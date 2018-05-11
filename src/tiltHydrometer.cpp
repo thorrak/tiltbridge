@@ -2,12 +2,16 @@
 // Created by John Beeler on 4/28/18.
 //
 
+#include <nlohmann/json.hpp>
 #include <Arduino.h>  // TODO - delete if possible
 #include "tiltHydrometer.h"
 #include <string>
 #include <sstream>
 #include "BLEUtils.h"
 
+
+// for convenience
+using json = nlohmann::json;
 
 
 

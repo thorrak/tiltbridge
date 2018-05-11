@@ -1,9 +1,13 @@
 //
 // Created by John Beeler on 4/26/18.
 //
+
+#include <nlohmann/json.hpp>
 #include <Arduino.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 
+// for convenience
+using json = nlohmann::json;
 
 /*
    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
@@ -64,6 +68,10 @@ void loop() {
 //    Serial.print("Devices found: ");
 //    Serial.println(foundDevices.getCount());
 //    Serial.println("Scan done!");
+    delay(1000);
+    json j;
+    j["object"] = { {"currency", "USD"}, {"value", 42.99} };
+    Serial.println(j.dump().c_str());
     delay(5000);
 }
 
