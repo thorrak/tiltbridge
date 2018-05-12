@@ -5,10 +5,10 @@
 #ifndef TILTBRIDGE_TILTSCANNER_H
 #define TILTBRIDGE_TILTSCANNER_H
 
-#include "../../.piolibdeps/ESP32 BLE Arduino_ID1841/src/BLEDevice.h"
-#include "../../.piolibdeps/ESP32 BLE Arduino_ID1841/src/BLEUtils.h"
-#include "../../.piolibdeps/ESP32 BLE Arduino_ID1841/src/BLEScan.h"
-#include "../../.piolibdeps/ESP32 BLE Arduino_ID1841/src/BLEAdvertisedDevice.h"
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
 
 extern BLEScan* pBLEScan;
 
