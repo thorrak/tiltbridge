@@ -19,51 +19,35 @@ using json = nlohmann::json;
 //????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttgggg??
 //**********----------**********----------**********
 
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEScan.h>
-#include <BLEAdvertisedDevice.h>
 
 #include "tiltHydrometer.h"
+#include "bridge_lcd.h"
+#include "tiltBridge.h"
 
-uint32_t scanTime = 30; //In seconds
 
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-    void onResult(BLEAdvertisedDevice advertisedDevice) {
-        tiltHydrometer tilt;
-//        Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
-        if(advertisedDevice.getName() == "Tilt") {
-            if(!tilt.load_from_advert_hex(advertisedDevice.getManufacturerData()))
-                Serial.printf("Failed to load tilt - ");
-            else
-                Serial.printf("Successfully loaded tilt - ");
+bridge_lcd lcd;
 
-            Serial.printf("Color: %s, Temp: %s, Grav: %s \r\n",
-                          tilt.color_name().c_str(), tilt.m_temp_string.c_str(), tilt.m_gravity_string.c_str());
-        }
-    }
-};
 
-BLEScan* pBLEScan;
 void setup() {
     Serial.begin(115200);
     Serial.println("Scanning...");
 
-    BLEDevice::init("");
-    pBLEScan = BLEDevice::getScan(); //create new scan
+    // Initialize the BLE scanner
+    tilt_scanner.init();
 
-//    MyAdvertisedDeviceCallbacks myCallbacks;
-//    pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+    // Intialize the display
+    lcd.init();
 
-    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    // Display the Fermentrack logo
+    lcd.display_logo();
 
-    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
 }
 
 void loop() {
     // put your main code here, to run repeatedly:
     Serial.println("Starting scan!");
-    BLEScanResults foundDevices = pBLEScan->start(scanTime);
+    tilt_scanner.scan();
+//    BLEScanResults foundDevices = pBLEScan->start(scanTime);
     Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
 //    Serial.print("Devices found: ");
 //    Serial.println(foundDevices.getCount());
@@ -74,7 +58,6 @@ void loop() {
     Serial.println(j.dump().c_str());
     delay(5000);
 }
-
 
 
 
