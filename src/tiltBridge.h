@@ -6,7 +6,7 @@
 #define TILTBRIDGE_TILTBRIDGE_H
 
 #include "bridge_lcd.h"
-#include "tiltScanner.h"
+#include "tilt/tiltScanner.h"
 
 
 #endif //TILTBRIDGE_TILTBRIDGE_H

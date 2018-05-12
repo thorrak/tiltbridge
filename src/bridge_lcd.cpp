@@ -5,7 +5,7 @@
 #include "bridge_lcd.h"
 #include "img/fermentrack_logo.h"
 
-extern bridge_lcd lcd;
+bridge_lcd lcd;
 
 
 #ifdef LCD_SSD1306

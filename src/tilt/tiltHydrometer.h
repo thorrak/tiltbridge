@@ -4,7 +4,7 @@
 
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
-#include <string>
+#include "../../../../.platformio/packages/toolchain-xtensa32/xtensa-esp32-elf/include/c++/5.2.0/string"
 
 
 // There's definitely a better way of doing this

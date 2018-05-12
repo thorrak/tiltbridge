@@ -20,13 +20,9 @@ using json = nlohmann::json;
 //**********----------**********----------**********
 
 
-#include "tiltHydrometer.h"
+#include "tilt/tiltHydrometer.h"
 #include "bridge_lcd.h"
 #include "tiltBridge.h"
-
-
-bridge_lcd lcd;
-
 
 void setup() {
     Serial.begin(115200);
