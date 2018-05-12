@@ -43,6 +43,9 @@ void loop() {
     // put your main code here, to run repeatedly:
     Serial.println("Starting scan!");
     tilt_scanner.scan();
+    Serial.println("Async scan started, sleeping until scan completes...");
+    tilt_scanner.wait_until_scan_complete();
+
 //    BLEScanResults foundDevices = pBLEScan->start(scanTime);
     Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
 //    Serial.print("Devices found: ");

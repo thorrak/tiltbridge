@@ -10,6 +10,9 @@
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
 
+#define BLE_SCAN_TIME 15
+
+
 extern BLEScan* pBLEScan;
 
 
@@ -19,6 +22,11 @@ public:
     void init();
     void scan();
 
+    bool wait_until_scan_complete();
+    void set_scan_active_flag(bool value);
+
+private:
+    bool m_scan_active;
 
 };
 
