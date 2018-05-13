@@ -4,20 +4,20 @@
 
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
-#include "../../../../.platformio/packages/toolchain-xtensa32/xtensa-esp32-elf/include/c++/5.2.0/string"
+#include <string>
 
 
 // There's definitely a better way of doing this
-#define TILT_COLOR_NONE     0
+#define TILT_COLOR_RED      0
+#define TILT_COLOR_GREEN    1
+#define TILT_COLOR_BLACK    2
+#define TILT_COLOR_PURPLE   3
+#define TILT_COLOR_ORANGE   4
+#define TILT_COLOR_BLUE     5
+#define TILT_COLOR_YELLOW   6
+#define TILT_COLOR_PINK     7
 
-#define TILT_COLOR_RED      1
-#define TILT_COLOR_GREEN    2
-#define TILT_COLOR_BLACK    3
-#define TILT_COLOR_PURPLE   4
-#define TILT_COLOR_ORANGE   5
-#define TILT_COLOR_BLUE     6
-#define TILT_COLOR_YELLOW   7
-#define TILT_COLOR_PINK     8
+#define TILT_COLORS         8
 
 
 #define TILT_COLOR_RED_UUID     "a495bb10c5b14b44b5121370f02d74de"
@@ -33,29 +33,28 @@
 
 class tiltHydrometer {
 public:
-    tiltHydrometer();
+    explicit tiltHydrometer(uint8_t color);
+
+
+    // TODO - Remove this
+    // For testing
+    bool set_string_values(std::string temp_string, std::string gravity_string);
+    std::string m_temp_string;
+    std::string m_gravity_string;
+
+    bool set_values(uint32_t i_temp, uint32_t i_grav);
+    uint32_t temp;
+    uint32_t gravity;
+
     std::string color_name();
     bool load_from_advert_hex(std::string advert_string);
 
-    std::string m_part1;
-    std::string m_device_uuid;
-    std::string m_temp_string;
-    std::string m_gravity_string;
-    std::string m_end_string;
+    static uint8_t uuid_to_color_no(std::string data);
+
 
 private:
+    uint8_t m_color;  // TODO - add a getter for this
     bool m_loaded;    // Has data been loaded from an ad string
-    uint8_t m_color;
-    uint16_t m_temp;
-    uint16_t m_gravity;
-
-//    std::string m_part1;
-//    std::string m_device_uuid;
-//    std::string m_temp_string;
-//    std::string m_gravity_string;
-//    std::string m_end_string;
-
-    uint8_t uuid_to_color_no(std::string data);
 
 
 };
