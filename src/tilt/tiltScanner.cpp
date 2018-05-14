@@ -26,22 +26,13 @@ tiltScanner tilt_scanner;
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice) {
-//        tiltHydrometer tilt;
-//        Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
         if(advertisedDevice.getName() == "Tilt") {
             uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-
-            // For debugging
-//            tiltHydrometer tilt = *tilt_scanner.tilt(color);
-//            Serial.printf("Color: %s, Temp: %d, Grav: %d \r\n", tilt.color_name().c_str(), tilt.temp, tilt.gravity);
         }
     }
 };
 
 static void ble_scan_complete(BLEScanResults scanResults) {
-//    printf("Scan complete!\n");
-//    printf("We found %d devices\n", scanResults.getCount());
-//    scanResults.dump();
     tilt_scanner.set_scan_active_flag(false);
 }
 

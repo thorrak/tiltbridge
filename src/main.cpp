@@ -23,7 +23,7 @@ using json = nlohmann::json;
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Scanning...");
+    Serial.println("Initializing...");
 
     // Initialize the BLE scanner
     tilt_scanner.init();
@@ -33,13 +33,12 @@ void setup() {
 
     // Display the Fermentrack logo
     lcd.display_logo();
-    delay(5000);
+//    delay(5000);
 
 }
 
 void loop() {
-    // put your main code here, to run repeatedly:
-    Serial.println("Starting scan!");
+
     tilt_scanner.scan();
     Serial.println("Async scan started, sleeping until scan completes...");
     tilt_scanner.wait_until_scan_complete();
@@ -47,7 +46,8 @@ void loop() {
 //    BLEScanResults foundDevices = pBLEScan->start(scanTime);
     Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
     Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
-    delay(1000);
+    lcd.display_tilts();
+    delay(100);
 }
 
 
