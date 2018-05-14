@@ -5,8 +5,14 @@
 #ifndef TILTBRIDGE_TILTBRIDGE_H
 #define TILTBRIDGE_TILTBRIDGE_H
 
-#include "bridge_lcd.h"
+#include <nlohmann/json.hpp>
+
+// for convenience
+using json = nlohmann::json;
+
+#include "tilt/tiltHydrometer.h"
 #include "tilt/tiltScanner.h"
+#include "bridge_lcd.h"
 
 
 #endif //TILTBRIDGE_TILTBRIDGE_H

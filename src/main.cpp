@@ -2,27 +2,24 @@
 // Created by John Beeler on 4/26/18.
 //
 
-#include <nlohmann/json.hpp>
-#include <Arduino.h>
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-
-// for convenience
-using json = nlohmann::json;
-
-/*
-   Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
-   Ported to Arduino ESP32 by Evandro Copercini
-*/
-
 //Advertised Device: Name: Tilt, Address: 88:c2:55:ac:26:81, manufacturer data: 4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
 //4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
 //????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttgggg??
 //**********----------**********----------**********
 
 
+#include <nlohmann/json.hpp>
+
+// for convenience
+using json = nlohmann::json;
+
 #include "tilt/tiltHydrometer.h"
+#include "tilt/tiltScanner.h"
+
+#include <Arduino.h>
 #include "bridge_lcd.h"
-#include "tiltBridge.h"
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+
 
 void setup() {
     Serial.begin(115200);
@@ -36,6 +33,7 @@ void setup() {
 
     // Display the Fermentrack logo
     lcd.display_logo();
+    delay(5000);
 
 }
 
@@ -48,14 +46,8 @@ void loop() {
 
 //    BLEScanResults foundDevices = pBLEScan->start(scanTime);
     Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
-//    Serial.print("Devices found: ");
-//    Serial.println(foundDevices.getCount());
-//    Serial.println("Scan done!");
+    Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
     delay(1000);
-    json j;
-    j["object"] = { {"currency", "USD"}, {"value", 42.99} };
-    Serial.println(j.dump().c_str());
-    delay(5000);
 }
 
 
