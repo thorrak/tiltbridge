@@ -33,7 +33,7 @@ public:
 
 private:
     bool m_scan_active;
-    tiltHydrometer* m_tilt_devices[];
+    tiltHydrometer* m_tilt_devices[TILT_COLORS];
 };
 
 extern tiltScanner tilt_scanner;
