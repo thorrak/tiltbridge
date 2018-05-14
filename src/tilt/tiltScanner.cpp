@@ -2,11 +2,15 @@
 // Created by John Beeler on 5/12/18.
 //
 
-#include <nlohmann/json.hpp>
-#include <Arduino.h>
-
-#include "tiltScanner.h"
 #include "tiltHydrometer.h"
+#include "tiltScanner.h"
+
+//#include <Arduino.h>
+
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
 
 
 // Create the scanner
@@ -26,17 +30,10 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 //        Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
         if(advertisedDevice.getName() == "Tilt") {
             uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-            if(color == TILT_NONE)
-                Serial.printf("Failed to load tilt - ");
-            else
-                Serial.printf("Successfully loaded tilt - ");
 
-            tiltHydrometer tilt = *tilt_scanner.tilt(color);
-
-            Serial.printf("Color: %s, Temp: %s, Grav: %s \r\n",
-                          tilt.color_name().c_str(), tilt.m_temp_string.c_str(), tilt.m_gravity_string.c_str());
-            Serial.printf("Temp F: %d, Grav: %d \r\n",
-                          tilt.temp, tilt.gravity);
+            // For debugging
+//            tiltHydrometer tilt = *tilt_scanner.tilt(color);
+//            Serial.printf("Color: %s, Temp: %d, Grav: %d \r\n", tilt.color_name().c_str(), tilt.temp, tilt.gravity);
         }
     }
 };
@@ -99,6 +96,9 @@ bool tiltScanner::wait_until_scan_complete() {
 uint8_t tiltScanner::load_tilt_from_advert_hex(std::string advert_string_hex) {
     std::stringstream ss;
     std::string advert_string;
+//    std::string m_part1;
+//    std::string m_end_string;
+    uint8_t m_color;
 
     // There is almost certainly a better way to do this
     // TODO - Rewrite this to not cast the grav/temp as a string & then recast it as an int
@@ -108,13 +108,6 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(std::string advert_string_hex) {
     advert_string = ss.str();
 
 
-//    std::string m_part1;
-    std::string device_uuid;
-    std::string temp_string;
-    std::string gravity_string;
-//    std::string m_end_string;
-    uint8_t m_color;
-
     // We need the advert_string to be at least 50 characters long
     if(advert_string.length() < 50)
         return TILT_NONE;
@@ -122,30 +115,35 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(std::string advert_string_hex) {
     // The advertisement string is the "manufacturer data" part of the following:
     //Advertised Device: Name: Tilt, Address: 88:c2:55:ac:26:81, manufacturer data: 4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
     //4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
-    //????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttgggg??
+    //????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttggggXR
     //**********----------**********----------**********
 
 //    m_part1 = advert_string.substr(0,8);
-    device_uuid = advert_string.substr(8,32);
-    m_color = tiltHydrometer::uuid_to_color_no(device_uuid);
+    m_color = tiltHydrometer::uuid_to_color_no(advert_string.substr(8,32));
 
-    if(!m_color) // We didn't match the uuid to a color
+    if(m_color == TILT_NONE) // We didn't match the uuid to a color (should only happen if new colors are released)
         return TILT_NONE;
 
-    temp_string = advert_string.substr(40,4);
-    gravity_string = advert_string.substr(44,4);
+    uint32_t temp = std::stoul(advert_string.substr(40,4), nullptr, 16);
+    uint32_t gravity = std::stoul(advert_string.substr(44,4), nullptr, 16);
 //    m_end_string = advert_string.substr(48,2);  // first byte is txpower, second is RSSI
-    uint32_t temp = std::stoul(temp_string, nullptr, 16);
-    uint32_t gravity = std::stoul(gravity_string, nullptr, 16);
 
-    m_tilt_devices[m_color]->set_string_values(temp_string, gravity_string);
     m_tilt_devices[m_color]->set_values(temp, gravity);
 
     return m_color;
-
 }
 
 
 tiltHydrometer* tiltScanner::tilt(uint8_t color) {
     return m_tilt_devices[color];
+}
+
+json tiltScanner::tilt_to_json() {
+    json j;
+    for(uint8_t i = 0;i<TILT_COLORS;i++) {
+        if(m_tilt_devices[i]->is_loaded()) {
+            j[m_tilt_devices[i]->color_name()] = m_tilt_devices[i]->to_json();
+        }
+    }
+    return j;
 }

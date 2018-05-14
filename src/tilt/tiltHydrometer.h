@@ -4,7 +4,8 @@
 
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
-#include <string>
+
+#include <nlohmann/json.hpp>
 
 
 // There's definitely a better way of doing this
@@ -18,6 +19,7 @@
 #define TILT_COLOR_PINK     7
 
 #define TILT_COLORS         8
+#define TILT_NONE           255 // Alternative to a tilt color
 
 
 #define TILT_COLOR_RED_UUID     "a495bb10c5b14b44b5121370f02d74de"
@@ -35,21 +37,15 @@ class tiltHydrometer {
 public:
     explicit tiltHydrometer(uint8_t color);
 
-
-    // TODO - Remove this
-    // For testing
-    bool set_string_values(std::string temp_string, std::string gravity_string);
-    std::string m_temp_string;
-    std::string m_gravity_string;
-
     bool set_values(uint32_t i_temp, uint32_t i_grav);
-    uint32_t temp;
-    uint32_t gravity;
-
     std::string color_name();
-    bool load_from_advert_hex(std::string advert_string);
+    nlohmann::json to_json();
+    bool is_loaded();
 
     static uint8_t uuid_to_color_no(std::string data);
+
+    uint32_t temp;
+    uint32_t gravity;
 
 
 private:
