@@ -13,13 +13,16 @@
 // for convenience
 using json = nlohmann::json;
 
-#include "tilt/tiltHydrometer.h"
-#include "tilt/tiltScanner.h"
+
+#include "tiltBridge.h"
+//#include "tilt/tiltHydrometer.h"
+//#include "tilt/tiltScanner.h"
 
 #include <Arduino.h>
-#include "bridge_lcd.h"
+//#include "bridge_lcd.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 
+jsonConfigHandler app_config;
 
 void setup() {
     Serial.begin(115200);
@@ -34,6 +37,17 @@ void setup() {
     // Display the Fermentrack logo
     lcd.display_logo();
 //    delay(5000);
+
+    Serial.println("Initializing Config...");
+    app_config.initialize();
+    Serial.println(app_config.config.dump().c_str());
+
+    Serial.println("Loading Config...");
+    app_config.load();
+
+//    app_config.config["didItWork"] = "Yes";
+//    app_config.save();
+    Serial.println(app_config.config.dump().c_str());
 
 }
 

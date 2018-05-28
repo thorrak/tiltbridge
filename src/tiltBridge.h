@@ -5,14 +5,17 @@
 #ifndef TILTBRIDGE_TILTBRIDGE_H
 #define TILTBRIDGE_TILTBRIDGE_H
 
-#include <nlohmann/json.hpp>
-
-// for convenience
-using json = nlohmann::json;
+//#include <nlohmann/json.hpp>
+//
+//// for convenience
+//using json = nlohmann::json;
 
 #include "tilt/tiltHydrometer.h"
 #include "tilt/tiltScanner.h"
 #include "bridge_lcd.h"
+#include "jsonConfigHandler.h"
 
+
+extern jsonConfigHandler app_config;
 
 #endif //TILTBRIDGE_TILTBRIDGE_H
