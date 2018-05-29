@@ -23,6 +23,7 @@ using json = nlohmann::json;
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 
 jsonConfigHandler app_config;
+uint64_t status_counter = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -49,19 +50,27 @@ void setup() {
 //    app_config.save();
     Serial.println(app_config.config.dump().c_str());
 
+    tilt_scanner.scan();
+    Serial.println("Initial scan started, sleeping until scan completes...");
+    tilt_scanner.wait_until_scan_complete();
+
 }
 
 void loop() {
 
-    tilt_scanner.scan();
-    Serial.println("Async scan started, sleeping until scan completes...");
-    tilt_scanner.wait_until_scan_complete();
+    if(tilt_scanner.scan())
+        Serial.println("Async scan started...");
 
+    
+    if(status_counter <= xTaskGetTickCount()) {
+        // Every 10 seconds, print some kind of status
+        Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
+        Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
+        status_counter = xTaskGetTickCount() + 10000;
+    }
 //    BLEScanResults foundDevices = pBLEScan->start(scanTime);
-    Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
-    Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
-    lcd.display_tilts();
-    delay(100);
+    lcd.check_screen();
+//    delay(100);
 }
 
 

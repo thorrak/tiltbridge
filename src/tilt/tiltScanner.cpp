@@ -64,12 +64,14 @@ void tiltScanner::set_scan_active_flag(bool value) {
 }
 
 
-void tiltScanner::scan() {
+bool tiltScanner::scan() {
     // Set a flag when we start asynchronously scanning to prevent
     if(!m_scan_active) {
         pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete);
         m_scan_active = true;
+        return true;
     }
+    return false;
 }
 
 

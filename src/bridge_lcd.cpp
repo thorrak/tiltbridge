@@ -16,7 +16,14 @@ bridge_lcd lcd;
 
 
 bridge_lcd::bridge_lcd() {
+#ifdef LCD_SSD1306
     oled_display = new SSD1306(0x3c, 21, 22);
+#endif
+
+    next_screen_at = 0;
+    on_screen = 0;  // Initialize to 0 (AKA screen_tilt)
+    tilt_on_page = 0;
+    tilt_pages_in_run = 0;
 
 }  // bridge_lcd
 
@@ -35,44 +42,82 @@ void bridge_lcd::init() {
 void bridge_lcd::display_logo() {
     // XBM files are C source bitmap arrays, and can be created in GIMP (and then read/imported using text editors)
 #ifdef LCD_SSD1306
-    oled_display->clear();
+    clear();
     oled_display->drawXbm((128-fermentrack_logo_width)/2, (64-fermentrack_logo_height)/2, fermentrack_logo_width, fermentrack_logo_height, fermentrack_logo_bits);
-    oled_display->display();
+    display();
 #endif
 }
 
 
-void bridge_lcd::display_tilts() {
+void bridge_lcd::check_screen() {
+    if(next_screen_at < xTaskGetTickCount()) {
+        next_screen_at = display_next() * 1000 + xTaskGetTickCount();
+    }
+}
+
+// display_next returns the number of seconds to "hold" on this screen
+uint8_t bridge_lcd::display_next() {
+    uint8_t active_tilts = 0;
+
+    if(on_screen==SCREEN_TILT) {
+        if(tilt_pages_in_run==0) {
+            // This is the first time we're displaying a tilt screen in this round. Figure out how many pages we need
+            for(uint8_t i = 0;i<TILT_COLORS;i++) {
+                if (tilt_scanner.tilt(i)->is_loaded())
+                    active_tilts++;
+            }
+
+            // We'll always have at least one page, but we can have more
+            tilt_pages_in_run = (active_tilts/TILTS_PER_PAGE) + 1;
+            tilt_on_page = 0;
+        }
+
+        display_tilt_screen(tilt_on_page);
+
+        tilt_on_page++;
+        if(tilt_on_page >= tilt_pages_in_run) {
+            tilt_pages_in_run = 0;  // We've displayed the last page
+            tilt_on_page = 0;
+            on_screen++;
+        }
+
+        return 10;  // Display this screen for 10 seconds
+
+    } else if(on_screen==SCREEN_FERMENTRACK) {
+        display_logo();
+        on_screen++;
+        return 5;  // This is currently a noop
+    } else {
+        on_screen = SCREEN_TILT;
+        return 0; // Immediately move on to the next screen
+    }
+
+}
+
+
+void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 
     uint8_t active_tilts = 0;
     uint8_t displayed_tilts = 0;
 
-    // If the page that was last displayed is the same as the total number of pages in this run (IE - if we've already
-    // displayed all the pages that exist in this run) then reset both the on_page & pages_in_run counters.
-    if(tilt_on_page == tilt_pages_in_run) {
-        tilt_on_page = 0;
-        tilt_pages_in_run = 0;
-    }
+    // Clear out the display before we start printing to it
+    clear();
 
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
             active_tilts++;
             // This check has the added bonus of limiting the # of displayed tilts to TILTS_PER_PAGE
-            if((active_tilts/TILTS_PER_PAGE)==tilt_on_page) {
+            if((active_tilts/TILTS_PER_PAGE)==screen_number) {
                 print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts+2);
                 displayed_tilts++;
             }
         }
     }
 
-    // If we reset the number of pages in the run above, we need to reinitialize it here.
-    // NOTE - This code will only get used if "display tilts" is the only screen in use, as this same check will be
-    // used to determine when to progress to the next screen
-    if(tilt_pages_in_run == 0)
-        tilt_pages_in_run = (active_tilts/TILTS_PER_PAGE) + 1;
+    // Toggle the actual display
+    display();
 
-    tilt_on_page++;
 }
 
 
@@ -85,16 +130,28 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 
 
+
+/////////// LCD Wrapper Functions
+
+void bridge_lcd::clear() {
+#ifdef LCD_SSD1306
+    oled_display->clear();
+    oled_display->setFont(SSD1306_FONT);
+#endif
+}
+
+void bridge_lcd::display() {
+#ifdef LCD_SSD1306
+    oled_display->display();
+#endif
+}
+
+
 void bridge_lcd::print_line(String left_text, String right_text, uint8_t line) {
 #ifdef LCD_SSD1306
     int16_t starting_pixel_row = 0;
 
     starting_pixel_row = (SSD_LINE_CLEARANCE + SSD1306_FONT_HEIGHT) * (line-1) + SSD_LINE_CLEARANCE;
-
-    // TODO - Remove the clear from this function
-    oled_display->clear();
-
-    oled_display->setFont(SSD1306_FONT);
 
     // The coordinates define the left starting point of the text
     oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -102,9 +159,6 @@ void bridge_lcd::print_line(String left_text, String right_text, uint8_t line) {
 
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);
-
-    oled_display->display();
-
 #endif
 }
 

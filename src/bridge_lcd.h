@@ -20,9 +20,10 @@
 
 #define TILTS_PER_PAGE          3
 
-#define LCD_MODE_TILT           1
-#define LCD_MODE_FERMENTRACK    2
+#define SCREEN_TILT             0
+#define SCREEN_FERMENTRACK      1
 
+#define SCREEN_MAX              2
 
 class bridge_lcd {
 public:
@@ -34,16 +35,25 @@ public:
 
     void print_line(String left_text, String right_text, uint8_t line);
 
-    void display_tilts();
+    void check_screen();
+
 
 private:
+    uint8_t display_next();
+    void display_tilt_screen(uint8_t screen_number);
     void print_tilt_to_line(tiltHydrometer* tilt, uint8_t line);
+
+    void clear();
+    void display();
 
     SSD1306* oled_display;
 
-
     uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
     uint8_t tilt_on_page;       // The page number currently being displayed
+
+    uint8_t on_screen;
+
+    uint64_t next_screen_at;
 
 
 };
