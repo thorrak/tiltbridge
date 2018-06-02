@@ -13,7 +13,6 @@
 #include <iostream>
 
 
-
 void jsonConfigHandler::initialize() {
 
     // SPIFFS.begin() explicitly must not be called in the class constructor (apparently)
@@ -23,6 +22,7 @@ void jsonConfigHandler::initialize() {
     config = {
             {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},
+            {"mdnsID", "tiltbridge"}
     };
 
 
@@ -52,8 +52,6 @@ String fileRead(String name){
     String contents;
     File file = SPIFFS.open(name.c_str(), "r");
     if (!file) {
-//        String errorMessage = "Can't open '" + name + "' !\r\n";
-//        Serial.println(errorMessage);
         return "";
     } else {
         // Read the file into a String
@@ -72,16 +70,26 @@ bool jsonConfigHandler::spiffs_config_is_valid() {
 }
 
 bool jsonConfigHandler::read_config_from_spiffs() {
-
     String json_string;
+    nlohmann::json loaded_config;
 
     json_string = fileRead(JSON_CONFIG_FILE);
+    if(json_string.length() <= 2)
+        return false;  // No data was loaded (empty string or {})
 
-    config = nlohmann::json::parse(json_string.c_str());
+    loaded_config = nlohmann::json::parse(json_string.c_str());
 
-    // TODO - Make it so this can return false
+    // The assumption that we're going to make is that the saved version of the config may have different keys than the
+    // version that is initialized in jsonConfigHandler::initialize(). To that end, we want to leave the initialized
+    // values in place for any new configuration options (where there isn't something in the saved string) and ignore
+    // the saved values for any keys that are no longer in use.
+    for(nlohmann::json::iterator it = loaded_config.begin(); it != loaded_config.end(); ++it) {
+        // Loop through the saved config items & overwrite those which exist in the initialized config block
+        if (config.find(it.key()) != config.end())
+            config[it.key()] = it.value();
+    }
+
     return true;
-
 }
 
 
