@@ -32,6 +32,8 @@ public:
     void init();
     void display_logo();
 
+    void display_wifi_connect_screen(String ap_name, String ap_pass);
+    void display_wifi_fail_screen();
 
     void print_line(String left_text, String right_text, uint8_t line);
 

@@ -28,15 +28,6 @@ bridge_lcd::bridge_lcd() {
 }  // bridge_lcd
 
 
-void bridge_lcd::init() {
-#ifdef LCD_SSD1306
-    oled_display->init();
-
-    oled_display->flipScreenVertically();
-    oled_display->setFont(ArialMT_Plain_10);
-#endif
-
-}
 
 
 void bridge_lcd::display_logo() {
@@ -121,6 +112,26 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 }
 
 
+void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
+    clear();
+    //         "**********8888888888   **********8888888888"
+    print_line("To configure, just", "", 1);
+    print_line("connect to this AP:", "", 2);
+    print_line("Name:", ap_name, 3);
+    print_line("Pass: ", ap_pass, 4);
+    display();
+}
+
+void bridge_lcd::display_wifi_fail_screen() {
+         //    "**********8888888888 **********8888888888"
+    clear();
+    print_line("Failed to connect.", "", 1);
+    print_line("Restart TiltBridge,", "", 2);
+    print_line("connect to config AP", "", 3);
+    print_line("and try again.", "", 4);
+    display();
+}
+
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10];
@@ -132,6 +143,15 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 
 /////////// LCD Wrapper Functions
+
+void bridge_lcd::init() {
+#ifdef LCD_SSD1306
+    oled_display->init();
+    oled_display->flipScreenVertically();
+    oled_display->setFont(ArialMT_Plain_10);
+#endif
+}
+
 
 void bridge_lcd::clear() {
 #ifdef LCD_SSD1306
