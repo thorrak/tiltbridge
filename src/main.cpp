@@ -15,9 +15,6 @@ using json = nlohmann::json;
 
 
 #include "tiltBridge.h"
-//#include "tilt/tiltHydrometer.h"
-//#include "tilt/tiltScanner.h"
-
 #include <Arduino.h>
 //#include "bridge_lcd.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
@@ -88,8 +85,9 @@ void setup() {
     Serial.setDebugOutput(true);
     Serial.println(modes[WiFi.getMode()]);
     WiFi.printDiag(Serial);
+    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
 #else
-    wifiManager.setDebugOutput(FALSE); // In case we have a serial connection to BrewPi
+    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
 #endif
 
     //reset settings - for testing
@@ -97,7 +95,6 @@ void setup() {
 
     //sets timeout until configuration portal gets turned off
     //useful to make it all retry or go to sleep
-    //in seconds
     wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
 
     // The main purpose of this is to set a boolean value which will allow us to know we
