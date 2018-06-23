@@ -21,4 +21,8 @@ extern jsonConfigHandler app_config;
 #define WIFI_SETUP_AP_NAME "TiltBridgeAP"
 #define WIFI_SETUP_AP_PASS "tiltbridge"  // Must be 8-63 chars
 
+
+#define DEBUG_PRINTS 1
+
+
 #endif //TILTBRIDGE_TILTBRIDGE_H

@@ -15,51 +15,20 @@ using json = nlohmann::json;
 
 
 #include "tiltBridge.h"
+#include "wifi_setup.h"
 #include <Arduino.h>
 //#include "bridge_lcd.h"
+#ifdef DEBUG_PRINTS
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-const char* modes[] = { "NULL", "STA", "AP", "STA+AP" };
+#endif
+#include <HTTPClient.h>
 
 jsonConfigHandler app_config;
 uint64_t status_counter = 0;
 
-#define DEBUG_PRINTS 1
-
-
-bool shouldSaveConfig = false;
-
-//callback notifying us of the need to save config
-void saveConfigCallback() {
-//    Serial.println("Should save config");
-    shouldSaveConfig = true;
-}
-
-// callback to display the WiFi LCD notification
-void configModeCallback(WiFiManager *myWiFiManager) {
-#ifdef DEBUG_PRINTS
-    Serial.println("Entered config mode");
-    Serial.println(WiFi.softAPIP());
-    Serial.println(myWiFiManager->getConfigPortalSSID());
-#endif
-    // Assuming WIFI_SETUP_AP_PASS here.
-    lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID(), WIFI_SETUP_AP_PASS);
-
-}
-
-// Not sure if this is sufficient to test for validity
-bool isValidmDNSName(String mdns_name) {
-    for (std::string::size_type i = 0; i < mdns_name.length(); ++i) {
-        // For now, we're just checking that every character in the string is alphanumeric. May need to add more validation here.
-        if (!isalnum(mdns_name[i]))
-            return false;
-    }
-    return true;
-}
 
 
 void setup() {
-    WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
-
     Serial.begin(115200);
 
     // Handle all of the config initialization & loading
@@ -72,7 +41,7 @@ void setup() {
     Serial.println(app_config.config.dump().c_str());
     Serial.println("Loading Config...");
 #endif
-    app_config.load();
+//    app_config.load();
 #ifdef DEBUG_PRINTS
     Serial.println(app_config.config.dump().c_str());
 #endif
@@ -83,64 +52,14 @@ void setup() {
 
 #ifdef DEBUG_PRINTS
     Serial.setDebugOutput(true);
-    Serial.println(modes[WiFi.getMode()]);
+//    Serial.println(modes[WiFi.getMode()]);
     WiFi.printDiag(Serial);
-    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
 #else
     wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
 #endif
 
-    //reset settings - for testing
-    //wifiManager.resetSettings();
 
-    //sets timeout until configuration portal gets turned off
-    //useful to make it all retry or go to sleep
-    wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
-
-    // The main purpose of this is to set a boolean value which will allow us to know we
-    // just saved a new configuration (as opposed to rebooting normally)
-    wifiManager.setSaveConfigCallback(saveConfigCallback);
-    wifiManager.setAPCallback(configModeCallback);
-
-    // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
-    // It's nice, but it means the user gets no actual prompt for what they're entering.
-    std::string mdns_id = app_config.config["mdnsID"];
-    WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
-    wifiManager.addParameter(&custom_mdns_name);
-
-    std::string fermentrack_url = app_config.config["fermentrackURL"];
-    WiFiManagerParameter custom_fermentrack_url("ferm_url", "Fermentrack Target URL", fermentrack_url.c_str(), 128);
-    wifiManager.addParameter(&custom_fermentrack_url);
-
-
-    if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
-        WiFi.softAPdisconnect(true);
-        WiFi.mode(WIFI_AP_STA);
-    } else {
-        Serial.println("failed to connect and hit timeout");
-        lcd.display_wifi_fail_screen();
-        delay(2 * 60 * 1000);
-        ESP.restart();
-        // TODO - Determine if we should hang here, force restart, or what.
-    }
-
-    // Alright. We're theoretically connected here.
-    // If we connected, then let's save the mDNS name
-    if (shouldSaveConfig) {
-        // If the mDNS name is valid, save it.
-        if (isValidmDNSName(custom_mdns_name.getValue())) {
-            app_config.config["mdnsID"] = custom_mdns_name.getValue();
-        } else {
-            // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
-            // TODO - add an LCD error message here maybe
-            WiFi.disconnect(true);
-            delay(2000);
-            ESP.restart();
-        }
-
-        app_config.config["fermentrackURL"] = custom_fermentrack_url.getValue();
-        app_config.save();
-    }
+    init_wifi();  // Initialize WiFi (including configuration AP if necessary)
 
     lcd.display_logo();  // Display the Fermentrack logo
 
@@ -158,8 +77,11 @@ void setup() {
 
 void loop() {
 #ifdef DEBUG_PRINTS
-    if(tilt_scanner.scan())
+    if(tilt_scanner.scan()) {
+
         Serial.println("Async scan started...");
+
+    }
 #else
     tilt_scanner.scan();
 #endif
@@ -171,6 +93,51 @@ void loop() {
         Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
 #endif
         status_counter = xTaskGetTickCount() + 10000;
+
+
+        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
+
+            HTTPClient http;
+            nlohmann::json j;
+
+            // This should look like this when sent to Fermentrack:
+            // {
+            //   'api_key': 'Key Goes Here',
+            //   'tilts': {'color': 'Purple', 'temp': 74, 'gravity': 1.043},
+            //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
+            // }
+
+            j["tilts"] = tilt_scanner.tilt_to_json();
+            j["api_key"] = app_config.config["fermentrackToken"].get<std::string>();
+
+#ifdef DEBUG_PRINTS
+            Serial.println(app_config.config["fermentrackURL"].get<std::string>().c_str());
+#endif
+            http.begin(app_config.config["fermentrackURL"].get<std::string>().c_str());  //Specify destination for HTTP request
+            http.addHeader("Content-Type", "text/plain");             //Specify content-type header
+
+            int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
+
+#ifdef DEBUG_PRINTS
+            if (httpResponseCode > 0) {
+
+                String response = http.getString();                       //Get the response to the request
+
+//                Serial.println(httpResponseCode);   //Print return code
+//                Serial.println(response);           //Print request answer
+
+            } else {
+
+                Serial.print("Error on sending POST: ");
+                Serial.println(httpResponseCode);
+
+            }
+#endif
+
+            http.end();  //Free resources
+        }
+
+
     }
 //    BLEScanResults foundDevices = pBLEScan->start(scanTime);
     lcd.check_screen();
