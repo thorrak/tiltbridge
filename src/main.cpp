@@ -51,17 +51,21 @@ void setup() {
 
 
 #ifdef DEBUG_PRINTS
+
     Serial.setDebugOutput(true);
 //    Serial.println(modes[WiFi.getMode()]);
-    WiFi.printDiag(Serial);
+//    WiFi.printDiag(Serial);  // causes crashes
+    Serial.println("WiFi setdebug set...");
 #else
     wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
 #endif
 
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
+    Serial.println("WiFi initialized...");
 
     lcd.display_logo();  // Display the Fermentrack logo
+    Serial.println("Logo displayed...");
 
     // Initialize the BLE scanner
     tilt_scanner.init();
@@ -113,32 +117,37 @@ void loop() {
 #ifdef DEBUG_PRINTS
             Serial.println(app_config.config["fermentrackURL"].get<std::string>().c_str());
 #endif
-            http.begin(app_config.config["fermentrackURL"].get<std::string>().c_str());  //Specify destination for HTTP request
-            http.addHeader("Content-Type", "text/plain");             //Specify content-type header
 
-            int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
+            if(strlen(j.dump().c_str()) > 5) {
+#ifdef DEBUG_PRINTS
+                Serial.print("Data to send! Lets do it. ");
+#endif
+                http.begin(app_config.config["fermentrackURL"].get<std::string>().c_str());  //Specify destination for HTTP request
+                http.addHeader("Content-Type", "text/plain");             //Specify content-type header
+                int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
 
 #ifdef DEBUG_PRINTS
-            if (httpResponseCode > 0) {
-
-                String response = http.getString();                       //Get the response to the request
-
+                if (httpResponseCode > 0) {
+//                String response = http.getString();                       //Get the response to the request
 //                Serial.println(httpResponseCode);   //Print return code
 //                Serial.println(response);           //Print request answer
-
-            } else {
-
-                Serial.print("Error on sending POST: ");
-                Serial.println(httpResponseCode);
-
-            }
+                } else {
+                    Serial.print("Error on sending POST: ");
+                    Serial.println(httpResponseCode);
+                }
 #endif
-
-            http.end();  //Free resources
+                http.end();  //Free resources
+            } else {
+#ifdef DEBUG_PRINTS
+                Serial.print("No data to send.");
+#endif
+            }
         }
 
 
     }
 //    BLEScanResults foundDevices = pBLEScan->start(scanTime);
     lcd.check_screen();
+//    vTaskDelay(10);
+    yield();
 }
