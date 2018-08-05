@@ -31,7 +31,7 @@
 #define TILT_COLOR_YELLOW_UUID  "a495bb70c5b14b44b5121370f02d74de"
 #define TILT_COLOR_PINK_UUID    "a495bb80c5b14b44b5121370f02d74de"
 
-
+//#define BLE_PRINT_ALL_DEVICES 1
 
 class tiltHydrometer {
 public:

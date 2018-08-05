@@ -54,6 +54,7 @@ bool isValidmDNSName(String mdns_name) {
 
 
 void init_wifi() {
+#ifndef OPTIONAL_WIFI
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
     wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
     //reset settings - for testing
@@ -107,6 +108,6 @@ void init_wifi() {
         app_config.config["fermentrackURL"] = custom_fermentrack_url.getValue();
         app_config.save();
     }
-
+#endif
 }
 

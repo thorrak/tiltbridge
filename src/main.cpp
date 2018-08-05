@@ -50,15 +50,16 @@ void setup() {
     lcd.init();  // Intialize the display
 
 
-#ifdef DEBUG_PRINTS
-
-    Serial.setDebugOutput(true);
-//    Serial.println(modes[WiFi.getMode()]);
-//    WiFi.printDiag(Serial);  // causes crashes
-    Serial.println("WiFi setdebug set...");
-#else
-    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
-#endif
+//#ifdef DEBUG_PRINTS
+//
+//    Serial.setDebugOutput(true);
+////    Serial.println(modes[WiFi.getMode()]);
+////    WiFi.printDiag(Serial);  // causes crashes
+//    Serial.println("WiFi setdebug set...");
+//#else
+    Serial.setDebugOutput(false);
+//    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
+//#endif
 
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)

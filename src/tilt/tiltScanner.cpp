@@ -5,7 +5,9 @@
 #include "tiltHydrometer.h"
 #include "tiltScanner.h"
 
-//#include <Arduino.h>
+#ifdef BLE_PRINT_ALL_DEVICES
+#include <Arduino.h>
+#endif
 
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -26,9 +28,11 @@ tiltScanner tilt_scanner;
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice) {
-        if(advertisedDevice.getName() == "Tilt") {
-            uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-        }
+//        uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
+        tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
+#ifdef BLE_PRINT_ALL_DEVICES
+        Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
+#endif
     }
 };
 
