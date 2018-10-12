@@ -70,6 +70,7 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     temp = i_temp;
     gravity = i_grav;
     m_loaded = true;  // Setting loaded true now that we have gravity/temp values
+    return true;
 }
 
 nlohmann::json tiltHydrometer::to_json() {

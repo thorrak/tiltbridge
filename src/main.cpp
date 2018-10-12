@@ -80,6 +80,10 @@ void setup() {
 
 }
 
+
+HTTPClient http;
+nlohmann::json j;
+
 void loop() {
 #ifdef DEBUG_PRINTS
     if(tilt_scanner.scan()) {
@@ -92,18 +96,15 @@ void loop() {
 #endif
 
     if(status_counter <= xTaskGetTickCount()) {
-        // Every 10 seconds, print some kind of status
 #ifdef DEBUG_PRINTS
+        // Every 10 seconds, print some kind of status
         Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
-        Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
+//        Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
 #endif
-        status_counter = xTaskGetTickCount() + 10000;
 
 
         if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
 
-            HTTPClient http;
-            nlohmann::json j;
 
             // This should look like this when sent to Fermentrack:
             // {
@@ -112,16 +113,18 @@ void loop() {
             //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
             // }
 
+            j.clear();
             j["tilts"] = tilt_scanner.tilt_to_json();
             j["api_key"] = app_config.config["fermentrackToken"].get<std::string>();
 
-#ifdef DEBUG_PRINTS
-            Serial.println(app_config.config["fermentrackURL"].get<std::string>().c_str());
-#endif
+//#ifdef DEBUG_PRINTS
+//            Serial.println(app_config.config["fermentrackURL"].get<std::string>().c_str());
+//#endif
 
             if(strlen(j.dump().c_str()) > 5) {
 #ifdef DEBUG_PRINTS
-                Serial.print("Data to send! Lets do it. ");
+                Serial.print("Data to send: ");
+                Serial.println(j.dump().c_str());
 #endif
                 http.begin(app_config.config["fermentrackURL"].get<std::string>().c_str());  //Specify destination for HTTP request
                 http.addHeader("Content-Type", "text/plain");             //Specify content-type header
@@ -143,6 +146,7 @@ void loop() {
                 Serial.print("No data to send.");
 #endif
             }
+            status_counter = xTaskGetTickCount() + 10000;
         }
 
 
