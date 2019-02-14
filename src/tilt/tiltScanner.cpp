@@ -58,8 +58,11 @@ tiltScanner::tiltScanner() {
 void tiltScanner::init() {
     BLEDevice::init("");
     pBLEScan = BLEDevice::getScan(); //create new scan
-    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), false);
+//    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), false);
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    pBLEScan->setInterval(100);
+    pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 
 
@@ -71,6 +74,7 @@ void tiltScanner::set_scan_active_flag(bool value) {
 bool tiltScanner::scan() {
     // Set a flag when we start asynchronously scanning to prevent
     if(!m_scan_active) {
+        pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
         pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete);
         m_scan_active = true;
         return true;

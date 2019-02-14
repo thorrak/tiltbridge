@@ -20,7 +20,7 @@ void jsonConfigHandler::initialize() {
     SPIFFS.begin(true);
 
     config = {
-            {"fermentrackURL", "http://192.168.5.198/tiltbridge/"},
+            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
             {"fermentrackPushEvery", 30},
             {"fermentrackToken", "tiltbridge"},
             {"mdnsID", "tiltbridge"}
