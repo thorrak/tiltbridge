@@ -75,10 +75,12 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
 
 nlohmann::json tiltHydrometer::to_json() {
     nlohmann::json j;
+    float_t converted_gravity;
+    converted_gravity = (float_t) gravity/1000;
     j = {
             {"color", color_name()},
             {"temp", temp},
-            {"gravity", gravity},
+            {"gravity", converted_gravity},
     };
     return j;
 }

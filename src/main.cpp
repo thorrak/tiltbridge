@@ -121,6 +121,7 @@ void loop() {
 //            Serial.println(app_config.config["fermentrackURL"].get<std::string>().c_str());
 //#endif
 
+#ifdef DONT_FAKE_HTTP
             if(strlen(j.dump().c_str()) > 5) {
 #ifdef DEBUG_PRINTS
                 Serial.print("Data to send: ");
@@ -146,6 +147,7 @@ void loop() {
                 Serial.print("No data to send.");
 #endif
             }
+#endif
             status_counter = xTaskGetTickCount() + 10000;
         }
 
