@@ -15,16 +15,16 @@
 
 void jsonConfigHandler::initialize() {
 
-    // SPIFFS.begin() explicitly must not be called in the class constructor (apparently)
+    // SPIFFS.begin() explicitly must not be called in the class constructor
     // https://github.com/espressif/arduino-esp32/issues/831
-    SPIFFS.begin(true);
+//    SPIFFS.begin(true);
 
-    config = {
-            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
-            {"fermentrackPushEvery", 30},
-            {"fermentrackToken", "tiltbridge"},
-            {"mdnsID", "tiltbridge"}
-    };
+//    config = {
+//            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
+//            {"fermentrackPushEvery", 30},
+//            {"fermentrackToken", "tiltbridge"},
+//            {"mdnsID", "tiltbridge"}
+//    };
 
 
 }

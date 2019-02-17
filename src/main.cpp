@@ -13,6 +13,7 @@
 // for convenience
 using json = nlohmann::json;
 
+#define DONT_FAKE_HTTP 1  // Maybe it works now?
 
 #include "tiltBridge.h"
 #include "wifi_setup.h"
@@ -24,7 +25,9 @@ using json = nlohmann::json;
 #include <HTTPClient.h>
 
 jsonConfigHandler app_config;
-uint64_t status_counter = 0;
+uint64_t trigger_next_data_send = 0;
+HTTPClient http;
+nlohmann::json j;
 
 
 
@@ -36,6 +39,7 @@ void setup() {
     Serial.println("Initializing Config...");
 #endif
     app_config.initialize();
+    SPIFFS.begin(true);
 
 #ifdef DEBUG_PRINTS
     Serial.println(app_config.config.dump().c_str());
@@ -50,17 +54,7 @@ void setup() {
     lcd.init();  // Intialize the display
 
 
-//#ifdef DEBUG_PRINTS
-//
-//    Serial.setDebugOutput(true);
-////    Serial.println(modes[WiFi.getMode()]);
-////    WiFi.printDiag(Serial);  // causes crashes
-//    Serial.println("WiFi setdebug set...");
-//#else
     Serial.setDebugOutput(false);
-//    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
-//#endif
-
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
     Serial.println("WiFi initialized...");
@@ -81,21 +75,17 @@ void setup() {
 }
 
 
-HTTPClient http;
-nlohmann::json j;
 
 void loop() {
-#ifdef DEBUG_PRINTS
+    // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if(tilt_scanner.scan()) {
-
+#ifdef DEBUG_PRINTS
         Serial.println("Async scan started...");
-
-    }
-#else
-    tilt_scanner.scan();
 #endif
+    }
 
-    if(status_counter <= xTaskGetTickCount()) {
+    // trigger_next_data_send is the
+    if(trigger_next_data_send <= xTaskGetTickCount()) {
 #ifdef DEBUG_PRINTS
         // Every 10 seconds, print some kind of status
         Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
@@ -148,13 +138,12 @@ void loop() {
 #endif
             }
 #endif
-            status_counter = xTaskGetTickCount() + 10000;
+            trigger_next_data_send = xTaskGetTickCount() + 10000;
         }
 
 
     }
-//    BLEScanResults foundDevices = pBLEScan->start(scanTime);
+
     lcd.check_screen();
-//    vTaskDelay(10);
     yield();
 }
