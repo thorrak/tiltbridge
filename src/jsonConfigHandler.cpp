@@ -19,12 +19,12 @@ void jsonConfigHandler::initialize() {
     // https://github.com/espressif/arduino-esp32/issues/831
 //    SPIFFS.begin(true);
 
-//    config = {
-//            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
-//            {"fermentrackPushEvery", 30},
-//            {"fermentrackToken", "tiltbridge"},
-//            {"mdnsID", "tiltbridge"}
-//    };
+    config = {
+            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
+            {"fermentrackPushEvery", 30},
+            {"fermentrackToken", "tiltbridge"},
+            {"mdnsID", "tiltbridge"}
+    };
 
 
 }

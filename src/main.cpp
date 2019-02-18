@@ -18,11 +18,14 @@ using json = nlohmann::json;
 #include "tiltBridge.h"
 #include "wifi_setup.h"
 #include <Arduino.h>
+#include "FS.h"
+#include "SPIFFS.h"
 //#include "bridge_lcd.h"
 #ifdef DEBUG_PRINTS
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #endif
 #include <HTTPClient.h>
+#include "http_server.h"
 
 jsonConfigHandler app_config;
 uint64_t trigger_next_data_send = 0;
@@ -71,6 +74,7 @@ void setup() {
 #endif
 
     tilt_scanner.wait_until_scan_complete();
+    http_server.init();
 
 }
 
@@ -145,5 +149,6 @@ void loop() {
     }
 
     lcd.check_screen();
+    http_server.handleClient();
     yield();
 }
