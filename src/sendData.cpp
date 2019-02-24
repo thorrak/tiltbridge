@@ -19,7 +19,11 @@ using json = nlohmann::json;
 
 #include <WiFiClientSecure.h>
 
+#ifdef USE_SECURE_GSCRIPTS
 // This is the GlobalSign 2021 root cert (the one used by script.google.com)
+// An appropriate root cert can be discovered for any site by running:
+//   openssl s_client -showcerts -connect script.google.com:443 </dev/null'
+// The CA root cert is the last cert given in the chain of certs
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
 "MIIDujCCAqKgAwIBAgILBAAAAAABD4Ym5g0wDQYJKoZIhvcNAQEFBQAwTDEgMB4G\n" \
@@ -43,9 +47,7 @@ const char* rootCACertificate = \
 "AfvDbbnvRG15RjF+Cv6pgsH/76tuIMRQyV+dTZsXjAzlAcmgQWpzU/qlULRuJQ/7\n" \
 "TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==\n" \
 "-----END CERTIFICATE-----\n";
-
-WiFiClientSecure *client = new WiFiClientSecure;
-
+#endif
 
 void setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
@@ -102,33 +104,35 @@ void send_to_fermentrack() {
         }
         http.end();  //Free resources
     }
+    j.clear();
 }
 
 
-void prep_send_secure() {
+#ifdef USE_SECURE_GSCRIPTS
+WiFiClientSecure *secure_client;
 
+void prep_send_secure() {
+    secure_client = new WiFiClientSecure;
+    secure_client -> setCACert(rootCACertificate);
 }
 
 void send_secure() {
     nlohmann::json j;
-    WiFiClientSecure *client = new WiFiClientSecure;
-
 
     j["Beer"] = "some beer,2";
     j["Temp"] = 75;
     j["SG"] = (float) 1.050;
     j["Color"] = "Blue";
-    j["Comment"] = "jbeeler@optictheory.com";
+    j["Comment"] = "xxx@yyy.com";  // The gmail email address associated with the script on google
     j["Timepoint"] = (float) 42728.4267217361;
 
-    if(client) {
-        client -> setCACert(rootCACertificate);
+    if(secure_client) {
 
-        { // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
+        { // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *secure_client is
             HTTPClient https;
 
             Serial.print("[HTTPS] begin...\r\n");
-            if (https.begin(*client, "https://script.google.com/a/optictheory.com/macros/s/AKfycbyqEM6l1c3Jh-1r5HPJ7ANWCKQcoUR2GDJMOcbX-mYFlyK49-EZ/exec")) {  // HTTPS
+            if (https.begin(*secure_client, "https://script.google.com/a/optictheory.com/macros/s/AKfycbyqEM6l1c3Jh-1r5HPJ7ANWCKQcoUR2GDJMOcbX-mYFlyK49-EZ/exec")) {  // HTTPS
                 Serial.print("[HTTPS] POST...\r\n");
                 https.addHeader("Content-Type", "application/json");             //Specify content-type header
                 // start connection and send HTTP header
@@ -141,8 +145,9 @@ void send_secure() {
 
                     // file found at server
                     if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                        String payload = https.getString();
-                        Serial.println(payload);
+                        Serial.println("OK");
+//                        String payload = https.getString();
+//                        Serial.println(payload);
                     }
                 } else {
                     Serial.printf("[HTTPS] GET... failed, error: %s\r\n", https.errorToString(httpCode).c_str());
@@ -150,20 +155,19 @@ void send_secure() {
 
                 https.end();
             } else {
-                Serial.printf("[HTTPS] Unable to connect\r\n");
+                Serial.println("[HTTPS] Unable to connect");
             }
 
             // End extra scoping block
         }
 
-        delete client;
+        // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
+//        delete secure_client;
     } else {
-        Serial.println("Unable to create client");
+        Serial.println("Unable to create secure_client");
     }
 
     Serial.println();
-    Serial.println("Waiting 10s before the next round...");
-    delay(10000);
     j.clear();
-//    FreeRTOS::sleep(10000);  // Otherwise, sleep for 100ms until the scan completes
 }
+#endif

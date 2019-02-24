@@ -75,7 +75,9 @@ void setup() {
 
     tilt_scanner.wait_until_scan_complete();
     http_server.init();
-
+#ifdef USE_SECURE_GSCRIPTS
+    prep_send_secure();
+#endif
 }
 
 
@@ -99,6 +101,7 @@ void loop() {
 
         if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
 
+            tilt_scanner.wait_until_scan_complete();
             send_to_fermentrack();
             send_secure();
 
