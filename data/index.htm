@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>TiltBridge</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <style>
+        body {padding-top: 5rem; padding-bottom: 5rem;}
+
+        @media (min-width: 576px) {
+            .sm-padded {
+                padding: 0.75rem 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="/">TiltBridge</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Settings</a>
+            </li>
+
+
+
+
+        </ul>
+
+    </div>
+</nav>
+
+<main role="main" class="container">
+
+    <h4>Available Tilts</h4>
+
+    <!-- Start vue Sensor container -->
+    <div id="gravapp">
+        <div class="row">
+            <!-- Start vue Sensor loop div -->
+            <div class="col-12 col-sm-6 sm-padded" v-for="sensor in sensors">
+                <!-- Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">{{sensor.color}}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Google Sheets: testbeer</h6>
+                    </div>
+
+                    <!-- GravitySensor Line -->
+                    <div class="row">
+                        <div class="col-sm-6 d-flex flex-column text-center">
+                            <div class="p-2 h3">Gravity</div><div class="p-2">{{sensor.gravity | numeral('0.000')}}</div>
+                        </div>
+                        <div class="col-sm-6 d-flex flex-column text-center">
+                            <div class="p-2 h3">Temp</div><div class="p-2 text-center">{{sensor.temp}}&deg; F</div>
+                        </div>
+                    </div>
+                    <!-- End GravitySensor Line -->
+
+                </div>
+                <!-- End Card -->
+            </div> <!-- End vue Sensor loop div -->
+        </div>
+    </div> <!-- End vue application container -->
+
+
+</main>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-numeral-filter/dist/vue-numeral-filter.min.js" crossorigin="anonymous"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#gravapp',
+        data: {
+            sensors: []
+        },
+        mounted: function () {
+            this.getSensors();
+            window.setInterval(() => {
+                this.getSensors()
+            }, 10000)  // Extending the delay as we don't update that often
+        },
+        methods: {
+            getSensors: function() {
+                var xhr = new XMLHttpRequest();
+                var self = this;
+                xhr.open('GET', '/json/');
+                xhr.onload = function () {
+                    self.fullDict = JSON.parse(xhr.responseText);
+                    self.sensors = [];
+                    Object.keys(self.fullDict).forEach(function(key) {
+                        self.sensors.push(self.fullDict[key]);
+                    });
+                    //console.log(self.fullDict);
+                    //console.log(self.sensors);
+                };
+                xhr.send()
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

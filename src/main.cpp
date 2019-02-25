@@ -103,7 +103,9 @@ void loop() {
 
             tilt_scanner.wait_until_scan_complete();
             send_to_fermentrack();
+#ifdef USE_SECURE_GSCRIPTS
             send_secure();
+#endif
 
             trigger_next_data_send = xTaskGetTickCount() + 10000;
         }
