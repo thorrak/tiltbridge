@@ -94,6 +94,9 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     // Clear out the display before we start printing to it
     clear();
 
+    // Display the header row
+    print_line("Color", "Gravity", 1);
+
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {

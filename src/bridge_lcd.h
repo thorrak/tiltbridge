@@ -18,7 +18,7 @@
 #endif
 
 
-#define TILTS_PER_PAGE          3
+#define TILTS_PER_PAGE          5  // The actual number is one fewer than this - the first row is used for headers
 
 #define SCREEN_TILT             0
 #define SCREEN_FERMENTRACK      1
