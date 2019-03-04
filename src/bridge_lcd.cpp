@@ -16,10 +16,6 @@ bridge_lcd lcd;
 
 
 bridge_lcd::bridge_lcd() {
-#ifdef LCD_SSD1306
-    oled_display = new SSD1306(0x3c, 21, 22);
-#endif
-
     next_screen_at = 0;
     on_screen = 0;  // Initialize to 0 (AKA screen_tilt)
     tilt_on_page = 0;
@@ -118,8 +114,8 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
     clear();
     //         "**********8888888888   **********8888888888"
-    print_line("To configure, just", "", 1);
-    print_line("connect to this AP:", "", 2);
+    print_line("To configure, connect to", "", 1);
+    print_line("this AP via WiFi:", "", 2);
     print_line("Name:", ap_name, 3);
     print_line("Pass: ", ap_pass, 4);
     display();
@@ -149,6 +145,17 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 void bridge_lcd::init() {
 #ifdef LCD_SSD1306
+    pinMode(16,OUTPUT);
+    // Address, SDA, SCK
+//    oled_display = new SSD1306(0x3c, 21, 22);
+    digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
+    delay(50);
+    digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
+
+    oled_display = new SSD1306(0x3c, 4, 15);
+
+
+
     oled_display->init();
     oled_display->flipScreenVertically();
     oled_display->setFont(ArialMT_Plain_10);

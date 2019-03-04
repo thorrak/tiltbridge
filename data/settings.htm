@@ -1,14 +1,135 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Update Settings</title>
-</head>
-<body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<form action="/settings/update/" method='POST'>Set Fermentrack URL<br>
-<input type='text' name='fermentrackURL' placeholder='http://127.0.0.1/'><br>
-<input type='submit' name='SUBMIT' value='Submit'></form><br>
+    <title>TiltBridge</title>
 
-</body>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+      <style>
+            body {padding-top: 5rem; padding-bottom: 5rem;}
+            
+            @media (min-width: 576px) {
+                .sm-padded {
+                    padding: 0.75rem 1.25rem;
+                }
+            }
+
+      </style>
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="/">TiltBridge</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/settings/">Settings <span class="sr-only">(current)</span></a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+
+    <main role="main" class="container">
+
+    <h4>Update Settings</h4>
+
+
+    <div class="card">
+        <div class="card-header">
+            TiltBridge Settings
+        </div>
+        <div class="card-body">
+            <p class="card-text">These settings apply to the TiltBridge as a whole</p>
+                <form action="/settings/update/" method="POST">
+        <div class="form-group row">
+            <label for="mdnsID" class="col-sm-2 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="mdnsID" placeholder="tiltbridge">
+            </div>
+            <div class="col-sm-1"><button type="submit" class="btn btn-primary">Update</button></div>
+        </div>
+    </form>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Fermentrack Target
+        </div>
+        <div class="card-body">
+            <p class="card-text">These settings control how TiltBridge talks to Fermentrack. To disable pushing to Fermentrack, delete the Fermentrack URL.</p>
+                <form action="/settings/update/" method="POST">
+        <div class="form-group row">
+            <label for="fermentrackURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target Fermentrack tiltbridge URL. Delete to disable pushing to Fermentrack">Fermentrack URL</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/">
+            </div>
+            <div class="col-sm-1"><button type="submit" class="btn btn-primary">Update</button></div>
+        </div>
+    </form>
+
+                <form action="/settings/update/" method="POST">
+        <div class="form-group row">
+            <label for="fermentrackPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Fermentrack">Push Frequency</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="fermentrackPushEvery" placeholder="30">
+            </div>
+            <div class="col-sm-1"><button type="submit" class="btn btn-primary">Update</button></div>
+        </div>
+    </form>
+
+                <form action="/settings/update/" method="POST">
+        <div class="form-group row">
+            <label for="fermentrackToken" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Token to be provided to Fermentrack to identify this tiltbridge">Fermentrack Token</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="fermentrackToken" placeholder="tiltbridge">
+            </div>
+            <div class="col-sm-1"><button type="submit" class="btn btn-primary">Update</button></div>
+        </div>
+    </form>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+    </main>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.js"></script>
+    
+<script>
+
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+
+</script>
+
+
+
+  </body>
 </html>

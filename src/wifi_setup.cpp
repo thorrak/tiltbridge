@@ -18,6 +18,9 @@ using json = nlohmann::json;
 //#include "bridge_lcd.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 //const char* modes[] = { "NULL", "STA", "AP", "STA+AP" };
+#include <ESPmDNS.h>
+#include <WiFiClient.h>
+
 
 
 bool shouldSaveConfig = false;
@@ -75,9 +78,9 @@ void init_wifi() {
     WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
     wifiManager.addParameter(&custom_mdns_name);
 
-    std::string fermentrack_url = app_config.config["fermentrackURL"];
-    WiFiManagerParameter custom_fermentrack_url("ferm_url", "Fermentrack Target URL", fermentrack_url.c_str(), 128);
-    wifiManager.addParameter(&custom_fermentrack_url);
+    std::string password = app_config.config["password"];
+    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
+    wifiManager.addParameter(&custom_password);
 
 
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
@@ -86,7 +89,7 @@ void init_wifi() {
     } else {
         Serial.println("failed to connect and hit timeout");
         lcd.display_wifi_fail_screen();
-        delay(2 * 60 * 1000);
+        delay(1 * 60 * 1000);
         ESP.restart();
         // TODO - Determine if we should hang here, force restart, or what.
     }
@@ -97,6 +100,7 @@ void init_wifi() {
         // If the mDNS name is valid, save it.
         if (isValidmDNSName(custom_mdns_name.getValue())) {
             app_config.config["mdnsID"] = custom_mdns_name.getValue();
+            mdns_id = app_config.config["mdnsID"];
         } else {
             // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
             // TODO - add an LCD error message here maybe
@@ -105,9 +109,17 @@ void init_wifi() {
             ESP.restart();
         }
 
-        app_config.config["fermentrackURL"] = custom_fermentrack_url.getValue();
+        // TODO - Validate the password
+        app_config.config["password"] = custom_password.getValue();
         app_config.save();
     }
+
+    if (!MDNS.begin(mdns_id.c_str())) {
+        Serial.println("Error setting up MDNS responder!");
+    }
+    Serial.println("mDNS responder started");
+    MDNS.addService("http", "tcp", 80);  // technically we should wait on this, but I'm impatient.
+
 #endif
 }
 

@@ -23,7 +23,8 @@ void jsonConfigHandler::initialize() {
             {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
             {"fermentrackPushEvery", 30},
             {"fermentrackToken", "tiltbridge"},
-            {"mdnsID", "tiltbridge"}
+            {"mdnsID", "tiltbridge"},
+            {"password", "password"}
     };
 
 
