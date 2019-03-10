@@ -57,7 +57,7 @@ bool isValidmDNSName(String mdns_name) {
 
 
 void init_wifi() {
-#ifndef OPTIONAL_WIFI
+
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
     wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
     //reset settings - for testing
@@ -119,7 +119,17 @@ void init_wifi() {
     }
     Serial.println("mDNS responder started");
     MDNS.addService("http", "tcp", 80);  // technically we should wait on this, but I'm impatient.
+    MDNS.addService("tiltbridge", "tcp", 80);  // for lookups
 
-#endif
+    // Display a screen so the user can see how to access the Tiltbridge
+    String mdns_url = String("http://");
+    mdns_url = mdns_url + mdns_id.c_str();
+    mdns_url = mdns_url + ".local/";
+    String ip_address_url = String("http://");
+    ip_address_url = ip_address_url + WiFi.localIP().toString();
+    ip_address_url.concat("/");
+
+    lcd.display_wifi_success_screen(mdns_url, ip_address_url);
+    delay(5000);
 }
 

@@ -131,6 +131,15 @@ void bridge_lcd::display_wifi_fail_screen() {
     display();
 }
 
+void bridge_lcd::display_wifi_success_screen(String mdns_url, String ip_address_url) {
+    //    "**********8888888888 **********8888888888"
+    clear();
+    print_line("Access your TiltBridge at:", "", 1);
+    print_line(mdns_url, "", 2);
+    print_line(ip_address_url, "", 3);
+    display();
+}
+
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10];
@@ -145,16 +154,19 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 void bridge_lcd::init() {
 #ifdef LCD_SSD1306
-    pinMode(16,OUTPUT);
     // Address, SDA, SCK
-//    oled_display = new SSD1306(0x3c, 21, 22);
-    digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
-    delay(50);
-    digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
+    // This is the TiltBridge "sleeve"
+    oled_display = new SSD1306(0x3c, 21, 22);
 
-    oled_display = new SSD1306(0x3c, 4, 15);
+    // For the "TTGO" style OLED shields, you have to power a pin to run the backlight.
+//    pinMode(16,OUTPUT);
+//    digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
+//    delay(50);
+//    digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
+//    oled_display = new SSD1306(0x3c, 4, 15);
 
-
+    // This is the ESP32 "OLED" board
+//    oled_display = new SSD1306(0x3c, 5, 4);
 
     oled_display->init();
     oled_display->flipScreenVertically();

@@ -8,6 +8,4 @@
 
 void init_wifi();
 
-//#define OPTIONAL_WIFI 1  // Disables the WiFi connection requirement (for testing)
-
 #endif //TILTBRIDGE_WIFI_SETUP_H

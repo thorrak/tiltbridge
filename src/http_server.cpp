@@ -40,7 +40,12 @@ bool is_authentified() {
             Serial.println("Authentification Successful");
             return true;
         }
+    } else if (server.hasArg("PASSWORD")) {
+
     }
+
+
+
     Serial.println("Authentification Failed");
     return false;
 }
