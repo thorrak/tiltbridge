@@ -116,23 +116,82 @@ void handleLogin() {
 //    server.send(200, "text/html", content);
 //}
 
+inline bool isInteger(const std::string & s)
+{
+    if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+    char * p;
+    strtol(s.c_str(), &p, 10);
+
+    return (*p == 0);
+}
+
 // This is to simplify the redirects in processConfig
 void redirectToConfig() {
+    // TODO - Disable this
+    Serial.println(app_config.config.dump().c_str());
+
     server.sendHeader("Location", "/settings/");
     server.sendHeader("Cache-Control", "no-cache");
     server.send(301);
 }
 
+void processConfigError() {
+    Serial.println("processConfigError!");
+    redirectToConfig();
+}
+
 void processConfig() {
 
     Serial.println("Entered processConfig");
+
+    if (server.hasArg("mdnsID")) {
+        Serial.println("Has mdnsID");
+        if (server.arg("mdnsID").length() > 30)
+            processConfigError();
+        else if (server.arg("mdnsID").length() < 3)
+            processConfigError();
+        else
+            app_config.config["mdnsID"] = server.arg("mdnsID").c_str();
+        Serial.println("Updated mdnsID");
+    }
+
     if (server.hasArg("fermentrackURL")) {
         Serial.println("Has fermentrackURL");
-        app_config.config["fermentrackURL"] = server.arg("fermentrackURL").c_str();
+        if (server.arg("fermentrackURL").length() > 255)
+            processConfigError();
+        else if (server.arg("fermentrackURL").length() < 12)
+            app_config.config["fermentrackURL"] = "";
+        else
+            app_config.config["fermentrackURL"] = server.arg("fermentrackURL").c_str();
         Serial.println("Updated fermentrackURL");
-        Serial.println(app_config.config.dump().c_str());
-        redirectToConfig();
     }
+
+    if (server.hasArg("fermentrackPushEvery")) {
+        Serial.println("Has fermentrackPushEvery");
+        if (server.arg("fermentrackPushEvery").length() > 5)
+            processConfigError();
+        else if (server.arg("fermentrackPushEvery").length() <= 0)
+            processConfigError();
+        else if (!isInteger(server.arg("fermentrackPushEvery"))) {
+            Serial.println("fermentrackPushEvery is not a string!");
+            processConfigError();
+        } else
+            app_config.config["fermentrackPushEvery"] = std::stoi (server.arg("fermentrackPushEvery"), nullptr, 10);
+        Serial.println("Updated fermentrackPushEvery");
+    }
+
+    if (server.hasArg("fermentrackToken")) {
+        Serial.println("Has fermentrackToken");
+        if (server.arg("fermentrackToken").length() > 255)
+            processConfigError();
+        else if (server.arg("fermentrackToken").length() < 12)
+            app_config.config["fermentrackToken"] = "";
+        else
+            app_config.config["fermentrackToken"] = server.arg("fermentrackToken").c_str();
+        Serial.println("Updated fermentrackToken");
+    }
+
 
     redirectToConfig();
 }
