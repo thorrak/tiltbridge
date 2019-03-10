@@ -116,12 +116,13 @@ void handleLogin() {
 //    server.send(200, "text/html", content);
 //}
 
-inline bool isInteger(const std::string & s)
+inline bool isInteger(const char*  s)
 {
-    if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+    // TODO - Fix this
+    if(strlen(s) <= 0 || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
 
     char * p;
-    strtol(s.c_str(), &p, 10);
+    strtol(s, &p, 10);
 
     return (*p == 0);
 }
@@ -141,58 +142,133 @@ void processConfigError() {
     redirectToConfig();
 }
 
+
+bool processSheetName(const char* varName, const char* colorName) {
+    if (server.hasArg(varName)) {
+        if (server.arg(varName).length() > 64) {
+            processConfigError();
+            return false;
+        } else if (server.arg(varName).length() < 1) {
+            app_config.config[varName] = "";
+            return true;
+        } else {
+            app_config.config[varName] = server.arg(varName).c_str();
+            return true;
+        }
+    }
+    // True or false is error state - not if it was processed
+    return true;
+}
+
 void processConfig() {
 
     Serial.println("Entered processConfig");
 
+    // Generic TiltBridge Settings
     if (server.hasArg("mdnsID")) {
-        Serial.println("Has mdnsID");
         if (server.arg("mdnsID").length() > 30)
-            processConfigError();
+            return processConfigError();
         else if (server.arg("mdnsID").length() < 3)
-            processConfigError();
+            return processConfigError();
         else
             app_config.config["mdnsID"] = server.arg("mdnsID").c_str();
-        Serial.println("Updated mdnsID");
     }
 
+
+    // Fermentrack Settings
     if (server.hasArg("fermentrackURL")) {
-        Serial.println("Has fermentrackURL");
         if (server.arg("fermentrackURL").length() > 255)
-            processConfigError();
+            return processConfigError();
         else if (server.arg("fermentrackURL").length() < 12)
             app_config.config["fermentrackURL"] = "";
         else
             app_config.config["fermentrackURL"] = server.arg("fermentrackURL").c_str();
-        Serial.println("Updated fermentrackURL");
     }
 
     if (server.hasArg("fermentrackPushEvery")) {
         Serial.println("Has fermentrackPushEvery");
         if (server.arg("fermentrackPushEvery").length() > 5)
-            processConfigError();
+            return processConfigError();
         else if (server.arg("fermentrackPushEvery").length() <= 0)
-            processConfigError();
-        else if (!isInteger(server.arg("fermentrackPushEvery"))) {
-            Serial.println("fermentrackPushEvery is not a string!");
-            processConfigError();
-        } else
-            app_config.config["fermentrackPushEvery"] = std::stoi (server.arg("fermentrackPushEvery"), nullptr, 10);
+            return processConfigError();
+        else if (!isInteger(server.arg("fermentrackPushEvery").c_str())) {
+            Serial.println("fermentrackPushEvery is not an integer!");
+            return processConfigError();
+        }
+
+        // At this point, we know that it's an integer. Let's convert to a long so we can test the value
+        // TODO - Figure out if we want to print error messages for these
+        long push_every = strtol(server.arg("fermentrackPushEvery").c_str(), nullptr, 10);
+        if(push_every < 30)
+            app_config.config["fermentrackPushEvery"] = 30;
+        else if(push_every > 60*60)
+            app_config.config["fermentrackPushEvery"] = 60*60;
+        else
+            app_config.config["fermentrackPushEvery"] = push_every;
         Serial.println("Updated fermentrackPushEvery");
     }
 
     if (server.hasArg("fermentrackToken")) {
-        Serial.println("Has fermentrackToken");
         if (server.arg("fermentrackToken").length() > 255)
-            processConfigError();
-        else if (server.arg("fermentrackToken").length() < 12)
+            return processConfigError();
+        else if (server.arg("fermentrackToken").length() < 1)
             app_config.config["fermentrackToken"] = "";
         else
             app_config.config["fermentrackToken"] = server.arg("fermentrackToken").c_str();
-        Serial.println("Updated fermentrackToken");
     }
 
 
+    // Google Sheets Settings
+    if (server.hasArg("scriptsURL")) {
+        // TODO - Validate this begins with "https://scripts.google.com/"
+        if (server.arg("scriptsURL").length() > 255)
+            return processConfigError();
+        else if (server.arg("scriptsURL").length() < 12)
+            app_config.config["scriptsURL"] = "";
+        else
+            app_config.config["scriptsURL"] = server.arg("scriptsURL").c_str();
+    }
+
+    if (server.hasArg("scriptsEmail")) {
+        if (server.arg("scriptsEmail").length() > 255)
+            return processConfigError();
+        else if (server.arg("scriptsEmail").length() < 7)
+            app_config.config["scriptsEmail"] = "";
+        else
+            app_config.config["scriptsEmail"] = server.arg("scriptsEmail").c_str();
+    }
+
+
+    // Individual Google Sheets Beer Log Names
+    if (!processSheetName("sheetName_red", "Red"))
+        return;
+    if (!processSheetName("sheetName_green", "Green"))
+        return;
+    if (!processSheetName("sheetName_black", "Black"))
+        return;
+    if (!processSheetName("sheetName_purple", "Purple"))
+        return;
+    if (!processSheetName("sheetName_orange", "Orange"))
+        return;
+    if (!processSheetName("sheetName_blue", "Blue"))
+        return;
+    if (!processSheetName("sheetName_yellow", "Yellow"))
+        return;
+    if (!processSheetName("sheetName_pink", "Pink"))
+        return;
+
+    // Brewers Friend Setting
+    if (server.hasArg("brewersFriendKey")) {
+        if (server.arg("brewersFriendKey").length() > 255)
+            return processConfigError();
+        else if (server.arg("brewersFriendKey").length() < 7)
+            app_config.config["brewersFriendKey"] = "";
+        else
+            app_config.config["brewersFriendKey"] = server.arg("brewersFriendKey").c_str();
+    }
+
+    // If we made it this far, one or more settings were updated. Save.
+    app_config.save();
     redirectToConfig();
 }
 
@@ -249,33 +325,29 @@ void http_json() {
 
 // settings_json is intended to be used to build the "Change Settings" page
 void settings_json() {
-    // TODO - Determine if I want to shift this to be inline
+    // TODO - Determine if I want to remove allow-origin
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", app_config.config.dump().c_str());
 }
 
-//no need authentification
+
 void handleNotFound() {
     String message = "File Not Found\n\n";
-    message += "URI: ";
-    message += server.uri();
-    message += "\nMethod: ";
-    message += (server.method() == HTTP_GET) ? "GET" : "POST";
-    message += "\nArguments: ";
-    message += server.args();
-    message += "\n";
-    for (uint8_t i = 0; i < server.args(); i++) {
-        message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-    }
+//    message += "URI: ";
+//    message += server.uri();
+//    message += "\nMethod: ";
+//    message += (server.method() == HTTP_GET) ? "GET" : "POST";
+//    message += "\nArguments: ";
+//    message += server.args();
+//    message += "\n";
+//    for (uint8_t i = 0; i < server.args(); i++) {
+//        message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+//    }
     server.send(404, "text/plain", message);
 }
 
 
 void httpServer::init(){
-    Serial.println("");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-
     server.on("/", root_from_spiffs);
     server.on("/settings/", settings_from_spiffs);
     server.on("/settings/update/", processConfig);

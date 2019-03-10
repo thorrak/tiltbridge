@@ -60,7 +60,7 @@
                             <div class="form-group row">
                                 <label for="mdnsID" class="col-sm-2 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
+                                    <input type="text" class="form-control" name="mdnsID" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -87,7 +87,7 @@
                             <div class="form-group row">
                                 <label for="fermentrackURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target Fermentrack tiltbridge URL. Delete to disable pushing to Fermentrack">Fermentrack URL</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/" :value="settings.fermentrackURL">
+                                    <input type="text" class="form-control" name="fermentrackURL" id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/" :value="settings.fermentrackURL">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -97,7 +97,7 @@
                             <div class="form-group row">
                                 <label for="fermentrackPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Fermentrack">Push Frequency</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="fermentrackPushEvery" placeholder="30" :value="settings.fermentrackPushEvery">
+                                    <input type="text" class="form-control" name="fermentrackPushEvery" id="fermentrackPushEvery" placeholder="30" :value="settings.fermentrackPushEvery">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -107,7 +107,7 @@
                             <div class="form-group row">
                                 <label for="fermentrackToken" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Token to be provided to Fermentrack to identify this tiltbridge">Fermentrack Token</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="fermentrackToken" placeholder="tiltbridge" :value="settings.fermentrackToken">
+                                    <input type="text" class="form-control" name="fermentrackToken" id="fermentrackToken" placeholder="tiltbridge" :value="settings.fermentrackToken">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -135,7 +135,7 @@
                             <div class="form-group row">
                                 <label for="scriptsUrl" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google Script URL</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="scriptsUrl" placeholder="https://sheets.google.com/.../" :value="settings.scriptsUrl">
+                                    <input type="text" class="form-control" name="scriptsUrl" id="scriptsUrl" placeholder="https://sheets.google.com/.../" :value="settings.scriptsUrl">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -145,7 +145,7 @@
                             <div class="form-group row">
                                 <label for="scriptsEmail" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The Google Scripts email address associated with your deployment of the Tilt logging script">Google Script Email</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="scriptsEmail" placeholder="you@gmail.com" :value="settings.scriptsEmail">
+                                    <input type="text" class="form-control" name="scriptsEmail" id="scriptsEmail" placeholder="you@gmail.com" :value="settings.scriptsEmail">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -155,7 +155,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_red" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the red Tilt will be written">Red Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_red" placeholder="BeerName" :value="settings.sheetName_red">
+                                    <input type="text" class="form-control" name="sheetName_red" id="sheetName_red" placeholder="BeerName" :value="settings.sheetName_red">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -165,7 +165,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_green" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the green Tilt will be written">Green Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_green" placeholder="BeerName" :value="settings.sheetName_green">
+                                    <input type="text" class="form-control" name="sheetName_green" id="sheetName_green" placeholder="BeerName" :value="settings.sheetName_green">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -175,7 +175,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_black" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the black Tilt will be written">Black Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_black" placeholder="BeerName" :value="settings.sheetName_black">
+                                    <input type="text" class="form-control" name="sheetName_black" id="sheetName_black" placeholder="BeerName" :value="settings.sheetName_black">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -185,7 +185,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_purple" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the purple Tilt will be written">Purple Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_purple" placeholder="BeerName" :value="settings.sheetName_purple">
+                                    <input type="text" class="form-control" name="sheetName_purple" id="sheetName_purple" placeholder="BeerName" :value="settings.sheetName_purple">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -195,7 +195,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_orange" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the orange Tilt will be written">Orange Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_orange" placeholder="BeerName" :value="settings.sheetName_orange">
+                                    <input type="text" class="form-control" name="sheetName_orange" id="sheetName_orange" placeholder="BeerName" :value="settings.sheetName_orange">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -205,7 +205,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_blue" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the blue Tilt will be written">Blue Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_blue" placeholder="BeerName" :value="settings.sheetName_blue">
+                                    <input type="text" class="form-control" name="sheetName_blue" id="sheetName_blue" placeholder="BeerName" :value="settings.sheetName_blue">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -215,7 +215,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_yellow" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the yellow Tilt will be written">Yellow Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_yellow" placeholder="BeerName" :value="settings.sheetName_yellow">
+                                    <input type="text" class="form-control" name="sheetName_yellow" id="sheetName_yellow" placeholder="BeerName" :value="settings.sheetName_yellow">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -225,7 +225,7 @@
                             <div class="form-group row">
                                 <label for="sheetName_pink" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the pink Tilt will be written">Pink Tilt Sheet Name</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="sheetName_pink" placeholder="BeerName" :value="settings.sheetName_pink">
+                                    <input type="text" class="form-control" name="sheetName_pink" id="sheetName_pink" placeholder="BeerName" :value="settings.sheetName_pink">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -253,7 +253,7 @@
                             <div class="form-group row">
                                 <label for="brewersFriendKey" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Your Brewers Friend API key">Brewers Friend API Key</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" id="brewersFriendKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewersFriendKey">
+                                    <input type="text" class="form-control" name="brewersFriendKey" id="brewersFriendKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewersFriendKey">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
@@ -264,6 +264,7 @@
             </div>
         </div>
     </div>
+
 
 
 </main>
@@ -290,7 +291,7 @@
             getSettings: function() {
                 var xhr = new XMLHttpRequest();
                 var self = this;
-                xhr.open('GET', 'http://192.168.5.159/settings/json/');
+                xhr.open('GET', '/settings/json/');
                 xhr.onload = function () {
                     self.settings = JSON.parse(xhr.responseText);
                 };
