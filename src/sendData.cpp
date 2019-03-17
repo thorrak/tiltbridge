@@ -49,10 +49,18 @@ const char* rootCACertificate = \
 "-----END CERTIFICATE-----\n";
 #endif
 
+
+
+dataSendHandler::dataSendHandler () {
+    send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
+    send_to_brewers_friend_at = 50 * 1000; // Trigger the first send to Fermentrack 50 seconds out
+    send_to_google_at =         55 * 1000; // Trigger the first send to Google Sheets 55 seconds out
+}
+
+
 void setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
-    //Serial.print(F("Waiting for NTP time sync: "));
     time_t nowSecs = time(nullptr);
     while (nowSecs < 8 * 3600 * 2) {
         delay(500);
@@ -60,11 +68,8 @@ void setClock() {
         nowSecs = time(nullptr);
     }
 
-    //Serial.println();
     struct tm timeinfo;
     gmtime_r(&nowSecs, &timeinfo);
-    //Serial.print(F("Current time: "));
-    //Serial.println(asctime(&timeinfo));
 }
 
 

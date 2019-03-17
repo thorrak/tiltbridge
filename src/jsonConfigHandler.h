@@ -13,11 +13,9 @@
 class jsonConfigHandler {
 
 public:
-
     void initialize();
     bool save();
     bool load();
-
 
     // Going the lazy route for now, and just enabling public access
     nlohmann::json config;
@@ -28,9 +26,8 @@ private:
     bool read_config_from_spiffs();
     bool spiffs_config_is_valid();
 
-
-
 };
 
+extern jsonConfigHandler app_config;
 
 #endif //TILTBRIDGE_JSONCONFIGHANDLER_H
