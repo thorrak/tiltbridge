@@ -8,6 +8,7 @@
 bridge_lcd lcd;
 
 
+#include <Wire.h>
 #ifdef LCD_SSD1306
 #include <SSD1306.h>
 #endif
@@ -150,23 +151,47 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 
 
+bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
+    byte error;
+
+    Wire.begin(sda_pin, scl_pin);
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0)  // No error means that a device responded
+        return true;
+    else
+        return false;
+}
+
+
+
 /////////// LCD Wrapper Functions
 
 void bridge_lcd::init() {
 #ifdef LCD_SSD1306
-    // Address, SDA, SCK
-    // This is the TiltBridge "sleeve"
-    oled_display = new SSD1306(0x3c, 21, 22);
 
-    // For the "TTGO" style OLED shields, you have to power a pin to run the backlight.
-//    pinMode(16,OUTPUT);
-//    digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
-//    delay(50);
-//    digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
-//    oled_display = new SSD1306(0x3c, 4, 15);
-
-    // This is the ESP32 "OLED" board
-//    oled_display = new SSD1306(0x3c, 5, 4);
+    // We're currently supporting three sets of hardware - The ESP32 "OLED" board, TTGO Boards, and the TiltBridge sleeve
+    if(i2c_device_at_address(0x3c, 5, 4)) {
+        // This is the ESP32 "OLED" board
+        oled_display = new SSD1306(0x3c, 5, 4);
+    } else if(i2c_device_at_address(0x3c, 21, 22)) {
+        // This is the TiltBridge "sleeve"
+        // Address, SDA, SCK
+        oled_display = new SSD1306(0x3c, 21, 22);
+    } else {
+        // For the "TTGO" style OLED shields, you have to power a pin to run the backlight.
+        pinMode(16,OUTPUT);
+        digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
+        delay(50);
+        digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
+        if(i2c_device_at_address(0x3c, 4, 15)) {
+            oled_display = new SSD1306(0x3c, 4, 15);
+        } else {
+            digitalWrite(16, LOW);    // We weren't able to find the TTGO board, so reset the pin
+            oled_display = new SSD1306(0x3c, 21, 22);  // ... and just default to the "sleeve" configuration
+        }
+    }
 
     oled_display->init();
     oled_display->flipScreenVertically();

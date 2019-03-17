@@ -58,6 +58,7 @@ private:
 
     uint64_t next_screen_at;
 
+    bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
 
 };
 
