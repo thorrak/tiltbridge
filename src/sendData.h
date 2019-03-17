@@ -27,8 +27,7 @@ class dataSendHandler {
 public:
     dataSendHandler();
     void init();
-    bool save();
-    bool load();
+    void process();
 
 
 private:
@@ -36,10 +35,13 @@ private:
     uint64_t send_to_brewers_friend_at;
     uint64_t send_to_google_at;
 
+    void setClock();
+    void send_to_fermentrack();
+    void send_to_google();
 
-    bool write_config_to_spiffs();
-    bool read_config_from_spiffs();
-    bool spiffs_config_is_valid();
+#ifdef USE_SECURE_GSCRIPTS
+    void prep_send_secure();
+#endif
 
 };
 

@@ -49,16 +49,16 @@ const char* rootCACertificate = \
 "-----END CERTIFICATE-----\n";
 #endif
 
+dataSendHandler data_sender;  // Global data sender
 
-
-dataSendHandler::dataSendHandler () {
+dataSendHandler::dataSendHandler() {
     send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
-    send_to_brewers_friend_at = 50 * 1000; // Trigger the first send to Fermentrack 50 seconds out
+    send_to_brewers_friend_at = 50 * 1000; // Trigger the first send to Brewer's Friend 50 seconds out
     send_to_google_at =         55 * 1000; // Trigger the first send to Google Sheets 55 seconds out
 }
 
 
-void setClock() {
+void dataSendHandler::setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
     time_t nowSecs = time(nullptr);
@@ -73,8 +73,15 @@ void setClock() {
 }
 
 
+void dataSendHandler::init() {
+    setClock();
+#ifdef USE_SECURE_GSCRIPTS
+    prep_send_secure();
+#endif
+}
 
-void send_to_fermentrack() {
+
+void dataSendHandler::send_to_fermentrack() {
     HTTPClient http;
     nlohmann::json j;
 
@@ -104,8 +111,10 @@ void send_to_fermentrack() {
 //            Serial.println(httpResponseCode);   //Print return code
 //            Serial.println(response);           //Print request answer
         } else {
+#ifdef DEBUG_PRINTS
             Serial.print("Error on sending POST: ");
             Serial.println(httpResponseCode);
+#endif
         }
         http.end();  //Free resources
     }
@@ -116,12 +125,12 @@ void send_to_fermentrack() {
 #ifdef USE_SECURE_GSCRIPTS
 WiFiClientSecure *secure_client;
 
-void prep_send_secure() {
+void dataSendHandler::prep_send_secure() {
     secure_client = new WiFiClientSecure;
     secure_client -> setCACert(rootCACertificate);
 }
 
-void send_secure() {
+void dataSendHandler::send_to_google() {
     nlohmann::json j;
 
     j["Beer"] = "some beer,2";
@@ -175,4 +184,99 @@ void send_secure() {
     Serial.println();
     j.clear();
 }
+#else
+
+void dataSendHandler::send_to_google() {
+    HTTPClient http;
+    nlohmann::json j;
+
+    // There are two configuration options which are mandatory when using the Google Sheets integration
+    if(app_config.config["scriptsURL"].get<std::string>().length() <= 12 || app_config.config["scriptsEmail"].get<std::string>().length() < 7) {
+#ifdef DEBUG_PRINTS
+        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
 #endif
+        return;
+    }
+    
+
+    // This should look like this when sent to the proxy that sends to Google (once per Tilt):
+    // {
+    //   'Beer':         'Key Goes Here',
+    //   'Temp':         65,
+    //   'SG':           1.050,  // This is sent as a float
+    //   'Color':        'Blue',
+    //   'Comment':      '',
+    //   'Email':        'xxx@gmail.com',
+    //   'gscripts_url': 'https://script.google.com/.../',  // This is specific to the proxy
+    // }
+
+    j["Beer"] = "some beer,2";
+    j["Temp"] = 75;  // Always in Fahrenheit
+    j["SG"] = (float) 1.050;
+    j["Color"] = "Blue";
+    j["Comment"] = "";
+    j["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
+    j["gscripts_url"] = app_config.config["scriptsURL"].get<std::string>();
+    
+    if(strlen(j.dump().c_str()) > 5) {
+#ifdef DEBUG_PRINTS
+        Serial.print("Data to send: ");
+        Serial.println(j.dump().c_str());
+#endif
+
+        http.begin("http://www.tiltbridge.com/tiltbridge_google_proxy/");  //Specify destination for HTTP request
+        http.addHeader("Content-Type", "application/json");             //Specify content-type header
+        int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
+
+        if (httpResponseCode > 0) {
+#ifdef DEBUG_PRINTS
+            String response = http.getString();                       //Get the response to the request
+            Serial.println(httpResponseCode);   //Print return code
+            Serial.println(response);           //Print request answer
+        } else {
+            Serial.print("Error on sending POST: ");
+            Serial.println(httpResponseCode);
+#endif
+        }
+        http.end();  //Free resources
+    }
+    j.clear();
+}
+
+#endif
+
+
+
+
+void dataSendHandler::process() {
+    // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
+
+    // Check & send to Fermentrack if necessary
+    if(send_to_fermentrack_at <= xTaskGetTickCount()) {
+        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
+#ifdef DEBUG_PRINTS
+            Serial.printf("Calling send to Fermentrack\r\n");
+#endif
+            // tilt_scanner.wait_until_scan_complete();
+            send_to_fermentrack();
+        }
+        // TODO - Make this use the Fermentrack send delay in the json config
+        send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
+        yield();
+    }
+
+    // Check & send to Google Scripts if necessary
+    if(send_to_google_at <= xTaskGetTickCount()) {
+        if(WiFi.status()== WL_CONNECTED && app_config.config["scriptsURL"].get<std::string>().length() > 12) {
+#ifdef DEBUG_PRINTS
+            Serial.printf("Calling send to Google\r\n");
+#endif
+            // tilt_scanner.wait_until_scan_complete();
+            //send_to_google();
+        }
+        send_to_google_at = xTaskGetTickCount() + 10000;
+        yield();
+    }
+
+
+}

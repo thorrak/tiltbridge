@@ -28,7 +28,9 @@ using json = nlohmann::json;
 #include "sendData.h"
 
 jsonConfigHandler app_config;
+#ifdef DEBUG_PRINTS
 uint64_t trigger_next_data_send = 0;
+#endif
 
 
 #include <driver/i2c.h>
@@ -38,8 +40,6 @@ uint64_t trigger_next_data_send = 0;
 #include <stdio.h>
 #include "sdkconfig.h"
 
-#define SDA_PIN 4
-#define SCL_PIN 15
 
 void setup() {
     Serial.begin(115200);
@@ -63,13 +63,12 @@ void setup() {
     // Handle setting the display up
     lcd.init();  // Intialize the display
 
-//    task_i2cscanner();
-
     Serial.setDebugOutput(false);
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
+#ifdef DEBUG_PRINTS
     Serial.println("WiFi initialized...");
-    setClock();
+#endif
 
     // I kind of want to leave the WiFi info on screen longer here instead of the logo. The logo will display often
     // enough as-is.
@@ -79,15 +78,14 @@ void setup() {
     tilt_scanner.init();
     tilt_scanner.scan();
 
+    data_sender.init();  // Initialize the data sender
+
 #ifdef DEBUG_PRINTS
     Serial.println("Initial scan started, sleeping until scan completes...");
 #endif
 
     tilt_scanner.wait_until_scan_complete();
     http_server.init();
-#ifdef USE_SECURE_GSCRIPTS
-    prep_send_secure();
-#endif
 }
 
 
@@ -96,33 +94,18 @@ void loop() {
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if(tilt_scanner.scan()) {
 #ifdef DEBUG_PRINTS
-        Serial.println("Async scan started...");
+        // Serial.println("Async scan started...");
 #endif
     }
 
-    // trigger_next_data_send is the
-    if(trigger_next_data_send <= xTaskGetTickCount()) {
 #ifdef DEBUG_PRINTS
-        // Every 10 seconds, print some kind of status
+    if(trigger_next_data_send <= xTaskGetTickCount()) {  // Every 10 seconds, print some kind of status
         Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
 //        Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
-#endif
-
-
-        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
-
-            tilt_scanner.wait_until_scan_complete();
-            send_to_fermentrack();
-#ifdef USE_SECURE_GSCRIPTS
-            send_secure();
-#endif
-
-            trigger_next_data_send = xTaskGetTickCount() + 10000;
-        }
-
-
     }
+#endif
 
+    data_sender.process();
     lcd.check_screen();
     http_server.handleClient();
     yield();
