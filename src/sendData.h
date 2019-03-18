@@ -17,7 +17,8 @@ void prep_send_secure();
 // #define USE_SECURE_GSCRIPTS 1  // Allow for direct posting to Google Scripts via HTTPS
 
 
-#define GSCRIPTS_DELAY (5 * 60 * 1000)  // 5 minute delay between pushes to Google Sheets
+
+#define GSCRIPTS_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets
 #define BREWERS_FRIEND_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend
 
 
@@ -38,6 +39,7 @@ private:
     void setClock();
     void send_to_fermentrack();
     void send_to_google();
+    void send_to_brewers_friend();
 
 #ifdef USE_SECURE_GSCRIPTS
     void prep_send_secure();

@@ -55,7 +55,7 @@ void setup() {
     Serial.println(app_config.config.dump().c_str());
     Serial.println("Loading Config...");
 #endif
-//    app_config.load();
+    app_config.load();
 #ifdef DEBUG_PRINTS
     Serial.println(app_config.config.dump().c_str());
 #endif
@@ -101,6 +101,7 @@ void loop() {
 #ifdef DEBUG_PRINTS
     if(trigger_next_data_send <= xTaskGetTickCount()) {  // Every 10 seconds, print some kind of status
         Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
+        trigger_next_data_send = xTaskGetTickCount() + 10000;
 //        Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
     }
 #endif

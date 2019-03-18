@@ -17,9 +17,9 @@ using json = nlohmann::json;
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
-#include <WiFiClientSecure.h>
 
 #ifdef USE_SECURE_GSCRIPTS
+#include <WiFiClientSecure.h>
 // This is the GlobalSign 2021 root cert (the one used by script.google.com)
 // An appropriate root cert can be discovered for any site by running:
 //   openssl s_client -showcerts -connect script.google.com:443 </dev/null'
@@ -189,61 +189,170 @@ void dataSendHandler::send_to_google() {
 void dataSendHandler::send_to_google() {
     HTTPClient http;
     nlohmann::json j;
+    nlohmann::json payload;
 
     // There are two configuration options which are mandatory when using the Google Sheets integration
     if(app_config.config["scriptsURL"].get<std::string>().length() <= 12 || app_config.config["scriptsEmail"].get<std::string>().length() < 7) {
-#ifdef DEBUG_PRINTS
-        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
-#endif
+//#ifdef DEBUG_PRINTS
+//        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
+//#endif
         return;
     }
     
 
     // This should look like this when sent to the proxy that sends to Google (once per Tilt):
     // {
-    //   'Beer':         'Key Goes Here',
-    //   'Temp':         65,
-    //   'SG':           1.050,  // This is sent as a float
-    //   'Color':        'Blue',
-    //   'Comment':      '',
-    //   'Email':        'xxx@gmail.com',
+    //   'payload': {
+    //        'Beer':     'Key Goes Here',
+    //        'Temp':     65,
+    //        'SG':       1.050,  // This is sent as a float
+    //        'Color':    'Blue',
+    //        'Comment':  '',
+    //        'Email':    'xxx@gmail.com',
+    //    },
     //   'gscripts_url': 'https://script.google.com/.../',  // This is specific to the proxy
     // }
 
-    j["Beer"] = "some beer,2";
-    j["Temp"] = 75;  // Always in Fahrenheit
-    j["SG"] = (float) 1.050;
-    j["Color"] = "Blue";
-    j["Comment"] = "";
-    j["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
-    j["gscripts_url"] = app_config.config["scriptsURL"].get<std::string>();
-    
-    if(strlen(j.dump().c_str()) > 5) {
-#ifdef DEBUG_PRINTS
-        Serial.print("Data to send: ");
-        Serial.println(j.dump().c_str());
-#endif
 
-        http.begin("http://www.tiltbridge.com/tiltbridge_google_proxy/");  //Specify destination for HTTP request
-        http.addHeader("Content-Type", "application/json");             //Specify content-type header
-        int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
+    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    for(uint8_t i = 0;i<TILT_COLORS;i++) {
+        if(tilt_scanner.tilt(i)->is_loaded()) {
+            if(tilt_scanner.tilt(i)->gsheets_beer_name().length() <= 0) {
+//#ifdef DEBUG_PRINTS
+//                Serial.print("Tilt has no beer name: ");
+//                Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
+//#endif
+                continue; // If there is no gsheets beer name, we don't know where to log to. Skip this tilt.
+            }
 
-        if (httpResponseCode > 0) {
-#ifdef DEBUG_PRINTS
-            String response = http.getString();                       //Get the response to the request
-            Serial.println(httpResponseCode);   //Print return code
-            Serial.println(response);           //Print request answer
+//#ifdef DEBUG_PRINTS
+//            Serial.print("Tilt loaded with beer name: ");
+//            Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
+//#endif
+
+
+            payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
+            payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
+            payload["SG"] = (float) tilt_scanner.tilt(i)->gravity / 1000;
+            payload["Color"] = tilt_scanner.tilt(i)->color_name();
+            payload["Comment"] = "";
+            payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
+
+            j["gscripts_url"] = app_config.config["scriptsURL"].get<std::string>();
+            j["payload"] = payload;
+
+            if(strlen(j.dump().c_str()) > 5) {
+//#ifdef DEBUG_PRINTS
+//                Serial.print("Data to send: ");
+//                Serial.println(j.dump().c_str());
+//#endif
+
+                http.begin("http://www.tiltbridge.com/tiltbridge_google_proxy/");  //Specify destination for HTTP request
+                http.addHeader("Content-Type", "application/json");             //Specify content-type header
+                int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
+
+                if (httpResponseCode > 0) {
+//#ifdef DEBUG_PRINTS
+//                    String response = http.getString();                       //Get the response to the request
+//                    Serial.println(httpResponseCode);   //Print return code
+//                    Serial.println(response);           //Print request answer
+//                } else {
+//                    Serial.print("Error on sending POST: ");
+//                    Serial.println(httpResponseCode);
+//#endif
+                }
+                http.end();  //Free resources
+            }
+            payload.clear();
+            j.clear();
         } else {
-            Serial.print("Error on sending POST: ");
-            Serial.println(httpResponseCode);
-#endif
+//#ifdef DEBUG_PRINTS
+//        Serial.print("Tilt not loaded: ");
+//        Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
+//#endif
         }
-        http.end();  //Free resources
     }
-    j.clear();
+
 }
 
 #endif
+
+
+void dataSendHandler::send_to_brewers_friend() {
+    HTTPClient http;
+    nlohmann::json j;
+    std::string url;
+
+    // Brewers Friend only requires a single option (API key)
+    if(app_config.config["brewersFriendKey"].get<std::string>().length() <= 12) {
+#ifdef DEBUG_PRINTS
+        Serial.println("brewersFriendKey not populated. Returning.");
+#endif
+        return;
+    }
+
+
+    // This should look like this when sent to the proxy that sends to Brewers Friend (once per Tilt):
+    // {
+    //   'name':     'Key Goes Here',
+    //        'Temp':     65,
+    //        'SG':       1.050,  // This is sent as a float
+    //        'Color':    'Blue',
+    //        'Comment':  '',
+    //        'Email':    'xxx@gmail.com',
+    //   'gscripts_url': 'https://script.google.com/.../',  // This is specific to the proxy
+    // }
+
+
+    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    for(uint8_t i = 0;i<TILT_COLORS;i++) {
+        if(tilt_scanner.tilt(i)->is_loaded()) {
+#ifdef DEBUG_PRINTS
+            Serial.print("Tilt loaded with beer name: ");
+            Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
+#endif
+            j["name"] = tilt_scanner.tilt(i)->color_name();
+            j["temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
+            j["temp_unit"] = "F";
+            j["gravity"] = tilt_scanner.tilt(i)->converted_gravity();
+            j["gravity_unit"] = "G";
+
+
+            if(strlen(j.dump().c_str()) > 5) {
+#ifdef DEBUG_PRINTS
+                Serial.print("Data to send: ");
+                Serial.println(j.dump().c_str());
+#endif
+
+                url = "http://log.brewersfriend.com/stream/" + app_config.config["brewersFriendKey"].get<std::string>();
+
+                http.begin(url.c_str());  //Specify destination for HTTP request
+                http.addHeader("Content-Type", "application/json");             //Specify content-type header
+                http.addHeader("X-API-KEY", app_config.config["brewersFriendKey"].get<std::string>().c_str());  //Specify API key header
+                int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
+
+                if (httpResponseCode > 0) {
+#ifdef DEBUG_PRINTS
+                    String response = http.getString();                       //Get the response to the request
+                    Serial.println(httpResponseCode);   //Print return code
+                    Serial.println(response);           //Print request answer
+                } else {
+                    Serial.print("Error on sending POST: ");
+                    Serial.println(httpResponseCode);
+#endif
+                }
+                http.end();  //Free resources
+            }
+            j.clear();
+        } else {
+#ifdef DEBUG_PRINTS
+            Serial.print("Tilt not loaded: ");
+            Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
+#endif
+        }
+    }
+
+}
 
 
 
@@ -260,7 +369,6 @@ void dataSendHandler::process() {
             // tilt_scanner.wait_until_scan_complete();
             send_to_fermentrack();
         }
-        // TODO - Make this use the Fermentrack send delay in the json config
         send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
         yield();
     }
@@ -272,9 +380,22 @@ void dataSendHandler::process() {
             Serial.printf("Calling send to Google\r\n");
 #endif
             // tilt_scanner.wait_until_scan_complete();
-            //send_to_google();
+            send_to_google();
         }
-        send_to_google_at = xTaskGetTickCount() + 10000;
+        send_to_google_at = xTaskGetTickCount() + GSCRIPTS_DELAY;
+        yield();
+    }
+
+    // Check & send to Brewers Friend if necessary
+    if(send_to_brewers_friend_at <= xTaskGetTickCount()) {
+        if(WiFi.status()== WL_CONNECTED && app_config.config["brewersFriendKey"].get<std::string>().length() > 12) {
+#ifdef DEBUG_PRINTS
+            Serial.printf("Calling send to Brewers Friend\r\n");
+#endif
+            // tilt_scanner.wait_until_scan_complete();
+            send_to_brewers_friend();
+        }
+        send_to_brewers_friend_at = xTaskGetTickCount() + BREWERS_FRIEND_DELAY;
         yield();
     }
 
