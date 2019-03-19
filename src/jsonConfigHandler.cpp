@@ -24,9 +24,8 @@ void jsonConfigHandler::initialize() {
             {"password", "password"},
 
             // Fermentrack Settings
-            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
+            {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},
-            {"fermentrackToken", "tiltbridge"},
 
             // Google Scripts Settings
             {"scriptsURL", ""},

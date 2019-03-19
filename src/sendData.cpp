@@ -53,8 +53,8 @@ dataSendHandler data_sender;  // Global data sender
 
 dataSendHandler::dataSendHandler() {
     send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
-    send_to_brewers_friend_at = 50 * 1000; // Trigger the first send to Brewer's Friend 50 seconds out
-    send_to_google_at =         55 * 1000; // Trigger the first send to Google Sheets 55 seconds out
+    send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
+    send_to_google_at =         65 * 1000; // Trigger the first send to Google Sheets 65 seconds out
 }
 
 
@@ -87,13 +87,13 @@ void dataSendHandler::send_to_fermentrack() {
 
     // This should look like this when sent to Fermentrack:
     // {
-    //   'api_key': 'Key Goes Here',
+    //   'mdns_id': 'mDNS ID Goes Here',
     //   'tilts': {'color': 'Purple', 'temp': 74, 'gravity': 1.043},
     //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
     // }
 
     j["tilts"] = tilt_scanner.tilt_to_json();
-    j["api_key"] = app_config.config["fermentrackToken"].get<std::string>();
+    j["mdns_id"] = app_config.config["mdnsID"].get<std::string>();
 
 
     if(strlen(j.dump().c_str()) > 5) {
@@ -381,8 +381,11 @@ void dataSendHandler::process() {
 #endif
             // tilt_scanner.wait_until_scan_complete();
             send_to_google();
+            send_to_google_at = xTaskGetTickCount() + GSCRIPTS_DELAY;
+        } else {
+            // If the user adds the setting, we want this to kick in within 15 seconds
+            send_to_google_at = xTaskGetTickCount() + 15000;
         }
-        send_to_google_at = xTaskGetTickCount() + GSCRIPTS_DELAY;
         yield();
     }
 
@@ -394,8 +397,11 @@ void dataSendHandler::process() {
 #endif
             // tilt_scanner.wait_until_scan_complete();
             send_to_brewers_friend();
+            send_to_brewers_friend_at = xTaskGetTickCount() + BREWERS_FRIEND_DELAY;
+        } else {
+            // If the user adds the setting, we want this to kick in within 15 seconds
+            send_to_brewers_friend_at = xTaskGetTickCount() + 15000;
         }
-        send_to_brewers_friend_at = xTaskGetTickCount() + BREWERS_FRIEND_DELAY;
         yield();
     }
 

@@ -177,6 +177,7 @@ void processConfig() {
 
     // Fermentrack Settings
     if (server.hasArg("fermentrackURL")) {
+        // TODO - Add a check here to make sure that fermentrackURL actually changed, and return if it didn't
         if (server.arg("fermentrackURL").length() > 255)
             return processConfigError();
         else if (server.arg("fermentrackURL").length() < 12)
@@ -206,15 +207,6 @@ void processConfig() {
         else
             app_config.config["fermentrackPushEvery"] = push_every;
         Serial.println("Updated fermentrackPushEvery");
-    }
-
-    if (server.hasArg("fermentrackToken")) {
-        if (server.arg("fermentrackToken").length() > 255)
-            return processConfigError();
-        else if (server.arg("fermentrackToken").length() < 1)
-            app_config.config["fermentrackToken"] = "";
-        else
-            app_config.config["fermentrackToken"] = server.arg("fermentrackToken").c_str();
     }
 
 

@@ -78,9 +78,9 @@ void init_wifi() {
     WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
     wifiManager.addParameter(&custom_mdns_name);
 
-    std::string password = app_config.config["password"];
-    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
-    wifiManager.addParameter(&custom_password);
+//    std::string password = app_config.config["password"];
+//    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
+//    wifiManager.addParameter(&custom_password);
 
 
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
@@ -109,14 +109,14 @@ void init_wifi() {
             ESP.restart();
         }
 
-        // TODO - Validate the password
-        app_config.config["password"] = custom_password.getValue();
+//        app_config.config["password"] = custom_password.getValue();
         app_config.save();
     }
 
     if (!MDNS.begin(mdns_id.c_str())) {
         Serial.println("Error setting up MDNS responder!");
     }
+
     Serial.println("mDNS responder started");
     MDNS.addService("http", "tcp", 80);  // technically we should wait on this, but I'm impatient.
     MDNS.addService("tiltbridge", "tcp", 80);  // for lookups
