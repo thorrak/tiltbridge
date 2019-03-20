@@ -199,7 +199,7 @@ bool loadFromSpiffs(String path)
     else if (path.endsWith(".zip")) dataType = "application/zip";
 
     File dataFile = SPIFFS.open(path.c_str(), "r");   //open file to read
-    if (!dataFile)  //unsuccesful open
+    if (!dataFile)  //unsuccessful open
     {
         Serial.print("Don't know this command and it's not a file in SPIFFS : ");
         Serial.println(path);

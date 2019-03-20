@@ -10,13 +10,6 @@
 
 WiFiClient client;
 
-// Variables to validate
-// response from S3
-
-// S3 Bucket Config
-String host = "www.tiltbridge.com";
-int port = 80;
-String bin = "/static/firmware.bin"; // bin file name with a slash in front.
 
 // Utility to extract header value from headers
 String getHeaderValue(String header, String headerName) {
@@ -27,13 +20,14 @@ String getHeaderValue(String header, String headerName) {
 void execOTA() {
     int contentLength = 0;
     bool isValidContentType = false;
+    String bin = "/static/firmware.bin"; // bin file name with a slash in front.
 
     // Connect to server
     // client.connect(host, port)
-    if (client.connect(host.c_str(), port)) {
+    if (client.connect("www.tiltbridge.com", 80)) {
         // Connection Succeed - fetch the bin
         client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
+                     "Host: www.tiltbridge.com\r\n" +
                      "Cache-Control: no-cache\r\n" +
                      "Connection: close\r\n\r\n");
 
