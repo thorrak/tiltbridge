@@ -12,12 +12,10 @@ WiFiClient client;
 
 // Variables to validate
 // response from S3
-int contentLength = 0;
-bool isValidContentType = false;
 
 // S3 Bucket Config
-String host = "www.tiltbridge.com"; // Host => bucket-name.s3.region.amazonaws.com
-int port = 80; // Non https. For HTTPS 443. As of today, HTTPS doesn't work.
+String host = "www.tiltbridge.com";
+int port = 80;
 String bin = "/static/firmware.bin"; // bin file name with a slash in front.
 
 // Utility to extract header value from headers
@@ -27,42 +25,30 @@ String getHeaderValue(String header, String headerName) {
 
 // OTA Logic
 void execOTA() {
-    Serial.println("Connecting to: " + String(host));
-    // Connect to S3
-    if (client.connect(host.c_str(), port)) {
-        // Connection Succeed.
-        // Fecthing the bin
-        Serial.println("Fetching Bin: " + String(bin));
+    int contentLength = 0;
+    bool isValidContentType = false;
 
-        // Get the contents of the bin file
+    // Connect to server
+    // client.connect(host, port)
+    if (client.connect(host.c_str(), port)) {
+        // Connection Succeed - fetch the bin
         client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
                      "Host: " + host + "\r\n" +
                      "Cache-Control: no-cache\r\n" +
                      "Connection: close\r\n\r\n");
 
-        // Check what is being sent
-        //    Serial.print(String("GET ") + bin + " HTTP/1.1\r\n" +
-        //                 "Host: " + host + "\r\n" +
-        //                 "Cache-Control: no-cache\r\n" +
-        //                 "Connection: close\r\n\r\n");
-
         unsigned long timeout = millis();
         while (client.available() == 0) {
             if (millis() - timeout > 5000) {
-                Serial.println("Client Timeout !");
                 client.stop();
                 return;
             }
         }
-        // Once the response is available,
-        // check stuff
-
+        // Once the response is available, check it
 
         while (client.available()) {
-            // read line till /n
-            String line = client.readStringUntil('\n');
-            // remove space, to check if the line is end of headers
-            line.trim();
+            String line = client.readStringUntil('\n');            // read line till /n
+            line.trim();            // remove space, to check if the line is end of headers
 
             // if the the line is empty,
             // this is end of headers
@@ -78,7 +64,6 @@ void execOTA() {
             // else break and Exit Update
             if (line.startsWith("HTTP/1.1")) {
                 if (line.indexOf("200") < 0) {
-                    Serial.println("Got a non 200 status code from server. Exiting OTA Update.");
                     break;
                 }
             }
@@ -87,29 +72,19 @@ void execOTA() {
             // Start with content length
             if (line.startsWith("Content-Length: ")) {
                 contentLength = atoi((getHeaderValue(line, "Content-Length: ")).c_str());
-                Serial.println("Got " + String(contentLength) + " bytes from server");
             }
 
             // Next, the content type
             if (line.startsWith("Content-Type: ")) {
-                String contentType = getHeaderValue(line, "Content-Type: ");
-                Serial.println("Got " + contentType + " payload.");
-                if (contentType == "application/octet-stream") {
+//                String contentType = getHeaderValue(line, "Content-Type: ");
+                if (getHeaderValue(line, "Content-Type: ") == "application/octet-stream") {
                     isValidContentType = true;
                 }
             }
         }
     } else {
-        // Connect to S3 failed
-        // May be try?
-        // Probably a choppy network?
-        Serial.println("Connection to " + String(host) + " failed. Please check your setup");
-        // retry??
-        // execOTA();
+        // Connection failed
     }
-
-    // Check what is the contentLength and if content type is `application/octet-stream`
-    Serial.println("contentLength : " + String(contentLength) + ", isValidContentType : " + String(isValidContentType));
 
     // check contentLength and content type
     if (contentLength && isValidContentType) {
@@ -118,39 +93,31 @@ void execOTA() {
 
         // If yes, begin
         if (canBegin) {
-            Serial.println("Begin OTA. This may take 2 - 5 mins to complete. Things might be quite for a while.. Patience!");
-            // No activity would appear on the Serial monitor
-            // So be patient. This may take 2 - 5mins to complete
             size_t written = Update.writeStream(client);
 
-            if (written == contentLength) {
-                Serial.println("Written : " + String(written) + " successfully");
-            } else {
-                Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?" );
-                // retry??
-                // execOTA();
-            }
+//            if (written == contentLength) {
+//                //Succeeded
+//            } else {
+//                // Failed
+//            }
 
             if (Update.end()) {
-                Serial.println("OTA done!");
+                // OTA update finished
                 if (Update.isFinished()) {
-                    Serial.println("Update successfully completed. Rebooting.");
+                    // Succeeded - restart
                     ESP.restart();
                 } else {
-                    Serial.println("Update not finished? Something went wrong!");
+                    // Failed
                 }
             } else {
-                Serial.println("Error Occurred. Error #: " + String(Update.getError()));
+                // Error occured
             }
         } else {
-            // not enough space to begin OTA
-            // Understand the partitions and
-            // space availability
-            Serial.println("Not enough space to begin OTA");
+            // not enough space to begin OTA - check the partition table
             client.flush();
         }
     } else {
-        Serial.println("There was no content in the response");
+//        Serial.println("There was no content in the response");
         client.flush();
     }
 }
