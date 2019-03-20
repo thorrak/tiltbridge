@@ -87,7 +87,6 @@ void init_wifi() {
         WiFi.softAPdisconnect(true);
         WiFi.mode(WIFI_AP_STA);
     } else {
-        Serial.println("failed to connect and hit timeout");
         lcd.display_wifi_fail_screen();
         delay(1 * 60 * 1000);
         ESP.restart();
@@ -114,10 +113,9 @@ void init_wifi() {
     }
 
     if (!MDNS.begin(mdns_id.c_str())) {
-        Serial.println("Error setting up MDNS responder!");
+//        Serial.println("Error setting up MDNS responder!");
     }
 
-    Serial.println("mDNS responder started");
     MDNS.addService("http", "tcp", 80);  // technically we should wait on this, but I'm impatient.
     MDNS.addService("tiltbridge", "tcp", 80);  // for lookups
 

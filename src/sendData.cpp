@@ -15,10 +15,10 @@ using json = nlohmann::json;
 #include <HTTPClient.h>
 
 #include <WiFi.h>
-#include <WiFiMulti.h>
 
 
 #ifdef USE_SECURE_GSCRIPTS
+#include <WiFiMulti.h>
 #include <WiFiClientSecure.h>
 // This is the GlobalSign 2021 root cert (the one used by script.google.com)
 // An appropriate root cert can be discovered for any site by running:

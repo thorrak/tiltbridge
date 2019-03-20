@@ -200,11 +200,7 @@ bool loadFromSpiffs(String path)
 
     File dataFile = SPIFFS.open(path.c_str(), "r");   //open file to read
     if (!dataFile)  //unsuccessful open
-    {
-        Serial.print("Don't know this command and it's not a file in SPIFFS : ");
-        Serial.println(path);
         return false;
-    }
     if (server.hasArg("download")) dataType = "application/octet-stream";
     if (server.streamFile(dataFile, dataType) != dataFile.size()) {}    //a lot happening here
 
@@ -219,6 +215,9 @@ void root_from_spiffs() {
 }
 void settings_from_spiffs() {
     loadFromSpiffs("/settings.htm");
+}
+void about_from_spiffs() {
+    loadFromSpiffs("/about.htm");
 }
 
 void trigger_OTA() {
@@ -254,11 +253,11 @@ void handleNotFound() {
 
 void httpServer::init(){
     server.on("/", root_from_spiffs);
+    server.on("/about/", about_from_spiffs);
     server.on("/settings/", settings_from_spiffs);
     server.on("/settings/update/", processConfig);
 
     server.on("/json/", http_json);
-    server.on("/json_fake/", http_json);
     server.on("/settings/json/", settings_json);
     server.on("/ota/", trigger_OTA);
 
