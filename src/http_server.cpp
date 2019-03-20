@@ -25,98 +25,14 @@ using json = nlohmann::json;
 #include <string>
 #include <iostream>
 
+#include "OTAUpdate.h"
+
 httpServer http_server;
 
 WebServer server(80);
 
-//Check if header is present and correct
-bool is_authentified() {
-    Serial.println("Enter is_authentified");
-    if (server.hasHeader("Cookie")) {
-        Serial.print("Found cookie: ");
-        String cookie = server.header("Cookie");
-        Serial.println(cookie);
-        if (cookie.indexOf("ESPSESSIONID=1") != -1) {
-            Serial.println("Authentification Successful");
-            return true;
-        }
-    } else if (server.hasArg("PASSWORD")) {
 
-    }
-
-
-
-    Serial.println("Authentification Failed");
-    return false;
-}
-
-//login page, also called for disconnect
-void handleLogin() {
-    String msg;
-    if (server.hasHeader("Cookie")) {
-        Serial.print("Found cookie: ");
-        String cookie = server.header("Cookie");
-        Serial.println(cookie);
-    }
-    if (server.hasArg("DISCONNECT")) {
-        Serial.println("Disconnection");
-        server.sendHeader("Location", "/login");
-        server.sendHeader("Cache-Control", "no-cache");
-        server.sendHeader("Set-Cookie", "ESPSESSIONID=0");
-        server.send(301);
-        return;
-    }
-    if (server.hasArg("USERNAME") && server.hasArg("PASSWORD")) {
-        if (server.arg("USERNAME") == "admin" &&  server.arg("PASSWORD") == "admin") {
-            server.sendHeader("Location", "/");
-            server.sendHeader("Cache-Control", "no-cache");
-            server.sendHeader("Set-Cookie", "ESPSESSIONID=1");
-            server.send(301);
-            Serial.println("Log in Successful");
-            return;
-        }
-        msg = "Wrong username/password! try again.";
-        Serial.println("Log in Failed");
-    }
-    String content = "<html><body><form action='/login' method='POST'>To log in, please use : admin/admin<br>";
-    content += "User:<input type='text' name='USERNAME' placeholder='user name'><br>";
-    content += "Password:<input type='password' name='PASSWORD' placeholder='password'><br>";
-    content += "<input type='submit' name='SUBMIT' value='Submit'></form>" + msg + "<br>";
-    content += "You also can go <a href='/inline'>here</a></body></html>";
-    server.send(200, "text/html", content);
-}
-
-
-////root page can be accessed only if authentification is ok
-//void http_root() {
-//    nlohmann::json json_obj;
-//
-//    Serial.println("Enter http_root");
-//
-//    json_obj.clear();
-//    json_obj["tilts"] = tilt_scanner.tilt_to_json();
-//
-//    if(strlen(json_obj.dump().c_str()) > 5) {
-//        Serial.print("http_root data: ");
-//        Serial.println(json_obj.dump().c_str());
-//    } else {
-//        Serial.print("No data to send.");
-//    }
-//
-//    String header;
-//    String content = "<html><body><H2>hello, you successfully connected to esp8266!</H2><br>";
-//    content += "<p>The tilt data we would send is: ";
-//    content += json_obj.dump().c_str();
-//    content += "</p>";
-//
-//    if (server.hasHeader("User-Agent")) {
-//        content += "the user agent used is : " + server.header("User-Agent") + "<br><br>";
-//    }
-//    content += "You can access this page until you <a href=\"/login?DISCONNECT=YES\">disconnect</a></body></html>";
-//    server.send(200, "text/html", content);
-//}
-
-inline bool isInteger(const char*  s)
+inline bool isInteger(const char* s)
 {
     // TODO - Fix this
     if(strlen(s) <= 0 || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
@@ -129,9 +45,6 @@ inline bool isInteger(const char*  s)
 
 // This is to simplify the redirects in processConfig
 void redirectToConfig() {
-    // TODO - Disable this
-    Serial.println(app_config.config.dump().c_str());
-
     server.sendHeader("Location", "/settings/");
     server.sendHeader("Cache-Control", "no-cache");
     server.send(301);
@@ -308,6 +221,15 @@ void settings_from_spiffs() {
     loadFromSpiffs("/settings.htm");
 }
 
+void trigger_OTA() {
+    loadFromSpiffs("/updating.htm");    // Send a message to the user to let them know what is going on
+    app_config.config["update_spiffs"] = true;
+    delay(1000);                        // Wait 1 second to let everything send
+    tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
+    execOTA();                          // Trigger the OTA update
+}
+
+
 void http_json() {
     // I probably don't want this inline so that I can add the Allow-Origin header (in case anyone wants to build
     // scripts that pull this data)
@@ -325,16 +247,6 @@ void settings_json() {
 
 void handleNotFound() {
     String message = "File Not Found\n\n";
-//    message += "URI: ";
-//    message += server.uri();
-//    message += "\nMethod: ";
-//    message += (server.method() == HTTP_GET) ? "GET" : "POST";
-//    message += "\nArguments: ";
-//    message += server.args();
-//    message += "\n";
-//    for (uint8_t i = 0; i < server.args(); i++) {
-//        message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-//    }
     server.send(404, "text/plain", message);
 }
 
@@ -345,13 +257,10 @@ void httpServer::init(){
     server.on("/settings/update/", processConfig);
 
     server.on("/json/", http_json);
+    server.on("/json_fake/", http_json);
     server.on("/settings/json/", settings_json);
-//    server.on("/login", handleLogin);
-//    server.on("/inline", []() {
-//        server.send(200, "text/plain", "this works without need of authentification");
-//    });
+    server.on("/ota/", trigger_OTA);
 
-//    server.onNotFound(handleNotFound);
     server.onNotFound(handleNotFound);
     //here the list of headers to be recorded
 //    const char * headerkeys[] = {"User-Agent", "Cookie"} ;
@@ -359,7 +268,6 @@ void httpServer::init(){
     //ask server to track these headers
 //    server.collectHeaders(headerkeys, headerkeyssize);
     server.begin();
-    Serial.println("HTTP server started");
 }
 
 void httpServer::handleClient(){

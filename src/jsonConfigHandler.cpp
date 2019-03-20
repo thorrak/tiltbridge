@@ -21,7 +21,7 @@ void jsonConfigHandler::initialize() {
     config = {
             // TiltBridge Settings
             {"mdnsID", "tiltbridge"},
-            {"password", "password"},
+            {"update_spiffs", false},
 
             // Fermentrack Settings
             {"fermentrackURL", ""},
