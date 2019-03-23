@@ -7,5 +7,8 @@
 
 
 void init_wifi();
+void initWiFiResetButton();
+void disconnect_from_wifi_and_restart();
+void handle_wifi_reset_presses();
 
 #endif //TILTBRIDGE_WIFI_SETUP_H

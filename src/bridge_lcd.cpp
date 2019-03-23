@@ -141,6 +141,15 @@ void bridge_lcd::display_wifi_success_screen(String mdns_url, String ip_address_
     display();
 }
 
+void bridge_lcd::display_wifi_reset_screen() {
+    //    "**********8888888888 **********8888888888"
+    clear();
+    print_line("Press the button again to", "", 1);
+    print_line("disable autoconnection to", "", 2);
+    print_line("and start the WiFi ", "", 3);
+    print_line("configuration AP.", "", 4);
+    display();
+}
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10];

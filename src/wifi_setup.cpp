@@ -21,9 +21,11 @@ using json = nlohmann::json;
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
 
-
+#define WIFI_RESET_BUTTON_GPIO 0  // Using the "boot" button
+#define WIFI_RESET_DOUBLE_PRESS_TIME 3000  // How long (in ms) the user has to press the wifi reset button a second time
 
 bool shouldSaveConfig = false;
+uint64_t wifi_reset_pressed_at = 0;
 
 //callback notifying us of the need to save config
 void saveConfigCallback() {
@@ -55,6 +57,10 @@ bool isValidmDNSName(String mdns_name) {
 
 
 
+void disconnect_from_wifi_and_restart() {
+    WiFi.disconnect(true, true);
+    ESP.restart();
+}
 
 void init_wifi() {
 
@@ -103,9 +109,7 @@ void init_wifi() {
         } else {
             // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
             // TODO - add an LCD error message here maybe
-            WiFi.disconnect(true);
-            delay(2000);
-            ESP.restart();
+            disconnect_from_wifi_and_restart();
         }
 
 //        app_config.config["password"] = custom_password.getValue();
@@ -131,3 +135,35 @@ void init_wifi() {
     delay(5000);
 }
 
+
+
+// Use the "boot" button present on most of the OLED boards to reset the WiFi configuration allowing for easy
+// transportation between networks
+void IRAM_ATTR wifi_reset_pressed() {
+    // When the reset button is pressed, just log the time & get back to work
+    wifi_reset_pressed_at = xTaskGetTickCount();
+}
+
+void initWiFiResetButton() {
+    pinMode(WIFI_RESET_BUTTON_GPIO, INPUT_PULLUP);
+    attachInterrupt(WIFI_RESET_BUTTON_GPIO, wifi_reset_pressed, RISING);
+}
+
+void disableWiFiResetButton() {
+    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
+}
+
+void handle_wifi_reset_presses() {
+    uint64_t initial_press_at = 0;
+
+    if(wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME) {
+        initial_press_at = wifi_reset_pressed_at; // Cache when the button was first pressed
+        lcd.display_wifi_reset_screen();
+        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+
+        if(wifi_reset_pressed_at != initial_press_at) {
+            // The user pushed the button a second time & caused a second interrupt. Process the reset.
+            disconnect_from_wifi_and_restart();
+        }
+    }
+}

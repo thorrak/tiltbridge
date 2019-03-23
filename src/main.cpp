@@ -66,6 +66,7 @@ void setup() {
     Serial.setDebugOutput(false);
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
+    initWiFiResetButton();
 #ifdef DEBUG_PRINTS
     Serial.println("WiFi initialized...");
 #endif
@@ -80,10 +81,7 @@ void setup() {
 
     data_sender.init();  // Initialize the data sender
 
-#ifdef DEBUG_PRINTS
-    Serial.println("Initial scan started, sleeping until scan completes...");
-#endif
-
+    // Once all this is done, we'll wait until the initial scan completes.
     tilt_scanner.wait_until_scan_complete();
     http_server.init();
 }
@@ -106,6 +104,7 @@ void loop() {
     }
 #endif
 
+    handle_wifi_reset_presses();
     data_sender.process();
     lcd.check_screen();
     http_server.handleClient();
