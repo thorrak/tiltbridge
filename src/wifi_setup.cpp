@@ -65,12 +65,7 @@ void disconnect_from_wifi_and_restart() {
 void init_wifi() {
 
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
-    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
-    //reset settings - for testing
-    //wifiManager.resetSettings();
-
-    //sets timeout until configuration portal gets turned off
-    //useful to make it all retry or go to sleep
+    wifiManager.setDebugOutput(false); // In case we have a serial connection
     wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
 
     // The main purpose of this is to set a boolean value which will allow us to know we
@@ -90,6 +85,7 @@ void init_wifi() {
 
 
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
+        // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
         WiFi.mode(WIFI_AP_STA);
     } else {

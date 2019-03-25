@@ -229,6 +229,13 @@ void trigger_OTA() {
     // TODO - Push a message to the LCD screen
 }
 
+void trigger_wifi_reset() {
+    loadFromSpiffs("/wifi_reset.htm");    // Send a message to the user to let them know what is going on
+    delay(1000);                          // Wait 1 second to let everything send
+    tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
+    handle_wifi_reset_presses();          // Reset the wifi settings
+}
+
 
 void http_json() {
     // I probably don't want this inline so that I can add the Allow-Origin header (in case anyone wants to build
@@ -260,6 +267,7 @@ void httpServer::init(){
     server.on("/json/", http_json);
     server.on("/settings/json/", settings_json);
     server.on("/ota/", trigger_OTA);
+    server.on("/wifi/", trigger_wifi_reset);
 
     server.onNotFound(handleNotFound);
     //here the list of headers to be recorded
