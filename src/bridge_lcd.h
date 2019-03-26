@@ -18,7 +18,7 @@
 #endif
 
 
-#define TILTS_PER_PAGE          3
+#define TILTS_PER_PAGE          5  // The actual number is one fewer than this - the first row is used for headers
 
 #define SCREEN_TILT             0
 #define SCREEN_FERMENTRACK      1
@@ -34,6 +34,8 @@ public:
 
     void display_wifi_connect_screen(String ap_name, String ap_pass);
     void display_wifi_fail_screen();
+    void display_wifi_success_screen(String mdns_url, String ip_address_url);
+    void display_wifi_reset_screen();
 
     void print_line(String left_text, String right_text, uint8_t line);
 
@@ -57,6 +59,7 @@ private:
 
     uint64_t next_screen_at;
 
+    bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
 
 };
 

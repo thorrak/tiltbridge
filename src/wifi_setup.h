@@ -7,7 +7,8 @@
 
 
 void init_wifi();
-
-//#define OPTIONAL_WIFI 1  // Disables the WiFi connection requirement (for testing)
+void initWiFiResetButton();
+void disconnect_from_wifi_and_restart();
+void handle_wifi_reset_presses();
 
 #endif //TILTBRIDGE_WIFI_SETUP_H

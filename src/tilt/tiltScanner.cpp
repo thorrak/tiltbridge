@@ -90,6 +90,8 @@ bool tiltScanner::wait_until_scan_complete() {
     while(m_scan_active)
         FreeRTOS::sleep(100);  // Otherwise, sleep for 100ms until the scan completes
 
+    pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
+
     return true;
 }
 

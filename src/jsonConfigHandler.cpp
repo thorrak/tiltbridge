@@ -14,19 +14,35 @@
 
 
 void jsonConfigHandler::initialize() {
-
-    // SPIFFS.begin() explicitly must not be called in the class constructor (apparently)
+    // SPIFFS.begin() explicitly must not be called in the class constructor
     // https://github.com/espressif/arduino-esp32/issues/831
-    SPIFFS.begin(true);
+//    SPIFFS.begin(true);
 
     config = {
-            {"fermentrackURL", "http://192.168.5.174/tiltbridge/"},
+            // TiltBridge Settings
+            {"mdnsID", "tiltbridge"},
+            {"update_spiffs", false},
+
+            // Fermentrack Settings
+            {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},
-            {"fermentrackToken", "tiltbridge"},
-            {"mdnsID", "tiltbridge"}
+
+            // Google Scripts Settings
+            {"scriptsURL", ""},
+            {"scriptsEmail", ""},
+
+            {"sheetName_red", ""},
+            {"sheetName_green", ""},
+            {"sheetName_black", ""},
+            {"sheetName_purple", ""},
+            {"sheetName_orange", ""},
+            {"sheetName_blue", ""},
+            {"sheetName_yellow", ""},
+            {"sheetName_pink", ""},
+
+            // Brewers Friend Setting(s)
+            {"brewersFriendKey", ""}
     };
-
-
 }
 
 

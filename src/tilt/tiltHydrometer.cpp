@@ -3,6 +3,7 @@
 //
 
 #include "tiltHydrometer.h"
+#include "jsonConfigHandler.h"
 
 
 
@@ -66,6 +67,30 @@ std::string tiltHydrometer::color_name() {
 }
 
 
+std::string tiltHydrometer::gsheets_beer_name() {
+    switch(m_color) {
+        case TILT_COLOR_RED:
+            return app_config.config["sheetName_red"];
+        case TILT_COLOR_GREEN:
+            return app_config.config["sheetName_green"];
+        case TILT_COLOR_BLACK:
+            return app_config.config["sheetName_black"];
+        case TILT_COLOR_PURPLE:
+            return app_config.config["sheetName_purple"];
+        case TILT_COLOR_ORANGE:
+            return app_config.config["sheetName_orange"];
+        case TILT_COLOR_BLUE:
+            return app_config.config["sheetName_blue"];
+        case TILT_COLOR_YELLOW:
+            return app_config.config["sheetName_yellow"];
+        case TILT_COLOR_PINK:
+            return app_config.config["sheetName_pink"];
+        default:
+            return "";
+    }
+}
+
+
 bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     temp = i_temp;
     gravity = i_grav;
@@ -73,14 +98,29 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     return true;
 }
 
+std::string tiltHydrometer::converted_gravity() {
+    // I guarantee there is a better way of doing this conversion, but this works. SG is always 0.000-9.999.
+    int right_of_decimal = gravity % 1000;
+    int left_of_decimal = (gravity - right_of_decimal)/1000;
+
+    std::string output = std::to_string(left_of_decimal) + ".";
+
+    if(right_of_decimal < 100)
+        output += "0";
+    if(right_of_decimal < 10)
+        output += "0";
+    output += std::to_string(right_of_decimal);
+
+    return output;
+}
+
 nlohmann::json tiltHydrometer::to_json() {
     nlohmann::json j;
-    float_t converted_gravity;
-    converted_gravity = (float_t) gravity/1000;
     j = {
             {"color", color_name()},
             {"temp", temp},
-            {"gravity", converted_gravity},
+            {"gravity", converted_gravity()},
+            {"gsheets_name", gsheets_beer_name()},
     };
     return j;
 }
