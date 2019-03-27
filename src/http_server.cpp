@@ -231,7 +231,7 @@ void trigger_wifi_reset() {
     loadFromSpiffs("/wifi_reset.htm");    // Send a message to the user to let them know what is going on
     delay(1000);                          // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    handle_wifi_reset_presses();          // Reset the wifi settings
+    disconnect_from_wifi_and_restart();          // Reset the wifi settings
 }
 
 

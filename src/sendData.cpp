@@ -302,6 +302,7 @@ void dataSendHandler::send_to_brewers_friend() {
             j["temp_unit"] = "F";
             j["gravity"] = tilt_scanner.tilt(i)->converted_gravity();
             j["gravity_unit"] = "G";
+            j["device_source"] = "TiltBridge";
 
 
             if(strlen(j.dump().c_str()) > 5) {
