@@ -8,7 +8,6 @@
 #include "tilt/tiltScanner.h"
 #include <Arduino.h>
 
-#define LCD_SSD1306 1  // TODO - For Testing, delete
 
 #ifdef LCD_SSD1306
 #include <SSD1306.h>
@@ -33,9 +32,9 @@ public:
     void display_logo();
 
     void display_wifi_connect_screen(String ap_name, String ap_pass);
-    void display_wifi_fail_screen();
     void display_wifi_success_screen(String mdns_url, String ip_address_url);
     void display_wifi_reset_screen();
+    void display_ota_update_screen();
 
     void print_line(String left_text, String right_text, uint8_t line);
 

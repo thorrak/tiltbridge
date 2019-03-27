@@ -30,7 +30,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice) {
 //        uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
         tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-#ifdef BLE_PRINT_ALL_DEVICES
+#if defined(BLE_PRINT_ALL_DEVICES) && defined(DEBUG_PRINTS)
         Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
 #endif
     }
@@ -58,7 +58,6 @@ tiltScanner::tiltScanner() {
 void tiltScanner::init() {
     BLEDevice::init("");
     pBLEScan = BLEDevice::getScan(); //create new scan
-//    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), false);
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
     pBLEScan->setInterval(100);
@@ -72,7 +71,7 @@ void tiltScanner::set_scan_active_flag(bool value) {
 
 
 bool tiltScanner::scan() {
-    // Set a flag when we start asynchronously scanning to prevent
+    // Set a flag when we start asynchronously scanning to prevent multiple scans from being launched
     if(!m_scan_active) {
         pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
         pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete);
@@ -88,7 +87,7 @@ bool tiltScanner::wait_until_scan_complete() {
         return false;  // Return false if there wasn't a scan active when this was called
 
     while(m_scan_active)
-        FreeRTOS::sleep(100);  // Otherwise, sleep for 100ms until the scan completes
+        FreeRTOS::sleep(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
 
     pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
 
@@ -121,7 +120,6 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(std::string advert_string_hex) {
     //????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttggggXR
     //**********----------**********----------**********
 
-//    m_part1 = advert_string.substr(0,8);
     m_color = tiltHydrometer::uuid_to_color_no(advert_string.substr(8,32));
 
     if(m_color == TILT_NONE) // We didn't match the uuid to a color (should only happen if new colors are released)

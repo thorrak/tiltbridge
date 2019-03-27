@@ -7,10 +7,6 @@
 
 #include <cstdint>
 
-void setClock();
-void send_to_fermentrack();
-void send_secure();
-void prep_send_secure();
 
 // USE_SECURE_GSCRIPTS is disabled due to memory requirements. For more info, see
 // https://github.com/thorrak/tiltbridge/issues/2
@@ -36,20 +32,18 @@ private:
     uint64_t send_to_brewers_friend_at;
     uint64_t send_to_google_at;
 
+#ifdef USE_SECURE_GSCRIPTS
+    // This is necessary for HTTPS support (which is useless until ESP32 bluetooth support is improved)
     void setClock();
+    void prep_send_secure();
+#endif
+
     void send_to_fermentrack();
     void send_to_google();
     void send_to_brewers_friend();
 
-#ifdef USE_SECURE_GSCRIPTS
-    void prep_send_secure();
-#endif
-
 };
 
 extern dataSendHandler data_sender;
-
-
-
 
 #endif //TILTBRIDGE_SENDDATA_H

@@ -58,6 +58,7 @@ dataSendHandler::dataSendHandler() {
 }
 
 
+#ifdef USE_SECURE_GSCRIPTS
 void dataSendHandler::setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
@@ -71,11 +72,12 @@ void dataSendHandler::setClock() {
     struct tm timeinfo;
     gmtime_r(&nowSecs, &timeinfo);
 }
+#endif
 
 
 void dataSendHandler::init() {
-    setClock();
 #ifdef USE_SECURE_GSCRIPTS
+    setClock();
     prep_send_secure();
 #endif
 }
@@ -218,18 +220,8 @@ void dataSendHandler::send_to_google() {
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
             if(tilt_scanner.tilt(i)->gsheets_beer_name().length() <= 0) {
-//#ifdef DEBUG_PRINTS
-//                Serial.print("Tilt has no beer name: ");
-//                Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
-//#endif
                 continue; // If there is no gsheets beer name, we don't know where to log to. Skip this tilt.
             }
-
-//#ifdef DEBUG_PRINTS
-//            Serial.print("Tilt loaded with beer name: ");
-//            Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
-//#endif
-
 
             payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
             payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
@@ -265,14 +257,8 @@ void dataSendHandler::send_to_google() {
             }
             payload.clear();
             j.clear();
-        } else {
-//#ifdef DEBUG_PRINTS
-//        Serial.print("Tilt not loaded: ");
-//        Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
-//#endif
         }
     }
-
 }
 
 #endif
@@ -344,14 +330,8 @@ void dataSendHandler::send_to_brewers_friend() {
                 http.end();  //Free resources
             }
             j.clear();
-        } else {
-#ifdef DEBUG_PRINTS
-            Serial.print("Tilt not loaded: ");
-            Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
-#endif
         }
     }
-
 }
 
 
@@ -404,6 +384,4 @@ void dataSendHandler::process() {
         }
         yield();
     }
-
-
 }
