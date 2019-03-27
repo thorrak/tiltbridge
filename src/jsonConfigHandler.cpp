@@ -51,11 +51,9 @@ bool jsonConfigHandler::write_config_to_spiffs() {
 
     if (!f) {
         // file open failed
-        Serial.println("Unable to open file with SPIFFS");
         return false;
     } else {
         //Write data to file
-        Serial.println("Writing Data to File");
         f.print(config.dump().c_str());
         f.close();  //Close file
     }
@@ -81,11 +79,6 @@ String fileRead(String name){
     }
 }
 
-bool jsonConfigHandler::spiffs_config_is_valid() {
-    // TODO - Actually make this test for a valid configuration
-    return true;
-}
-
 bool jsonConfigHandler::read_config_from_spiffs() {
     String json_string;
     nlohmann::json loaded_config;
@@ -105,7 +98,6 @@ bool jsonConfigHandler::read_config_from_spiffs() {
         if (config.find(it.key()) != config.end())
             config[it.key()] = it.value();
     }
-
     return true;
 }
 

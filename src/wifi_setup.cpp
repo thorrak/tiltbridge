@@ -5,27 +5,19 @@
 #include "wifi_setup.h"
 
 
-
-
-#include <nlohmann/json.hpp>
-
-// for convenience
-using json = nlohmann::json;
-
-
 #include "tiltBridge.h"
 #include <Arduino.h>
 //#include "bridge_lcd.h"
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-//const char* modes[] = { "NULL", "STA", "AP", "STA+AP" };
+#include <WiFiManager.h>
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
 
 
-
 bool shouldSaveConfig = false;
+uint64_t wifi_reset_pressed_at = 0;
 
 //callback notifying us of the need to save config
+// TODO - This can probably be eliminated
 void saveConfigCallback() {
 //    Serial.println("Should save config");
     shouldSaveConfig = true;
@@ -40,7 +32,6 @@ void configModeCallback(WiFiManager *myWiFiManager) {
 #endif
     // Assuming WIFI_SETUP_AP_PASS here.
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID(), WIFI_SETUP_AP_PASS);
-
 }
 
 // Not sure if this is sufficient to test for validity
@@ -53,18 +44,14 @@ bool isValidmDNSName(String mdns_name) {
     return true;
 }
 
-
-
+void disconnect_from_wifi_and_restart() {
+    WiFi.disconnect(true, true);
+    ESP.restart();
+}
 
 void init_wifi() {
-
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
-    wifiManager.setDebugOutput(false); // In case we have a serial connection to BrewPi
-    //reset settings - for testing
-    //wifiManager.resetSettings();
-
-    //sets timeout until configuration portal gets turned off
-    //useful to make it all retry or go to sleep
+    wifiManager.setDebugOutput(false); // In case we have a serial connection
     wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
 
     // The main purpose of this is to set a boolean value which will allow us to know we
@@ -84,13 +71,13 @@ void init_wifi() {
 
 
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
+        // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
         WiFi.mode(WIFI_AP_STA);
     } else {
-        lcd.display_wifi_fail_screen();
-        delay(1 * 60 * 1000);
+        // If we haven't successfully connected to WiFi, just restart & continue to project the configuration AP.
+        // Alternatively, we can hang here.
         ESP.restart();
-        // TODO - Determine if we should hang here, force restart, or what.
     }
 
     // Alright. We're theoretically connected here.
@@ -103,9 +90,7 @@ void init_wifi() {
         } else {
             // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
             // TODO - add an LCD error message here maybe
-            WiFi.disconnect(true);
-            delay(2000);
-            ESP.restart();
+            disconnect_from_wifi_and_restart();
         }
 
 //        app_config.config["password"] = custom_password.getValue();
@@ -131,3 +116,35 @@ void init_wifi() {
     delay(5000);
 }
 
+
+
+// Use the "boot" button present on most of the OLED boards to reset the WiFi configuration allowing for easy
+// transportation between networks
+void IRAM_ATTR wifi_reset_pressed() {
+    // When the reset button is pressed, just log the time & get back to work
+    wifi_reset_pressed_at = xTaskGetTickCount();
+}
+
+void initWiFiResetButton() {
+    pinMode(WIFI_RESET_BUTTON_GPIO, INPUT_PULLUP);
+    attachInterrupt(WIFI_RESET_BUTTON_GPIO, wifi_reset_pressed, RISING);
+}
+
+//void disableWiFiResetButton() {
+//    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
+//}
+
+void handle_wifi_reset_presses() {
+    uint64_t initial_press_at = 0;
+
+    if(wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME) {
+        initial_press_at = wifi_reset_pressed_at; // Cache when the button was first pressed
+        lcd.display_wifi_reset_screen();
+        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+
+        if(wifi_reset_pressed_at != initial_press_at) {
+            // The user pushed the button a second time & caused a second interrupt. Process the reset.
+            disconnect_from_wifi_and_restart();
+        }
+    }
+}
