@@ -1,6 +1,6 @@
 # TiltBridge
 
-[![Fermentrack Logo](http://www.fermentrack.com/static/img/fermentrack_logo.png "Fermentrack")](http://www.fermentrack.com/)
+[![TiltBridge Logo](http://www.tiltbridge.com/static/img/tiltbridge_logo.png "TiltBridge")](http://www.tiltbridge.com/)
 
 [![Documentation Status](https://readthedocs.org/projects/tiltbridge/badge/?version=master)](http://tiltbridge.readthedocs.io/en/master/?badge=master)
                 

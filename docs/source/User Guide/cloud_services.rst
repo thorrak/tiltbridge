@@ -101,6 +101,7 @@ Following the first data transmission, you can easily check in Brewer's Friend t
 #. In the ``Device Settings`` pane click ``Show All`` (to the right of ``All Brew Sessions``)
 #. All Tilt devices should appear in the list as ``Stream`` devices and will be identified by their color
 
+.. note:: Per Brewer's Friend guidelines, data is only pushed once every 15 minutes. As a result, it may take up to 15 minutes for the device to be created or for the first points to appear.
 
 
 Setting up TiltBridge for Google Sheets
