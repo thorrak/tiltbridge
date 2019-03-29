@@ -91,6 +91,8 @@ bool tiltScanner::wait_until_scan_complete() {
 
     pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
 
+    pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
+
     return true;
 }
 
