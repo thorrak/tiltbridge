@@ -5,29 +5,19 @@
 #include "wifi_setup.h"
 
 
-
-
-#include <nlohmann/json.hpp>
-
-// for convenience
-using json = nlohmann::json;
-
-
 #include "tiltBridge.h"
 #include <Arduino.h>
 //#include "bridge_lcd.h"
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-//const char* modes[] = { "NULL", "STA", "AP", "STA+AP" };
+#include <WiFiManager.h>
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
 
-#define WIFI_RESET_BUTTON_GPIO 0  // Using the "boot" button
-#define WIFI_RESET_DOUBLE_PRESS_TIME 3000  // How long (in ms) the user has to press the wifi reset button a second time
 
 bool shouldSaveConfig = false;
 uint64_t wifi_reset_pressed_at = 0;
 
 //callback notifying us of the need to save config
+// TODO - This can probably be eliminated
 void saveConfigCallback() {
 //    Serial.println("Should save config");
     shouldSaveConfig = true;
@@ -42,7 +32,6 @@ void configModeCallback(WiFiManager *myWiFiManager) {
 #endif
     // Assuming WIFI_SETUP_AP_PASS here.
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID(), WIFI_SETUP_AP_PASS);
-
 }
 
 // Not sure if this is sufficient to test for validity
@@ -55,15 +44,12 @@ bool isValidmDNSName(String mdns_name) {
     return true;
 }
 
-
-
 void disconnect_from_wifi_and_restart() {
     WiFi.disconnect(true, true);
     ESP.restart();
 }
 
 void init_wifi() {
-
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
     wifiManager.setDebugOutput(false); // In case we have a serial connection
     wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
@@ -89,10 +75,9 @@ void init_wifi() {
         WiFi.softAPdisconnect(true);
         WiFi.mode(WIFI_AP_STA);
     } else {
-        lcd.display_wifi_fail_screen();
-        delay(1 * 60 * 1000);
+        // If we haven't successfully connected to WiFi, just restart & continue to project the configuration AP.
+        // Alternatively, we can hang here.
         ESP.restart();
-        // TODO - Determine if we should hang here, force restart, or what.
     }
 
     // Alright. We're theoretically connected here.
@@ -145,9 +130,9 @@ void initWiFiResetButton() {
     attachInterrupt(WIFI_RESET_BUTTON_GPIO, wifi_reset_pressed, RISING);
 }
 
-void disableWiFiResetButton() {
-    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
-}
+//void disableWiFiResetButton() {
+//    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
+//}
 
 void handle_wifi_reset_presses() {
     uint64_t initial_press_at = 0;

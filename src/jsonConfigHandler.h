@@ -24,7 +24,6 @@ public:
 private:
     bool write_config_to_spiffs();
     bool read_config_from_spiffs();
-    bool spiffs_config_is_valid();
 
 };
 
