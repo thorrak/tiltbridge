@@ -23,9 +23,9 @@ of a Raspberry Pi running `Fermentrack`_.
 
 
 #. Install esptool.py using the `instructions here <https://github.com/espressif/esptool#installation--dependencies>`_.
-#. Download all three of the TiltBridge firmware files from `GitHub`_ - tiltbridge-spiffs.bin, tiltbridge.bin, and tiltbridge-partitions.bin
+#. Download all three of the TiltBridge firmware files from `GitHub`_ - spiffs.bin, firmware.bin, and partitions.bin
 #. Connect the ESP32 board to the computer you will be using to flash
-#. Open a command prompt and run the flash command ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0x10000 tiltbridge.bin 0x8000 tiltbridge-partitions.bin 0x3D1000 tiltbridge-spiffs.bin``
+#. Open a command prompt and run the flash command ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0x10000 firmware.bin 0x8000 partitions.bin 0x3D1000 spiffs.bin``
 
 
 Next Steps
