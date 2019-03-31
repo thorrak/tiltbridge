@@ -84,7 +84,6 @@ uint8_t bridge_lcd::display_next() {
 
 
 void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
-
     uint8_t active_tilts = 0;
     uint8_t displayed_tilts = 0;
 
@@ -108,13 +107,12 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 
     // Toggle the actual display
     display();
-
 }
 
 
 void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
+    // This screen is displayed when the user first plugs in an unconfigured TiltBridge
     clear();
-    //         "**********8888888888   **********8888888888"
     print_line("To configure, connect to", "", 1);
     print_line("this AP via WiFi:", "", 2);
     print_line("Name:", ap_name, 3);
@@ -122,18 +120,8 @@ void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
     display();
 }
 
-void bridge_lcd::display_wifi_fail_screen() {
-         //    "**********8888888888 **********8888888888"
-    clear();
-    print_line("Failed to connect.", "", 1);
-    print_line("Restart TiltBridge,", "", 2);
-    print_line("connect to config AP", "", 3);
-    print_line("and try again.", "", 4);
-    display();
-}
-
 void bridge_lcd::display_wifi_success_screen(String mdns_url, String ip_address_url) {
-    //    "**********8888888888 **********8888888888"
+    // This screen is displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
     print_line("Access your TiltBridge at:", "", 1);
     print_line(mdns_url, "", 2);
@@ -142,7 +130,9 @@ void bridge_lcd::display_wifi_success_screen(String mdns_url, String ip_address_
 }
 
 void bridge_lcd::display_wifi_reset_screen() {
-    //    "**********8888888888 **********8888888888"
+    // When the user presses the "boot" switch, this screen appears. If the user presses the boot button a second time
+    // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
+    // configuration AP at startup
     clear();
     print_line("Press the button again to", "", 1);
     print_line("disable autoconnection to", "", 2);
@@ -150,6 +140,19 @@ void bridge_lcd::display_wifi_reset_screen() {
     print_line("configuration AP.", "", 4);
     display();
 }
+
+void bridge_lcd::display_ota_update_screen() {
+    // When the user presses the "boot" switch, this screen appears. If the user presses the boot button a second time
+    // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
+    // configuration AP at startup
+    clear();
+    print_line("The TiltBridge firmware is ", "", 1);
+    print_line("being updated. Please do not", "", 2);
+    print_line("power down or reset your", "", 3);
+    print_line("TiltBridge.", "", 4);
+    display();
+}
+
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10];
@@ -161,6 +164,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 
 bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
+    // This allows us to do LCD autodetection (and by extension, support multiple OLED ESP32 boards
     byte error;
 
     Wire.begin(sda_pin, scl_pin);

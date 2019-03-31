@@ -2,10 +2,6 @@
 // Created by John Beeler on 4/26/18.
 //
 
-//Advertised Device: Name: Tilt, Address: 88:c2:55:ac:26:81, manufacturer data: 4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
-//4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
-//????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttgggg??
-//**********----------**********----------**********
 
 
 #include <nlohmann/json.hpp>
@@ -42,7 +38,10 @@ uint64_t trigger_next_data_send = 0;
 
 
 void setup() {
+#ifdef DEBUG_PRINTS
     Serial.begin(115200);
+    Serial.setDebugOutput(false);
+#endif
 
     // Handle all of the config initialization & loading
 #ifdef DEBUG_PRINTS
@@ -63,13 +62,9 @@ void setup() {
     // Handle setting the display up
     lcd.init();  // Intialize the display
 
-    Serial.setDebugOutput(false);
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
-#ifdef DEBUG_PRINTS
-    Serial.println("WiFi initialized...");
-#endif
 
     // I kind of want to leave the WiFi info on screen longer here instead of the logo. The logo will display often
     // enough as-is.
@@ -91,16 +86,14 @@ void setup() {
 void loop() {
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if(tilt_scanner.scan()) {
-#ifdef DEBUG_PRINTS
-        // Serial.println("Async scan started...");
-#endif
+        // If we need to do anything when a new scan is started, trigger it here.
     }
 
 #ifdef DEBUG_PRINTS
+    // This is optional & just allows us to print the available ram in case of memory leaks.
     if(trigger_next_data_send <= xTaskGetTickCount()) {  // Every 10 seconds, print some kind of status
         Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
         trigger_next_data_send = xTaskGetTickCount() + 10000;
-//        Serial.println(tilt_scanner.tilt_to_json().dump().c_str());
     }
 #endif
 

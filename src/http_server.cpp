@@ -51,7 +51,9 @@ void redirectToConfig() {
 }
 
 void processConfigError() {
+#ifdef DEBUG_PRINTS
     Serial.println("processConfigError!");
+#endif
     redirectToConfig();
 }
 
@@ -74,9 +76,6 @@ bool processSheetName(const char* varName, const char* colorName) {
 }
 
 void processConfig() {
-
-    Serial.println("Entered processConfig");
-
     // Generic TiltBridge Settings
     if (server.hasArg("mdnsID")) {
         if (server.arg("mdnsID").length() > 30)
@@ -184,7 +183,6 @@ void processConfig() {
 bool loadFromSpiffs(String path)
 {
     String dataType = "text/plain";
-//    if (path.endsWith("/")) path += "index.htm"; //this is where index.htm is created
 
     if (path.endsWith(".src")) path = path.substring(0, path.lastIndexOf("."));
     else if (path.endsWith(".htm")) dataType = "text/html";
@@ -227,17 +225,17 @@ void favicon_from_spiffs() {
 void trigger_OTA() {
     loadFromSpiffs("/updating.htm");    // Send a message to the user to let them know what is going on
     app_config.config["update_spiffs"] = true;
+    lcd.display_ota_update_screen();    // Trigger this here while everything else is waiting.
     delay(1000);                        // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     execOTA();                          // Trigger the OTA update
-    // TODO - Push a message to the LCD screen
 }
 
 void trigger_wifi_reset() {
     loadFromSpiffs("/wifi_reset.htm");    // Send a message to the user to let them know what is going on
     delay(1000);                          // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    handle_wifi_reset_presses();          // Reset the wifi settings
+    disconnect_from_wifi_and_restart();          // Reset the wifi settings
 }
 
 
@@ -250,7 +248,7 @@ void http_json() {
 
 // settings_json is intended to be used to build the "Change Settings" page
 void settings_json() {
-    // TODO - Determine if I want to remove allow-origin
+    // Not sure if I want to leave allow-origin here, but for now it's OK.
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", app_config.config.dump().c_str());
 }
@@ -275,11 +273,6 @@ void httpServer::init(){
     server.on("/favicon.ico", favicon_from_spiffs);
 
     server.onNotFound(handleNotFound);
-    //here the list of headers to be recorded
-//    const char * headerkeys[] = {"User-Agent", "Cookie"} ;
-//    size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
-    //ask server to track these headers
-//    server.collectHeaders(headerkeys, headerkeyssize);
     server.begin();
 }
 
