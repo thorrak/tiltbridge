@@ -220,6 +220,10 @@ void about_from_spiffs() {
     loadFromSpiffs("/about.htm");
 }
 
+void favicon_from_spiffs() {
+    loadFromSpiffs("/favicon.ico");
+}
+
 void trigger_OTA() {
     loadFromSpiffs("/updating.htm");    // Send a message to the user to let them know what is going on
     app_config.config["update_spiffs"] = true;
@@ -268,6 +272,7 @@ void httpServer::init(){
     server.on("/settings/json/", settings_json);
     server.on("/ota/", trigger_OTA);
     server.on("/wifi/", trigger_wifi_reset);
+    server.on("/favicon.ico", favicon_from_spiffs);
 
     server.onNotFound(handleNotFound);
     //here the list of headers to be recorded
