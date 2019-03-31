@@ -119,7 +119,26 @@ TiltBridge will not transmit data to Google Sheets more than once every 15 minut
 Preparing Google Sheets to Receive Data
 ***************************************
 
-.. todo:: Add this
+The first step in Google Sheets integration is preparing Google Sheets to receive the data. Google Sheets requires the
+use of a Gmail or Google Apps for Domains account. This preparation step only needs to be done once per Google Account
+and once complete can be used with multiple Tilts, TiltBridges, and beer logs.
+
+#. Open the `TiltBridge Master Sheet <https://docs.google.com/spreadsheets/d/1yyqzjzJ7M0LxvQuV-1U7GbdZ_w_vOXV1AR5nivVNVYI/>`_ on Google Sheets. If prompted to login, log into your Gmail or Google Apps for Domains account.
+#. As prompted, go to the ``File`` Menu, and select ``Make a Copy``
+#. Enter a name for this sheet (it will be the master sheet to coordinate all your beer logs) and click ``OK``
+#. The copy you just made will open in a new window. Go to the ``Tools`` menu and select ``Script Editor``
+
+This will then open the Google Script editor. Before you can begin logging to Google Sheets, you need to "publish" the
+script that will receive the incoming data. To do so, you can follow these instructions (which are the same as those at
+the top of the window that appears):
+
+#. Go to the ``Publish`` menu and select ``Deploy as web app...``
+#. In the dialog box that appears, set ``Who has access to the app:`` to ``Anyone, even anonymous`` and click ``Deploy``
+#. A dialog box will appear. Select ``Review Permissions``. Another dialog box will appear. Select your Google Account.
+#. A dialog box with ``This app isn't verified`` will appear. Select ``Advanced`` then select ``Go to Tilt Cloud Template for TiltBridge (unsafe)``
+#. A dialog box with permission requests will appear. Select "Allow".
+#. A dialog box confirming the app has been published will appear. Click ``OK``, then Close Script Editor and return to the Google Sheet.
+#. Use the new "Tilt" menu in the Google Sheet to view the cloud URL or email it to yourself.
 
 
 Configuring the TiltBridge for Google Sheets

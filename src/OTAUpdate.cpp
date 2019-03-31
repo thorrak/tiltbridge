@@ -20,7 +20,7 @@ String getHeaderValue(String header, String headerName) {
 void execOTA() {
     int contentLength = 0;
     bool isValidContentType = false;
-    String bin = "/static/firmware.bin"; // bin file name with a slash in front.
+    String bin = "/firmware/tiltbridge/firmware.bin"; // bin file name with a slash in front.
 
     // Connect to server
     // client.connect(host, port)
