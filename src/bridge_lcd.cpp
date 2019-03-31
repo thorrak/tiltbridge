@@ -146,10 +146,10 @@ void bridge_lcd::display_ota_update_screen() {
     // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
     // configuration AP at startup
     clear();
-    print_line("The TiltBridge firmware is ", "", 1);
-    print_line("being updated. Please do not", "", 2);
-    print_line("power down or reset your", "", 3);
-    print_line("TiltBridge.", "", 4);
+    print_line("The TiltBridge firmware is", "", 1);
+    print_line("being updated. Please do", "", 2);
+    print_line("not power down or reset", "", 3);
+    print_line("your TiltBridge.", "", 4);
     display();
 }
 
