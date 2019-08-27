@@ -57,7 +57,7 @@ Sources
 Enclosures
 **********
 
-- `Sample Case on Thingiverse <https://www.thingiverse.com/thing:3515836>`_
+- `Sample Case on Thingiverse <https://www.thingiverse.com/thing:3604590>`_
 
 .. todo:: Fix this link
 
