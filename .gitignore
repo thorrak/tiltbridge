@@ -94,3 +94,5 @@ fabric.properties
 
 docs/.build/html/
 docs/.build/doctrees/
+/.pio
+/.vscode
