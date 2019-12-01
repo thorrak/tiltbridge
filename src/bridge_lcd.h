@@ -10,14 +10,33 @@
 
 
 #ifdef LCD_SSD1306
+
 #include <SSD1306.h>
 #define SSD1306_FONT_HEIGHT     10
 #define SSD_LINE_CLEARANCE      2
 #define SSD1306_FONT            ArialMT_Plain_10
+#define TILTS_PER_PAGE          5  // The actual number is one fewer than this - the first row is used for headers
+
+#elif defined(LCD_TFT)
+
+// For the LCD_TFT displays, we're connecting via SPI
+#include <SPI.h>
+#include "Adafruit_GFX.h"
+#include "Adafruit_ILI9341.h"
+
+// Pin definitions for TFT displays
+#define TFT_CS 14  //for D32 Pro
+#define TFT_DC 27  //for D32 Pro
+#define TFT_RST 33 //for D32 Pro
+#define TS_CS  12 //for D32 Pro
+#define TFT_BACKLIGHT 32
+// TODO - Determine if I can actually use 15 tilts/display
+#define TILTS_PER_PAGE          15  // The actual number is one fewer than this - the first row is used for headers
+#define TILT_FONT_SIZE          2
+
 #endif
 
 
-#define TILTS_PER_PAGE          5  // The actual number is one fewer than this - the first row is used for headers
 
 #define SCREEN_TILT             0
 #define SCREEN_FERMENTRACK      1
@@ -49,7 +68,11 @@ private:
     void clear();
     void display();
 
+#ifdef LCD_SSD1306
     SSD1306* oled_display;
+#elif defined(LCD_TFT)
+    Adafruit_ILI9341* tft;
+#endif
 
     uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
     uint8_t tilt_on_page;       // The page number currently being displayed

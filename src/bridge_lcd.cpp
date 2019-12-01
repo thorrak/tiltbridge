@@ -3,17 +3,14 @@
 //
 
 #include "bridge_lcd.h"
-#include "img/fermentrack_logo.h"
+#include "img/fermentrack_logo.h"  // TODO - Determine if this can be removed for non-OLED displays
 
 bridge_lcd lcd;
 
 
-#include <Wire.h>
 #ifdef LCD_SSD1306
-#include <SSD1306.h>
+#include <Wire.h>
 #endif
-
-
 
 
 bridge_lcd::bridge_lcd() {
@@ -34,6 +31,11 @@ void bridge_lcd::display_logo() {
     oled_display->drawXbm((128-fermentrack_logo_width)/2, (64-fermentrack_logo_height)/2, fermentrack_logo_width, fermentrack_logo_height, fermentrack_logo_bits);
     display();
 #endif
+
+#ifdef LCD_TFT
+    print_line("Logo goes here.", "", 1);
+#endif
+
 }
 
 
@@ -162,7 +164,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
 
 
 
-
+#ifdef LCD_SSD1306
 bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
     // This allows us to do LCD autodetection (and by extension, support multiple OLED ESP32 boards
     byte error;
@@ -176,7 +178,7 @@ bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
     else
         return false;
 }
-
+#endif
 
 
 /////////// LCD Wrapper Functions
@@ -210,6 +212,21 @@ void bridge_lcd::init() {
     oled_display->flipScreenVertically();
     oled_display->setFont(ArialMT_Plain_10);
 #endif
+
+#ifdef LCD_TFT
+    tft = new Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+    tft->begin();
+    tft->setRotation(3);
+    tft->fillScreen(ILI9341_BLACK);
+    tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+
+#if defined(TFT_BACKLIGHT)
+    pinMode(TFT_BACKLIGHT, OUTPUT);
+    digitalWrite(TFT_BACKLIGHT, HIGH);
+#endif
+    print_line("We are ready to go", "", 1);
+#endif
+
 }
 
 
@@ -218,6 +235,11 @@ void bridge_lcd::clear() {
     oled_display->clear();
     oled_display->setFont(SSD1306_FONT);
 #endif
+
+#ifdef LCD_TFT
+    tft->fillScreen(ILI9341_BLACK);
+#endif
+
 }
 
 void bridge_lcd::display() {
@@ -240,5 +262,28 @@ void bridge_lcd::print_line(String left_text, String right_text, uint8_t line) {
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);
 #endif
+
+
+#ifdef LCD_TFT
+    int16_t x = 0;
+    int16_t y = TILT_FONT_SIZE * (line-1) * 9 + 2;
+
+    tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+    tft->setTextSize(TILT_FONT_SIZE);
+
+    tft->setCursor(x,y);
+    tft->print(left_text);
+
+    // While the OLED library has functions for printing right-aligned text, Adafruit GFX does not. We'll have to
+    // do this manually.
+    int16_t  x1, y1;
+    uint16_t w, h;
+
+    tft->getTextBounds(right_text, x, y, &x1, &y1, &w, &h);
+    tft->setCursor(320-w,y);
+    tft->print(right_text);
+
+#endif
+
 }
 
