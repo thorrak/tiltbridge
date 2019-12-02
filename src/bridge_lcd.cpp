@@ -136,11 +136,21 @@ void bridge_lcd::display_wifi_reset_screen() {
     // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
     // configuration AP at startup
     clear();
+#ifdef LCD_SSD1306
     print_line("Press the button again to", "", 1);
-    print_line("disable autoconnection to", "", 2);
+    print_line("disable autoconnection", "", 2);
     print_line("and start the WiFi ", "", 3);
     print_line("configuration AP.", "", 4);
     display();
+#endif
+
+#ifdef LCD_TFT
+    print_line("Tap the screen again to", "", 1);
+    print_line("delete any saved WiFi", "", 2);
+    print_line("credentials and restart", "", 3);
+    print_line("the WiFi configuration AP", "", 4);
+#endif
+
 }
 
 void bridge_lcd::display_ota_update_screen() {
@@ -224,7 +234,7 @@ void bridge_lcd::init() {
     pinMode(TFT_BACKLIGHT, OUTPUT);
     digitalWrite(TFT_BACKLIGHT, HIGH);
 #endif
-    print_line("We are ready to go", "", 1);
+
 #endif
 
 }

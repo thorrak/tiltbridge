@@ -58,6 +58,7 @@ public:
     void print_line(String left_text, String right_text, uint8_t line);
 
     void check_screen();
+    void clear();
 
 
 private:
@@ -65,7 +66,6 @@ private:
     void display_tilt_screen(uint8_t screen_number);
     void print_tilt_to_line(tiltHydrometer* tilt, uint8_t line);
 
-    void clear();
     void display();
 
 #ifdef LCD_SSD1306
@@ -81,7 +81,9 @@ private:
 
     uint64_t next_screen_at;
 
+#ifdef LCD_SSD1306
     bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
+#endif
 
 };
 
