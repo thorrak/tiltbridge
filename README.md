@@ -14,6 +14,7 @@ TiltBridge automatically logs your data to the following cloud data services:
 
 * [Fermentrack](https://www.fermentrack.com/)
 * [Brewer's Friend](http://www.brewersfriend.com/)
+* [Brewfather](https://brewfather.app)
 * Google Sheets
 
 
