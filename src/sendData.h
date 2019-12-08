@@ -15,7 +15,7 @@
 
 
 #define GSCRIPTS_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets
-#define BREWERS_FRIEND_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend
+#define BREWERS_FRIEND_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend & Brewfather
 
 
 
@@ -31,6 +31,7 @@ private:
     uint64_t send_to_fermentrack_at;
     uint64_t send_to_brewers_friend_at;
     uint64_t send_to_google_at;
+    uint64_t send_to_brewfather_at;
 
 #ifdef USE_SECURE_GSCRIPTS
     // This is necessary for HTTPS support (which is useless until ESP32 bluetooth support is improved)
@@ -41,9 +42,12 @@ private:
     void send_to_fermentrack();
     void send_to_google();
     void send_to_brewers_friend();
+    bool send_to_url(const char *url, const char *apiKey);
 
 };
 
 extern dataSendHandler data_sender;
+extern const char *g_brewfatherKey;
+
 
 #endif //TILTBRIDGE_SENDDATA_H

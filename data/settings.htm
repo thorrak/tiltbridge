@@ -257,6 +257,36 @@
                 </div>
             </div>
         </div>
+
+        <div class="row row-padded">
+            <div class="col-12">
+                <div class="card">
+                    <h5 class="card-header">
+                        Brewfather Settings
+                    </h5>
+                    <div class="card-body">
+                        <p class="card-text">
+                            These settings control how TiltBridge talks to <a href="http://www.brewfather.net/">Brewfather</a>
+                            With a premium account, Brewfather supports logging from gravity sensors such
+                            as the Tilt Hydrometer. To find your API key, log into your Brewfather account and go
+                            to Settings > Custom Stream. Your Stream key will be a string of letters and numbers (not a URL).
+                        </p>
+                        <form action="/settings/update/" method="POST">
+                            <div class="form-group row">
+                                <label for="brewfatherKey" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Your Brewfather Stream key">Brewfather Stream key</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="brewfatherKey" id="brewfatherKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewfatherKey">
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 
 

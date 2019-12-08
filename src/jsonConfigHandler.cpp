@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include "sendData.h"
 
 
 void jsonConfigHandler::initialize() {
@@ -38,10 +39,13 @@ void jsonConfigHandler::initialize() {
             {"sheetName_orange", ""},
             {"sheetName_blue", ""},
             {"sheetName_yellow", ""},
-            {"sheetName_pink", ""},
+            {"sheetName_pink", ""},        
 
             // Brewers Friend Setting(s)
-            {"brewersFriendKey", ""}
+            {"brewersFriendKey", ""},
+
+            // Brewfather
+            {g_brewfatherKey, ""}
     };
 }
 
