@@ -12,6 +12,7 @@ tiltHydrometer::tiltHydrometer(uint8_t color) {
     m_color             = color;
     temp                = 0;
     gravity             = 0;
+    m_lastUpdate        = 0;
 
 } // tiltHydrometer
 
@@ -95,6 +96,7 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     temp = i_temp;
     gravity = i_grav;
     m_loaded = true;  // Setting loaded true now that we have gravity/temp values
+    m_lastUpdate = xTaskGetTickCount();
     return true;
 }
 
@@ -127,5 +129,11 @@ nlohmann::json tiltHydrometer::to_json() {
 
 
 bool tiltHydrometer::is_loaded() {
+    // Expire loading after 5 minutes
+    if (m_loaded) {
+        if ((xTaskGetTickCount() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION) {
+            m_loaded = false;
+        }
+    }
     return m_loaded;
 }

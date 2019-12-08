@@ -134,17 +134,56 @@ void initWiFiResetButton() {
 //    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
 //}
 
+#include <XPT2046_Touchscreen.h>
+XPT2046_Touchscreen ts(TS_CS);
+
+
 void handle_wifi_reset_presses() {
     uint64_t initial_press_at = 0;
+
+
+    while (ts.touched())  // Block while the screen is pressed until the user releases
+        wifi_reset_pressed_at = xTaskGetTickCount();
+
+//    if (ts.touched())
+//    {
+//        TS_Point p = ts.getPoint();
+//
+//
+//        lcd.tft->fillScreen(ILI9341_BLACK);
+//        lcd.tft->setCursor(0, 0);
+//
+//        lcd.tft->print("Pressure = ");
+//        lcd.tft->println(p.z);
+//        lcd.tft->print("X = ");
+//        lcd.tft->println(p.x);
+//        lcd.tft->print("Y = ");
+//        lcd.tft->println(p.y);
+//    }
+
+
 
     if(wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME) {
         initial_press_at = wifi_reset_pressed_at; // Cache when the button was first pressed
         lcd.display_wifi_reset_screen();
-        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+        delay(100); // Give the user a moment to release the screen (doubles as debounce)
 
-        if(wifi_reset_pressed_at != initial_press_at) {
-            // The user pushed the button a second time & caused a second interrupt. Process the reset.
-            disconnect_from_wifi_and_restart();
+        for(TickType_t x = xTaskGetTickCount() + WIFI_RESET_DOUBLE_PRESS_TIME; xTaskGetTickCount() <= x;) {
+            delay(1);
+            if(ts.touched() || wifi_reset_pressed_at != initial_press_at) {
+                // The user pushed the button a second time & caused a second interrupt. Process the reset.
+                disconnect_from_wifi_and_restart();
+            }
         }
+
+        // Explicitly clear the screen
+        lcd.clear();
+
+//        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+//
+//        if(wifi_reset_pressed_at != initial_press_at) {
+//            // The user pushed the button a second time & caused a second interrupt. Process the reset.
+//            disconnect_from_wifi_and_restart();
+//        }
     }
 }
