@@ -26,11 +26,11 @@ using json = nlohmann::json;
 #include <iostream>
 
 #include "OTAUpdate.h"
+#include "sendData.h"
 
 httpServer http_server;
 
 WebServer server(80);
-
 
 inline bool isInteger(const char* s)
 {
@@ -170,6 +170,16 @@ void processConfig() {
         else
             app_config.config["brewersFriendKey"] = server.arg("brewersFriendKey").c_str();
     }
+
+    // Brewfather
+    if (server.hasArg(g_brewfatherKey)) {
+        if (server.arg(g_brewfatherKey).length() > 255)
+            return processConfigError();
+        else if (server.arg(g_brewfatherKey).length() < 7)
+            app_config.config[g_brewfatherKey] = "";
+        else
+            app_config.config[g_brewfatherKey] = server.arg(g_brewfatherKey).c_str();
+    }    
 
     // If we made it this far, one or more settings were updated. Save.
     app_config.save();

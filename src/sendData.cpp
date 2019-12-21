@@ -51,8 +51,11 @@ const char* rootCACertificate = \
 
 dataSendHandler data_sender;  // Global data sender
 
+const char *g_brewfatherKey = "brewfatherKey";
+
 dataSendHandler::dataSendHandler() {
     send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
+    send_to_brewfather_at =     50 * 1000;
     send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
     send_to_google_at =         65 * 1000; // Trigger the first send to Google Sheets 65 seconds out
 }
@@ -263,20 +266,22 @@ void dataSendHandler::send_to_google() {
 
 #endif
 
-
 void dataSendHandler::send_to_brewers_friend() {
-    HTTPClient http;
-    nlohmann::json j;
-    std::string url;
-
-    // Brewers Friend only requires a single option (API key)
-    if(app_config.config["brewersFriendKey"].get<std::string>().length() <= 12) {
+        // Brewers Friend only requires a single option (API key)
+    std::string apiKeyStr = app_config.config["brewersFriendKey"].get<std::string>();
+    if(apiKeyStr.length() <= 12) {
 #ifdef DEBUG_PRINTS
         Serial.println("brewersFriendKey not populated. Returning.");
 #endif
         return;
     }
+    std::string url = "http://log.brewersfriend.com/stream/" + apiKeyStr;
+    send_to_url(url.c_str(), apiKeyStr.c_str());
+}
 
+bool dataSendHandler::send_to_url(const char *url, const char *apiKey) {
+    HTTPClient http;
+    nlohmann::json j;
 
     // This should look like this when sent to the proxy that sends to Brewers Friend (once per Tilt):
     // {
@@ -289,7 +294,7 @@ void dataSendHandler::send_to_brewers_friend() {
     //   'gscripts_url': 'https://script.google.com/.../',  // This is specific to the proxy
     // }
 
-
+    bool result = false;
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
@@ -311,21 +316,22 @@ void dataSendHandler::send_to_brewers_friend() {
                 Serial.println(j.dump().c_str());
 #endif
 
-                url = "http://log.brewersfriend.com/stream/" + app_config.config["brewersFriendKey"].get<std::string>();
-
-                http.begin(url.c_str());  //Specify destination for HTTP request
+                http.begin(url);
                 http.addHeader("Content-Type", "application/json");             //Specify content-type header
-                http.addHeader("X-API-KEY", app_config.config["brewersFriendKey"].get<std::string>().c_str());  //Specify API key header
+                if (apiKey) {
+                    http.addHeader("X-API-KEY", apiKey);  //Specify API key header
+                }
                 int httpResponseCode = http.POST(j.dump().c_str());   //Send the actual POST request
 
                 if (httpResponseCode > 0) {
+                    result = true;
 #ifdef DEBUG_PRINTS
                     String response = http.getString();                       //Get the response to the request
                     Serial.println(httpResponseCode);   //Print return code
                     Serial.println(response);           //Print request answer
                 } else {
                     Serial.print("Error on sending POST: ");
-                    Serial.println(httpResponseCode);
+                    Serial.println(httpResponseCode);   //Print return code
 #endif
                 }
                 http.end();  //Free resources
@@ -333,6 +339,7 @@ void dataSendHandler::send_to_brewers_friend() {
             j.clear();
         }
     }
+    return result;
 }
 
 
@@ -385,4 +392,26 @@ void dataSendHandler::process() {
         }
         yield();
     }
+
+    if (send_to_brewfather_at <= xTaskGetTickCount()) {
+        if(WiFi.status() == WL_CONNECTED) {
+            std::string apiKeyStr = app_config.config[g_brewfatherKey].get<std::string>();
+            if (apiKeyStr.length() > 5) { // length?
+                
+    #ifdef DEBUG_PRINTS
+                Serial.printf("Calling send to Brewfather\r\n");
+    #endif
+                // tilt_scanner.wait_until_scan_complete();
+                std::string url = "http://log.brewfather.net/stream?id=" + apiKeyStr;
+                if (send_to_url(url.c_str(), NULL)) {
+                    // Don't reset our try again if we failed; the first lookup was failing for me (always)
+                    send_to_brewfather_at = xTaskGetTickCount() + BREWERS_FRIEND_DELAY;
+                }
+            } else {
+                // If the user adds the setting, we want this to kick in within 15 seconds
+                send_to_brewfather_at = xTaskGetTickCount() + 15000;
+            }
+        }
+        yield();
+    }    
 }
