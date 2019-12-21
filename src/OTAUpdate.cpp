@@ -20,7 +20,14 @@ String getHeaderValue(String header, String headerName) {
 void execOTA() {
     int contentLength = 0;
     bool isValidContentType = false;
-    String bin = "/firmware/tiltbridge/firmware.bin"; // bin file name with a slash in front.
+#ifdef LCD_TFT
+    String bin = "/firmware/tiltbridge/firmware_tft.bin"; // bin file name with a slash in front.
+#elif LCD_SSD1306
+    String bin = "/firmware/tiltbridge/firmware_ssd1306.bin"; // bin file name with a slash in front.
+#else
+    // This shouldn't ever happen - but if it does, die. We don't want to flash random firmware.
+    return;
+#endif
 
     // Connect to server
     // client.connect(host, port)

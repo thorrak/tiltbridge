@@ -13,6 +13,14 @@
 #include <WiFiClient.h>
 
 
+// Since we can't use double reset detection or the "boot" button, we need to leverage the touchscreen to trigger the
+// WiFi reset on TFT builds
+#ifdef LCD_TFT
+#include <XPT2046_Touchscreen.h>
+XPT2046_Touchscreen ts(TS_CS);
+#endif
+
+
 bool shouldSaveConfig = false;
 uint64_t wifi_reset_pressed_at = 0;
 
@@ -117,7 +125,7 @@ void init_wifi() {
 }
 
 
-
+#ifndef LCD_TFT
 // Use the "boot" button present on most of the OLED boards to reset the WiFi configuration allowing for easy
 // transportation between networks
 void IRAM_ATTR wifi_reset_pressed() {
@@ -134,33 +142,16 @@ void initWiFiResetButton() {
 //    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
 //}
 
-#include <XPT2046_Touchscreen.h>
-XPT2046_Touchscreen ts(TS_CS);
-
+#endif
 
 void handle_wifi_reset_presses() {
     uint64_t initial_press_at = 0;
 
 
+#ifdef LCD_TFT
     while (ts.touched())  // Block while the screen is pressed until the user releases
         wifi_reset_pressed_at = xTaskGetTickCount();
-
-//    if (ts.touched())
-//    {
-//        TS_Point p = ts.getPoint();
-//
-//
-//        lcd.tft->fillScreen(ILI9341_BLACK);
-//        lcd.tft->setCursor(0, 0);
-//
-//        lcd.tft->print("Pressure = ");
-//        lcd.tft->println(p.z);
-//        lcd.tft->print("X = ");
-//        lcd.tft->println(p.x);
-//        lcd.tft->print("Y = ");
-//        lcd.tft->println(p.y);
-//    }
-
+#endif
 
 
     if(wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME) {
@@ -170,7 +161,13 @@ void handle_wifi_reset_presses() {
 
         for(TickType_t x = xTaskGetTickCount() + WIFI_RESET_DOUBLE_PRESS_TIME; xTaskGetTickCount() <= x;) {
             delay(1);
-            if(ts.touched() || wifi_reset_pressed_at != initial_press_at) {
+
+#ifdef LCD_TFT
+            if(ts.touched() || wifi_reset_pressed_at != initial_press_at)
+#else
+            if(wifi_reset_pressed_at != initial_press_at)
+#endif
+            {
                 // The user pushed the button a second time & caused a second interrupt. Process the reset.
                 disconnect_from_wifi_and_restart();
             }
