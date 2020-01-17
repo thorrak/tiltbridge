@@ -33,6 +33,11 @@ private:
     uint64_t send_to_google_at;
     uint64_t send_to_brewfather_at;
 
+#ifdef ENABLE_TEST_CHECKINS
+    // This is for a "heartbeat" checkin to fermentrack.com. Unless you are me (thorrak) don't enable this, please.
+    uint64_t send_checkin_at;
+#endif
+
 #ifdef USE_SECURE_GSCRIPTS
     // This is necessary for HTTPS support (which is useless until ESP32 bluetooth support is improved)
     void setClock();

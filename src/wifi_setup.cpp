@@ -142,6 +142,12 @@ void initWiFiResetButton() {
 //    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
 //}
 
+#else
+// If we have LCD_TFT set, we need to build the functions as noop
+void initWiFiResetButton() {
+    // This is noop for LCD_TFT as we're using the touchscreen instead
+}
+
 #endif
 
 void handle_wifi_reset_presses() {

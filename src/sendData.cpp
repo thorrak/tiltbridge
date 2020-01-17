@@ -58,6 +58,9 @@ dataSendHandler::dataSendHandler() {
     send_to_brewfather_at =     50 * 1000;
     send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
     send_to_google_at =         65 * 1000; // Trigger the first send to Google Sheets 65 seconds out
+#ifdef ENABLE_TEST_CHECKINS
+    send_checkin_at =           35 * 1000; // If we have send_checkins enabled (this is a testing thing!) send at 35 seconds
+#endif
 }
 
 
@@ -136,48 +139,89 @@ void dataSendHandler::prep_send_secure() {
 }
 
 void dataSendHandler::send_to_google() {
-    nlohmann::json j;
+    nlohmann::json payload;
 
-    j["Beer"] = "some beer,2";
-    j["Temp"] = 75;
-    j["SG"] = (float) 1.050;
-    j["Color"] = "Blue";
-    j["Comment"] = "xxx@yyy.com";  // The gmail email address associated with the script on google
-    j["Timepoint"] = (float) 42728.4267217361;
+    // There are two configuration options which are mandatory when using the Google Sheets integration
+    if(app_config.config["scriptsURL"].get<std::string>().length() <= 12 || app_config.config["scriptsEmail"].get<std::string>().length() < 7) {
+//#ifdef DEBUG_PRINTS
+//        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
+//#endif
+        return;
+    }
+
+//    j["Beer"] = "some beer,2";
+//    j["Temp"] = 75;
+//    j["SG"] = (float) 1.050;
+//    j["Color"] = "Blue";
+//    j["Comment"] = "xxx@yyy.com";  // The gmail email address associated with the script on google
+//    j["Timepoint"] = (float) 42728.4267217361;
 
     if(secure_client) {
 
-        { // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *secure_client is
-            HTTPClient https;
 
-            Serial.print("[HTTPS] begin...\r\n");
-            if (https.begin(*secure_client, "https://script.google.com/a/optictheory.com/macros/s/AKfycbyqEM6l1c3Jh-1r5HPJ7ANWCKQcoUR2GDJMOcbX-mYFlyK49-EZ/exec")) {  // HTTPS
-                Serial.print("[HTTPS] POST...\r\n");
-                https.addHeader("Content-Type", "application/json");             //Specify content-type header
-                // start connection and send HTTP header
-                int httpCode = https.POST(j.dump().c_str());   //Send the actual POST request
-
-                // httpCode will be negative on error
-                if (httpCode > 0) {
-                    // HTTP header has been send and Server response header has been handled
-                    Serial.printf("[HTTPS] GET... code: %d\r\n", httpCode);
-
-                    // file found at server
-                    if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                        Serial.println("OK");
-//                        String payload = https.getString();
-//                        Serial.println(payload);
-                    }
-                } else {
-                    Serial.printf("[HTTPS] GET... failed, error: %s\r\n", https.errorToString(httpCode).c_str());
+        // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+        for(uint8_t i = 0;i<TILT_COLORS;i++) {
+            if(tilt_scanner.tilt(i)->is_loaded()) {
+                if(tilt_scanner.tilt(i)->gsheets_beer_name().length() <= 0) {
+                    continue; // If there is no gsheets beer name, we don't know where to log to. Skip this tilt.
                 }
 
-                https.end();
-            } else {
-                Serial.println("[HTTPS] Unable to connect");
-            }
+                payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
+                payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
+                payload["SG"] = (float) tilt_scanner.tilt(i)->gravity / 1000;
+                payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                payload["Comment"] = "";
+                payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
 
-            // End extra scoping block
+                if(strlen(payload.dump().c_str()) > 5) {
+                    { // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *secure_client is
+                        HTTPClient https;
+
+#ifdef DEBUG_PRINTS
+                        Serial.print("[HTTPS] begin...\r\n");
+#endif
+                        if (https.begin(*secure_client, app_config.config["scriptsURL"].get<std::string>().c_str())) {  // HTTPS
+#ifdef DEBUG_PRINTS
+                            Serial.print("[HTTPS] POST...\r\n");
+#endif
+                            https.addHeader("Content-Type", "application/json");             //Specify content-type header
+                            // start connection and send HTTP header
+                            int httpCode = https.POST(payload.dump().c_str());   //Send the actual POST request
+
+                            // httpCode will be negative on error
+                            if (httpCode > 0) {
+                                // HTTP header has been send and Server response header has been handled
+#ifdef DEBUG_PRINTS
+                                Serial.printf("[HTTPS] GET... code: %d\r\n", httpCode);
+#endif
+                                
+                                // file found at server
+                                if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+#ifdef DEBUG_PRINTS
+                                    Serial.println("OK");
+//                        String payload = https.getString();
+//                        Serial.println(payload);
+#endif
+                                }
+                            } else {
+#ifdef DEBUG_PRINTS
+                                Serial.printf("[HTTPS] GET... failed, error: %s\r\n", https.errorToString(httpCode).c_str());
+#endif
+                            }
+
+                            https.end();
+                        } else {
+#ifdef DEBUG_PRINTS
+                            Serial.println("[HTTPS] Unable to connect");
+#endif
+                        }
+
+                        // End extra scoping block
+                    }                   
+
+                }
+                payload.clear();
+            }
         }
 
         // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
@@ -187,7 +231,6 @@ void dataSendHandler::send_to_google() {
     }
 
     Serial.println();
-    j.clear();
 }
 #else
 
@@ -342,24 +385,52 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey) {
     return result;
 }
 
+u_long checkin_no = 0;
+
+void send_checkin_stat() {
+    HTTPClient http;
 
 
+    String Data = "checkin_no=";
+    Data += String(checkin_no);
+//    Data += "\r\n\r\n";
+
+
+//    Serial.print("Data to send: ");
+//    Serial.println(Data);
+
+    http.begin("http://www.fermentrack.com/checkin/");  //Specify destination for HTTP request
+    http.addHeader("Content-Type", "application/json");             //Specify content-type header
+    int httpResponseCode = http.POST(Data);   //Send the actual POST request
+
+    if (httpResponseCode > 0) {
+//        String response = http.getString();                       //Get the response to the request
+//        Serial.println(httpResponseCode);   //Print return code
+//        Serial.println(response);           //Print request answer
+    } else {
+//        Serial.print("Error on sending POST: ");
+//        Serial.println(httpResponseCode);
+    }
+    http.end();  //Free resources
+
+    checkin_no = checkin_no + 1;
+}
 
 void dataSendHandler::process() {
     // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
 
     // Check & send to Fermentrack if necessary
-    if(send_to_fermentrack_at <= xTaskGetTickCount()) {
-        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
-#ifdef DEBUG_PRINTS
-            Serial.printf("Calling send to Fermentrack\r\n");
-#endif
-            // tilt_scanner.wait_until_scan_complete();
-            send_to_fermentrack();
-        }
-        send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
-        yield();
-    }
+//    if(send_to_fermentrack_at <= xTaskGetTickCount()) {
+//        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
+//#ifdef DEBUG_PRINTS
+//            Serial.printf("Calling send to Fermentrack\r\n");
+//#endif
+//            // tilt_scanner.wait_until_scan_complete();
+//            send_to_fermentrack();
+//        }
+//        send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
+//        yield();
+//    }
 
     // Check & send to Google Scripts if necessary
     if(send_to_google_at <= xTaskGetTickCount()) {
@@ -393,11 +464,25 @@ void dataSendHandler::process() {
         yield();
     }
 
+#ifdef ENABLE_TEST_CHECKINS
+    if(send_checkin_at <= xTaskGetTickCount()) {
+        if(WiFi.status()== WL_CONNECTED) {   //Check WiFi connection status
+#ifdef DEBUG_PRINTS
+            Serial.printf("Calling check-in to fermentrack.com\r\n");
+#endif
+            // tilt_scanner.wait_until_scan_complete();
+            send_checkin_stat();
+        }
+        send_checkin_at = xTaskGetTickCount() + (60*5 * 1000);
+        yield();
+    }
+#endif
+
     if (send_to_brewfather_at <= xTaskGetTickCount()) {
         if(WiFi.status() == WL_CONNECTED) {
             std::string apiKeyStr = app_config.config[g_brewfatherKey].get<std::string>();
             if (apiKeyStr.length() > 5) { // length?
-                
+
     #ifdef DEBUG_PRINTS
                 Serial.printf("Calling send to Brewfather\r\n");
     #endif
@@ -413,5 +498,5 @@ void dataSendHandler::process() {
             }
         }
         yield();
-    }    
+    }
 }
