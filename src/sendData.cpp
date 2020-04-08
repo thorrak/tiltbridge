@@ -420,17 +420,17 @@ void dataSendHandler::process() {
     // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
 
     // Check & send to Fermentrack if necessary
-//    if(send_to_fermentrack_at <= xTaskGetTickCount()) {
-//        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
-//#ifdef DEBUG_PRINTS
-//            Serial.printf("Calling send to Fermentrack\r\n");
-//#endif
-//            // tilt_scanner.wait_until_scan_complete();
-//            send_to_fermentrack();
-//        }
-//        send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
-//        yield();
-//    }
+    if(send_to_fermentrack_at <= xTaskGetTickCount()) {
+        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
+#ifdef DEBUG_PRINTS
+            Serial.printf("Calling send to Fermentrack\r\n");
+#endif
+            // tilt_scanner.wait_until_scan_complete();
+            send_to_fermentrack();
+        }
+        send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
+        yield();
+    }
 
     // Check & send to Google Scripts if necessary
     if(send_to_google_at <= xTaskGetTickCount()) {
