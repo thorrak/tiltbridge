@@ -9,13 +9,8 @@ settings.
 Updating your TiltBridge Firmware
 ---------------------------------
 
-To update your TiltBridge firmware, use a web browser to log into your TiltBridge, click the "x" option at the top of the
-page, and then click the "Update Firmware" button. Your TiltBridge will automatically locate the latest firmware, download
-it, and install it on your device.
-
-.. todo:: replace "x" in the above
-
-.. warning:: While the TiltBridge is performing the OTA firmware update, do not attempt to power down or reset the device. This may cause the update to fail which can result in permanent damage to your device.
+Updates to TiltBridge can be easily performed by flashing the latest available firmware from `GitHub`_ using either
+`BrewFlasher`_, `Fermentrack`_, or your favorite ESP32 flashing software.
 
 
 Resetting your WiFi Configuration Settings

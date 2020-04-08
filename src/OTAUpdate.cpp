@@ -4,6 +4,7 @@
 
 #include "OTAUpdate.h"
 
+#ifdef ENABLE_OTA_UPDATES
 
 #include <WiFi.h>
 #include <Update.h>
@@ -123,3 +124,4 @@ void execOTA() {
     }
 }
 
+#endif

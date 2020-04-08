@@ -8,5 +8,6 @@
 .. _tiltbridge.com: https://www.tiltbridge.com/
 .. _Fermentrack: https://www.fermentrack.com/
 .. _GitHub: https://github.com/thorrak/tiltbridge/
+.. _BrewFlasher: https://www.brewflasher.com/
 
 
