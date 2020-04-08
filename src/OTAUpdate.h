@@ -5,11 +5,13 @@
 #ifndef TILTBRIDGE_OTAUPDATE_H
 #define TILTBRIDGE_OTAUPDATE_H
 
-// Enable the below to enable the OTA update code.
-// NOTE - Leave this disabled as long as we're having to use the huge_app partition scheme! No OTA blocks exist.
-//#define ENABLE_OTA_UPDATES 1
+// Although this should be automatically done with build flags, OTA updates are explicitly not supported on the
+// "legacy" OLED screen version due to flash constraints. TFT + 16MB flash only!
+#if defined(LCD_SSD1306) && !defined(DISABLE_OTA_UPDATES)
+#define DISABLE_OTA_UPDATES 1
+#endif
 
-#ifdef ENABLE_OTA_UPDATES
+#ifndef DISABLE_OTA_UPDATES
 void execOTA();
 #endif
 

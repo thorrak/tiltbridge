@@ -4,7 +4,7 @@
 
 #include "OTAUpdate.h"
 
-#ifdef ENABLE_OTA_UPDATES
+#ifndef DISABLE_OTA_UPDATES
 
 #include <WiFi.h>
 #include <Update.h>
@@ -23,8 +23,8 @@ void execOTA() {
     bool isValidContentType = false;
 #ifdef LCD_TFT
     String bin = "/firmware/tiltbridge/firmware_tft.bin"; // bin file name with a slash in front.
-#elif LCD_SSD1306
-    String bin = "/firmware/tiltbridge/firmware_ssd1306.bin"; // bin file name with a slash in front.
+//#elif LCD_SSD1306
+//    String bin = "/firmware/tiltbridge/firmware_ssd1306.bin"; // bin file name with a slash in front.
 #else
     // This shouldn't ever happen - but if it does, die. We don't want to flash random firmware.
     return;

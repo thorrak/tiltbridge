@@ -232,7 +232,7 @@ void favicon_from_spiffs() {
     loadFromSpiffs("/favicon.ico");
 }
 
-#ifdef ENABLE_OTA_UPDATES
+#ifndef DISABLE_OTA_UPDATES
 void trigger_OTA() {
     loadFromSpiffs("/updating.htm");    // Send a message to the user to let them know what is going on
     app_config.config["update_spiffs"] = true;
@@ -280,7 +280,7 @@ void httpServer::init(){
 
     server.on("/json/", http_json);
     server.on("/settings/json/", settings_json);
-#ifdef ENABLE_OTA_UPDATES
+#ifndef DISABLE_OTA_UPDATES
     server.on("/ota/", trigger_OTA);
 #endif
     server.on("/wifi/", trigger_wifi_reset);

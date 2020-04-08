@@ -1,7 +1,6 @@
 TiltBridge Hardware
 ===================
 
-
 The first step in a TiltBridge installation is sourcing the necessary hardware. The only component required for a
 TiltBridge is an ESP32-based board - however selecting the LOLIN D32 Pro and adding the compatible TFT screen will
 result in the best experience with the most features.
@@ -12,28 +11,20 @@ result in the best experience with the most features.
 LOLIN D32 Pro + TFT
 -------------------
 
-
-
-Although the full "TTGO" board includes features we do not need like LoRa radios, there are a handful of boards in the
-"TTGO" style that only have the OLED screen. These boards are very small, and have the advantage of having a screen that
-is secured to the PCB itself. These boards run hot, but as long as the case has some ventilation they should be fine. An
-optional heatsink can be added. These boards do not have any mounting holes which requires that they be secured by other
-means.
-
-For these boards, pin 16 is required to be set high to power the board, the address is 0x3c, SDA is 4, and SCK is 15.
-TiltBridge will automatically detect boards with this configuration and enable the OLED screen accordingly.
-
+The recommended board for this project is the LOLIN D32 Pro, along with its TFT screen and cable. This set of hardware
+enables the full suite of TiltBridge functionality without needing to solder anything. Simply add an enclosure and
+you're done!
 
 Sources
 *******
 
-You will need the board, but will likely also want the TFT screen & cable:
+Although the only required component is the board, you will likely also want the TFT screen & cable:
 
 - `AliExpress (board) <https://www.aliexpress.com/item/32883116057.html>`_
 - `AliExpress (TFT Screen) <https://www.aliexpress.com/item/32919729730.html>`_
 - `AliExpress (Cable) <https://www.aliexpress.com/item/32848833474.html>`_
 
-.. note:: For the board, any of the 3 "colors" are fine - 16MB FLASH, 4MB FLASH, or 16MB FLASH(LED). Preference should go to the non-LED models, but all 3 will work.
+.. note:: For the board, you will want one of the 16MB variants. Preference should go to the non-LED models.
 
 
 Enclosures
@@ -45,19 +36,11 @@ Enclosures
 
 
 
-Other Boards
-------------
-
-TiltBridge is designed to operate without an attached screen, and as such most other ESP32 boards should successfully
-run the firmware.
-
-
 Additional Hardware Required
 ----------------------------
 
 In addition to the ESP32 board, you will also need a USB power source to power the ESP32 (such as a phone charger), a
 MicroUSB cable for flashing, and you will likely want some kind of enclosure.
-
 
 Once you have acquired the necessary hardware, you are ready to begin :doc:`User Guide/initial_setup`
 
@@ -67,6 +50,11 @@ Once you have acquired the necessary hardware, you are ready to begin :doc:`User
 Notes about Previous Versions/Other Hardware
 --------------------------------------------
 
-Previous versions of TiltBridge supported other boards, including OLED-based ESP32 boards. Although these are technically
-still supported, due to significant issues consistently sourcing working hardware, other boards are no longer recommended.
+TiltBridge is designed to run either with or without an attached screen, and therefore can be used with a variety of
+other boards. Although this functionality exists, due to the myriad issues experienced with OLED boards, non-LOLIN
+boards, etc. the use of boards other than the LOLIN D32 Pro are not currently recommended.
 
+If you use another board, make sure to select the appropriate firmware:
+
+- "OLED" boards and those with less than 16MB of flash should select the "OLED" firmware variant
+- Any non-"OLED" board with 16MB of flash or greater should select the "TFT" firmware variant

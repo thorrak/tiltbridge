@@ -34,5 +34,5 @@ Building a TiltBridge is simple - the hardest decision in most cases is the encl
 
 #### Requirements
 
-TiltBridge requires an ESP32-based controller, properly flashed with the TiltBridge firmware.
+TiltBridge requires an ESP32-based controller with 16MB or more of flash space properly flashed with the TiltBridge firmware.
 
