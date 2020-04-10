@@ -12,6 +12,10 @@ bridge_lcd lcd;
 #include "img/fermentrack_logo.h"  // We're only using this style of logo for the OLED variant
 #endif
 
+#ifdef LCD_TFT
+#include "img/tiltbridge_logo_tft.h"  // The (large) TiltBridge logo
+#endif
+
 
 bridge_lcd::bridge_lcd() {
     next_screen_at = 0;
@@ -33,7 +37,9 @@ void bridge_lcd::display_logo() {
 #endif
 
 #ifdef LCD_TFT
-    print_line("Logo goes here.", "", 1);
+    //print_line("Logo goes here.", "", 1);
+    clear();
+    tft->drawRGBBitmap((320-288)/2, 0, gimp_image.pixel_data, gimp_image.width, gimp_image.height);
 #endif
 
 }
