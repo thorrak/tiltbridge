@@ -3,13 +3,13 @@
 //
 
 #include "bridge_lcd.h"
-#include "img/fermentrack_logo.h"  // TODO - Determine if this can be removed for non-OLED displays
 
 bridge_lcd lcd;
 
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
+#include "img/fermentrack_logo.h"  // We're only using this style of logo for the OLED variant
 #endif
 
 
@@ -25,16 +25,16 @@ bridge_lcd::bridge_lcd() {
 
 
 void bridge_lcd::display_logo() {
-//    // XBM files are C source bitmap arrays, and can be created in GIMP (and then read/imported using text editors)
-//#ifdef LCD_SSD1306
-//    clear();
-//    oled_display->drawXbm((128-fermentrack_logo_width)/2, (64-fermentrack_logo_height)/2, fermentrack_logo_width, fermentrack_logo_height, fermentrack_logo_bits);
-//    display();
-//#endif
-//
-//#ifdef LCD_TFT
-//    print_line("Logo goes here.", "", 1);
-//#endif
+#ifdef LCD_SSD1306
+    // XBM files are C source bitmap arrays, and can be created in GIMP (and then read/imported using text editors)
+    clear();
+    oled_display->drawXbm((128-fermentrack_logo_width)/2, (64-fermentrack_logo_height)/2, fermentrack_logo_width, fermentrack_logo_height, fermentrack_logo_bits);
+    display();
+#endif
+
+#ifdef LCD_TFT
+    print_line("Logo goes here.", "", 1);
+#endif
 
 }
 
@@ -73,10 +73,10 @@ uint8_t bridge_lcd::display_next() {
 
         return 10;  // Display this screen for 10 seconds
 
-//    } else if(on_screen==SCREEN_FERMENTRACK) {
-//        display_logo();
-//        on_screen++;
-//        return 5;  // This is currently a noop
+    } else if(on_screen==SCREEN_FERMENTRACK) {
+        display_logo();
+        on_screen++;
+        return 5;  // This is currently a noop
     } else {
         on_screen = SCREEN_TILT;
         return 0; // Immediately move on to the next screen
@@ -157,12 +157,14 @@ void bridge_lcd::display_ota_update_screen() {
     // When the user presses the "boot" switch, this screen appears. If the user presses the boot button a second time
     // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
     // configuration AP at startup
+#ifndef DISABLE_OTA_UPDATES
     clear();
     print_line("The TiltBridge firmware is", "", 1);
     print_line("being updated. Please do", "", 2);
     print_line("not power down or reset", "", 3);
     print_line("your TiltBridge.", "", 4);
     display();
+#endif
 }
 
 
