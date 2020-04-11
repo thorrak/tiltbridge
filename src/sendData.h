@@ -14,8 +14,18 @@
 
 
 
-#define GSCRIPTS_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets
-#define BREWERS_FRIEND_DELAY (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend & Brewfather
+#define GSCRIPTS_DELAY          (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets
+#define BREWERS_FRIEND_DELAY    (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend
+#define BREWFATHER_DELAY        (15 * 60 * 1000)  // 15 minute delay between pushes to Brewfather
+
+#define BREWFATHER_MIN_KEY_LENGTH       5
+#define BREWERS_FRIEND_MIN_KEY_LENGTH   12
+
+
+// This is me being simplifying the reuse of code. The formats for Brewers Friend and Brewfather are basically the same
+// so I'm combining them together in one function
+#define BF_MEANS_BREWFATHER     1
+#define BF_MEANS_BREWERS_FRIEND 2
 
 
 
@@ -44,15 +54,15 @@ private:
     void prep_send_secure();
 #endif
 
-    void send_to_fermentrack();
-    void send_to_google();
-    void send_to_brewers_friend();
-    bool send_to_url(const char *url, const char *apiKey);
+    bool send_to_fermentrack();
+    bool send_to_google();
+
+    static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend);
+    bool send_to_bf_and_bf(uint8_t which_bf);  // Handler for both Brewer's Friend and Brewfather
 
 };
 
 extern dataSendHandler data_sender;
-extern const char *g_brewfatherKey;
 
 
 #endif //TILTBRIDGE_SENDDATA_H

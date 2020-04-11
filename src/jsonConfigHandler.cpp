@@ -45,7 +45,7 @@ void jsonConfigHandler::initialize() {
             {"brewersFriendKey", ""},
 
             // Brewfather
-            {g_brewfatherKey, ""}
+            {"brewfatherKey", ""}
     };
 }
 
