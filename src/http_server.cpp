@@ -32,6 +32,8 @@ httpServer http_server;
 
 WebServer server(80);
 
+void trigger_restart();
+
 inline bool isInteger(const char* s)
 {
     // TODO - Fix this
@@ -76,14 +78,21 @@ bool processSheetName(const char* varName, const char* colorName) {
 }
 
 void processConfig() {
+    bool restart_tiltbridge = false;
+
     // Generic TiltBridge Settings
     if (server.hasArg("mdnsID")) {
         if (server.arg("mdnsID").length() > 30)
             return processConfigError();
         else if (server.arg("mdnsID").length() < 3)
             return processConfigError();
-        else
+        else {
             app_config.config["mdnsID"] = server.arg("mdnsID").c_str();
+
+            // When we update the mDNS ID, a lot of things have to get reset. Rather than doing the hard work of actually
+            // resetting those settings & broadcasting the new ID, let's just restart the controller.
+            restart_tiltbridge = true;
+        }
     }
 
 
@@ -165,25 +174,30 @@ void processConfig() {
     if (server.hasArg("brewersFriendKey")) {
         if (server.arg("brewersFriendKey").length() > 255)
             return processConfigError();
-        else if (server.arg("brewersFriendKey").length() < 7)
+        else if (server.arg("brewersFriendKey").length() <= BREWERS_FRIEND_MIN_KEY_LENGTH)
             app_config.config["brewersFriendKey"] = "";
         else
             app_config.config["brewersFriendKey"] = server.arg("brewersFriendKey").c_str();
     }
 
     // Brewfather
-    if (server.hasArg(g_brewfatherKey)) {
-        if (server.arg(g_brewfatherKey).length() > 255)
+    if (server.hasArg("brewfatherKey")) {
+        if (server.arg("brewfatherKey").length() > 255)
             return processConfigError();
-        else if (server.arg(g_brewfatherKey).length() < 7)
-            app_config.config[g_brewfatherKey] = "";
+        else if (server.arg("brewfatherKey").length() <= BREWFATHER_MIN_KEY_LENGTH)
+            app_config.config["brewfatherKey"] = "";
         else
-            app_config.config[g_brewfatherKey] = server.arg(g_brewfatherKey).c_str();
+            app_config.config["brewfatherKey"] = server.arg("brewfatherKey").c_str();
     }    
 
     // If we made it this far, one or more settings were updated. Save.
     app_config.save();
-    redirectToConfig();
+
+    if(restart_tiltbridge) {
+        trigger_restart();
+    } else {
+        redirectToConfig();
+    }
 }
 
 
@@ -245,11 +259,17 @@ void trigger_OTA() {
 
 void trigger_wifi_reset() {
     loadFromSpiffs("/wifi_reset.htm");    // Send a message to the user to let them know what is going on
-    delay(1000);                          // Wait 1 second to let everything send
+    delay(1000);                                // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    disconnect_from_wifi_and_restart();          // Reset the wifi settings
+    disconnect_from_wifi_and_restart();         // Reset the wifi settings
 }
 
+void trigger_restart() {
+    loadFromSpiffs("/restarting.htm");    // Send a message to the user to let them know what is going on
+    delay(1000);                                // Wait 1 second to let everything send
+    tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
+    ESP.restart();         // Restart the TiltBridge
+}
 
 void http_json() {
     // I probably don't want this inline so that I can add the Allow-Origin header (in case anyone wants to build
@@ -284,6 +304,7 @@ void httpServer::init(){
     server.on("/ota/", trigger_OTA);
 #endif
     server.on("/wifi/", trigger_wifi_reset);
+    server.on("/restart/", trigger_restart);
     server.on("/favicon.ico", favicon_from_spiffs);
 
     server.onNotFound(handleNotFound);
