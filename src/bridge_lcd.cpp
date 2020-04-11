@@ -99,7 +99,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     clear();
 
     // Display the header row
-    print_line("Color", "Gravity", 1);
+    print_line("Color", "Temp", "Gravity", 1);
 
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
@@ -128,7 +128,7 @@ void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
     display();
 }
 
-void bridge_lcd::display_wifi_success_screen(String mdns_url, String ip_address_url) {
+void bridge_lcd::display_wifi_success_screen(const String& mdns_url, const String& ip_address_url) {
     // This screen is displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
     print_line("Access your TiltBridge at:", "", 1);
@@ -175,9 +175,11 @@ void bridge_lcd::display_ota_update_screen() {
 
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
-    char gravity[10];
+    char gravity[10], temp[6];
     sprintf(gravity, "%.3f", double_t(tilt->gravity)/1000);
-    print_line(tilt->color_name().c_str(), gravity, line);
+    sprintf(temp, "%d F", tilt->temp);
+
+    print_line(tilt->color_name().c_str(), temp, gravity, line);
 }
 
 
@@ -267,8 +269,14 @@ void bridge_lcd::display() {
 }
 
 
-void bridge_lcd::print_line(String left_text, String right_text, uint8_t line) {
+void bridge_lcd::print_line(const String& left_text, const String& right_text, uint8_t line) {
+    print_line(left_text, "", right_text, line);
+}
+
+
+void bridge_lcd::print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line) {
 #ifdef LCD_SSD1306
+    // middle_text is ignored for non-TFT displays
     int16_t starting_pixel_row = 0;
 
     starting_pixel_row = (SSD_LINE_CLEARANCE + SSD1306_FONT_HEIGHT) * (line-1) + SSD_LINE_CLEARANCE;
@@ -289,8 +297,12 @@ void bridge_lcd::print_line(String left_text, String right_text, uint8_t line) {
     tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
     tft->setTextSize(TILT_FONT_SIZE);
 
-    tft->setCursor(x,y);
+    tft->setCursor(x, y);
     tft->print(left_text);
+
+    // For now, we're just dropping the middle text at pixel 145. No math.
+    tft->setCursor(145, y);
+    tft->print(middle_text);
 
     // While the OLED library has functions for printing right-aligned text, Adafruit GFX does not. We'll have to
     // do this manually.
@@ -304,4 +316,5 @@ void bridge_lcd::print_line(String left_text, String right_text, uint8_t line) {
 #endif
 
 }
+
 
