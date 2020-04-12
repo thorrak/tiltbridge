@@ -300,8 +300,8 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
     tft->setCursor(x, y);
     tft->print(left_text);
 
-    // For now, we're just dropping the middle text at pixel 145. No math.
-    tft->setCursor(145, y);
+    // For now, we're just dropping the middle text at pixel 155. No math.
+    tft->setCursor(155, y);
     tft->print(middle_text);
 
     // While the OLED library has functions for printing right-aligned text, Adafruit GFX does not. We'll have to

@@ -20,6 +20,8 @@
 
 #define BREWFATHER_MIN_KEY_LENGTH       5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH   12
+#define FERMENTRACK_MIN_URL_LENGTH      12
+#define GSCRIPTS_MIN_URL_LENGTH         24
 
 
 // This is me being simplifying the reuse of code. The formats for Brewers Friend and Brewfather are basically the same

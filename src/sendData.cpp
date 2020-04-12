@@ -433,7 +433,7 @@ void dataSendHandler::process() {
 
     // Check & send to Fermentrack if necessary
     if(send_to_fermentrack_at <= xTaskGetTickCount()) {
-        if(WiFi.status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > 12) {   //Check WiFi connection status
+        if(WiFiClass::status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > FERMENTRACK_MIN_URL_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
             Serial.printf("Calling send to Fermentrack\r\n");
             #endif
@@ -449,7 +449,7 @@ void dataSendHandler::process() {
 
     // Check & send to Google Scripts if necessary
     if(send_to_google_at <= xTaskGetTickCount()) {
-        if(WiFi.status()== WL_CONNECTED && app_config.config["scriptsURL"].get<std::string>().length() > 12) {
+        if(WiFiClass::status()== WL_CONNECTED && app_config.config["scriptsURL"].get<std::string>().length() > GSCRIPTS_MIN_URL_LENGTH) {
 #ifdef DEBUG_PRINTS
             Serial.printf("Calling send to Google\r\n");
 #endif
@@ -465,7 +465,7 @@ void dataSendHandler::process() {
 
     // Check & send to Brewers Friend if necessary
     if(send_to_brewers_friend_at <= xTaskGetTickCount()) {
-        if(WiFi.status()== WL_CONNECTED && app_config.config["brewersFriendKey"].get<std::string>().length() > BREWERS_FRIEND_MIN_KEY_LENGTH) {
+        if(WiFiClass::status()== WL_CONNECTED && app_config.config["brewersFriendKey"].get<std::string>().length() > BREWERS_FRIEND_MIN_KEY_LENGTH) {
             #ifdef DEBUG_PRINTS
             Serial.printf("Calling send to Brewers Friend\r\n");
             #endif
@@ -481,7 +481,7 @@ void dataSendHandler::process() {
 
 #ifdef ENABLE_TEST_CHECKINS
     if(send_checkin_at <= xTaskGetTickCount()) {
-        if(WiFi.status()== WL_CONNECTED) {   //Check WiFi connection status
+        if(WiFiClass::status()== WL_CONNECTED) {   //Check WiFi connection status
 #ifdef DEBUG_PRINTS
             Serial.printf("Calling check-in to fermentrack.com\r\n");
 #endif
@@ -494,7 +494,7 @@ void dataSendHandler::process() {
 #endif
 
     if (send_to_brewfather_at <= xTaskGetTickCount()) {
-        if(WiFi.status() == WL_CONNECTED && app_config.config["brewfatherKey"].get<std::string>().length() > BREWFATHER_MIN_KEY_LENGTH) {
+        if(WiFiClass::status() == WL_CONNECTED && app_config.config["brewfatherKey"].get<std::string>().length() > BREWFATHER_MIN_KEY_LENGTH) {
             #ifdef DEBUG_PRINTS
             Serial.printf("Calling send to Brewfather\r\n");
             #endif
