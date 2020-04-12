@@ -13,8 +13,11 @@
 // #define USE_SECURE_GSCRIPTS 1  // Allow for direct posting to Google Scripts via HTTPS
 
 
-
-#define GSCRIPTS_DELAY          (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets
+#ifdef USE_SECURE_GSCRIPTS
+#define GSCRIPTS_DELAY          (5  * 60 * 1000)  // 5 minute delay between pushes to Google Sheets directly
+#else
+#define GSCRIPTS_DELAY          (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets Proxy
+#endif
 #define BREWERS_FRIEND_DELAY    (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY        (15 * 60 * 1000)  // 15 minute delay between pushes to Brewfather
 
@@ -54,6 +57,7 @@ private:
     // This is necessary for HTTPS support (which is useless until ESP32 bluetooth support is improved)
     void setClock();
     void prep_send_secure();
+    static bool send_to_url_https(const char *url, const char *apiKey, const char *dataToSend);
 #endif
 
     bool send_to_fermentrack();

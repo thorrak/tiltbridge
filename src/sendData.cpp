@@ -63,6 +63,8 @@ dataSendHandler::dataSendHandler() {
 
 
 #ifdef USE_SECURE_GSCRIPTS
+WiFiClientSecure *secure_client;
+
 void dataSendHandler::setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
@@ -75,6 +77,11 @@ void dataSendHandler::setClock() {
 
     struct tm timeinfo;
     gmtime_r(&nowSecs, &timeinfo);
+}
+
+void dataSendHandler::prep_send_secure() {
+    secure_client = new WiFiClientSecure;
+    secure_client -> setCACert(rootCACertificate);
 }
 #endif
 
@@ -111,111 +118,150 @@ bool dataSendHandler::send_to_fermentrack() {
 
 
 #ifdef USE_SECURE_GSCRIPTS
-// TODO - Refactor this to send_to_url_https
+// For sending data to Google Scripts, we have to use secure_client but otherwise we're doing the same thing as before.
+bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend) {
+    // This handles the generic act of sending data to an endpoint
+    HTTPClient https;
+    bool result = false;
 
-
-WiFiClientSecure *secure_client;
-
-void dataSendHandler::prep_send_secure() {
-    secure_client = new WiFiClientSecure;
-    secure_client -> setCACert(rootCACertificate);
-}
-
-void dataSendHandler::send_to_google() {
-    nlohmann::json payload;
-
-    // There are two configuration options which are mandatory when using the Google Sheets integration
-    if(app_config.config["scriptsURL"].get<std::string>().length() <= 12 || app_config.config["scriptsEmail"].get<std::string>().length() < 7) {
-//#ifdef DEBUG_PRINTS
-//        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
-//#endif
-        return;
-    }
-
-//    j["Beer"] = "some beer,2";
-//    j["Temp"] = 75;
-//    j["SG"] = (float) 1.050;
-//    j["Color"] = "Blue";
-//    j["Comment"] = "xxx@yyy.com";  // The gmail email address associated with the script on google
-//    j["Timepoint"] = (float) 42728.4267217361;
-
+    // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
+    // prep_send_secure();
     if(secure_client) {
-
-
-        // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
-        for(uint8_t i = 0;i<TILT_COLORS;i++) {
-            if(tilt_scanner.tilt(i)->is_loaded()) {
-                if(tilt_scanner.tilt(i)->gsheets_beer_name().length() <= 0) {
-                    continue; // If there is no gsheets beer name, we don't know where to log to. Skip this tilt.
-                }
-
-                payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
-                payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
-                payload["SG"] = (float) tilt_scanner.tilt(i)->gravity / 1000;
-                payload["Color"] = tilt_scanner.tilt(i)->color_name();
-                payload["Comment"] = "";
-                payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
-
-                if(strlen(payload.dump().c_str()) > 5) {
-                    { // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *secure_client is
-                        HTTPClient https;
-
+        if (strlen(dataToSend) > 5) {
 #ifdef DEBUG_PRINTS
-                        Serial.print("[HTTPS] begin...\r\n");
+            Serial.print("[HTTPS] Sending data to: ");
+                Serial.println(url);
+                Serial.print("Data to send: ");
+                Serial.println(dataToSend);
 #endif
-                        if (https.begin(*secure_client, app_config.config["scriptsURL"].get<std::string>().c_str())) {  // HTTPS
-#ifdef DEBUG_PRINTS
-                            Serial.print("[HTTPS] POST...\r\n");
-#endif
-                            https.addHeader("Content-Type", "application/json");             //Specify content-type header
-                            // start connection and send HTTP header
-                            int httpCode = https.POST(payload.dump().c_str());   //Send the actual POST request
 
-                            // httpCode will be negative on error
-                            if (httpCode > 0) {
-                                // HTTP header has been send and Server response header has been handled
-#ifdef DEBUG_PRINTS
-                                Serial.printf("[HTTPS] GET... code: %d\r\n", httpCode);
-#endif
-                                
-                                // file found at server
-                                if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-#ifdef DEBUG_PRINTS
-                                    Serial.println("OK");
-//                        String payload = https.getString();
-//                        Serial.println(payload);
-#endif
-                                }
-                            } else {
-#ifdef DEBUG_PRINTS
-                                Serial.printf("[HTTPS] GET... failed, error: %s\r\n", https.errorToString(httpCode).c_str());
-#endif
-                            }
+            // If we're really memory starved, we can wait to send any data until current scans complete
+            // For all HTTPS sends, let's do this just to be safe
+            tilt_scanner.wait_until_scan_complete();
 
-                            https.end();
-                        } else {
-#ifdef DEBUG_PRINTS
-                            Serial.println("[HTTPS] Unable to connect");
-#endif
-                        }
-
-                        // End extra scoping block
-                    }                   
-
-                }
-                payload.clear();
+            https.begin(*secure_client, url);
+            https.addHeader("Content-Type", "application/json");             //Specify content-type header
+            if (apiKey) {
+                https.addHeader("X-API-KEY", apiKey);  //Specify API key header
             }
+            int httpResponseCode = https.POST(dataToSend);   //Send the actual POST request
+
+            if (httpResponseCode > 0) {
+                result = true;
+#ifdef DEBUG_PRINTS
+                String response = https.getString();                       //Get the response to the request
+                Serial.println(httpResponseCode);   //Print return code
+                Serial.println(response);           //Print request answer
+            } else {
+                    Serial.print("[HTTPS] Error on sending POST: ");
+                    Serial.println(httpResponseCode);   //Print return code
+#endif
+            }
+            https.end();  //Free resources
         }
-
         // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
-//        delete secure_client;
-    } else {
-        Serial.println("Unable to create secure_client");
-    }
+        // delete secure_client;
 
-    Serial.println();
+    } else {
+        Serial.println("[HTTPS] Unable to create secure_client");
+    }
+    return result;
 }
-#else
+
+//
+//void dataSendHandler::send_to_google() {
+//    nlohmann::json payload;
+//
+//    // There are two configuration options which are mandatory when using the Google Sheets integration
+//    if(app_config.config["scriptsURL"].get<std::string>().length() <= 12 || app_config.config["scriptsEmail"].get<std::string>().length() < 7) {
+////#ifdef DEBUG_PRINTS
+////        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
+////#endif
+//        return;
+//    }
+//
+////    j["Beer"] = "some beer,2";
+////    j["Temp"] = 75;
+////    j["SG"] = (float) 1.050;
+////    j["Color"] = "Blue";
+////    j["Comment"] = "xxx@yyy.com";  // The gmail email address associated with the script on google
+////    j["Timepoint"] = (float) 42728.4267217361;
+//
+//    if(secure_client) {
+//
+//
+//        // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+//        for(uint8_t i = 0;i<TILT_COLORS;i++) {
+//            if(tilt_scanner.tilt(i)->is_loaded()) {
+//                if(tilt_scanner.tilt(i)->gsheets_beer_name().length() <= 0) {
+//                    continue; // If there is no gsheets beer name, we don't know where to log to. Skip this tilt.
+//                }
+//
+//                payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
+//                payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
+//                payload["SG"] = (float) tilt_scanner.tilt(i)->gravity / 1000;
+//                payload["Color"] = tilt_scanner.tilt(i)->color_name();
+//                payload["Comment"] = "";
+//                payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
+//
+//                if(strlen(payload.dump().c_str()) > 5) {
+//                    { // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *secure_client is
+//                        HTTPClient https;
+//
+//#ifdef DEBUG_PRINTS
+//                        Serial.print("[HTTPS] begin...\r\n");
+//#endif
+//                        if (https.begin(*secure_client, app_config.config["scriptsURL"].get<std::string>().c_str())) {  // HTTPS
+//#ifdef DEBUG_PRINTS
+//                            Serial.print("[HTTPS] POST...\r\n");
+//#endif
+//                            https.addHeader("Content-Type", "application/json");             //Specify content-type header
+//                            // start connection and send HTTP header
+//                            int httpCode = https.POST(payload.dump().c_str());   //Send the actual POST request
+//
+//                            // httpCode will be negative on error
+//                            if (httpCode > 0) {
+//                                // HTTP header has been send and Server response header has been handled
+//#ifdef DEBUG_PRINTS
+//                                Serial.printf("[HTTPS] GET... code: %d\r\n", httpCode);
+//#endif
+//
+//                                // file found at server
+//                                if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+//#ifdef DEBUG_PRINTS
+//                                    Serial.println("OK");
+////                        String payload = https.getString();
+////                        Serial.println(payload);
+//#endif
+//                                }
+//                            } else {
+//#ifdef DEBUG_PRINTS
+//                                Serial.printf("[HTTPS] GET... failed, error: %s\r\n", https.errorToString(httpCode).c_str());
+//#endif
+//                            }
+//
+//                            https.end();
+//                        } else {
+//#ifdef DEBUG_PRINTS
+//                            Serial.println("[HTTPS] Unable to connect");
+//#endif
+//                        }
+//                    }  // End extra scoping block
+//
+//                }
+//                payload.clear();
+//            }
+//        }
+//
+//        // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
+////        delete secure_client;
+//    } else {
+//        Serial.println("Unable to create secure_client");
+//    }
+//
+//    Serial.println();
+//}
+#endif
 
 bool dataSendHandler::send_to_google() {
     HTTPClient http;
@@ -264,7 +310,8 @@ bool dataSendHandler::send_to_google() {
             j["payload"] = payload;
 
 #ifdef USE_SECURE_GSCRIPTS
-            if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", j.dump().c_str()))
+            // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
+            if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", payload.dump().c_str()))
                 result = false;  // There was an error with the previous send
 #else
             // All data for non-secure gscripts goes through the TiltBridge google proxy script. I'm not happy with this
@@ -279,7 +326,6 @@ bool dataSendHandler::send_to_google() {
     return result;
 }
 
-#endif
 
 
 
