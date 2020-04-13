@@ -64,6 +64,12 @@ void tiltScanner::init() {
     pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 
+void tiltScanner::deinit() {
+    //pBLEScan->stop();
+    wait_until_scan_complete();
+    BLEDevice::deinit(true);  // Deinitialize the scanner & release memory
+}
+
 
 void tiltScanner::set_scan_active_flag(bool value) {
     m_scan_active = value;
@@ -89,8 +95,7 @@ bool tiltScanner::wait_until_scan_complete() {
     while(m_scan_active)
         FreeRTOS::sleep(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
 
-    pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
-
+    //pBLEScan->stop();
     pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
 
     return true;

@@ -21,6 +21,7 @@ class tiltScanner {
 public:
     tiltScanner();
     void init();
+    void deinit();
     bool scan();
 
     bool wait_until_scan_complete();
