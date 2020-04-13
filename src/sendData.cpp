@@ -55,7 +55,7 @@ dataSendHandler::dataSendHandler() {
     send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
     send_to_brewfather_at =     50 * 1000; // Trigger the first send to Fermentrack 50 seconds out
     send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
-    send_to_google_at =         65 * 1000; // Trigger the first send to Google Sheets 65 seconds out
+    send_to_google_at =         15 * 1000; // Trigger the first send to Google Sheets 65 seconds out
 #ifdef ENABLE_TEST_CHECKINS
     send_checkin_at =           35 * 1000; // If we have send_checkins enabled (this is a testing thing!) send at 35 seconds
 #endif
@@ -81,7 +81,7 @@ void dataSendHandler::setClock() {
 
 void dataSendHandler::prep_send_secure() {
     secure_client = new WiFiClientSecure;
-    secure_client -> setCACert(rootCACertificate);
+//    secure_client -> setCACert(rootCACertificate);
 }
 #endif
 
@@ -130,15 +130,17 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
         if (strlen(dataToSend) > 5) {
 #ifdef DEBUG_PRINTS
             Serial.print("[HTTPS] Sending data to: ");
-                Serial.println(url);
-                Serial.print("Data to send: ");
-                Serial.println(dataToSend);
+            Serial.println(url);
+            Serial.print("Data to send: ");
+            Serial.println(dataToSend);
+            Serial.printf("[HTTPS] Pre-deinit RAM left %d\r\n", esp_get_free_heap_size());
 #endif
+            // We're severely memory starved. Deinitialize bluetooth and free the related memory
+            tilt_scanner.deinit();
 
-            // If we're really memory starved, we can wait to send any data until current scans complete
-            // For all HTTPS sends, let's do this just to be safe
-            tilt_scanner.wait_until_scan_complete();
-
+#ifdef DEBUG_PRINTS
+            Serial.printf("[HTTPS] Post-deinit RAM left %d\r\n", esp_get_free_heap_size());
+#endif
             https.begin(*secure_client, url);
             https.addHeader("Content-Type", "application/json");             //Specify content-type header
             if (apiKey) {
@@ -157,7 +159,17 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
                     Serial.println(httpResponseCode);   //Print return code
 #endif
             }
+#ifdef DEBUG_PRINTS
+            Serial.printf("[HTTPS] Pre-https.end RAM left %d\r\n", esp_get_free_heap_size());
+#endif
             https.end();  //Free resources
+#ifdef DEBUG_PRINTS
+            Serial.printf("[HTTPS] Post-https.end RAM left %d\r\n", esp_get_free_heap_size());
+#endif
+            tilt_scanner.init();
+#ifdef DEBUG_PRINTS
+            Serial.printf("[HTTPS] Post-reinit RAM left %d\r\n", esp_get_free_heap_size());
+#endif
         }
         // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
         // delete secure_client;
