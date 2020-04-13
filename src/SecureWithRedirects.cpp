@@ -14,14 +14,23 @@
 #include <WiFiClientSecure.h>
 
 
-SecureWithRedirects::SecureWithRedirects() {
-    // Initialize secure_client
+SecureWithRedirects::SecureWithRedirects(const char * original_url, const char *api_key, const char *data_to_send) {
+    // Initialize secure_client & HTTPClient
     secure_client = new WiFiClientSecure;
     https = new HTTPClient;
+
+    // Set defaults
     redirects=0;
     use_get=false;
-    const char* headerNames[] = { "Location", "Last-Modified" };
+
+    // Configure the HTTPClient to collect headers
+    const char* headerNames[] = { "Location" };
     https->collectHeaders(headerNames, sizeof(headerNames)/sizeof(headerNames[0]));
+
+    // Set the URL/apiKey/dataToSend
+    url = original_url;
+    apiKey=api_key;
+    dataToSend=data_to_send;
 }
 
 
@@ -34,39 +43,23 @@ void SecureWithRedirects::end() {
 }
 
 
-bool SecureWithRedirects::send_with_redirects(const char * original_url, const char *api_key, const char *data_to_send) {
-    // TODO - Refactor this into the constructor or something
-    url = original_url;
-    apiKey=api_key;
-    dataToSend=data_to_send;
 
+bool SecureWithRedirects::send_with_redirects() {
 #ifdef DEBUG_PRINTS
-    Serial.print("[send_with_redirects] apiKey: ");
-    Serial.println(apiKey);
-
-    Serial.print("[send_with_redirects] dataToSend: ");
-    Serial.println(dataToSend);
-#endif
-
-    return attempt_send();
-
-}
-
-
-bool SecureWithRedirects::attempt_send() {
     String response;
     String location_header;
+#endif
     int httpResponseCode;
 
     if(redirects >= MAXIMUM_REDIRECTS) { // We've been redirected too many times
 #ifdef DEBUG_PRINTS
-        Serial.println("[SWR::attempt_send] Too many redirects - returning");
+        Serial.println("[SWR::send_with_redirects] Too many redirects - returning");
 #endif
         return false;
     }
 
 
-    Serial.print("[SWR::attempt_send] Current URL: `");
+    Serial.print("[SWR::send_with_redirects] Current URL: `");
     Serial.print(url);
     Serial.println("`");
 
@@ -90,7 +83,7 @@ bool SecureWithRedirects::attempt_send() {
             // These are success codes - Return true, as we were able to post
 #ifdef DEBUG_PRINTS
             response = https->getString();      //Get the response to the request
-            Serial.print("[SWR::attempt_send] Success - Code");
+            Serial.print("[SWR::send_with_redirects] Success - Code");
             Serial.println(httpResponseCode);   //Print return code
             Serial.println(response);           //Print request answer
 #endif
@@ -102,24 +95,24 @@ bool SecureWithRedirects::attempt_send() {
             // These are redirect codes (which is the whole reason that this function exists)
 #ifdef DEBUG_PRINTS
             response = https->getString();                       //Get the response to the request
-            Serial.print("[SWR::attempt_send] Redirected (use get next time) - Code ");
+            Serial.print("[SWR::send_with_redirects] Redirected (use get next time) - Code ");
             Serial.println(httpResponseCode);   //Print return code
 #endif
 
             if(https->hasHeader("Location")) {
 #ifdef DEBUG_PRINTS
                 location_header = https->header("Location");                       //Get the response to the request
-                Serial.print("[SWR::attempt_send] Location Header: ");
+                Serial.print("[SWR::send_with_redirects] Location Header: ");
                 Serial.println(location_header);   //Print return code
 #endif
                 url = https->header("Location");
                 https->end();
                 redirects++;  // Increment redirects
                 use_get = true;  // For these redirect codes, we have to switch to use GET (without post data)
-                return attempt_send();  // Then call attempt_send again
+                return send_with_redirects();  // Then call send_with_redirects again
             } else {
 #ifdef DEBUG_PRINTS
-                Serial.print("[SWR::attempt_send] No location header found! ");
+                Serial.print("[SWR::send_with_redirects] No location header found! ");
 #endif
                 https->end();
                 return false;
@@ -130,23 +123,23 @@ bool SecureWithRedirects::attempt_send() {
             // These are redirect codes (which is the whole reason that this function exists)
 #ifdef DEBUG_PRINTS
             response = https->getString();                       //Get the response to the request
-            Serial.print("[SWR::attempt_send] Redirected - Code ");
+            Serial.print("[SWR::send_with_redirects] Redirected - Code ");
             Serial.println(httpResponseCode);   //Print return code
 #endif
 
             if(https->hasHeader("Location")) {
 #ifdef DEBUG_PRINTS
                 location_header = https->header("Location");                       //Get the response to the request
-                Serial.print("[SWR::attempt_send] Location Header: ");
+                Serial.print("[SWR::send_with_redirects] Location Header: ");
                 Serial.println(location_header);   //Print return code
 #endif
                 url = https->header("Location");
                 https->end();
                 redirects++;  // Increment redirects
-                return attempt_send();  // Then call attempt_send again
+                return send_with_redirects();  // Then call send_with_redirects again
             } else {
 #ifdef DEBUG_PRINTS
-                Serial.print("[SWR::attempt_send] No location header found! ");
+                Serial.print("[SWR::send_with_redirects] No location header found! ");
 #endif
                 https->end();
                 return false;
@@ -159,16 +152,16 @@ bool SecureWithRedirects::attempt_send() {
             // We had some kind of connection issue. Treat it as a redirect, but keep the same URL/method
 #ifdef DEBUG_PRINTS
             response = https->getString();                       //Get the response to the request
-            Serial.print("[SWR::attempt_send] Connection error - Code ");
+            Serial.print("[SWR::send_with_redirects] Connection error - Code ");
             Serial.println(httpResponseCode);   //Print return code
 #endif
             https->end();
             redirects++;  // Increment redirects
-            return attempt_send();  // Then call attempt_send again
+            return send_with_redirects();  // Then call send_with_redirects again
         default:
 #ifdef DEBUG_PRINTS
             response = https->getString();                       //Get the response to the request
-            Serial.print("[SWR::attempt_send] Failed - Code ");
+            Serial.print("[SWR::send_with_redirects] Failed - Code ");
             Serial.println(httpResponseCode);   //Print return code
             Serial.println(response);           //Print request answer
 #endif

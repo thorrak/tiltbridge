@@ -90,7 +90,6 @@ bool dataSendHandler::send_to_fermentrack() {
 bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend) {
     // This handles the generic act of sending data to an endpoint
     bool result = false;
-    SecureWithRedirects SWR;
 
     if (strlen(dataToSend) > 5) {
 #ifdef DEBUG_PRINTS
@@ -108,7 +107,8 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
         Serial.println("[HTTPS] Calling SWR::send_with_redirects");
 #endif
 
-        result = SWR.send_with_redirects(url, apiKey, dataToSend);
+        SecureWithRedirects SWR(url, apiKey, dataToSend);
+        result = SWR.send_with_redirects();
         SWR.end();
 
 #ifdef DEBUG_PRINTS

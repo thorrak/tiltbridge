@@ -13,14 +13,9 @@
 class SecureWithRedirects {
 
 public:
-
-
-    SecureWithRedirects();
+    SecureWithRedirects(const char * original_url, const char *api_key, const char *data_to_send);
     void end();
-    bool send_with_redirects(const char * original_url, const char *api_key, const char *data_to_send);
-    bool attempt_send();
-
-
+    bool send_with_redirects();
 
 private:
     int redirects;
@@ -32,12 +27,6 @@ private:
     const char *apiKey;
     const char *dataToSend;
 
-
-
 };
-
-
-
-
 
 #endif //TILTBRIDGE_SECUREWITHREDIRECTS_H
