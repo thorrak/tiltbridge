@@ -67,7 +67,7 @@ void tiltScanner::init() {
 void tiltScanner::deinit() {
     //pBLEScan->stop();
     wait_until_scan_complete();
-    BLEDevice::deinit(true);  // Deinitialize the scanner & release memory
+    BLEDevice::deinit(false);  // Deinitialize the scanner & release memory
 }
 
 

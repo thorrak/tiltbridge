@@ -20,33 +20,7 @@ using json = nlohmann::json;
 #ifdef USE_SECURE_GSCRIPTS
 #include <WiFiMulti.h>
 #include <WiFiClientSecure.h>
-// This is the GlobalSign 2021 root cert (the one used by script.google.com)
-// An appropriate root cert can be discovered for any site by running:
-//   openssl s_client -showcerts -connect script.google.com:443 </dev/null'
-// The CA root cert is the last cert given in the chain of certs
-const char* rootCACertificate = \
-"-----BEGIN CERTIFICATE-----\n" \
-"MIIDujCCAqKgAwIBAgILBAAAAAABD4Ym5g0wDQYJKoZIhvcNAQEFBQAwTDEgMB4G\n" \
-"A1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjIxEzARBgNVBAoTCkdsb2JhbFNp\n" \
-"Z24xEzARBgNVBAMTCkdsb2JhbFNpZ24wHhcNMDYxMjE1MDgwMDAwWhcNMjExMjE1\n" \
-"MDgwMDAwWjBMMSAwHgYDVQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMjETMBEG\n" \
-"A1UEChMKR2xvYmFsU2lnbjETMBEGA1UEAxMKR2xvYmFsU2lnbjCCASIwDQYJKoZI\n" \
-"hvcNAQEBBQADggEPADCCAQoCggEBAKbPJA6+Lm8omUVCxKs+IVSbC9N/hHD6ErPL\n" \
-"v4dfxn+G07IwXNb9rfF73OX4YJYJkhD10FPe+3t+c4isUoh7SqbKSaZeqKeMWhG8\n" \
-"eoLrvozps6yWJQeXSpkqBy+0Hne/ig+1AnwblrjFuTosvNYSuetZfeLQBoZfXklq\n" \
-"tTleiDTsvHgMCJiEbKjNS7SgfQx5TfC4LcshytVsW33hoCmEofnTlEnLJGKRILzd\n" \
-"C9XZzPnqJworc5HGnRusyMvo4KD0L5CLTfuwNhv2GXqF4G3yYROIXJ/gkwpRl4pa\n" \
-"zq+r1feqCapgvdzZX99yqWATXgAByUr6P6TqBwMhAo6CygPCm48CAwEAAaOBnDCB\n" \
-"mTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUm+IH\n" \
-"V2ccHsBqBt5ZtJot39wZhi4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5n\n" \
-"bG9iYWxzaWduLm5ldC9yb290LXIyLmNybDAfBgNVHSMEGDAWgBSb4gdXZxwewGoG\n" \
-"3lm0mi3f3BmGLjANBgkqhkiG9w0BAQUFAAOCAQEAmYFThxxol4aR7OBKuEQLq4Gs\n" \
-"J0/WwbgcQ3izDJr86iw8bmEbTUsp9Z8FHSbBuOmDAGJFtqkIk7mpM0sYmsL4h4hO\n" \
-"291xNBrBVNpGP+DTKqttVCL1OmLNIG+6KYnX3ZHu01yiPqFbQfXf5WRDLenVOavS\n" \
-"ot+3i9DAgBkcRcAtjOj4LaR0VknFBbVPFd5uRHg5h6h+u/N5GJG79G+dwfCMNYxd\n" \
-"AfvDbbnvRG15RjF+Cv6pgsH/76tuIMRQyV+dTZsXjAzlAcmgQWpzU/qlULRuJQ/7\n" \
-"TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==\n" \
-"-----END CERTIFICATE-----\n";
+#include "SecureWithRedirects.h"
 #endif
 
 dataSendHandler data_sender;  // Global data sender
@@ -63,7 +37,6 @@ dataSendHandler::dataSendHandler() {
 
 
 #ifdef USE_SECURE_GSCRIPTS
-WiFiClientSecure *secure_client;
 
 void dataSendHandler::setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
@@ -79,17 +52,12 @@ void dataSendHandler::setClock() {
     gmtime_r(&nowSecs, &timeinfo);
 }
 
-void dataSendHandler::prep_send_secure() {
-    secure_client = new WiFiClientSecure;
-//    secure_client -> setCACert(rootCACertificate);
-}
 #endif
 
 
 void dataSendHandler::init() {
 #ifdef USE_SECURE_GSCRIPTS
     setClock();
-    prep_send_secure();
 #endif
 }
 
@@ -121,61 +89,35 @@ bool dataSendHandler::send_to_fermentrack() {
 // For sending data to Google Scripts, we have to use secure_client but otherwise we're doing the same thing as before.
 bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend) {
     // This handles the generic act of sending data to an endpoint
-    HTTPClient https;
     bool result = false;
+    SecureWithRedirects SWR;
 
-    // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
-    // prep_send_secure();
-    if(secure_client) {
-        if (strlen(dataToSend) > 5) {
+    if (strlen(dataToSend) > 5) {
 #ifdef DEBUG_PRINTS
-            Serial.print("[HTTPS] Sending data to: ");
-            Serial.println(url);
-            Serial.print("Data to send: ");
-            Serial.println(dataToSend);
-            Serial.printf("[HTTPS] Pre-deinit RAM left %d\r\n", esp_get_free_heap_size());
+        Serial.print("[HTTPS] Sending data to: ");
+        Serial.println(url);
+        Serial.print("Data to send: ");
+        Serial.println(dataToSend);
+        Serial.printf("[HTTPS] Pre-deinit RAM left %d\r\n", esp_get_free_heap_size());
 #endif
-            // We're severely memory starved. Deinitialize bluetooth and free the related memory
-            tilt_scanner.deinit();
+        // We're severely memory starved. Deinitialize bluetooth and free the related memory
+        tilt_scanner.deinit();
 
 #ifdef DEBUG_PRINTS
-            Serial.printf("[HTTPS] Post-deinit RAM left %d\r\n", esp_get_free_heap_size());
+        Serial.printf("[HTTPS] Post-deinit RAM left %d\r\n", esp_get_free_heap_size());
+        Serial.println("[HTTPS] Calling SWR::send_with_redirects");
 #endif
-            https.begin(*secure_client, url);
-            https.addHeader("Content-Type", "application/json");             //Specify content-type header
-            if (apiKey) {
-                https.addHeader("X-API-KEY", apiKey);  //Specify API key header
-            }
-            int httpResponseCode = https.POST(dataToSend);   //Send the actual POST request
 
-            if (httpResponseCode > 0) {
-                result = true;
-#ifdef DEBUG_PRINTS
-                String response = https.getString();                       //Get the response to the request
-                Serial.println(httpResponseCode);   //Print return code
-                Serial.println(response);           //Print request answer
-            } else {
-                    Serial.print("[HTTPS] Error on sending POST: ");
-                    Serial.println(httpResponseCode);   //Print return code
-#endif
-            }
-#ifdef DEBUG_PRINTS
-            Serial.printf("[HTTPS] Pre-https.end RAM left %d\r\n", esp_get_free_heap_size());
-#endif
-            https.end();  //Free resources
-#ifdef DEBUG_PRINTS
-            Serial.printf("[HTTPS] Post-https.end RAM left %d\r\n", esp_get_free_heap_size());
-#endif
-            tilt_scanner.init();
-#ifdef DEBUG_PRINTS
-            Serial.printf("[HTTPS] Post-reinit RAM left %d\r\n", esp_get_free_heap_size());
-#endif
-        }
-        // There are memory leaks when we do this, disabling creation/deletion of the secure_client for every round
-        // delete secure_client;
+        result = SWR.send_with_redirects(url, apiKey, dataToSend);
+        SWR.end();
 
-    } else {
-        Serial.println("[HTTPS] Unable to create secure_client");
+#ifdef DEBUG_PRINTS
+        Serial.printf("[HTTPS] Post-SWR RAM left %d\r\n", esp_get_free_heap_size());
+#endif
+        tilt_scanner.init();
+#ifdef DEBUG_PRINTS
+        Serial.printf("[HTTPS] Post-reinit RAM left %d\r\n", esp_get_free_heap_size());
+#endif
     }
     return result;
 }

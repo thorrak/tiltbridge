@@ -14,7 +14,7 @@
 
 
 #ifdef USE_SECURE_GSCRIPTS
-#define GSCRIPTS_DELAY          (5  * 60 * 1000)  // 5 minute delay between pushes to Google Sheets directly
+#define GSCRIPTS_DELAY          (1  * 60 * 1000)  // 5 minute delay between pushes to Google Sheets directly
 #else
 #define GSCRIPTS_DELAY          (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets Proxy
 #endif
@@ -56,7 +56,6 @@ private:
 #ifdef USE_SECURE_GSCRIPTS
     // This is necessary for HTTPS support (which is useless until ESP32 bluetooth support is improved)
     void setClock();
-    void prep_send_secure();
     static bool send_to_url_https(const char *url, const char *apiKey, const char *dataToSend);
 #endif
 
