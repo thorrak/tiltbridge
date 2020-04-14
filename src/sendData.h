@@ -14,7 +14,7 @@
 
 
 #ifdef USE_SECURE_GSCRIPTS
-#define GSCRIPTS_DELAY          (1  * 60 * 1000)  // 5 minute delay between pushes to Google Sheets directly
+#define GSCRIPTS_DELAY          (10  * 60 * 1000)  // 10 minute delay between pushes to Google Sheets directly
 #else
 #define GSCRIPTS_DELAY          (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets Proxy
 #endif
@@ -25,6 +25,7 @@
 #define BREWERS_FRIEND_MIN_KEY_LENGTH   12
 #define FERMENTRACK_MIN_URL_LENGTH      12
 #define GSCRIPTS_MIN_URL_LENGTH         24
+#define GSCRIPTS_MIN_EMAIL_LENGTH       7
 
 
 // This is me being simplifying the reuse of code. The formats for Brewers Friend and Brewfather are basically the same

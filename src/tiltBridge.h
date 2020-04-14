@@ -20,7 +20,7 @@
 
 
 // Enable this for testing
-#define DEBUG_PRINTS 1
+//#define DEBUG_PRINTS 1
 
 // This is for a "heartbeat" checkin to fermentrack.com. Unless you are me (thorrak) don't enable this, please.
 //#define ENABLE_TEST_CHECKINS 1

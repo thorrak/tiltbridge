@@ -29,7 +29,7 @@ dataSendHandler::dataSendHandler() {
     send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
     send_to_brewfather_at =     50 * 1000; // Trigger the first send to Fermentrack 50 seconds out
     send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
-    send_to_google_at =         15 * 1000; // Trigger the first send to Google Sheets 65 seconds out
+    send_to_google_at =         65 * 1000; // Trigger the first send to Google Sheets 65 seconds out
 #ifdef ENABLE_TEST_CHECKINS
     send_checkin_at =           35 * 1000; // If we have send_checkins enabled (this is a testing thing!) send at 35 seconds
 #endif
@@ -134,7 +134,8 @@ bool dataSendHandler::send_to_google() {
     bool result = true;
 
     // There are two configuration options which are mandatory when using the Google Sheets integration
-    if(app_config.config["scriptsURL"].get<std::string>().length() <= 12 || app_config.config["scriptsEmail"].get<std::string>().length() < 7) {
+    if(app_config.config["scriptsURL"].get<std::string>().length() <= GSCRIPTS_MIN_URL_LENGTH ||
+       app_config.config["scriptsEmail"].get<std::string>().length() < GSCRIPTS_MIN_EMAIL_LENGTH) {
 //#ifdef DEBUG_PRINTS
 //        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
 //#endif
