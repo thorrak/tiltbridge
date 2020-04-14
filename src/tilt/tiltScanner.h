@@ -7,6 +7,7 @@
 
 #include "tiltHydrometer.h"
 #include <nlohmann/json.hpp>
+#include <BLEAdvertisedDevice.h>
 
 
 
@@ -17,15 +18,21 @@
 using json = nlohmann::json;
 
 
+class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+    void onResult(BLEAdvertisedDevice advertisedDevice) override;
+};
+
+
 class tiltScanner {
 public:
     tiltScanner();
     void init();
+    void deinit();
     bool scan();
 
     bool wait_until_scan_complete();
     void set_scan_active_flag(bool value);
-    uint8_t load_tilt_from_advert_hex(std::string advert_string_hex);
+    uint8_t load_tilt_from_advert_hex(const std::string& advert_string_hex);
     nlohmann::json tilt_to_json();
 
 
@@ -33,7 +40,8 @@ public:
 
 private:
     bool m_scan_active;
-    tiltHydrometer* m_tilt_devices[TILT_COLORS];
+    tiltHydrometer* m_tilt_devices[TILT_COLORS]{};
+    MyAdvertisedDeviceCallbacks *callbacks;
 };
 
 extern tiltScanner tilt_scanner;

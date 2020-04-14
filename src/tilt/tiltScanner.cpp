@@ -26,15 +26,13 @@ tiltScanner tilt_scanner;
 // BLE Scanner Callbacks/Code
 ////////////////////////////
 
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-    void onResult(BLEAdvertisedDevice advertisedDevice) {
+void MyAdvertisedDeviceCallbacks::onResult(BLEAdvertisedDevice advertisedDevice) {
 //        uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-        tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
+    tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
 #if defined(BLE_PRINT_ALL_DEVICES) && defined(DEBUG_PRINTS)
-        Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
+    Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
 #endif
-    }
-};
+}
 
 static void ble_scan_complete(BLEScanResults scanResults) {
     tilt_scanner.set_scan_active_flag(false);
@@ -52,16 +50,25 @@ tiltScanner::tiltScanner() {
     m_scan_active = false;
     for(uint8_t i = 0;i<TILT_COLORS;i++)
         m_tilt_devices[i] = new tiltHydrometer(i);
+
+    // Also initialize the callbacks
+    callbacks = new MyAdvertisedDeviceCallbacks();
 }
 
 
 void tiltScanner::init() {
     BLEDevice::init("");
     pBLEScan = BLEDevice::getScan(); //create new scan
-    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
     pBLEScan->setInterval(100);
     pBLEScan->setWindow(99);  // less or equal setInterval value
+}
+
+void tiltScanner::deinit() {
+    //pBLEScan->stop();
+    wait_until_scan_complete();
+    BLEDevice::deinit(false);  // Deinitialize the scanner & release memory
 }
 
 
@@ -89,15 +96,14 @@ bool tiltScanner::wait_until_scan_complete() {
     while(m_scan_active)
         FreeRTOS::sleep(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
 
-    pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
-
+    //pBLEScan->stop();
     pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
 
     return true;
 }
 
 
-uint8_t tiltScanner::load_tilt_from_advert_hex(std::string advert_string_hex) {
+uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_hex) {
     std::stringstream ss;
     std::string advert_string;
 //    std::string m_part1;
