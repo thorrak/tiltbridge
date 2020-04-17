@@ -121,7 +121,7 @@ void init_wifi() {
     ip_address_url.concat("/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
-    delay(5000);
+    delay(1000);
 }
 
 
