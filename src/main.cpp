@@ -3,6 +3,8 @@
 //
 
 
+//#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+//#include "esp_log.h"
 
 #include <nlohmann/json.hpp>
 
@@ -69,6 +71,10 @@ void setup() {
     // I kind of want to leave the WiFi info on screen longer here instead of the logo. The logo will display often
     // enough as-is.
 //    lcd.display_logo();  // Display the Fermentrack logo
+
+//    esp_log_level_set("*", ESP_LOG_DEBUG);        // set all components to DEBUG level
+//    esp_log_level_set("wifi", ESP_LOG_WARN);      // enable WARN logs from WiFi stack
+//    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // enable WARN logs from DHCP client
 
     // Initialize the BLE scanner
     tilt_scanner.init();

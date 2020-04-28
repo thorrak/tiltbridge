@@ -7,7 +7,7 @@
 
 #include "tiltHydrometer.h"
 #include <nlohmann/json.hpp>
-#include <BLEAdvertisedDevice.h>
+#include <NimBLEAdvertisedDevice.h>
 
 
 
@@ -18,8 +18,8 @@
 using json = nlohmann::json;
 
 
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-    void onResult(BLEAdvertisedDevice advertisedDevice) override;
+class MyAdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
+    void onResult(NimBLEAdvertisedDevice* advertisedDevice) override;
 };
 
 

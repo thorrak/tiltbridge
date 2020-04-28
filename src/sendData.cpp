@@ -100,6 +100,7 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
         Serial.printf("[HTTPS] Pre-deinit RAM left %d\r\n", esp_get_free_heap_size());
 #endif
         // We're severely memory starved. Deinitialize bluetooth and free the related memory
+        // NOTE - This is not strictly true under NimBLE. Deinit now only waits for a scan to complete before
         tilt_scanner.deinit();
         yield();
 

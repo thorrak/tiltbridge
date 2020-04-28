@@ -2,6 +2,7 @@
 // Created by John Beeler on 5/12/18.
 //
 
+#include "tiltBridge.h"
 #include "tiltHydrometer.h"
 #include "tiltScanner.h"
 
@@ -9,10 +10,10 @@
 #include <Arduino.h>
 #endif
 
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEScan.h>
-#include <BLEAdvertisedDevice.h>
+#include <NimBLEDevice.h>
+#include <NimBLEUtils.h>
+#include <NimBLEScan.h>
+#include <NimBLEAdvertisedDevice.h>
 
 
 // Create the scanner
@@ -26,15 +27,23 @@ tiltScanner tilt_scanner;
 // BLE Scanner Callbacks/Code
 ////////////////////////////
 
-void MyAdvertisedDeviceCallbacks::onResult(BLEAdvertisedDevice advertisedDevice) {
+void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
 //        uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-    tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
+
+    if(advertisedDevice->getManufacturerData().length() > 4) {
+        if(advertisedDevice->getManufacturerData()[0] == 0x4c && advertisedDevice->getManufacturerData()[1] == 0x00 &&
+           advertisedDevice->getManufacturerData()[2] == 0x02 && advertisedDevice->getManufacturerData()[3] == 0x15) {
 #if defined(BLE_PRINT_ALL_DEVICES) && defined(DEBUG_PRINTS)
-    Serial.printf("Advertised Device: %s \r\n", advertisedDevice.toString().c_str());
+            Serial.printf("Advertised iBeacon Device: %s ", advertisedDevice->toString().c_str());
+            Serial.println();
 #endif
+            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData());
+        }
+    }
 }
 
-static void ble_scan_complete(BLEScanResults scanResults) {
+static void ble_scan_complete(NimBLEScanResults scanResults) {
+    // Todo - Decide if it makes sense to process scan results here rather than on a callback
     tilt_scanner.set_scan_active_flag(false);
 }
 
@@ -57,10 +66,12 @@ tiltScanner::tiltScanner() {
 
 
 void tiltScanner::init() {
-    BLEDevice::init("");
-    pBLEScan = BLEDevice::getScan(); //create new scan
+    NimBLEDevice::init("");
+    pBLEScan = NimBLEDevice::getScan(); //create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
-    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    // CHANGE IN NIMBLE - Active Scan must be set false to read new (Gen 2/3) Tilts
+    // See https://github.com/h2zero/NimBLE-Arduino/issues/22
+    pBLEScan->setActiveScan(false); //active scan uses more power, but get results faster
     pBLEScan->setInterval(100);
     pBLEScan->setWindow(99);  // less or equal setInterval value
 }
@@ -68,7 +79,10 @@ void tiltScanner::init() {
 void tiltScanner::deinit() {
     //pBLEScan->stop();
     wait_until_scan_complete();
-    BLEDevice::deinit(false);  // Deinitialize the scanner & release memory
+    // NimBLE fails to reinitialize after a call to deinit() (but thankfully it's light enough weight that we don't
+    // have to call deinit to use https any longer)
+    // https://github.com/h2zero/NimBLE-Arduino/issues/23
+    //NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
 }
 
 
@@ -81,7 +95,7 @@ bool tiltScanner::scan() {
     // Set a flag when we start asynchronously scanning to prevent multiple scans from being launched
     if(!m_scan_active) {
         pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
-        pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete);
+        pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete, true);
         m_scan_active = true;
         return true;
     }
@@ -110,9 +124,12 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
 //    std::string m_end_string;
     uint8_t m_color;
 
+    // Check that this is an iBeacon packet
+    if(advert_string_hex[0] != 0x4c || advert_string_hex[1] != 0x00 || advert_string_hex[2] != 0x02 || advert_string_hex[3] != 0x15)
+        return TILT_NONE;
+
     // There is almost certainly a better way to do this
-    // TODO - Rewrite this to not cast the grav/temp as a string & then recast it as an int
-    char *hex_cstr = BLEUtils::buildHexData(nullptr, (uint8_t*)advert_string_hex.data(), advert_string_hex.length());
+    char *hex_cstr = NimBLEUtils::buildHexData(nullptr, (uint8_t*)advert_string_hex.data(), advert_string_hex.length());
     ss.str(hex_cstr);
     free(hex_cstr);
     advert_string = ss.str();
@@ -133,6 +150,7 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
     if(m_color == TILT_NONE) // We didn't match the uuid to a color (should only happen if new colors are released)
         return TILT_NONE;
 
+    // TODO - Rewrite this to not cast the grav/temp as a string & then recast it as an int
     uint32_t temp = std::stoul(advert_string.substr(40,4), nullptr, 16);
     uint32_t gravity = std::stoul(advert_string.substr(44,4), nullptr, 16);
 //    m_end_string = advert_string.substr(48,2);  // first byte is txpower, second is RSSI
