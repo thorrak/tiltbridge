@@ -95,9 +95,22 @@ bool tiltScanner::scan() {
     // Set a flag when we start asynchronously scanning to prevent multiple scans from being launched
     if(!m_scan_active) {
         pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
-        pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete, true);
-        m_scan_active = true;
-        return true;
+
+        if(!pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete, true)) {
+            // We failed to start a scan. There is a race condition where ble_scan_complete gets triggered prior to
+            // the semaphores being released - if we happen to catch things just right, we can end up in an inconsistent
+            // state.
+#ifdef DEBUG_PRINTS
+            Serial.println("Scan already in progress - explicitly stopping.");
+#endif
+            pBLEScan->stop();
+            FreeRTOS::sleep(100);
+            return false;
+        } else {
+            // We successfully started a scan
+            m_scan_active = true;
+            return true;
+        }
     }
     return false;
 }
