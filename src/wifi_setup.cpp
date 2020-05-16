@@ -190,3 +190,35 @@ void handle_wifi_reset_presses() {
 //        }
     }
 }
+
+
+void reconnectIfDisconnected() {
+    if(WiFiClass::status() !=  WL_CONNECTED) {
+        // WiFi is down - Reconnect
+        lcd.display_wifi_disconnected_screen();
+        WiFi.begin();
+
+        delay(1000);  // Ensuring the "disconnected" screen appears for at least one second
+
+        int WLcount = 0;
+        while(WiFiClass::status() != WL_CONNECTED && WLcount < 190)
+        {
+            delay( 100 );
+#ifdef DEBUG_PRINTS
+            if(WLcount % 5 = 0)
+                Serial.printf(".");
+#endif
+            ++WLcount;
+        }
+
+        if(WiFiClass::status() !=  WL_CONNECTED) {
+            // We failed to reconnect.
+            lcd.display_wifi_reconnect_failed();
+        } else {
+            // We reconnected successfully
+            lcd.display_logo();
+        }
+
+    }
+}
+

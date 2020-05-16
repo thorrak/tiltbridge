@@ -90,6 +90,7 @@ void setup() {
 
 
 void loop() {
+
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if(tilt_scanner.scan()) {
         // If we need to do anything when a new scan is started, trigger it here.
@@ -104,6 +105,7 @@ void loop() {
 #endif
 
     handle_wifi_reset_presses();
+    reconnectIfDisconnected();  // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
     lcd.check_screen();
     http_server.handleClient();

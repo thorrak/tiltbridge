@@ -55,6 +55,9 @@ public:
     void display_wifi_reset_screen();
     void display_ota_update_screen();
 
+    void display_wifi_disconnected_screen();
+    void display_wifi_reconnect_failed();
+
     void print_line(const String& left_text, const String& right_text, uint8_t line);
     void print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line);
 

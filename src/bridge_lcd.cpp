@@ -173,6 +173,28 @@ void bridge_lcd::display_ota_update_screen() {
 #endif
 }
 
+void bridge_lcd::display_wifi_disconnected_screen() {
+    // If the user's WiFi disconnects for any reason, it can take up to 20 seconds to reconnect. We'll print a message
+    // letting the user know while we attempt to reconnect.
+    clear();
+    print_line("The TiltBridge has lost", "", 1);
+    print_line("connection to your WiFi.", "", 2);
+    print_line("", "", 3);
+    print_line("Attempting to reconnect...", "", 4);
+    display();
+}
+
+void bridge_lcd::display_wifi_reconnect_failed() {
+    // If the user's WiFi disconnects for any reason, it can take up to 20 seconds to reconnect. We'll print a message
+    // letting the user know while we attempt to reconnect.
+    clear();
+    print_line("The TiltBridge has lost", "", 1);
+    print_line("connection to your WiFi.", "", 2);
+    print_line("", "", 3);
+    print_line("Attempting to reconnect...", "", 4);
+    display();
+}
+
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10], temp[6];
