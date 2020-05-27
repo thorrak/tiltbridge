@@ -258,7 +258,12 @@ void bridge_lcd::init() {
 #ifdef LCD_TFT
     tft = new Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
     tft->begin();
+#ifdef LCD_TFT_M5_STACK
+    // +4 "mirrors" the text (supposedly)
+    tft->setRotation(0+4);
+#else
     tft->setRotation(3);
+#endif
     tft->fillScreen(ILI9341_BLACK);
     tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 
