@@ -97,8 +97,5 @@ docs/.build/doctrees/
 /.pio
 /.vscode
 
-cmake-build-debug
-cmake-build-all
-cmake-build-d32_pro_tft
-cmake-build-lcd_ssd1306
+cmake-build-*
 

@@ -260,7 +260,7 @@ void bridge_lcd::init() {
     tft->begin();
 #ifdef LCD_TFT_M5_STACK
     // +4 "mirrors" the text (supposedly)
-    tft->setRotation(0+4);
+    tft->setRotation(0);
 #else
     tft->setRotation(3);
 #endif
