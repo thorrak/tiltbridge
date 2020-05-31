@@ -43,7 +43,7 @@
 #define TFT_ESPI_LINE_CLEARANCE 4
 #define TFT_ESPI_FONT_HEIGHT    2
 #define TFT_ESPI_FONT_NUMBER    4
-#define TILTS_PER_PAGE          3  // The actual number is one fewer than this - the first row is used for headers
+#define TILTS_PER_PAGE          4  // The actual number is one fewer than this - the first row is used for headers
 
 #endif
 
