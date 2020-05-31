@@ -16,6 +16,10 @@ bridge_lcd lcd;
 #include "img/tiltbridge_logo_tft.h"  // The (large) TiltBridge logo
 #endif
 
+#ifdef LCD_TFT_ESPI
+#include "img/fermentrack_logo.h"  // We're only using this style of logo for the OLED variant
+#endif
+
 
 bridge_lcd::bridge_lcd() {
     next_screen_at = 0;
@@ -42,6 +46,11 @@ void bridge_lcd::display_logo() {
     tft->drawRGBBitmap((320-288)/2, 0, gimp_image.pixel_data, gimp_image.width, gimp_image.height);
 #endif
 
+#ifdef LCD_TFT_ESPI
+    clear();
+    tft->drawXBitmap((tft->width()-fermentrack_logo_width)/2, (tft->height()-fermentrack_logo_height)/2, fermentrack_logo_bits, fermentrack_logo_width, fermentrack_logo_height, TFT_WHITE);
+    display();
+#endif
 }
 
 
@@ -142,7 +151,8 @@ void bridge_lcd::display_wifi_reset_screen() {
     // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
     // configuration AP at startup
     clear();
-#ifdef LCD_SSD1306
+ 
+#if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
     print_line("Press the button again to", "", 1);
     print_line("disable autoconnection", "", 2);
     print_line("and start the WiFi ", "", 3);
@@ -274,6 +284,14 @@ void bridge_lcd::init() {
 
 #endif
 
+#ifdef LCD_TFT_ESPI
+    tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
+    tft->init();
+    tft->fontHeight(TFT_ESPI_FONT_HEIGHT);
+    tft->setRotation(1);
+    tft->fillScreen(TFT_BLACK);
+#endif
+
 }
 
 
@@ -285,6 +303,10 @@ void bridge_lcd::clear() {
 
 #ifdef LCD_TFT
     tft->fillScreen(ILI9341_BLACK);
+#endif
+
+#ifdef LCD_TFT_ESPI
+    tft->fillScreen(TFT_BLACK);
 #endif
 
 }
@@ -340,6 +362,17 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
     tft->setCursor(320-w,y);
     tft->print(right_text);
 
+#endif
+
+#ifdef LCD_TFT_ESPI
+    // middle_text is ignored for non-TFT displays
+    int16_t starting_pixel_row = 0;
+
+    starting_pixel_row = (TFT_ESPI_LINE_CLEARANCE + TFT_ESPI_FONT_SIZE) * (line-1) + TFT_ESPI_LINE_CLEARANCE;
+
+    // TFT_eSPI::drawString(const char *string, int32_t poX, int32_t poY, uint8_t font_number)
+    tft->drawString(left_text, 0, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
+    tft->drawString(right_text, tft->width()/2, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
 #endif
 
 }
