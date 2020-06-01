@@ -41,6 +41,7 @@ public:
 
     bool set_values(uint32_t i_temp, uint32_t i_grav);
     std::string color_name();
+    uint32_t text_color();
     std::string converted_gravity();
     std::string gsheets_beer_name();
     nlohmann::json to_json();
