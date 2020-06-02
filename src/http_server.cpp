@@ -164,6 +164,26 @@ void processConfig() {
         Serial.println("Updated brewstatusPushEvery");
     }
 
+    if (server.hasArg("brewstatusTZoffset")) {
+        Serial.println("Has brewstatusTZoffset");
+        if (server.arg("brewstatusTZoffset").length() > 3)
+            return processConfigError();
+        else if (server.arg("brewstatusTZoffset").length() <= 0)
+            return processConfigError();
+        }
+
+        float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr, 10);
+        if(tzoffset < -12.0) {
+            Serial.println("brewstatusTZoffset is less than -12!");
+            return processConfigError();
+        } else if(tzoffset > 12.0) {
+            Serial.println("brewstatusTZoffset is greater than 12!");
+            return processConfigError();
+        else
+            app_config.config["brewstatusTZoffset"] = tzoffset;
+        Serial.println("Updated brewstatusTZoffset");
+    }
+
     // Google Sheets Settings
     if (server.hasArg("scriptsURL")) {
         // TODO - Validate this begins with "https://scripts.google.com/"

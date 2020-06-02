@@ -107,7 +107,7 @@ bool dataSendHandler::send_to_brewstatus() {
                      (float) tilt_scanner.tilt(i)->gravity / 1000,
                      (float) tilt_scanner.tilt(i)->temp,
                      tilt_scanner.tilt(i)->color_name().c_str(),
-                     (double) std::time(0) / 86400.0 + 25569.0
+                     ((double) std::time(0) / 86400.0 + 25569.0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0)
                     );
             if(!send_to_url(app_config.config["brewstatusURL"].get<std::string>().c_str(), "", payload, "application/x-www-form-urlencoded"))
                 result = false;  // There was an error with the previous send

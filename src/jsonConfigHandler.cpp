@@ -31,6 +31,7 @@ void jsonConfigHandler::initialize() {
             // Brewstatus Settings
             {"brewstatusURL", ""},
             {"brewstatusPushEvery", 60},
+            {"brewstatusTZoffset", -5},
 
             // Google Scripts Settings
             {"scriptsURL", ""},
