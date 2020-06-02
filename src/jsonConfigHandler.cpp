@@ -28,6 +28,10 @@ void jsonConfigHandler::initialize() {
             {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},
 
+            // Brewstatus Settings
+            {"brewstatusURL", ""},
+            {"brewstatusPushEvery", 60},
+
             // Google Scripts Settings
             {"scriptsURL", ""},
             {"scriptsEmail", ""},

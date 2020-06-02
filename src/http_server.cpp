@@ -130,6 +130,39 @@ void processConfig() {
         Serial.println("Updated fermentrackPushEvery");
     }
 
+    // Brewstatus Settings
+    if (server.hasArg("brewstatusURL")) {
+        // TODO - Add a check here to make sure that brewstatusURL actually changed, and return if it didn't
+        if (server.arg("brewstatusURL").length() > 255)
+            return processConfigError();
+        else if (server.arg("brewstatusURL").length() < 12)
+            app_config.config["brewstatusURL"] = "";
+        else
+            app_config.config["brewstatusURL"] = server.arg("brewstatusURL").c_str();
+    }
+
+    if (server.hasArg("brewstatusPushEvery")) {
+        Serial.println("Has brewstatusPushEvery");
+        if (server.arg("brewstatusPushEvery").length() > 5)
+            return processConfigError();
+        else if (server.arg("brewstatusPushEvery").length() <= 0)
+            return processConfigError();
+        else if (!isInteger(server.arg("brewstatusPushEvery").c_str())) {
+            Serial.println("brewstatusPushEvery is not an integer!");
+            return processConfigError();
+        }
+
+        // At this point, we know that it's an integer. Let's convert to a long so we can test the value
+        // TODO - Figure out if we want to print error messages for these
+        long push_every = strtol(server.arg("brewstatusPushEvery").c_str(), nullptr, 10);
+        if(push_every < 30)
+            app_config.config["brewstatusPushEvery"] = 30;
+        else if(push_every > 60*60)
+            app_config.config["brewstatusPushEvery"] = 60*60;
+        else
+            app_config.config["brewstatusPushEvery"] = push_every;
+        Serial.println("Updated brewstatusPushEvery");
+    }
 
     // Google Sheets Settings
     if (server.hasArg("scriptsURL")) {

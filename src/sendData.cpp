@@ -7,7 +7,6 @@
 // for convenience
 using json = nlohmann::json;
 
-
 #include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "sendData.h"
@@ -26,6 +25,7 @@ using json = nlohmann::json;
 dataSendHandler data_sender;  // Global data sender
 
 dataSendHandler::dataSendHandler() {
+    send_to_brewstatus_at =     40 * 1000; // Trigger the first send to BrewStatus 40 seconds out
     send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
     send_to_brewfather_at =     50 * 1000; // Trigger the first send to Fermentrack 50 seconds out
     send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
@@ -77,7 +77,7 @@ bool dataSendHandler::send_to_fermentrack() {
     j["tilts"] = tilt_scanner.tilt_to_json();
 
 
-    if(!send_to_url(app_config.config["fermentrackURL"].get<std::string>().c_str(), "", j.dump().c_str()))
+    if(!send_to_url(app_config.config["fermentrackURL"].get<std::string>().c_str(), "", j.dump().c_str(), "application/json"))
         result = false;  // There was an error with the previous send
 
     j.clear();
@@ -85,9 +85,34 @@ bool dataSendHandler::send_to_fermentrack() {
 }
 
 
+bool dataSendHandler::send_to_brewstatus() {
+    bool result = true;
+    const int payload_size = 512;
+    char payload[payload_size];
+
+    // This should look like this when sent to Brewstatus:
+    // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Test')
+
+    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    for(uint8_t i = 0;i<TILT_COLORS;i++) {
+        if(tilt_scanner.tilt(i)->is_loaded()) {
+            snprintf(payload, payload_size, "SG=%f&Temp=%f&Color=%s&Comment=''", 
+                     (float) tilt_scanner.tilt(i)->gravity / 1000,
+                     (float) tilt_scanner.tilt(i)->temp,
+                     tilt_scanner.tilt(i)->color_name().c_str()
+                    );
+            if(!send_to_url(app_config.config["brewstatusURL"].get<std::string>().c_str(), "", payload, "application/x-www-form-urlencoded"))
+                result = false;  // There was an error with the previous send
+        }
+    }
+
+    return result;
+}
+
+
 #ifdef USE_SECURE_GSCRIPTS
 // For sending data to Google Scripts, we have to use secure_client but otherwise we're doing the same thing as before.
-bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend) {
+bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend, const char *contentType) {
     // This handles the generic act of sending data to an endpoint
     bool result = false;
 
@@ -109,7 +134,7 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
         Serial.println("[HTTPS] Calling SWR::send_with_redirects");
 #endif
 
-        SecureWithRedirects SWR(url, apiKey, dataToSend);
+        SecureWithRedirects SWR(url, apiKey, dataToSend, contentType);
         result = SWR.send_with_redirects();
         SWR.end();
 
@@ -174,7 +199,7 @@ bool dataSendHandler::send_to_google() {
 
 #ifdef USE_SECURE_GSCRIPTS
             // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
-            if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", payload.dump().c_str()))
+            if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", payload.dump().c_str(), "application/json"))
                 result = false;  // There was an error with the previous send
             payload.clear();
 #else
@@ -183,7 +208,7 @@ bool dataSendHandler::send_to_google() {
 
             // All data for non-secure gscripts goes through the TiltBridge google proxy script. I'm not happy with this
             // but it's the best I've got until HTTPS can be readded
-            if(!send_to_url("http://www.tiltbridge.com/tiltbridge_google_proxy/", "", j.dump().c_str()))
+            if(!send_to_url("http://www.tiltbridge.com/tiltbridge_google_proxy/", "", j.dump().c_str(), "application/json"))
                 result = false;  // There was an error with the previous send
             payload.clear();
             j.clear();
@@ -257,7 +282,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
             j["gravity_unit"] = "G";
             j["device_source"] = "TiltBridge";
 
-            if(!send_to_url(url.c_str(), apiKeyStr.c_str(), j.dump().c_str()))
+            if(!send_to_url(url.c_str(), apiKeyStr.c_str(), j.dump().c_str(), "application/json"))
                 result = false;  // There was an error with the previous send
 
             j.clear();
@@ -268,7 +293,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
 
 
 
-bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend) {
+bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType) {
     // This handles the generic act of sending data to an endpoint
     HTTPClient http;
     bool result = false;
@@ -285,7 +310,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         // tilt_scanner.wait_until_scan_complete();
 
         http.begin(url);
-        http.addHeader("Content-Type", "application/json");             //Specify content-type header
+        http.addHeader("Content-Type", contentType);             //Specify content-type header
         if (apiKey) {
             http.addHeader("X-API-KEY", apiKey);  //Specify API key header
         }
@@ -356,6 +381,22 @@ void dataSendHandler::process() {
         } else {
             // If the user adds the setting, we want this to kick in within 10 seconds
             send_to_fermentrack_at = xTaskGetTickCount() + 10000;
+        }
+        yield();
+    }
+
+    // Check & send to Brewstatus if necessary
+    if(send_to_brewstatus_at <= xTaskGetTickCount()) {
+        if(WiFiClass::status()== WL_CONNECTED && app_config.config["brewstatusURL"].get<std::string>().length() > BREWSTATUS_MIN_URL_LENGTH) {   //Check WiFi connection status
+            #ifdef DEBUG_PRINTS
+            Serial.printf("Calling send to Brewstatus\r\n");
+            #endif
+
+            send_to_brewstatus();
+            send_to_brewstatus_at = xTaskGetTickCount() + (app_config.config["brewstatusPushEvery"].get<int>() * 1000);
+        } else {
+            // If the user adds the setting, we want this to kick in within 10 seconds
+            send_to_brewstatus_at = xTaskGetTickCount() + 10000;
         }
         yield();
     }

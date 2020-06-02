@@ -14,7 +14,7 @@
 #include <WiFiClientSecure.h>
 
 
-SecureWithRedirects::SecureWithRedirects(const char * original_url, const char *api_key, const char *data_to_send) {
+SecureWithRedirects::SecureWithRedirects(const char * original_url, const char *api_key, const char *data_to_send, const char *content_type) {
     // Initialize secure_client & HTTPClient
     secure_client = new WiFiClientSecure;
     https = new HTTPClient;
@@ -31,6 +31,7 @@ SecureWithRedirects::SecureWithRedirects(const char * original_url, const char *
     url = original_url;
     apiKey=api_key;
     dataToSend=data_to_send;
+    contentType=content_type;
 }
 
 
@@ -64,7 +65,7 @@ bool SecureWithRedirects::send_with_redirects() {
     Serial.println("`");
 
     https->begin(*secure_client, url);
-    https->addHeader("Content-Type", "application/json");             //Specify content-type header
+    https->addHeader("Content-Type", contentType);             //Specify content-type header
     if (apiKey) {
         https->addHeader("X-API-KEY", apiKey);  //Specify API key header
     }
