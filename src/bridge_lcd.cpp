@@ -332,7 +332,11 @@ void bridge_lcd::display() {
 
 
 void bridge_lcd::print_line(const String& left_text, const String& right_text, uint8_t line) {
+#ifdef LCD_TFT_ESPI
+    print_line("", left_text, right_text, line);
+#else
     print_line(left_text, "", right_text, line);
+#endif
 }
 
 
