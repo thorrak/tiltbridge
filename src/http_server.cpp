@@ -172,15 +172,16 @@ void processConfig() {
             return processConfigError();
         }
 
-        float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr, 10);
+        float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
         if(tzoffset < -12.0) {
             Serial.println("brewstatusTZoffset is less than -12!");
             return processConfigError();
         } else if(tzoffset > 12.0) {
             Serial.println("brewstatusTZoffset is greater than 12!");
             return processConfigError();
-        else
+        } else {
             app_config.config["brewstatusTZoffset"] = tzoffset;
+        }
         Serial.println("Updated brewstatusTZoffset");
     }
 
