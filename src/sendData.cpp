@@ -99,6 +99,7 @@ bool dataSendHandler::send_to_brewstatus() {
     // The Timepoint is Google Sheets time, which is fractional days since 12/30/1899
     // Using https://www.timeanddate.com/date/durationresult.html?m1=12&d1=30&y1=1899&m2=1&d2=1&y2=1970 gives
     // us 25,569 days from the start of Google Sheets time to the start of the Unix epoch.
+    // BrewStatus wants local time, so we allow the user to specify a time offset.
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
@@ -107,8 +108,8 @@ bool dataSendHandler::send_to_brewstatus() {
                      (float) tilt_scanner.tilt(i)->gravity / 1000,
                      (float) tilt_scanner.tilt(i)->temp,
                      tilt_scanner.tilt(i)->color_name().c_str(),
-                     ((double) std::time(0) / 86400.0 + 25569.0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0)
-                    );
+                     ((double) std::time(0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0))
+                     / 86400.0 + 25569.0);
             if(!send_to_url(app_config.config["brewstatusURL"].get<std::string>().c_str(), "", payload, "application/x-www-form-urlencoded"))
                 result = false;  // There was an error with the previous send
         }
