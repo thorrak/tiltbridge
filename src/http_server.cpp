@@ -170,7 +170,6 @@ void processConfig() {
             return processConfigError();
         else if (server.arg("brewstatusTZoffset").length() <= 0)
             return processConfigError();
-        }
 
         float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
         if(tzoffset < -12.0) {
