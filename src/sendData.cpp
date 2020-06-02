@@ -2,6 +2,8 @@
 // Created by John Beeler on 2/18/19.
 //
 
+#include<ctime>
+
 #include <nlohmann/json.hpp>
 
 // for convenience
@@ -90,16 +92,22 @@ bool dataSendHandler::send_to_brewstatus() {
     const int payload_size = 512;
     char payload[payload_size];
 
-    // This should look like this when sent to Brewstatus:
-    // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Test')
+    // The payload should look like this when sent to Brewstatus:
+    // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Comment')
+    // BrewStatus ignors Beer, so we just set this to Undefined.
+    // BrewStatus will record Comment if it set, but just leave it blank.
+    // The Timepoint is Google Sheets time, which is fractional days since 12/30/1899
+    // Using https://www.timeanddate.com/date/durationresult.html?m1=12&d1=30&y1=1899&m2=1&d2=1&y2=1970 gives
+    // us 25,569 days from the start of Google Sheets time to the start of the Unix epoch.
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
-            snprintf(payload, payload_size, "SG=%f&Temp=%f&Color=%s&Comment=''", 
+            snprintf(payload, payload_size, "SG=%f&Temp=%f&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=", 
                      (float) tilt_scanner.tilt(i)->gravity / 1000,
                      (float) tilt_scanner.tilt(i)->temp,
-                     tilt_scanner.tilt(i)->color_name().c_str()
+                     tilt_scanner.tilt(i)->color_name().c_str(),
+                     (double) std::time(0) / 86400.0 + 25569.0
                     );
             if(!send_to_url(app_config.config["brewstatusURL"].get<std::string>().c_str(), "", payload, "application/x-www-form-urlencoded"))
                 result = false;  // There was an error with the previous send
