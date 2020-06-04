@@ -201,6 +201,8 @@ void processConfig() {
 }
 
 
+void processCalibration() {
+}
 
 
 //This function is overkill for how we're handling things, but
@@ -238,10 +240,12 @@ void root_from_spiffs() {
 void settings_from_spiffs() {
     loadFromSpiffs("/settings.htm");
 }
+void calibration_from_spiffs() {
+    loadFromSpiffs("/calibration.htm");
+}
 void about_from_spiffs() {
     loadFromSpiffs("/about.htm");
 }
-
 void favicon_from_spiffs() {
     loadFromSpiffs("/favicon.ico");
 }
@@ -297,6 +301,9 @@ void httpServer::init(){
     server.on("/about/", about_from_spiffs);
     server.on("/settings/", settings_from_spiffs);
     server.on("/settings/update/", processConfig);
+
+    server.on("/calibration/", calibration_from_spiffs);
+    server.on("/calibration/", processCalibration);
 
     server.on("/json/", http_json);
     server.on("/settings/json/", settings_json);

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>TiltBridge Updating</title>
+    <title>TiltBridge - Settings</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
@@ -12,15 +12,13 @@
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 
-    <!-- Custom styles for this template -->
     <style>
         body {padding-top: 5rem; padding-bottom: 5rem;}
 
-        @media (min-width: 576px) {
-            .sm-padded {
-                padding: 0.75rem 1.25rem;
-            }
+        .row-padded {
+            padding: 0.75rem 1.25rem;
         }
+
     </style>
 </head>
 
@@ -28,17 +26,17 @@
 
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
     <a class="navbar-brand" href="/">TiltBridge</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsMain" aria-controls="navbarsMain" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <div class="collapse navbar-collapse" id="navbarsMain">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-            </li>
             <li class="nav-item">
-                <a class="nav-link" href="/settings/">Settings</a>
+                <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="/settings/">Settings <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/calibration/">Calibration</a>
@@ -47,24 +45,47 @@
                 <a class="nav-link" href="/about/">About</a>
             </li>
         </ul>
-
     </div>
 </nav>
 
 <main role="main" class="container">
 
-    <h4>Updating Firmware</h4>
-
-    <p>
-        Your TiltBridge's firmware is being updated to the latest version. This can take up to 5 minutes, during which
-        your TiltBridge will be unresponsive. Please do not disconnect the power or reset your TiltBridge while this
-        process is taking place.
-    </p>
+    <h4>Calibration</h4>
 
 </main>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"></script>
+
+<script type="text/javascript">
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    });
+
+    var vm = new Vue({
+        el: '#settingsapp',
+        data: {
+            settings: []
+        },
+        mounted: function () {
+            this.getSettings();
+        },
+        methods: {
+            getSettings: function() {
+                var xhr = new XMLHttpRequest();
+                var self = this;
+                xhr.open('GET', '/settings/json/');
+                xhr.onload = function () {
+                    self.settings = JSON.parse(xhr.responseText);
+                };
+                xhr.send()
+            }
+        }
+    });
+</script>
+
+
 </body>
 </html>
