@@ -95,7 +95,7 @@
                         <p class="card-text">Select the tilt color to delete the current calibration. The current calibration should be deleted before re-calibrating the Tilt.</p>
                         <form action="/calibration/clear/" method="POST">
                             <div class="form-group row">
-                                <label for="clearTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select the color of the tilt to calibrate">Tilt Color</label>
+                                <label for="clearTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select the color of the tilt to clear">Tilt Color</label>
                                 <div class="col-sm-8">
                                     <select class="form-control" name="clearTiltColor" id="clearTiltColor">
                                         <option value="0">Red</option>
@@ -123,7 +123,7 @@
                         Calibrate Tilt
                     </h5>
                     <div class="card-body">
-                        <p class="card-text">Select the tilt color that is being calibrated. Once you have entered the calibration details in the form below you can update the calibration parameters.</p>
+                        <p class="card-text">First, select the tilt color that is being calibrated. Then enter calibration points using the form below. The more points you enter, the more accurate the calibration will be. You need to enter at least two points to generate a linear fit. If you enter more calibration points, a quadratic and then a cubic fit will be estimated. Choose the order of the polynomial fit that you want to use for the calibration and click Update to apply that calibtration to the selected Tilt.</p>
                         <form action="/calibration/update/" method="POST">
                             <div class="form-group row">
                                 <label for="updateTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select the color of the tilt to calibrate">Tilt Color</label>
@@ -139,7 +139,74 @@
                                         <option value="7">Pink</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
+                            </div>
+
+
+                            <div class="form-row">
+                                <div class="form-group col-sm-2">
+                                    <label for="linearFitx1" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Linear Fit</label>
+                                </div>
+                                <div class="form-group col-sm-3">
+                                    <input type="text" name="linearFitx1" id="linearFitx1" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="form-group col-sm-2 text-center">
+                                    <label for="linearFitx0" class="col-form-label">&times; x +</label>
+                                </div>
+                                <div class="form-group col-sm-3">
+                                    <input type="text" name="linearFitx0" id="linearFitx0" class="form-control" placeholder="0" readonly>
+                                </div>
+
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="linear">Apply</button></div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-sm-2">
+                                    <label for="quadraticFitx2" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Quadratic Fit</label>
+                                </div>
+                                <div class="form-group col-sm-2">
+                                    <input type="text" name="quadraticFitx2" id="quadraticFitx2" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="form-group col-1 text-center">
+                                    <label for="quadraticFitx1" class="col-form-label">&times; x<sup>2</sup> +</label>
+                                </div>
+                                <div class="form-group col-sm-2">
+                                    <input type="text" name="quadraticFitx1" id="quadraticFitx1" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="form-group col-1 text-center">
+                                    <label for="quadraticFitx0" class="col-form-label">&times; x +</label>
+                                </div>
+                                <div class="form-group col-sm-2">
+                                    <input type="text" name="quadraticFitx0" id="quadraticFitx0" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="quadratic">Apply</button></div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-sm-2">
+                                    <label for="cubicFitx3" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Cubic Fit</label>
+                                </div>
+                                <div class="form-group col-sm-1">
+                                    <input type="text" name="cubicFitx3" id="cubicFitx3" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="form-group col-1 text-center">
+                                    <label for="cubicFitx2" class="col-form-label">&times; x<sup>3</sup> +</label>
+                                </div>
+                                <div class="form-group col-sm-1">
+                                    <input type="text" name="cubicFitx2" id="cubicFitx2" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="form-group col-1 text-center">
+                                    <label for="cubicFitx1" class="col-form-label">&times; x<sup>2</sup> +</label>
+                                </div>
+                                <div class="form-group col-sm-1">
+                                    <input type="text" name="cubicFitx1" id="cubicFitx1" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="form-group col-1 text-center">
+                                    <label for="cubicFitx0" class="col-form-label">&times; x +</label>
+                                </div>
+                                <div class="form-group col-sm-2">
+                                    <input type="text" name="cubicFitx0" id="cubicFitx0" class="form-control" placeholder="0" readonly>
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="cubic">Apply</button></div>
                             </div>
                         </form>
                         <p><span id="firstpoly"></span></p>
@@ -197,14 +264,14 @@
                             <div class="form-group row">
                                 <label for="worttemp" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual gravity of calibration sample">Wort temperature</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="worttemp" id="worttemp" onchange="sgchanged()">
+                                    <input type="text" class="form-control" name="worttemp" id="worttemp" value="20" onchange="sgchanged()">
                                 </div>
                             </div>
 
                             <div class="form-group row">
                                 <label for="sgcorrect" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual hydrometer reading of calibration sample">Calibration temperature</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sgcorrect" id="sgcorrect" onchange="sgchanged()">
+                                    <input type="text" class="form-control" name="sgcorrect" id="sgcorrect"value="20" onchange="sgchanged()">
                                 </div>
                             </div>
 
@@ -236,21 +303,12 @@
                         </div>
 
                         <fieldset id="inputpoints">
-                            <div class="form-group row">
-                                <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Reading displayed on the uncalibrated Tilt">Tilt Reading</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="tiltinput" id="tiltinput" onchange="sgchanged()">
-                                </div>
-                            </div>
-
-
                             <div id="result_sg">
                                 <div class="form-group row">
                                     <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The actual gravity of the sample (SG)">Actual value</label>
                                     <div class="col-sm-8">
                                         <input type="text" name="sg_result" id="sg_result" class="form-control" readonly>
                                     </div>
-                                    <div class="col-sm-2"><button onclick="TiltPoints.adddata();" class="btn btn-primary">Add</button></div>
                                 </div>
                             </div>
 
@@ -260,9 +318,18 @@
                                     <div class="col-sm-8">
                                         <input type="text" name="brix_result" id="brix_result" class="form-control" readonly>
                                     </div>
-                                    <div class="col-sm-2"><button onclick="TiltPoints.adddata();" class="btn btn-primary">Add</button></div>
                                 </div>
                             </div>
+
+                            <div class="form-group row">
+                                <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Reading displayed on the uncalibrated Tilt">Tilt Reading</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="tiltinput" id="tiltinput" onchange="sgchanged()">
+                                </div>
+                                <div class="col-sm-2"><button onclick="TiltPoints.adddata();" class="btn btn-primary">Add</button></div>
+                            </div>
+
+
                         </fieldset>
 
                     </div>
@@ -716,7 +783,7 @@
             // Plot the result
             var lines=[ {
                     data: firstRegression.points,
-                    label: '1st'
+                    label: 'linear'
                     },
                 {
                 data: this.points,
@@ -730,13 +797,13 @@
             if(this.points.length > 2){
                lines.push({
                     data: secondRegression.points,
-                    label: '2nd'
+                    label: 'quadratic'
                 });
             }
             if(this.points.length > 3){
                lines.push( {
                 data: thirdRegression.points,
-                label: '3rd'
+                label: 'cubic'
                 });
             }
 
