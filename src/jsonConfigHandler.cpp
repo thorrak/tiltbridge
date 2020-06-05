@@ -28,6 +28,17 @@ void jsonConfigHandler::initialize() {
             {"applyCalibration", false},
             {"tempCorrect", false},
 
+            // Tilt Calibration Settings
+            // parameters stored are degree, x0, x1, x2, x3
+            {"cal_red", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_green", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_black", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_purple", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_orange", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_blue", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_yellow", { 1, 0.0, 1.0, 0.0, 0.0 }},
+            {"cal_pink", { 1, 0.0, 1.0, 0.0, 0.0 }},
+
             // Fermentrack Settings
             {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},
