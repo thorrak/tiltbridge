@@ -24,6 +24,10 @@ void jsonConfigHandler::initialize() {
             {"mdnsID", "tiltbridge"},
             {"update_spiffs", false},
 
+            // Global Calibration settings
+            {"applyCalibration", false},
+            {"tempCorrect", false},
+
             // Fermentrack Settings
             {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},

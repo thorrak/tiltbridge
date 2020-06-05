@@ -95,6 +95,17 @@ void processConfig() {
         }
     }
 
+    if (server.hasArg("applyCalibration")) {
+        app_config.config["applyCalibration"] = true;
+    } else {
+        app_config.config["applyCalibration"] = false;
+    }
+
+    if (server.hasArg("tempCorrect")) {
+        app_config.config["tempCorrect"] = true;
+    } else {
+        app_config.config["tempCorrect"] = false;
+    }
 
     // Fermentrack Settings
     if (server.hasArg("fermentrackURL")) {
