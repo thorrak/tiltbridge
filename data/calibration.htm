@@ -93,19 +93,19 @@
                     </h5>
                     <div class="card-body">
                         <p class="card-text">Select the tilt color to delete the current calibration. The current calibration should be deleted before re-calibrating the Tilt.</p>
-                        <form action="/calibration/clear/" method="POST">
+                        <form action="/calibration/update/" method="POST">
                             <div class="form-group row">
                                 <label for="clearTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select the color of the tilt to clear">Tilt Color</label>
                                 <div class="col-sm-8">
                                     <select class="form-control" name="clearTiltColor" id="clearTiltColor">
-                                        <option value="0">Red</option>
-                                        <option value="1">Green</option>
-                                        <option value="2">Black</option>
-                                        <option value="3">Purple</option>
-                                        <option value="4">Orange</option>
-                                        <option value="5">Blue</option>
-                                        <option value="6">Yellow</option>
-                                        <option value="7">Pink</option>
+                                        <option value="red">Red</option>
+                                        <option value="green">Green</option>
+                                        <option value="black">Black</option>
+                                        <option value="purple">Purple</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="yellow">Yellow</option>
+                                        <option value="pink">Pink</option>
                                     </select>
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Clear</button></div>
@@ -129,18 +129,17 @@
                                 <label for="updateTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select the color of the tilt to calibrate">Tilt Color</label>
                                 <div class="col-sm-8">
                                     <select class="form-control" name="updateTiltColor" id="updateTiltColor">
-                                        <option value="0">Red</option>
-                                        <option value="1">Green</option>
-                                        <option value="2">Black</option>
-                                        <option value="3">Purple</option>
-                                        <option value="4">Orange</option>
-                                        <option value="5">Blue</option>
-                                        <option value="6">Yellow</option>
-                                        <option value="7">Pink</option>
+                                        <option value="red">Red</option>
+                                        <option value="green">Green</option>
+                                        <option value="black">Black</option>
+                                        <option value="purple">Purple</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="yellow">Yellow</option>
+                                        <option value="pink">Pink</option>
                                     </select>
                                 </div>
                             </div>
-
 
                             <div id="linear_polynomial">
                                 <div class="form-row">
@@ -156,7 +155,7 @@
                                     <div class="form-group col-sm-3">
                                         <input type="text" name="linearFitx0" id="linearFitx0" class="form-control" placeholder="0" readonly>
                                     </div>
-                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="linear">Apply</button></div>
+                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="linear" value="linear">Apply</button></div>
                                 </div>
                             </div>
 
@@ -180,7 +179,7 @@
                                     <div class="form-group col-sm-2">
                                         <input type="text" name="quadraticFitx0" id="quadraticFitx0" class="form-control" placeholder="0" readonly>
                                     </div>
-                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="quadratic">Apply</button></div>
+                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="quadratic" value="quadratic">Apply</button></div>
                                 </div>
                             </div>
 
@@ -210,9 +209,8 @@
                                     <div class="form-group col-sm-2">
                                         <input type="text" name="cubicFitx0" id="cubicFitx0" class="form-control" placeholder="0" readonly>
                                     </div>
-                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="cubic">Apply</button></div>
+                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="cubic" value="cubic">Apply</button></div>
                                 </div>
-
 
                             </div>
                         </form>
