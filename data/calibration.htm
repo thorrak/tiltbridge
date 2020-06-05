@@ -123,7 +123,7 @@
                         Calibrate Tilt
                     </h5>
                     <div class="card-body">
-                        <p class="card-text">First, select the tilt color that is being calibrated. Then enter calibration points using the form below. The more points you enter, the more accurate the calibration will be. You need to enter at least two points to generate a linear fit. If you enter more calibration points, a quadratic and then a cubic fit will be estimated. Choose the order of the polynomial fit that you want to use for the calibration and click Update to apply that calibtration to the selected Tilt.</p>
+                        <p class="card-text">First, select the tilt color that is being calibrated. Then enter calibration points using the form below. The more points you enter, the more accurate the calibration will be. You need to enter at least two points to generate a linear fit. If you enter more calibration points, a quadratic and then a cubic fit will be estimated. Once you have entered your calibration points the calibration correction is displayed and you can apply it to the selected Tilt.</p>
                         <form action="/calibration/update/" method="POST">
                             <div class="form-group row">
                                 <label for="updateTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select the color of the tilt to calibrate">Tilt Color</label>
@@ -142,76 +142,80 @@
                             </div>
 
 
-                            <div class="form-row">
-                                <div class="form-group col-sm-2">
-                                    <label for="linearFitx1" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Linear Fit</label>
+                            <div id="linear_polynomial">
+                                <div class="form-row">
+                                    <div class="form-group col-sm-2">
+                                        <label for="linearFitx1" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Linear Fit</label>
+                                    </div>
+                                    <div class="form-group col-sm-3">
+                                        <input type="text" name="linearFitx1" id="linearFitx1" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="form-group col-sm-2 text-center">
+                                        <label for="linearFitx0" class="col-form-label">&times; x +</label>
+                                    </div>
+                                    <div class="form-group col-sm-3">
+                                        <input type="text" name="linearFitx0" id="linearFitx0" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="linear">Apply</button></div>
                                 </div>
-                                <div class="form-group col-sm-3">
-                                    <input type="text" name="linearFitx1" id="linearFitx1" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="form-group col-sm-2 text-center">
-                                    <label for="linearFitx0" class="col-form-label">&times; x +</label>
-                                </div>
-                                <div class="form-group col-sm-3">
-                                    <input type="text" name="linearFitx0" id="linearFitx0" class="form-control" placeholder="0" readonly>
-                                </div>
-
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="linear">Apply</button></div>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group col-sm-2">
-                                    <label for="quadraticFitx2" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Quadratic Fit</label>
+                            <div id="quadratic_polynomial">
+                                <div class="form-row">
+                                    <div class="form-group col-sm-2">
+                                        <label for="quadraticFitx2" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Quadratic Fit</label>
+                                    </div>
+                                    <div class="form-group col-sm-2">
+                                        <input type="text" name="quadraticFitx2" id="quadraticFitx2" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="form-group col-1 text-center">
+                                        <label for="quadraticFitx1" class="col-form-label">&times; x<sup>2</sup> +</label>
+                                    </div>
+                                    <div class="form-group col-sm-2">
+                                        <input type="text" name="quadraticFitx1" id="quadraticFitx1" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="form-group col-1 text-center">
+                                        <label for="quadraticFitx0" class="col-form-label">&times; x +</label>
+                                    </div>
+                                    <div class="form-group col-sm-2">
+                                        <input type="text" name="quadraticFitx0" id="quadraticFitx0" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="quadratic">Apply</button></div>
                                 </div>
-                                <div class="form-group col-sm-2">
-                                    <input type="text" name="quadraticFitx2" id="quadraticFitx2" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="form-group col-1 text-center">
-                                    <label for="quadraticFitx1" class="col-form-label">&times; x<sup>2</sup> +</label>
-                                </div>
-                                <div class="form-group col-sm-2">
-                                    <input type="text" name="quadraticFitx1" id="quadraticFitx1" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="form-group col-1 text-center">
-                                    <label for="quadraticFitx0" class="col-form-label">&times; x +</label>
-                                </div>
-                                <div class="form-group col-sm-2">
-                                    <input type="text" name="quadraticFitx0" id="quadraticFitx0" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="quadratic">Apply</button></div>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group col-sm-2">
-                                    <label for="cubicFitx3" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Cubic Fit</label>
+                            <div id="cubic_polynomial">
+                                <div class="form-row">
+                                    <div class="form-group col-sm-2">
+                                        <label for="cubicFitx3" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Cubic Fit</label>
+                                    </div>
+                                    <div class="form-group col-sm-1">
+                                        <input type="text" name="cubicFitx3" id="cubicFitx3" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="form-group col-1 text-center">
+                                        <label for="cubicFitx2" class="col-form-label">&times; x<sup>3</sup> +</label>
+                                    </div>
+                                    <div class="form-group col-sm-1">
+                                        <input type="text" name="cubicFitx2" id="cubicFitx2" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="form-group col-1 text-center">
+                                        <label for="cubicFitx1" class="col-form-label">&times; x<sup>2</sup> +</label>
+                                    </div>
+                                    <div class="form-group col-sm-1">
+                                        <input type="text" name="cubicFitx1" id="cubicFitx1" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="form-group col-1 text-center">
+                                        <label for="cubicFitx0" class="col-form-label">&times; x +</label>
+                                    </div>
+                                    <div class="form-group col-sm-2">
+                                        <input type="text" name="cubicFitx0" id="cubicFitx0" class="form-control" placeholder="0" readonly>
+                                    </div>
+                                    <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="cubic">Apply</button></div>
                                 </div>
-                                <div class="form-group col-sm-1">
-                                    <input type="text" name="cubicFitx3" id="cubicFitx3" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="form-group col-1 text-center">
-                                    <label for="cubicFitx2" class="col-form-label">&times; x<sup>3</sup> +</label>
-                                </div>
-                                <div class="form-group col-sm-1">
-                                    <input type="text" name="cubicFitx2" id="cubicFitx2" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="form-group col-1 text-center">
-                                    <label for="cubicFitx1" class="col-form-label">&times; x<sup>2</sup> +</label>
-                                </div>
-                                <div class="form-group col-sm-1">
-                                    <input type="text" name="cubicFitx1" id="cubicFitx1" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="form-group col-1 text-center">
-                                    <label for="cubicFitx0" class="col-form-label">&times; x +</label>
-                                </div>
-                                <div class="form-group col-sm-2">
-                                    <input type="text" name="cubicFitx0" id="cubicFitx0" class="form-control" placeholder="0" readonly>
-                                </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary" name="apply" value="cubic">Apply</button></div>
+
+
                             </div>
                         </form>
-                        <p><span id="firstpoly"></span></p>
-                        <p><span id="secondpoly"></span></p>
-                        <p><span id="thirdpoly"></span></p>
                     </div>
                 </div>
             </div>
@@ -483,66 +487,6 @@
         }
         var d, e = 2,
             f = {
-                linear: function(b, d, e) {
-                    for (var f, g, h, i = [0, 0, 0, 0, 0], j = b.length, k = 0; j > k; k++) null !== b[k][1] && (i[0] += b[k][0], i[1] += b[k][1], i[2] += b[k][0] * b[k][0], i[3] += b[k][0] * b[k][1], i[4] += b[k][1] * b[k][1]);
-                    return g = (j * i[3] - i[0] * i[1]) / (j * i[2] - i[0] * i[0]), h = i[1] / j - g * i[0] / j, f = b.map(function(a) {
-                        var b = a[0];
-                        return [b, g * b + h]
-                    }), {
-                        r2: a(b, f),
-                        equation: [g, h],
-                        points: f,
-                        string: "y = " + c(g, e.precision) + "x + " + c(h, e.precision)
-                    }
-                },
-                linearthroughorigin: function(b, d, e) {
-                    for (var f, g, h = [0, 0], i = 0; i < b.length; i++) null !== b[i][1] && (h[0] += b[i][0] * b[i][0], h[1] += b[i][0] * b[i][1]);
-                    return f = h[1] / h[0], g = b.map(function(a) {
-                        var b = a[0];
-                        return [b, f * b]
-                    }), {
-                        r2: a(b, g),
-                        equation: [f],
-                        points: g,
-                        string: "y = " + c(f, e.precision) + "x"
-                    }
-                },
-                exponential: function(b, d, e) {
-                    for (var f, g, h, i, j = [0, 0, 0, 0, 0, 0], k = 0; k < b.length; k++) null !== b[k][1] && (j[0] += b[k][0], j[1] += b[k][1], j[2] += b[k][0] * b[k][0] * b[k][1], j[3] += b[k][1] * Math.log(b[k][1]), j[4] += b[k][0] * b[k][1] * Math.log(b[k][1]), j[5] += b[k][0] * b[k][1]);
-                    return f = j[1] * j[2] - j[5] * j[5], g = Math.exp((j[2] * j[3] - j[5] * j[4]) / f), h = (j[1] * j[4] - j[5] * j[3]) / f, i = b.map(function(a) {
-                        var b = a[0];
-                        return [b, g * Math.exp(h * b)]
-                    }), {
-                        r2: a(b, i),
-                        equation: [g, h],
-                        points: i,
-                        string: "y = " + c(g, e.precision) + "e^(" + c(h, e.precision) + "x)"
-                    }
-                },
-                logarithmic: function(b, d, e) {
-                    for (var f, g, h, i = [0, 0, 0, 0], j = b.length, k = 0; j > k; k++) null !== b[k][1] && (i[0] += Math.log(b[k][0]), i[1] += b[k][1] * Math.log(b[k][0]), i[2] += b[k][1], i[3] += Math.pow(Math.log(b[k][0]), 2));
-                    return g = (j * i[1] - i[2] * i[0]) / (j * i[3] - i[0] * i[0]), f = (i[2] - g * i[0]) / j, h = b.map(function(a) {
-                        var b = a[0];
-                        return [b, f + g * Math.log(b)]
-                    }), {
-                        r2: a(b, h),
-                        equation: [f, g],
-                        points: h,
-                        string: "y = " + c(f, e.precision) + " + " + c(g, e.precision) + " ln(x)"
-                    }
-                },
-                power: function(b, d, e) {
-                    for (var f, g, h, i = [0, 0, 0, 0], j = b.length, k = 0; j > k; k++) null !== b[k][1] && (i[0] += Math.log(b[k][0]), i[1] += Math.log(b[k][1]) * Math.log(b[k][0]), i[2] += Math.log(b[k][1]), i[3] += Math.pow(Math.log(b[k][0]), 2));
-                    return g = (j * i[1] - i[2] * i[0]) / (j * i[3] - i[0] * i[0]), f = Math.exp((i[2] - g * i[0]) / j), h = b.map(function(a) {
-                        var b = a[0];
-                        return [b, f * Math.pow(b, g)]
-                    }), {
-                        r2: a(b, h),
-                        equation: [f, g],
-                        points: h,
-                        string: "y = " + c(f, e.precision) + "x^" + c(g, e.precision)
-                    }
-                },
                 polynomial: function(d, e, f) {
                     var g, h, i, j, k, l, m, n, o = [],
                         p = [],
@@ -568,18 +512,13 @@
                         r2: a(d, l),
                         equation: m,
                         points: l,
-                        string: n
+                        string: n,
+                        x0: c(m[0], f.precision),
+                        x1: c(m[1], f.precision),
+                        x2: c(m[2], f.precision),
+                        x3: c(m[3], f.precision)
                     }
                 },
-                lastvalue: function(b, d, e) {
-                    for (var f = [], g = null, h = 0; h < b.length; h++) null !== b[h][1] && isFinite(b[h][1]) ? (g = b[h][1], f.push([b[h][0], b[h][1]])) : f.push([b[h][0], g]);
-                    return {
-                        r2: a(b, f),
-                        equation: [g],
-                        points: f,
-                        string: "" + c(g, e.precision)
-                    }
-                }
             };
         return d = function(a, b, c, d) {
             var g = "object" == typeof c && "undefined" == typeof d ? c : d || {};
@@ -587,6 +526,7 @@
         }
     });
     /*** end of Regression.JS **/
+
     function C2F(c) {
         return (c * 1.8 + 32);
     }
@@ -760,10 +700,6 @@
             }
         },
         regression: function() {
-            $("#firstpoly").html("");
-            $("#secondpoly").html("");
-            $("#thirdpoly").html("");
-
             if (this.points.length < 2) return;
             var firstRegression =regression('polynomial', this.points, 1, {
                 precision: 9
@@ -808,9 +744,31 @@
             }
 
             $.plot($('#graph'), lines);
-            $("#firstpoly").html(firstRegression.string);
-            if(this.points.length > 2) $("#secondpoly").html(secondRegression.string);
-            if(this.points.length > 3) $("#thirdpoly").html(thirdRegression.string);
+            $("#quadratic_polynomial").hide();
+            $("#cubic_polynomial").hide();
+            document.getElementById('linearFitx0').value = firstRegression.x0;
+            document.getElementById('linearFitx1').value = firstRegression.x1;
+            $("#linear_polynomial").show();
+
+            if(this.points.length > 2) {
+                $("#linear_polynomial").hide();
+                $("#cubic_polynomial").hide();
+                document.getElementById('quadraticFitx0').value = secondRegression.x0;
+                document.getElementById('quadraticFitx1').value = secondRegression.x1;
+                document.getElementById('quadraticFitx2').value = secondRegression.x2;
+                $("#quadratic_polynomial").show();
+            }
+
+            if(this.points.length > 3) {
+                $("#linear_polynomial").hide();
+                $("#quadratic_polynomial").hide();
+                document.getElementById('cubicFitx0').value = thirdRegression.x0;
+                document.getElementById('cubicFitx1').value = thirdRegression.x1;
+                document.getElementById('cubicFitx2').value = thirdRegression.x2;
+                document.getElementById('cubicFitx3').value = thirdRegression.x3;
+                $("#cubic_polynomial").show();
+            }
+
             // caluate errors
             var secoe, thridoe;
 
@@ -933,9 +891,12 @@
     }
 
     function loaded() {
-        //default to sg
+        //default to plato and refractometer
         using_plato(true);
         instrument(false);
+        $("#linear_polynomial").hide();
+        $("#quadratic_polynomial").hide();
+        $("#cubic_polynomial").hide();
     }
 </script>
 
