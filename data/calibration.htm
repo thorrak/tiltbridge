@@ -233,9 +233,10 @@
                         <div class="form-group row">
                             <label for="gu_select" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select either specific gravity or degrees Plato">Gravity Unit</label>
                             <div class="col-sm-8">
-                                <select class="form-control" name="gu_select" id="gu_select" onchange="gravityunitchange()">
-                                    <option value="gu_sg" selected>Specific Gravity</option>
-                                    <option value="gu_plato">Degrees Plato</option>
+                                <select class="form-control" name="gu_select" id="gu_select" onchange="sgchanged()">
+                                    <option value="gu_sg">Specific Gravity</option>
+                                    <option value="gu_plato" selected>Degrees Plato</option>
+                                    <option value="gu_brix" selected>Brix</option>
                                 </select>
                             </div>
                         </div>
@@ -250,14 +251,14 @@
                             </div>
                         </div>
 
-                        <div id="hydrometer_input">
-                            <div class="form-group row">
-                                <label for="sginput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual gravity of calibration sample">Reading</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sginput" id="sginput" onchange="sgchanged()">
-                                </div>
+                        <div class="form-group row">
+                            <label for="gravinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual gravity of calibration sample">Reading</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="gravinput" id="gravinput" onchange="sgchanged()">
                             </div>
+                        </div>
 
+                        <div id="hydrometer_input">
                             <p class="card-text">If the hydrometer reading is temperature corrected, check the box and enter the correction below.</p>
 
                             <div class="form-group form-check">
@@ -292,48 +293,27 @@
 
                         <div id="refractometer_input">
                             <div class="form-group row">
-                                <label for="brixinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual refractometer reading of calibration sample">Reading</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="brixinput" id="brixinput" onchange="brixchanged()">
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
                                 <label for="wortcorrect" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Refractometer wort correction factor">Wort correction</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="wortcorrect" id="wortcorrect" value="1.0" onchange="brixchanged()">
+                                    <input type="text" class="form-control" name="wortcorrect" id="wortcorrect" value="1.0" onchange="sgchange()">
                                 </div>
                             </div>
                         </div>
 
                         <fieldset id="inputpoints">
-                            <div id="result_sg">
-                                <div class="form-group row">
-                                    <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The actual gravity of the sample (SG)">Actual value</label>
-                                    <div class="col-sm-8">
-                                        <input type="text" name="sg_result" id="sg_result" class="form-control" readonly>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="result_plato">
-                                <div class="form-group row">
-                                    <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The actual gravity of the sample (&deg;P)">Actual value</label>
-                                    <div class="col-sm-8">
-                                        <input type="text" name="brix_result" id="brix_result" class="form-control" readonly>
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="form-group row">
-                                <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Reading displayed on the uncalibrated Tilt">Tilt Reading</label>
+                                <label for="sg_result" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The actual gravity of the sample (SG)">Actual Gravity</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="sg_result" id="sg_result" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="tiltinput" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Reading displayed on the uncalibrated Tilt">Tilt Gravity</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="tiltinput" id="tiltinput" onchange="sgchanged()">
                                 </div>
                                 <div class="col-sm-2"><button onclick="TiltPoints.adddata();" class="btn btn-primary">Add</button></div>
                             </div>
-
-
                         </fieldset>
 
                     </div>
@@ -347,10 +327,9 @@
                        Calibration Data
                     </h5>
                     <table id="pointlist" class="card-table table">
-                        <div id="result_sg">
                             <tr>
-                                <th>Tilt Reading</th>
-                                <th>Reference Gravity (SG)</th>
+                                <th>Tilt Gravity</th>
+                                <th>Calibration Gravity</th>
                                 <th>x<sub>0</sub></th>
                                 <th>&delta;x<sub>0</sub></th>
                                 <th>x<sub>1</sub></th>
@@ -359,20 +338,6 @@
                                 <th>&delta;x<sub>2</sub></th>
                                 <th></th>
                             </tr>
-                        </div>
-                        <div id="result_plato">
-                            <tr>
-                                <th>Tilt Reading</th>
-                                <th>Reference Gravity (&deg;P)</th>
-                                <th>x<sub>0</sub></th>
-                                <th>&delta;x<sub>0</sub></th>
-                                <th>x<sub>1</sub></th>
-                                <th>&delta;x<sub>1</sub></th>
-                                <th>x<sub>2</sub></th>
-                                <th>&delta;x<sub>2</sub></th>
-                                <th></th>
-                            </tr>
-                        </div>
                     </table>
                     <table class="card-table table" align="center">
                         <tr scope="col" align="center">
@@ -535,16 +500,7 @@
 
     var BrewMath = {
         plato2sg: function(plato) {
-            return 1 + plato / (258.6 - ((plato / 258.2) * 227.1));
-            // SG = 1+ (plato / (258.6 – ( (plato/258.2) *227.1) ) )
-        },
-        sg2brix: function(sg) {
-            //Brix = (((182.4601 * SG -775.6821) * SG +1262.7794) * SG -669.5622)
-            return ((182.4601 * sg - 775.6821) * sg + 1262.7794) * sg - 669.5622;
-        },
-        sg2plato: function(sg) {
-            //plato = (-1 * 616.868) + (1111.14 * sg) – (630.272 * sg^2) + (135.997 * sg^3)
-            return -616.868 + (1111.14 * sg) - (630.272 * sg * sg) + (135.997 * sg * sg * sg);
+            return 1.000019+(0.003865613*plato+0.00001296425*plato*plato+0.00000005701128*plato*plato*plato)
         },
         sgTempCorrectedC: function(Reading, C, CT) {
             return BrewMath.sgTempCorrected(Reading, C2F(C), C2F(CT));
@@ -552,10 +508,8 @@
         sgTempCorrected: function(Reading, F, CT) {
             return Reading * ((1.00130346 - 0.000134722124 * F + 0.00000204052596 * F * F - 0.00000000232820948 * F * F * F) / (1.00130346 - 0.000134722124 * CT + 0.00000204052596 * CT * CT - 0.00000000232820948 * CT * CT * CT));
         },
-        brix2sg: function(brix, wc) {
-            wc = (typeof wc === "undefined") ? 1.0 : wc;
-            var bi = brix / wc;
-            return (bi / (258.6 - ((bi / 258.2) * 227.1))) + 1;
+        brix2sg: function(brix) {
+            return 1.000898+0.003859118*brix+0.00001370735*brix*brix+0.00000003742517*brix*brix*brix;
         }
     };
 
@@ -566,7 +520,6 @@
             alert("invalid calibration value");
             return;
         }
-        console.log("temp cal:" + cal);
         s_ajax({
             url: tcurl,
             m: "POST",
@@ -580,40 +533,33 @@
         });
     }
 
-    function setSg(sgn, bx) {
-        $("#sgvalue").html(sgn.toFixed(3));
-        $("#brixvalue").html(bx.toFixed(1));
-        window.sg = sgn;
-        window.brix = bx;
-        document.getElementById('sg_result').value = sgn.toFixed(3);
-        document.getElementById('brix_result').value = bx.toFixed(1);
-    }
-
     function sgchanged() {
-        var sg = parseFloat($("#sginput").val());
-        if (isNaN(sg)) return;
-        var temp = parseFloat($("#worttemp").val());
-        if (isNaN(temp)) return;
+        var gravinput = parseFloat($("#gravinput").val());
+        if (isNaN(gravinput)) return;
 
-        var tc = $("#tempcorrect").prop("checked");
-        var ct = $("#sgcorrect").val().trim();
-        var useF = window.temp_unit == "F";
-        //clear brix to avoid confusing
-        $("#brixinput").val("");
-        var sgn = tc ? (useF ? BrewMath.sgTempCorrected(sg, temp, ct) : BrewMath.sgTempCorrectedC(sg, temp, ct)) : sg;
-        var bx = BrewMath.sg2plato(sgn);
-        setSg(sgn, bx);
-    }
+        // Convert Plato to SG
+        if ($("#gu_select").val() == "gu_plato") {
+            sg = BrewMath.plato2sg(gravinput);
+        } else if ($("#gu_select").val() == "gu_brix") {
+            sg = BrewMath.brix2sg(gravinput);
+        } else {
+            sg = gravinput;
+        }
 
-    function brixchanged() {
-        var brix = $("#brixinput").val().trim();
-        if (brix == "") return;
-        var wc = $("#wortcorrect").val().trim();
-
-        $("#sginput").val("");
-        var bx = parseFloat(brix) / parseFloat(wc);
-        var sgn = BrewMath.plato2sg(bx);
-        setSg(sgn, bx);
+        if ( $("#instrument").val() == "hydro" ) {
+            var temp = parseFloat($("#worttemp").val());
+            if (isNaN(temp)) return;
+            var tc = $("#tempcorrect").prop("checked");
+            var ct = $("#sgcorrect").val().trim();
+            var useF = window.temp_unit == "F";
+            var calsg = tc ? (useF ? BrewMath.sgTempCorrected(sg, temp, ct) : BrewMath.sgTempCorrectedC(sg, temp, ct)) : sg;
+            document.getElementById('sg_result').value = calsg.toFixed(3)
+        } else {
+            var wc = parseFloat($("#wortcorrect").val())
+            if (isNaN(wc)) return;
+            var calsg = sg / parseFloat(wc);
+            document.getElementById('sg_result').value = calsg.toFixed(3)
+        }
     }
 
     var TiltPoints = {
@@ -629,7 +575,6 @@
             return tbody;
         },
         del: function(i) {
-            console.log("delete " + i);
             this.points.splice(i, 1);
             this.list();
         },
@@ -651,7 +596,7 @@
             td2.innerHTML = this.points[i][0];
             var td3 = document.createElement("td");
 
-            var precision = window.use_plato ? 2 : 4;
+            var precision = 3;
 
             var td4 = document.createElement("td");
             td4.className = "pl_sg";
@@ -702,7 +647,13 @@
             }
         },
         regression: function() {
-            if (this.points.length < 2) return;
+            if (this.points.length < 2) {
+               $("#linear_polynomial").hide();
+               $("#quadratic_polynomial").hide();
+               $("#cubic_polynomial").hide();
+               $("#graph").hide();
+               return;
+            }
             var firstRegression =regression('polynomial', this.points, 1, {
                 precision: 9
             });
@@ -747,12 +698,11 @@
                 fit = thirdRegression.string;
             }
 
-            maxrange = window.use_plato ? 45 : 1.2;
-            axisunits = window.use_plato ? '(Degrees Plato)' : '(Specific Gravity)';
+            $("#graph").show();
             functionPlot({
                 target: '#graph',
-                xAxis: {label: 'Uncalibrated Data ' + axisunits, domain: [0, maxrange]},
-                yAxis: {label: 'Uncalibrated Data ' + axisunits, domain: [0, maxrange]},
+                xAxis: {label: 'Uncalibrated Readings (SG)', domain: [0.97, 1.2]},
+                yAxis: {label: 'Calibrated Readings (SG)', domain: [0.97, 1.2]},
                 data: [
                     { fn: fit },
                     { points: this.points, fnType: 'points', graphType: 'scatter' }
@@ -822,9 +772,9 @@
         },
         adddata: function() {
             var tilt = parseFloat($("#tiltinput").val());
-            var gravity = window.use_plato ? window.brix : window.sg;
+            var gravity = parseFloat($("#sg_result").val());
             if (isNaN(tilt) || isNaN(gravity)) {
-                alert("invalid value");
+                alert("Cannot add invalid values");
                 return;
             }
             this.points.push([tilt,gravity]);
@@ -833,13 +783,6 @@
             });
             this.list();
         },
-        change_gu: function() {
-
-            for (var i = 0; i < this.points.length; i++) {
-                this.points[i][1] = window.use_plato ? BrewMath.sg2plato(this.points[i][1]) : BrewMath.plato2sg(this.points[i][1]);
-            }
-            this.list();
-        }
     };
 
     function temperatureunit(celisus) {
@@ -848,22 +791,6 @@
 
     function tempunitchange() {
         temperatureunit($("#tu_select").val() == "C");
-    }
-
-    function using_plato(plato) {
-        window.use_plato = plato;
-        if (plato) {
-            $("#result_sg").hide();
-            $("#result_plato").show();
-        } else {
-            $("#result_sg").show();
-            $("#result_plato").hide();
-        }
-        TiltPoints.change_gu();
-    }
-
-    function gravityunitchange() {
-        using_plato($("#gu_select").val() == "gu_plato");
     }
 
     function instrument(hydro) {
@@ -881,12 +808,12 @@
     }
 
     function loaded() {
-        //default to plato and refractometer
-        using_plato(true);
+        //default to brix and refractometer
         instrument(false);
         $("#linear_polynomial").hide();
         $("#quadratic_polynomial").hide();
         $("#cubic_polynomial").hide();
+        $("#graph").hide();
     }
 </script>
 
