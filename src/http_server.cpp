@@ -270,28 +270,28 @@ void processCalibration() {
 
     switch( tilt_name ) {
         case str2int("red"):
-            app_config.config["cal_red"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_red"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("green"):
-            app_config.config["cal_green"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_green"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("black"):
-            app_config.config["cal_black"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_black"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("purple"):
-            app_config.config["cal_purple"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_purple"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("orange"):
-            app_config.config["cal_orange"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_orange"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("blue"):
-            app_config.config["cal_blue"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_blue"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("yellow"):
-            app_config.config["cal_yellow"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_yellow"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
         case str2int("pink"):
-            app_config.config["cal_pink"] = {degree, x0, x1, x2, x3};
+            app_config.config["cal_pink"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
          default:
              processCalibrationError();

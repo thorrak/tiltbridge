@@ -90,15 +90,15 @@
                         <p class="card-text">These settings control whether or not TiltBridge applies <a href="/calibration/">calibration</a> and temperature corrections to the Tilt reading before it is uploaded.</p>
                         <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="applyCalibration" class="col-sm-3 form-check-label" data-toggle="tooltip" title="Apply calibration to Tilt data">Enable Calibration</label>
-                                <div class="col-sm-7">
+                                <label for="applyCalibration" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Apply calibration to Tilt data">Enable Calibration</label>
+                                <div class="col-sm-6">
                                     <input class="form-check-input" type="checkbox" id="applyCalibration" name="applyCalibration">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                             <div class="form-group row">
-                                <label for="tempCorrect" class="col-sm-3 form-check-label" data-toggle="tooltip" title="Apply temperature correction to Tilt data">Enable Temperature Correction</label>
-                                <div class="col-sm-7">
+                                <label for="tempCorrect" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Apply temperature correction to Tilt data">Enable Temperature Correction to 60 &deg;F</label>
+                                <div class="col-sm-6">
                                     <input class="form-check-input" type="checkbox" id="tempCorrect" name="tempCorrect">
                                 </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
