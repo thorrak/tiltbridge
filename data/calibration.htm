@@ -441,7 +441,7 @@
         // these formula are taken from https://straighttothepint.com/specific-gravity-brix-plato-conversion-calculators/
         // and seem to the the most accurate
         plato2sg: function(plato) {
-            return 1.0 + (plato / (258.6 – ( (plato/258.2) *227.1) ) );
+            return 1.0 + (plato / (258.6 - ( (plato/258.2) *227.1) ) );
         },
         sgTempCorrectedC: function(Reading, C, CT) {
             return BrewMath.sgTempCorrected(Reading, C2F(C), C2F(CT));
