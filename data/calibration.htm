@@ -128,7 +128,7 @@
                         <div id="quadratic_polynomial">
                             <div class="form-row">
                                 <div class="form-group col-sm-2">
-                                    <label for="quadraticFitx2" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Quadratic Fit</label>
+                                    <label for="quadraticFitx2" class="col-form-label" data-toggle="tooltip" title="Calibration correction to quadratic order">Quadratic Fit</label>
                                 </div>
                                 <div class="form-group col-sm-2">
                                     <input type="text" name="quadraticFitx2" id="quadraticFitx2" class="form-control" placeholder="0" readonly>
@@ -152,7 +152,7 @@
                         <div id="cubic_polynomial">
                             <div class="form-row">
                                 <div class="form-group col-sm-2">
-                                    <label for="cubicFitx3" class="col-form-label" data-toggle="tooltip" title="Calibration correction to linear order">Cubic Fit</label>
+                                    <label for="cubicFitx3" class="col-form-label" data-toggle="tooltip" title="Calibration correction to cubic order">Cubic Fit</label>
                                 </div>
                                 <div class="form-group col-sm-1">
                                     <input type="text" name="cubicFitx3" id="cubicFitx3" class="form-control" placeholder="0" readonly>
@@ -195,7 +195,7 @@
                 <div class="card-body">
                     <p class="card-text">Add a calibration data point.</p>
                     <div class="form-group row">
-                        <label for="gu_select" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select either specific gravity or degrees Plato">Gravity Unit</label>
+                        <label for="gu_select" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select either specific gravity, Brix, or degrees Plato">Gravity Unit</label>
                         <div class="col-sm-8">
                             <select class="form-control" name="gu_select" id="gu_select" onchange="sgchanged()">
                                 <option value="gu_sg">Specific Gravity</option>
@@ -231,21 +231,21 @@
                         </div>
 
                         <div class="form-group row">
-                            <label for="worttemp" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual gravity of calibration sample">Wort temperature</label>
+                            <label for="worttemp" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Temperature of the calibration sample">Wort temperature</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control" name="worttemp" id="worttemp" value="20" onchange="sgchanged()">
                             </div>
                         </div>
 
                         <div class="form-group row">
-                            <label for="sgcorrect" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Actual hydrometer reading of calibration sample">Calibration temperature</label>
+                            <label for="sgcorrect" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Temperature of reference gravity">Calibration temperature</label>
                             <div class="col-sm-8">
                                 <input type="text" class="form-control" name="sgcorrect" id="sgcorrect"value="20" onchange="sgchanged()">
                             </div>
                         </div>
 
                         <div class="form-group row">
-                            <label for="tu_select" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Select either hydrometer or refractometer">Measurement</label>
+                            <label for="tu_select" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Units used for temperature measurement">Temperature in</label>
                             <div class="col-sm-8">
                                 <select class="form-control" name="tu_select" id="tu_select" onchange="tempunitchange()">
                                     <option value="C" selected>Celsius (C)</option>
@@ -494,7 +494,7 @@
             var ct = $("#sgcorrect").val().trim();
             var useF = window.temp_unit == "F";
             var calsg = tc ? (useF ? BrewMath.sgTempCorrected(sg, temp, ct) : BrewMath.sgTempCorrectedC(sg, temp, ct)) : sg;
-            document.getElementById('sg_result').value = calsg.toFixed(3)
+            document.getElementById('sg_result').value = calsg.toFixed(5)
         } else {
             var wc = parseFloat($("#wortcorrect").val())
             if (isNaN(wc)) return;
@@ -537,7 +537,7 @@
             td2.innerHTML = this.points[i][0];
             var td3 = document.createElement("td");
 
-            var precision = 3;
+            var precision = 5;
 
             var td4 = document.createElement("td");
             td4.className = "pl_sg";
@@ -596,17 +596,17 @@
                return;
             }
             var firstRegression =regression('polynomial', this.points, 1, {
-                precision: 9
+                precision: 5
             });
             var secondRegression,thirdRegression;
             if(this.points.length > 2){
                 secondRegression = regression('polynomial', this.points, 2, {
-                precision: 9
+                precision: 5
             });
             }
             if(this.points.length > 3){
                 thirdRegression = regression('polynomial', this.points, 3, {
-                precision: 9
+                precision: 5
             });
             }
 
