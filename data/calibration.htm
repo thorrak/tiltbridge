@@ -438,8 +438,10 @@
     }
 
     var BrewMath = {
+        // these formula are taken from https://straighttothepint.com/specific-gravity-brix-plato-conversion-calculators/
+        // and seem to the the most accurate
         plato2sg: function(plato) {
-            return 1.000019+(0.003865613*plato+0.00001296425*plato*plato+0.00000005701128*plato*plato*plato)
+            return 1.0 + (plato / (258.6 – ( (plato/258.2) *227.1) ) );
         },
         sgTempCorrectedC: function(Reading, C, CT) {
             return BrewMath.sgTempCorrected(Reading, C2F(C), C2F(CT));
@@ -448,7 +450,7 @@
             return Reading * ((1.00130346 - 0.000134722124 * F + 0.00000204052596 * F * F - 0.00000000232820948 * F * F * F) / (1.00130346 - 0.000134722124 * CT + 0.00000204052596 * CT * CT - 0.00000000232820948 * CT * CT * CT));
         },
         brix2sg: function(brix) {
-            return 1.000898+0.003859118*brix+0.00001370735*brix*brix+0.00000003742517*brix*brix*brix;
+            return (brix / (258.6-((brix / 258.2)*227.1))) + 1;
         }
     };
 
