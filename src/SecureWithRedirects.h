@@ -13,7 +13,7 @@
 class SecureWithRedirects {
 
 public:
-    SecureWithRedirects(const char * original_url, const char *api_key, const char *data_to_send);
+    SecureWithRedirects(const char * original_url, const char *api_key, const char *data_to_send, const char *content_type);
     void end();
     bool send_with_redirects();
 
@@ -26,6 +26,7 @@ private:
     String url;
     const char *apiKey;
     const char *dataToSend;
+    const char *contentType;
 
 };
 

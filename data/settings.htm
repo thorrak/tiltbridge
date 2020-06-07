@@ -287,6 +287,52 @@
         </div>
 
 
+        <div class="row row-padded">
+            <div class="col-12">
+                <div class="card">
+                    <h5 class="card-header">
+                        BrewStatus Settings
+                    </h5>
+                    <div class="card-body">
+                        <p class="card-text">These settings control how TiltBridge talks to
+                            <a href="https://www.brewstat.us/">BrewStatus</a>. To disable pushing to BrewStatus, delete
+                            the BrewStatus URL.
+                        </p>
+                        <form action="/settings/update/" method="POST">
+                            <div class="form-group row">
+                                <label for="brewstatusURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus URL</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="brewstatusURL" id="brewstatusURL" placeholder="https://www.brewstat.us/tilt/xxxxxxxxxx/log" :value="settings.brewstatusURL">
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
+                            </div>
+                        </form>
+
+                        <form action="/settings/update/" method="POST">
+                            <div class="form-group row">
+                                <label for="brewstatusPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Brewstatus">Push Frequency</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="brewstatusPushEvery" id="brewstatusPushEvery" placeholder="30" :value="settings.brewstatusPushEvery">
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
+                            </div>
+                        </form>
+
+                        <form action="/settings/update/" method="POST">
+                            <div class="form-group row">
+                                <label for="brewstatusTZoffset" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Time zone offset from UTC (in hours)">Time Zone Offset</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="brewstatusTZoffset" id="brewstatusTZoffset" placeholder="-5" :value="settings.brewstatusTZoffset">
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 

@@ -130,6 +130,59 @@ void processConfig() {
         Serial.println("Updated fermentrackPushEvery");
     }
 
+    // Brewstatus Settings
+    if (server.hasArg("brewstatusURL")) {
+        // TODO - Add a check here to make sure that brewstatusURL actually changed, and return if it didn't
+        if (server.arg("brewstatusURL").length() > 255)
+            return processConfigError();
+        else if (server.arg("brewstatusURL").length() < 12)
+            app_config.config["brewstatusURL"] = "";
+        else
+            app_config.config["brewstatusURL"] = server.arg("brewstatusURL").c_str();
+    }
+
+    if (server.hasArg("brewstatusPushEvery")) {
+        Serial.println("Has brewstatusPushEvery");
+        if (server.arg("brewstatusPushEvery").length() > 5)
+            return processConfigError();
+        else if (server.arg("brewstatusPushEvery").length() <= 0)
+            return processConfigError();
+        else if (!isInteger(server.arg("brewstatusPushEvery").c_str())) {
+            Serial.println("brewstatusPushEvery is not an integer!");
+            return processConfigError();
+        }
+
+        // At this point, we know that it's an integer. Let's convert to a long so we can test the value
+        // TODO - Figure out if we want to print error messages for these
+        long push_every = strtol(server.arg("brewstatusPushEvery").c_str(), nullptr, 10);
+        if(push_every < 30)
+            app_config.config["brewstatusPushEvery"] = 30;
+        else if(push_every > 60*60)
+            app_config.config["brewstatusPushEvery"] = 60*60;
+        else
+            app_config.config["brewstatusPushEvery"] = push_every;
+        Serial.println("Updated brewstatusPushEvery");
+    }
+
+    if (server.hasArg("brewstatusTZoffset")) {
+        Serial.println("Has brewstatusTZoffset");
+        if (server.arg("brewstatusTZoffset").length() > 3)
+            return processConfigError();
+        else if (server.arg("brewstatusTZoffset").length() <= 0)
+            return processConfigError();
+
+        float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
+        if(tzoffset < -12.0) {
+            Serial.println("brewstatusTZoffset is less than -12!");
+            return processConfigError();
+        } else if(tzoffset > 12.0) {
+            Serial.println("brewstatusTZoffset is greater than 12!");
+            return processConfigError();
+        } else {
+            app_config.config["brewstatusTZoffset"] = tzoffset;
+        }
+        Serial.println("Updated brewstatusTZoffset");
+    }
 
     // Google Sheets Settings
     if (server.hasArg("scriptsURL")) {
