@@ -67,6 +67,30 @@ std::string tiltHydrometer::color_name() {
     }
 }
 
+uint32_t tiltHydrometer::text_color() {
+
+    switch(m_color) {
+        case TILT_COLOR_RED:
+            return 0xF800;
+        case TILT_COLOR_GREEN:
+            return 0x07E0;
+        case TILT_COLOR_BLACK:
+            return 0xFFFF;
+        case TILT_COLOR_PURPLE:
+            return 0x780F;
+        case TILT_COLOR_ORANGE:
+            return 0xFDA0;
+        case TILT_COLOR_BLUE:
+            return 0x001F;
+        case TILT_COLOR_YELLOW:
+            return 0xFFE0;
+        case TILT_COLOR_PINK:
+            return 0xFE19;
+        default:
+            return 0xFFFF;
+    }
+}
+
 
 std::string tiltHydrometer::gsheets_beer_name() {
     switch(m_color) {

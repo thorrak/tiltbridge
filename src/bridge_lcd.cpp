@@ -215,7 +215,16 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     sprintf(gravity, "%.3f", double_t(tilt->gravity)/1000);
     sprintf(temp, "%d F", tilt->temp);
 
+#ifdef LCD_TFT_ESPI
+    tft->setTextColor(tilt->text_color());
+#endif
+
     print_line(tilt->color_name().c_str(), temp, gravity, line);
+
+#ifdef LCD_TFT_ESPI
+    tft->setTextColor(TFT_WHITE);
+#endif
+
 }
 
 
@@ -323,7 +332,11 @@ void bridge_lcd::display() {
 
 
 void bridge_lcd::print_line(const String& left_text, const String& right_text, uint8_t line) {
+#ifdef LCD_TFT_ESPI
+    print_line("", left_text, right_text, line);
+#else
     print_line(left_text, "", right_text, line);
+#endif
 }
 
 
@@ -369,13 +382,13 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
 #endif
 
 #ifdef LCD_TFT_ESPI
-    // middle_text is ignored for non-TFT displays
+    // ignore left text as we color the text by the tilt
     int16_t starting_pixel_row = 0;
 
     starting_pixel_row = (TFT_ESPI_LINE_CLEARANCE + TFT_ESPI_FONT_SIZE) * (line-1) + TFT_ESPI_LINE_CLEARANCE;
 
     // TFT_eSPI::drawString(const char *string, int32_t poX, int32_t poY, uint8_t font_number)
-    tft->drawString(left_text, 0, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
+    tft->drawString(middle_text, 0, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
     tft->drawString(right_text, tft->width()/2, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
 #endif
 
