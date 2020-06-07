@@ -205,7 +205,7 @@ void reconnectIfDisconnected() {
         {
             delay( 100 );
 #ifdef DEBUG_PRINTS
-            if(WLcount % 5 = 0)
+            if(WLcount % 5 == 0)
                 Serial.printf(".");
 #endif
             ++WLcount;

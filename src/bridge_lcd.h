@@ -34,6 +34,17 @@
 #define TILTS_PER_PAGE          15  // The actual number is one fewer than this - the first row is used for headers
 #define TILT_FONT_SIZE          2
 
+#elif defined(LCD_TFT_ESPI)
+
+#include <TFT_eSPI.h> 
+#include <SPI.h>
+
+#define TFT_ESPI_FONT_SIZE      25
+#define TFT_ESPI_LINE_CLEARANCE 4
+#define TFT_ESPI_FONT_HEIGHT    2
+#define TFT_ESPI_FONT_NUMBER    4
+#define TILTS_PER_PAGE          4  // The actual number is one fewer than this - the first row is used for headers
+
 #endif
 
 
@@ -76,6 +87,8 @@ private:
     SSD1306* oled_display;
 #elif defined(LCD_TFT)
     Adafruit_ILI9341* tft;
+#elif defined(LCD_TFT_ESPI)
+    TFT_eSPI* tft;
 #endif
 
     uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
