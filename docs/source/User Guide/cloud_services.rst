@@ -9,6 +9,8 @@ relay their gravity readings to the cloud. At the moment, TiltBridge supports th
 * `Fermentrack`_
 * `Brewers Friend`_
 * Google Sheets
+* `Brewfather`_
+* `BrewStatus`_
 
 
 Setting up TiltBridge for Fermentrack
@@ -16,7 +18,8 @@ Setting up TiltBridge for Fermentrack
 
 The TiltBridge was designed by the primary author of `Fermentrack`_ and is designed with Fermentrack support in mind.
 In most cases, your TiltBridge can be linked to a single Fermentrack installation from directly within the Fermentrack
-app as part of the "Add Gravity Sensor" workflow
+app as part of the "Add Gravity Sensor" workflow. The configuration can also be re-sent to TiltBridge by clicking the
+ "Update TiltBridge Automatically" button from the "Manage Sensor" page for the Tilt Hydrometer linked to the TiltBridge.
 
 Adding the TiltBridge to Fermentrack
 ************************************
@@ -101,7 +104,7 @@ Following the first data transmission, you can easily check in Brewer's Friend t
 #. In the ``Device Settings`` pane click ``Show All`` (to the right of ``All Brew Sessions``)
 #. All Tilt devices should appear in the list as ``Stream`` devices and will be identified by their color
 
-.. note:: Per Brewer's Friend guidelines, data is only pushed once every 15 minutes. As a result, it may take up to 15 minutes for the device to be created or for the first points to appear.
+.. note:: Per Brewer's Friend guidelines, data is only pushed once every 15 minutes.
 
 
 Setting up TiltBridge for Google Sheets
@@ -110,10 +113,6 @@ Setting up TiltBridge for Google Sheets
 Similar to TiltPi or the Tilt Hydrometer app, TiltBridge supports logging to Google Sheets. Setting up Google Sheets is
 more involved than either `Fermentrack`_ or `Brewers Friend`_, but provides a free, easily accessible cloud data service.
 
-Due to hardware constraints, TiltBridge cannot communicate via HTTPS, and must rely upon a proxy service hosted
-at `tiltbridge.com`_ to translate between HTTP and HTTPS. If these constraints are removed in the future, HTTPS support
-may be readded to allow the TiltBridge to directly communicate with Google Sheets. As a result of the proxy requirement,
-TiltBridge will not transmit data to Google Sheets more than once every 15 minutes.
 
 
 Preparing Google Sheets to Receive Data
@@ -170,4 +169,50 @@ Sheets it will be created. If the sheet does exist, new data points will be appe
 Once this is complete, your Tilt will begin logging data points to the sheet name you specified. If the sheet does not
 exist, it will automatically be created.
 
-.. note:: Points are only pushed to Google Sheets once every 15 minutes. As a result, it may take up to 15 minutes for the sheet to be created or for the first points to appear.
+.. note:: Points are only pushed to Google Sheets once every 10 minutes. As a result, it may take up to 10 minutes for the sheet to be created or for the first points to appear.
+
+
+
+Setting up TiltBridge for Brewfather
+------------------------------------
+
+With a premium `Brewfather`_ account, you can store temperature and gravity readings from your Tilt Hydrometer as
+part of your brew logs.
+
+Configuring your TiltBridge for Brewfather
+******************************************
+
+TiltBridge will need your Brewfather stream ID in order to post to your Brewfather account.
+
+#. Go to `Brewfather`_ and log in to your account
+#. Click the ``Settings`` option in the menu on the left
+#. Under "Power-ups" in the lower left corner, click the "switch" next to "Custom Stream" if it is not already toggled
+#. Copy just the string of letters/numbers that appears after the start of the URL (http://log.brewfather.net/stream?id=) to your clipboard
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. Click the ``Settings`` link at the top of the dashboard
+#. In the ``Brewfather Stream key`` field paste the string you copied earlier and click ``Update``
+
+
+Testing Brewfather
+**********************
+
+Once the Brewfather Stream key is provided, the TiltBridge will begin transmitting gravity data once every 15 minutes.
+Following the first data transmission, you can easily check in Brewfather to see if the data was received.
+
+#. Go to `Brewfather`_ and log in to your account
+#. Click the ``Devices`` option in the menu on the left
+#. All Tilt devices should appear in the list as ``Custom Stream`` devices and will be identified by their color
+
+.. note:: Per Brewfather's guidelines, data is only pushed once every 15 minutes.
+
+
+
+Setting up TiltBridge for Brewstatus
+------------------------------------
+
+TiltBridge is designed to allow for data to be pushed to `Brewstatus`_. This functionality was helpfully added by
+contributors to the project on `GitHub`_ and has not yet been documented.
+
+.. todo:: Document Brewstatus configuration
+
+
