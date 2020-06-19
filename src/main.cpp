@@ -3,6 +3,8 @@
 //
 
 
+//#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+//#include "esp_log.h"
 
 #include <nlohmann/json.hpp>
 
@@ -70,6 +72,10 @@ void setup() {
     // enough as-is.
 //    lcd.display_logo();  // Display the Fermentrack logo
 
+//    esp_log_level_set("*", ESP_LOG_DEBUG);        // set all components to DEBUG level
+//    esp_log_level_set("wifi", ESP_LOG_WARN);      // enable WARN logs from WiFi stack
+//    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // enable WARN logs from DHCP client
+
     // Initialize the BLE scanner
     tilt_scanner.init();
     tilt_scanner.scan();
@@ -84,6 +90,7 @@ void setup() {
 
 
 void loop() {
+
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if(tilt_scanner.scan()) {
         // If we need to do anything when a new scan is started, trigger it here.
@@ -98,6 +105,7 @@ void loop() {
 #endif
 
     handle_wifi_reset_presses();
+    reconnectIfDisconnected();  // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
     lcd.check_screen();
     http_server.handleClient();

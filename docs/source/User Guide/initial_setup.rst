@@ -3,6 +3,23 @@
 Initial Setup
 =============
 
+Once you have acquired the necessary hardware, you are ready to flash the TiltBridge firmware to your controller and set
+it up for use on your network.
+
+Flashing the TiltBridge Firmware
+--------------------------------
+
+The TiltBridge firmware can downloaded from `GitHub`_ and flashed to your controller using either `BrewFlasher`_,
+`Fermentrack`_, or your favorite ESP32 flashing software. The easiest method to flash the firmware is using `BrewFlasher`_ -
+a desktop firmware flashing application maintained by the author of TiltBridge.
+
+.. note:: Be sure to flash the right version of the firmware. For new builds using the LOLIN D32 Pro you will want the "TFT" firmware.
+
+
+
+Setting up TiltBridge
+---------------------
+
 Once you have flashed the firmware to your ESP32, secured it in its enclosure, and powered it on, you are ready to connect
 it to your WiFi network. After the TiltBridge is powered on it will create a new WiFi access point with the SSID ``TiltBridgeAP``
 and password ``tiltbridge``. Connect to this AP using a phone, laptop, or other WiFi enabled device, and attempt to

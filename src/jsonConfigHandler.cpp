@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include "sendData.h"
 
 
 void jsonConfigHandler::initialize() {
@@ -23,9 +24,28 @@ void jsonConfigHandler::initialize() {
             {"mdnsID", "tiltbridge"},
             {"update_spiffs", false},
 
+            // Global Calibration settings
+            {"applyCalibration", false},
+            {"tempCorrect", false},
+
+            // Tilt Calibration Settings
+            {"cal_red", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_green", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_black", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_purple", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_orange", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_blue", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_yellow", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+            {"cal_pink", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
+
             // Fermentrack Settings
             {"fermentrackURL", ""},
             {"fermentrackPushEvery", 30},
+
+            // Brewstatus Settings
+            {"brewstatusURL", ""},
+            {"brewstatusPushEvery", 60},
+            {"brewstatusTZoffset", -5},
 
             // Google Scripts Settings
             {"scriptsURL", ""},
@@ -38,10 +58,13 @@ void jsonConfigHandler::initialize() {
             {"sheetName_orange", ""},
             {"sheetName_blue", ""},
             {"sheetName_yellow", ""},
-            {"sheetName_pink", ""},
+            {"sheetName_pink", ""},        
 
             // Brewers Friend Setting(s)
-            {"brewersFriendKey", ""}
+            {"brewersFriendKey", ""},
+
+            // Brewfather
+            {"brewfatherKey", ""}
     };
 }
 

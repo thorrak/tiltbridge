@@ -1,0 +1,32 @@
+
+
+set(COPY_CMD "cp")
+set(RM_CMD "rm")
+
+
+add_custom_target(
+    PLATFORMIO_COPY_BUILT_FIRMWARE
+
+# TODO - Figure out how to ignore the return value if there aren't files already present with these filenames
+#    COMMAND ${RM_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/bin/lcd_ssd1306_firmware.bin"
+#    COMMAND ${RM_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/bin/lcd_ssd1306_partitions.bin"
+#    COMMAND ${RM_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/bin/lcd_ssd1306_spiffs.bin"
+
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/lcd_ssd1306/firmware.bin"   "${CMAKE_CURRENT_SOURCE_DIR}/bin/lcd_ssd1306_firmware.bin"
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/lcd_ssd1306/partitions.bin" "${CMAKE_CURRENT_SOURCE_DIR}/bin/lcd_ssd1306_partitions.bin"
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/lcd_ssd1306/spiffs.bin"     "${CMAKE_CURRENT_SOURCE_DIR}/bin/lcd_ssd1306_spiffs.bin"
+
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/d32_pro_tft/firmware.bin"   "${CMAKE_CURRENT_SOURCE_DIR}/bin/d32_pro_tft_firmware.bin"
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/d32_pro_tft/partitions.bin" "${CMAKE_CURRENT_SOURCE_DIR}/bin/d32_pro_tft_partitions.bin"
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/d32_pro_tft/spiffs.bin"     "${CMAKE_CURRENT_SOURCE_DIR}/bin/d32_pro_tft_spiffs.bin"
+
+#    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/m5_stack_tft/firmware.bin"   "${CMAKE_CURRENT_SOURCE_DIR}/bin/m5_stack_tft_firmware.bin"
+#    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/m5_stack_tft/partitions.bin" "${CMAKE_CURRENT_SOURCE_DIR}/bin/m5_stack_tft_partitions.bin"
+#    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/m5_stack_tft/spiffs.bin"     "${CMAKE_CURRENT_SOURCE_DIR}/bin/m5_stack_tft_spiffs.bin"
+
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/tft_espi/firmware.bin"   "${CMAKE_CURRENT_SOURCE_DIR}/bin/tft_espi_firmware.bin"
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/tft_espi/partitions.bin" "${CMAKE_CURRENT_SOURCE_DIR}/bin/tft_espi_partitions.bin"
+    COMMAND ${COPY_CMD} "${CMAKE_CURRENT_SOURCE_DIR}/.pio/build/tft_espi/spiffs.bin"     "${CMAKE_CURRENT_SOURCE_DIR}/bin/tft_espi_spiffs.bin"
+
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)

@@ -6,7 +6,7 @@
 #define TILTBRIDGE_TILTHYDROMETER_H
 
 #include <nlohmann/json.hpp>
-
+#include <Arduino.h>
 
 // There's definitely a better way of doing this
 #define TILT_COLOR_RED      0
@@ -31,6 +31,8 @@
 #define TILT_COLOR_YELLOW_UUID  "a495bb70c5b14b44b5121370f02d74de"
 #define TILT_COLOR_PINK_UUID    "a495bb80c5b14b44b5121370f02d74de"
 
+#define TILT_NO_DATA_RECEIVED_EXPIRATION (5*60*1000) // expire in 5 minutes if we didn't read any values in that time. in ms
+
 //#define BLE_PRINT_ALL_DEVICES 1
 
 class tiltHydrometer {
@@ -39,6 +41,7 @@ public:
 
     bool set_values(uint32_t i_temp, uint32_t i_grav);
     std::string color_name();
+    uint32_t text_color();
     std::string converted_gravity();
     std::string gsheets_beer_name();
     nlohmann::json to_json();
@@ -53,8 +56,7 @@ public:
 private:
     uint8_t m_color;  // TODO - add a getter for this
     bool m_loaded;    // Has data been loaded from an ad string
-
-
+    TickType_t m_lastUpdate; // Keep track of when we last updated and stop propigating out stale information
 };
 
 

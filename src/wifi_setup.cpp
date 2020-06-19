@@ -13,6 +13,14 @@
 #include <WiFiClient.h>
 
 
+// Since we can't use double reset detection or the "boot" button, we need to leverage the touchscreen to trigger the
+// WiFi reset on TFT builds
+#ifdef LCD_TFT
+#include <XPT2046_Touchscreen.h>
+XPT2046_Touchscreen ts(TS_CS);
+#endif
+
+
 bool shouldSaveConfig = false;
 uint64_t wifi_reset_pressed_at = 0;
 
@@ -113,11 +121,11 @@ void init_wifi() {
     ip_address_url.concat("/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
-    delay(5000);
+    delay(1000);
 }
 
 
-
+#ifndef LCD_TFT
 // Use the "boot" button present on most of the OLED boards to reset the WiFi configuration allowing for easy
 // transportation between networks
 void IRAM_ATTR wifi_reset_pressed() {
@@ -134,17 +142,83 @@ void initWiFiResetButton() {
 //    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
 //}
 
+#else
+// If we have LCD_TFT set, we need to build the functions as noop
+void initWiFiResetButton() {
+    // This is noop for LCD_TFT as we're using the touchscreen instead
+}
+
+#endif
+
 void handle_wifi_reset_presses() {
     uint64_t initial_press_at = 0;
+
+
+#ifdef LCD_TFT
+    while (ts.touched())  // Block while the screen is pressed until the user releases
+        wifi_reset_pressed_at = xTaskGetTickCount();
+#endif
+
 
     if(wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME) {
         initial_press_at = wifi_reset_pressed_at; // Cache when the button was first pressed
         lcd.display_wifi_reset_screen();
-        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+        delay(100); // Give the user a moment to release the screen (doubles as debounce)
 
-        if(wifi_reset_pressed_at != initial_press_at) {
-            // The user pushed the button a second time & caused a second interrupt. Process the reset.
-            disconnect_from_wifi_and_restart();
+        for(TickType_t x = xTaskGetTickCount() + WIFI_RESET_DOUBLE_PRESS_TIME; xTaskGetTickCount() <= x;) {
+            delay(1);
+
+#ifdef LCD_TFT
+            if(ts.touched() || wifi_reset_pressed_at != initial_press_at)
+#else
+            if(wifi_reset_pressed_at != initial_press_at)
+#endif
+            {
+                // The user pushed the button a second time & caused a second interrupt. Process the reset.
+                disconnect_from_wifi_and_restart();
+            }
         }
+
+        // Explicitly clear the screen
+        lcd.clear();
+
+//        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+//
+//        if(wifi_reset_pressed_at != initial_press_at) {
+//            // The user pushed the button a second time & caused a second interrupt. Process the reset.
+//            disconnect_from_wifi_and_restart();
+//        }
     }
 }
+
+
+void reconnectIfDisconnected() {
+    if(WiFiClass::status() !=  WL_CONNECTED) {
+        // WiFi is down - Reconnect
+        lcd.display_wifi_disconnected_screen();
+        WiFi.begin();
+
+        delay(1000);  // Ensuring the "disconnected" screen appears for at least one second
+
+        int WLcount = 0;
+        while(WiFiClass::status() != WL_CONNECTED && WLcount < 190)
+        {
+            delay( 100 );
+#ifdef DEBUG_PRINTS
+            if(WLcount % 5 == 0)
+                Serial.printf(".");
+#endif
+            ++WLcount;
+        }
+
+        if(WiFiClass::status() !=  WL_CONNECTED) {
+            // We failed to reconnect.
+            lcd.display_wifi_reconnect_failed();
+        } else {
+            // We reconnected successfully
+            lcd.display_logo();
+        }
+
+    }
+}
+

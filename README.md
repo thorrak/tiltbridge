@@ -14,7 +14,9 @@ TiltBridge automatically logs your data to the following cloud data services:
 
 * [Fermentrack](https://www.fermentrack.com/)
 * [Brewer's Friend](http://www.brewersfriend.com/)
+* [Brewfather](https://brewfather.app)
 * Google Sheets
+* [Brewstatus](https://brewstat.us)
 
 
 #### Features
@@ -30,8 +32,17 @@ TiltBridge automatically logs your data to the following cloud data services:
 
 Building a TiltBridge is simple - the hardest decision in most cases is the enclosure. For more information, read the [documentation](http://docs.tiltbridge.com/).
 
+Once you've acquired your hardware, simply flash the TiltBridge firmware with [Fermentrack](http://www.fermentrack.com/) or [BrewFlasher](http://www.brewflasher.com/). Easy!
+
 
 #### Requirements
 
-TiltBridge requires an ESP32-based controller, properly flashed with the TiltBridge firmware.
+TiltBridge requires an ESP32-based controller properly flashed with the TiltBridge firmware.
+
+
+### Support TiltBridge
+
+Interested in supporting TiltBridge? Buy a [sticker](https://www.tindie.com/products/thorrak/tiltbridge-sticker/) (or a [magnet](https://www.tindie.com/products/thorrak/tiltbridge-magnet/))!
+
+
 

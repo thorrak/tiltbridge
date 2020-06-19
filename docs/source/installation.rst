@@ -3,9 +3,22 @@
 Installing the Firmware on an ESP32
 ===================================
 
-Installing TiltBridge on an ESP32 can be accomplished using either Fermentrack or the Espressif esptool.py script.
+Installing TiltBridge on an ESP32 can be accomplished using either `BrewFlasher`_, `Fermentrack`_, or the Espressif esptool.py script.
 
-Installation Using Fermentrack
+
+Installation using BrewFlasher
+------------------------------
+
+The easiest way to install TiltBridge is using `BrewFlasher`_. BrewFlasher is a standalone application for Windows and Mac OS
+which allows flashing the same set of firmware that is available through Fermentrack without having to delve into the command line.
+It is free, easy to use, and is recommended for most users.
+
+To install using BrewFlasher simply connect your ESP32 to your computer, download and open BrewFlasher, and follow the prompts on
+screen.
+
+
+
+Installation using Fermentrack
 ------------------------------
 
 Installation via `Fermentrack`_ is incredibly easy as it leverages the existing "firmware flash" workflow. To flash via
@@ -23,10 +36,15 @@ of a Raspberry Pi running `Fermentrack`_.
 
 
 #. Install esptool.py using the `instructions here <https://github.com/espressif/esptool#installation--dependencies>`_.
-#. Download all three of the TiltBridge firmware files from `GitHub`_ - spiffs.bin, firmware.bin, and partitions.bin
+#. Download all **five** of the appropriate TiltBridge firmware files for your controller from `GitHub`_ and rename them to the following - spiffs.bin, firmware.bin, partitions.bin, boot_app0.bin, and bootloader_dio_40m.bin
 #. Connect the ESP32 board to the computer you will be using to flash
-#. Open a command prompt and run the flash command ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0x10000 firmware.bin 0x8000 partitions.bin 0x3D1000 spiffs.bin``
+#. Open a command prompt and run the appropriate flash command
 
+
+The appropriate flash command for your build depends on the version firmware you are using. You may need to tweak the command, but sample flash commands are as follows:
+
+- **"TFT" Firmware:** ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0xe000 boot_app0.bin 0x1000 bootloader_dio_40m.bin 0x10000 firmware.bin 0x8000 partitions.bin 0x910000 spiffs.bin``
+- **"OLED" Firmware:** ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0xe000 boot_app0.bin 0x1000 bootloader_dio_40m.bin 0x10000 firmware.bin 0x8000 partitions.bin 0x310000 spiffs.bin``
 
 Next Steps
 ----------
