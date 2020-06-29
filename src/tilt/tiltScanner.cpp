@@ -104,7 +104,7 @@ bool tiltScanner::scan() {
             Serial.println("Scan already in progress - explicitly stopping.");
 #endif
             pBLEScan->stop();
-            FreeRTOS::sleep(100);
+            delay(100);
             return false;
         } else {
             // We successfully started a scan
@@ -121,7 +121,7 @@ bool tiltScanner::wait_until_scan_complete() {
         return false;  // Return false if there wasn't a scan active when this was called
 
     while(m_scan_active)
-        FreeRTOS::sleep(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
+        delay(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
 
     //pBLEScan->stop();
     pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory

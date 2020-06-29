@@ -49,8 +49,12 @@ public:
 
     static uint8_t uuid_to_color_no(std::string data);
 
+    // There is no real reason these need to be uint32, given that we are receiving 2 bytes each (uint16)
     uint32_t temp;
     uint32_t gravity;
+    uint32_t version_code;
+
+    uint8_t weeks_since_last_battery_change;
 
 
 private:

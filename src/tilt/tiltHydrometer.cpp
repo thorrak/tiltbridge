@@ -14,6 +14,10 @@ tiltHydrometer::tiltHydrometer(uint8_t color) {
     gravity             = 0;
     m_lastUpdate        = 0;
 
+    version_code        = 0;  // Set if captured - only applies to Gen 3 Tilts
+
+    weeks_since_last_battery_change = 0;  // Not currently implemented - for future use
+
 } // tiltHydrometer
 
 
@@ -125,6 +129,16 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     Serial.print("Tilt gravity = ");
     Serial.println(d_grav);
 #endif
+
+    if(i_temp==999) {
+        // If the temp is 999, that's an indicator that the SG actually represents the firmware version of the Tilt.
+        // Although we won't do anything with this data, let's capture it.
+
+        // This also has the (desired) side effect of not logging the 999 "temperature" and 1.00x "gravity"
+        version_code = i_grav;
+        return true;
+    }
+
 
     if (app_config.config["applyCalibration"]) {
         double x0 = 0.0;
