@@ -69,10 +69,10 @@ void tiltScanner::init() {
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan(); //create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
-    // CHANGE IN NIMBLE - Active Scan must be set false to read new (Gen 2/3) Tilts
-    // See https://github.com/h2zero/NimBLE-Arduino/issues/22
-    pBLEScan->setActiveScan(false); //active scan uses more power, but get results faster
-    pBLEScan->setInterval(100);
+    //active scan actively queries devices for more info following detection.
+    // This isn't required for the Tilt to work - I'm just trying it to see if it helps keep v3 tilts awake (it shouldnt)
+    pBLEScan->setActiveScan(true);
+    pBLEScan->setInterval(101);
     pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 
@@ -94,7 +94,7 @@ void tiltScanner::set_scan_active_flag(bool value) {
 bool tiltScanner::scan() {
     // Set a flag when we start asynchronously scanning to prevent multiple scans from being launched
     if(!m_scan_active) {
-        pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
+        pBLEScan->clearResults();   // delete results from BLEScan buffer to release memory
 
         if(!pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete, true)) {
             // We failed to start a scan. There is a race condition where ble_scan_complete gets triggered prior to

@@ -11,7 +11,7 @@
 
 
 
-#define BLE_SCAN_TIME       5  // Seconds to scan
+#define BLE_SCAN_TIME       3  // Seconds to scan
 
 
 // for convenience
