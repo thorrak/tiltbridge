@@ -1,14 +1,13 @@
 Changelog
 #########
 
-Note - At some point I will come back and write a proper changelog. For now, this is just freeform notes
-
 
 v0.2.1 - XXXX XX, 2020 - Capture Version Info
 ---------------------------------------------
 
 - Properly capture/filter the "version" info sent on wake by v3 Tilts
 - Added version information to about.htm
+- Update to latest version of Bluetooth library
 
 
 
@@ -26,4 +25,4 @@ v0.2 - June 19, 2020 - Brewfather, Brewstatus, and Secure GScripts Support
 v0.1 - Mar 31, 2019 - Initial Release
 -------------------------------------
 
-- Initial release of TiltBride!
+- Initial release of TiltBridge!
