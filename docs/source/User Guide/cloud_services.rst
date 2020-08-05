@@ -4,9 +4,10 @@ Cloud Service Setup
 ===================
 
 Once your tilt has completed the :doc:`initial_setup` process it is ready to begin scanning for `Tilt Hydrometers`_ and
-relay their gravity readings to the cloud. At the moment, TiltBridge supports three cloud service targets for this data:
+relay their gravity readings to the cloud. At the moment, TiltBridge supports six cloud service targets for this data:
 
 * `Fermentrack`_
+* `BrewPi Remix`_
 * `Brewers Friend`_
 * Google Sheets
 * `Brewfather`_
@@ -19,7 +20,7 @@ Setting up TiltBridge for Fermentrack
 The TiltBridge was designed by the primary author of `Fermentrack`_ and is designed with Fermentrack support in mind.
 In most cases, your TiltBridge can be linked to a single Fermentrack installation from directly within the Fermentrack
 app as part of the "Add Gravity Sensor" workflow. The configuration can also be re-sent to TiltBridge by clicking the
- "Update TiltBridge Automatically" button from the "Manage Sensor" page for the Tilt Hydrometer linked to the TiltBridge.
+"Update TiltBridge Automatically" button from the "Manage Sensor" page for the Tilt Hydrometer linked to the TiltBridge.
 
 Adding the TiltBridge to Fermentrack
 ************************************
@@ -43,7 +44,7 @@ settings page.
 #. Identify the IP address of your Fermentrack installation
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
-#. In the ``Fermentrack URL`` field enter http://<fermentrack_ip_address>/tiltbridge/ and click ``Update``
+#. In the ``Local Target Settings`` field enter http://<fermentrack_ip_address>/tiltbridge/ and click ``Update``
 
 Fermentrack and TiltBridge are now configured to properly communicate. You can now set up Tilts connected using
 TiltBridge in Fermentrack.
@@ -64,6 +65,40 @@ that will be pushed via the TiltBridge.
 Congratulations - your Tilt will now send gravity readings to Fermentrack.
 
 
+
+Setting up TiltBridge for BrewPi Remix
+---------------------------------------
+
+Tiltbridge will operate natively with `BrewPi Remix`_. Tiltbridge is configured to push to BrewPi Remix in the
+same manner it may be manually configured to point to Fermentrack.
+
+Adding the TiltBridge to BrewPi Remix
+**************************************
+
+#. Identify the IP address of your BrewPi Remix installation
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. Click the ``Settings`` link at the top of the dashboard
+#. In the ``Local Target Settings`` field enter http://<brewpi_remix__ip_address>//brewpi-api.php and click ``Update``
+
+BrewPi Remix and TiltBridge are now configured to properly communicate. You can log Tilts through TiltBridge in BrewPi Remix.
+
+Note: If you are using multi-chamber mode you must update the URL accordingly, and you may (currently) only report one Tilt via Tiltbridge. If this impacts you negatively, you should definitely
+log an `issue to the BrewPi Remix project <https://github.com/brewpi-remix/brewpi-tools-rmx/issues>`_.
+
+
+Adding TiltBridge-connected Tilts to BrewPi Remix
+**************************************************
+
+Once the TiltBridge and BrewPi Remix are configured to communicate, you can add the Tilt hydrometers to BrewPi Remix
+that will be pushed via the TiltBridge.
+
+#. Connect to your Pi with ssh and login
+#. Edit your config file (``sudo nano /home/brewpi/settings/config.cfg``)
+#. Add a line at the bottom of this file for the color you would like to report (``tiltColor = Yellow``)
+#. Save and exit (``Ctrl-X``, ``y``)
+#. Restart the BrewPi Remix Daemon for the changes to take effect (``sudo systemctl restart brewpi``)
+
+Congratulations - your Tilt will now send gravity readings to BrewPi Remix.
 
 
 Setting up TiltBridge for Brewers Friend
