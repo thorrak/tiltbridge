@@ -7,6 +7,7 @@
 .. _TiltBridge: https://www.tiltbridge.com/
 .. _tiltbridge.com: https://www.tiltbridge.com/
 .. _Fermentrack: https://www.fermentrack.com/
+.. _BrewPi Remix: https://www.brewpiremix.com/
 .. _GitHub: https://github.com/thorrak/tiltbridge/
 .. _BrewFlasher: https://www.brewflasher.com/
 .. _Brewstatus: http://www.brewstat.us/
