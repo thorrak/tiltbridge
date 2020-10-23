@@ -3,6 +3,7 @@
 //
 
 #include "bridge_lcd.h"
+#include "jsonConfigHandler.h"
 
 bridge_lcd lcd;
 
@@ -285,7 +286,12 @@ void bridge_lcd::init() {
     // +4 "mirrors" the text (supposedly)
     tft->setRotation(0);
 #else
-    tft->setRotation(3);
+    if(app_config.config["invertTFT"]){
+        tft->setRotation(1);
+    }
+    else{
+        tft->setRotation(3);
+    }
 #endif
     tft->fillScreen(ILI9341_BLACK);
     tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);

@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 5/20/18.
+// Modified by Tim Pletcher on 21-Oct-2020.
 //
 
 #include "jsonConfigHandler.h"
@@ -22,6 +23,7 @@ void jsonConfigHandler::initialize() {
     config = {
             // TiltBridge Settings
             {"mdnsID", "tiltbridge"},
+            {"invertTFT", false},
             {"update_spiffs", false},
 
             // Global Calibration settings
@@ -84,33 +86,22 @@ bool jsonConfigHandler::write_config_to_spiffs() {
     return true;
 }
 
-
-String fileRead(String name){
-    //read file from SPIFFS and store it as a String variable
-    String contents;
-    File file = SPIFFS.open(name.c_str(), "r");
-    if (!file) {
-        return "";
-    } else {
-        // Read the file into a String
-        while (file.available()){
-            contents += char(file.read());
-        }
-        file.close();
-
-        return contents;
-    }
-}
-
 bool jsonConfigHandler::read_config_from_spiffs() {
-    String json_string;
+    //Modified to eliminate use of String class
+    File file = SPIFFS.open(JSON_CONFIG_FILE);
+    size_t filesize = file.size();
+    char json_string[filesize+1];
+    json_string[0] = '\0';
+    file.read((uint8_t *)json_string,sizeof(json_string));
+    json_string[filesize] = '\0';
+    file.close();
+
     nlohmann::json loaded_config;
 
-    json_string = fileRead(JSON_CONFIG_FILE);
-    if(json_string.length() <= 2)
+    if(strlen(json_string) <= 2)
         return false;  // No data was loaded (empty string or {})
 
-    loaded_config = nlohmann::json::parse(json_string.c_str());
+    loaded_config = nlohmann::json::parse(json_string);
 
     // The assumption that we're going to make is that the saved version of the config may have different keys than the
     // version that is initialized in jsonConfigHandler::initialize(). To that end, we want to leave the initialized
@@ -123,6 +114,7 @@ bool jsonConfigHandler::read_config_from_spiffs() {
     }
     return true;
 }
+
 
 
 bool jsonConfigHandler::save() {

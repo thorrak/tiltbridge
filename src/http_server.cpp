@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 2/17/19.
+// Modified by Tim Pletcher 21-Oct-2020.
 //
 
 #include <nlohmann/json.hpp>
@@ -34,15 +35,15 @@ WebServer server(80);
 
 void trigger_restart();
 
-inline bool isInteger(const char* s)
+//Check if integer and return result as well as int value
+void isInteger(const char* s, bool &is_int, int &int_value)
 {
-    // TODO - Fix this
-    if(strlen(s) <= 0 || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
-
+    if( (strlen(s) <= 0) || (!isdigit(s[0])) ) {
+        is_int = false;
+    }
     char * p;
-    strtol(s, &p, 10);
-
-    return (*p == 0);
+    int_value = strtol(s, &p, 10);
+    is_int = (*p == 0);
 }
 
 // This is to simplify the redirects in processConfig
@@ -93,9 +94,10 @@ bool processSheetName(const char* varName, const char* colorName) {
 
 void processConfig() {
     bool restart_tiltbridge = false;
+    bool reinit_tft = false;
 
     // Generic TiltBridge Settings
-    if (server.hasArg("mdnsID")) {
+    if (server.hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != server.arg("mdnsID").c_str()) ) {
         if (server.arg("mdnsID").length() > 30)
             return processConfigError();
         else if (server.arg("mdnsID").length() < 3)
@@ -109,16 +111,31 @@ void processConfig() {
         }
     }
 
+    if (server.hasArg("invertTFT")) {
+        if((server.arg("invertTFT")=="on") && (!app_config.config["invertTFT"].get<bool>())) {
+            app_config.config["invertTFT"] = true;
+            reinit_tft = true;       
+        } else if ((server.arg("invertTFT")=="off") && (app_config.config["invertTFT"].get<bool>())){
+            app_config.config["invertTFT"] = false;
+            reinit_tft = true;
+        }
+    }
+
     if (server.hasArg("applyCalibration")) {
-        app_config.config["applyCalibration"] = true;
-    } else {
-        app_config.config["applyCalibration"] = false;
+        if((server.arg("applyCalibration")=="on") && (!app_config.config["applyCalibration"].get<bool>())) {
+            app_config.config["applyCalibration"] = true;
+           
+        } else if ((server.arg("applyCalibration")=="off") && (app_config.config["applyCalibration"].get<bool>())){
+            app_config.config["applyCalibration"] = false;
+        }
     }
 
     if (server.hasArg("tempCorrect")) {
-        app_config.config["tempCorrect"] = true;
-    } else {
-        app_config.config["tempCorrect"] = false;
+        if((server.arg("tempCorrect")=="on") && (!app_config.config["tempCorrect"].get<bool>())) {
+            app_config.config["tempCorrect"] = true;         
+        } else if ((server.arg("tempCorrect")=="off") && (app_config.config["tempCorrect"].get<bool>())){
+            app_config.config["tempCorrect"] = false;
+        }
     }
 
     // Fermentrack Settings
@@ -133,26 +150,24 @@ void processConfig() {
     }
 
     if (server.hasArg("fermentrackPushEvery")) {
-        Serial.println("Has fermentrackPushEvery");
-        if (server.arg("fermentrackPushEvery").length() > 5)
-            return processConfigError();
-        else if (server.arg("fermentrackPushEvery").length() <= 0)
-            return processConfigError();
-        else if (!isInteger(server.arg("fermentrackPushEvery").c_str())) {
-            Serial.println("fermentrackPushEvery is not an integer!");
+#ifdef DEBUG_PRINTS
+        Serial.println(F("Has fermentrackPushEvery"));
+#endif
+        int push_every;
+        bool is_int;
+        isInteger(server.arg("fermentrackPushEvery").c_str(),is_int,push_every);
+        if (!is_int) {
             return processConfigError();
         }
-
-        // At this point, we know that it's an integer. Let's convert to a long so we can test the value
-        // TODO - Figure out if we want to print error messages for these
-        long push_every = strtol(server.arg("fermentrackPushEvery").c_str(), nullptr, 10);
-        if(push_every < 30)
-            app_config.config["fermentrackPushEvery"] = 30;
-        else if(push_every > 60*60)
-            app_config.config["fermentrackPushEvery"] = 60*60;
-        else
+        if ((push_every > 3600) || (push_every <30)) {
+            return processConfigError();
+        }
+        else {
             app_config.config["fermentrackPushEvery"] = push_every;
-        Serial.println("Updated fermentrackPushEvery");
+        }
+#ifdef DEBUG_PRINTS
+        Serial.println(F("Updated fermentrackPushEvery"));
+#endif
     }
 
     // Brewstatus Settings
@@ -167,30 +182,30 @@ void processConfig() {
     }
 
     if (server.hasArg("brewstatusPushEvery")) {
-        Serial.println("Has brewstatusPushEvery");
-        if (server.arg("brewstatusPushEvery").length() > 5)
-            return processConfigError();
-        else if (server.arg("brewstatusPushEvery").length() <= 0)
-            return processConfigError();
-        else if (!isInteger(server.arg("brewstatusPushEvery").c_str())) {
-            Serial.println("brewstatusPushEvery is not an integer!");
+#ifdef DEBUG_PRINTS
+        Serial.println(F("Has brewstatusPushEvery"));
+#endif
+        int push_every;
+        bool is_int;
+        isInteger(server.arg("brewstatusPushEvery").c_str(),is_int,push_every);
+        if (!is_int) {
             return processConfigError();
         }
-
-        // At this point, we know that it's an integer. Let's convert to a long so we can test the value
-        // TODO - Figure out if we want to print error messages for these
-        long push_every = strtol(server.arg("brewstatusPushEvery").c_str(), nullptr, 10);
-        if(push_every < 30)
-            app_config.config["brewstatusPushEvery"] = 30;
-        else if(push_every > 60*60)
-            app_config.config["brewstatusPushEvery"] = 60*60;
-        else
+        if ((push_every > 3600) || (push_every <30)) {
+            return processConfigError();
+        }
+        else {
             app_config.config["brewstatusPushEvery"] = push_every;
+        }
+#ifdef DEBUG_PRINTS
         Serial.println("Updated brewstatusPushEvery");
+#endif
     }
 
     if (server.hasArg("brewstatusTZoffset")) {
+#ifdef DEBUG_PRINTS
         Serial.println("Has brewstatusTZoffset");
+#endif
         if (server.arg("brewstatusTZoffset").length() > 3)
             return processConfigError();
         else if (server.arg("brewstatusTZoffset").length() <= 0)
@@ -198,15 +213,21 @@ void processConfig() {
 
         float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
         if(tzoffset < -12.0) {
+#ifdef DEBUG_PRINTS
             Serial.println("brewstatusTZoffset is less than -12!");
+#endif
             return processConfigError();
         } else if(tzoffset > 12.0) {
+#ifdef DEBUG_PRINTS
             Serial.println("brewstatusTZoffset is greater than 12!");
+#endif
             return processConfigError();
         } else {
             app_config.config["brewstatusTZoffset"] = tzoffset;
         }
+#ifdef DEBUG_PRINTS
         Serial.println("Updated brewstatusTZoffset");
+#endif
     }
 
     // Google Sheets Settings
@@ -270,6 +291,10 @@ void processConfig() {
 
     // If we made it this far, one or more settings were updated. Save.
     app_config.save();
+
+    if(reinit_tft) {
+        lcd.init();
+    }
 
     if(restart_tiltbridge) {
         trigger_restart();

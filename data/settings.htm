@@ -55,20 +55,30 @@
 
     <div id="settingsapp">
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         TiltBridge Settings
                     </h5>
 
                     <div class="card-body">
-                        <p class="card-text">These settings apply to the TiltBridge as a whole. Updating these will cause the TiltBridge to restart.</p>
-                        <form action="/settings/update/" method="POST">
+                        <p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will cause the TiltBridge to restart.</p>
+                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
                                 <label for="mdnsID" class="col-sm-2 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mdnsID" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
                                 </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="invertTFT" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Rotate TFT Display 180 degrees">Invert TFT Display</label>
+                                <div class="col-sm-8">
+                                    <input class="form-check-input" value="on" type="checkbox" id="invertTFT" name="invertTFT">
+                                    <input value="off" type="hidden" name="invertTFT">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -80,7 +90,7 @@
         </div>
 
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         Calibration Settings
@@ -88,19 +98,27 @@
 
                     <div class="card-body">
                         <p class="card-text">These settings control whether or not TiltBridge applies <a href="/calibration/">calibration</a> and temperature corrections to the Tilt reading before it is uploaded.</p>
-                        <form action="/settings/update/" method="POST">
+                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
                                 <label for="applyCalibration" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Apply calibration to Tilt data">Enable Calibration</label>
-                                <div class="col-sm-6">
-                                    <input class="form-check-input" type="checkbox" id="applyCalibration" name="applyCalibration">
+                                <div class="col-sm-8">
+                                    <div class="col-sm-8">
+                                        <input class="form-check-input" value="on" type="checkbox" id="applyCalibration" name="applyCalibration">
+                                        <input value="off" type="hidden" name="applyCalibration">
+                                    </div>
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                             <div class="form-group row">
                                 <label for="tempCorrect" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Apply temperature correction to Tilt data">Enable Temperature Correction to 60 &deg;F</label>
-                                <div class="col-sm-6">
-                                    <input class="form-check-input" type="checkbox" id="tempCorrect" name="tempCorrect">
+                                <div class="col-sm-8">
+                                    <div class="col-sm-8">
+                                        <input class="form-check-input" value="on" type="checkbox" id="tempCorrect" name="tempCorrect">
+                                        <input value="off" type="hidden" name="tempCorrect">
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -111,7 +129,7 @@
         </div>
 
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         Fermentrack Target Settings
@@ -121,22 +139,23 @@
                             <a href="https://www.fermentrack.com/">Fermentrack</a>. To disable pushing to Fermentrack, delete
                             the Fermentrack URL.
                         </p>
-                        <form action="/settings/update/" method="POST">
+                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
-                                <label for="fermentrackURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target Fermentrack tiltbridge URL. Delete to disable pushing to Fermentrack">Fermentrack URL</label>
+                                <label for="fermentrackURL" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Target Fermentrack tiltbridge URL. Delete to disable pushing to Fermentrack">Fermentrack URL</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="fermentrackURL" id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/" :value="settings.fermentrackURL">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="fermentrackPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Fermentrack">Push Frequency</label>
+                                <label for="fermentrackPushEvery" class="col-sm-3 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Fermentrack">Push Frequency</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="fermentrackPushEvery" id="fermentrackPushEvery" placeholder="30" :value="settings.fermentrackPushEvery">
                                 </div>
+                                
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -148,7 +167,7 @@
 
 
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         Google Sheets Settings
@@ -159,102 +178,78 @@
                             this feature (as well as a better explanation of these options), please read the
                             <a href="http://sheets.tiltbridge.com/">TiltBridge documentation here.</a>
                         </p>
-                        <form action="/settings/update/" method="POST">
+                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
-                                <label for="scriptsURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google Script URL</label>
+                                <label for="scriptsURL" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google Script URL</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="scriptsURL" id="scriptsURL" placeholder="https://sheets.google.com/.../" :value="settings.scriptsURL">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="scriptsEmail" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The Google Scripts email address associated with your deployment of the Tilt logging script">Google Script Email</label>
+                                <label for="scriptsEmail" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The Google Scripts email address associated with your deployment of the Tilt logging script">Google Script Email</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="scriptsEmail" id="scriptsEmail" placeholder="you@gmail.com" :value="settings.scriptsEmail">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_red" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the red Tilt will be written">Red Tilt Sheet Name</label>
+                                <label for="sheetName_red" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the red Tilt will be written">Red Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_red" id="sheetName_red" placeholder="BeerName" :value="settings.sheetName_red">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_green" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the green Tilt will be written">Green Tilt Sheet Name</label>
+                                <label for="sheetName_green" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the green Tilt will be written">Green Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_green" id="sheetName_green" placeholder="BeerName" :value="settings.sheetName_green">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_black" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the black Tilt will be written">Black Tilt Sheet Name</label>
+                                <label for="sheetName_black" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the black Tilt will be written">Black Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_black" id="sheetName_black" placeholder="BeerName" :value="settings.sheetName_black">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_purple" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the purple Tilt will be written">Purple Tilt Sheet Name</label>
+                                <label for="sheetName_purple" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the purple Tilt will be written">Purple Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_purple" id="sheetName_purple" placeholder="BeerName" :value="settings.sheetName_purple">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_orange" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the orange Tilt will be written">Orange Tilt Sheet Name</label>
+                                <label for="sheetName_orange" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the orange Tilt will be written">Orange Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_orange" id="sheetName_orange" placeholder="BeerName" :value="settings.sheetName_orange">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_blue" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the blue Tilt will be written">Blue Tilt Sheet Name</label>
+                                <label for="sheetName_blue" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the blue Tilt will be written">Blue Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_blue" id="sheetName_blue" placeholder="BeerName" :value="settings.sheetName_blue">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_yellow" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the yellow Tilt will be written">Yellow Tilt Sheet Name</label>
+                                <label for="sheetName_yellow" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the yellow Tilt will be written">Yellow Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_yellow" id="sheetName_yellow" placeholder="BeerName" :value="settings.sheetName_yellow">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="sheetName_pink" class="col-sm-2 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the pink Tilt will be written">Pink Tilt Sheet Name</label>
+                                <label for="sheetName_pink" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the pink Tilt will be written">Pink Tilt Sheet Name</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="sheetName_pink" id="sheetName_pink" placeholder="BeerName" :value="settings.sheetName_pink">
                                 </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -265,7 +260,7 @@
         </div>
 
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         Brewer's Friend Settings
@@ -279,10 +274,13 @@
                         </p>
                         <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="brewersFriendKey" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Your Brewers Friend API key">Brewers Friend API Key</label>
+                                <label for="brewersFriendKey" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Your Brewers Friend API key">Brewers Friend API Key</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="brewersFriendKey" id="brewersFriendKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewersFriendKey">
                                 </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -293,7 +291,7 @@
         </div>
 
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         Brewfather Settings
@@ -307,10 +305,13 @@
                         </p>
                         <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="brewfatherKey" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Your Brewfather Stream key">Brewfather Stream key</label>
+                                <label for="brewfatherKey" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Your Brewfather Stream key">Brewfather Stream key</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="brewfatherKey" id="brewfatherKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewfatherKey">
                                 </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -322,7 +323,7 @@
 
 
         <div class="row row-padded">
-            <div class="col-12">
+            <div class="col-8">
                 <div class="card">
                     <h5 class="card-header">
                         BrewStatus Settings
@@ -332,32 +333,29 @@
                             <a href="https://www.brewstat.us/">BrewStatus</a>. To disable pushing to BrewStatus, delete
                             the BrewStatus URL.
                         </p>
-                        <form action="/settings/update/" method="POST">
+                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
-                                <label for="brewstatusURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus URL</label>
+                                <label for="brewstatusURL" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus URL</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="brewstatusURL" id="brewstatusURL" placeholder="https://www.brewstat.us/tilt/xxxxxxxxxx/log" :value="settings.brewstatusURL">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="brewstatusPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Brewstatus">Push Frequency</label>
+                                <label for="brewstatusPushEvery" class="col-sm-3 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Brewstatus">Push Frequency</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="brewstatusPushEvery" id="brewstatusPushEvery" placeholder="30" :value="settings.brewstatusPushEvery">
                                 </div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
-                        </form>
 
-                        <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="brewstatusTZoffset" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Time zone offset from UTC (in hours)">Time Zone Offset</label>
+                                <label for="brewstatusTZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Time zone offset from UTC (in hours)">Time Zone Offset</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="brewstatusTZoffset" id="brewstatusTZoffset" placeholder="-5" :value="settings.brewstatusTZoffset">
                                 </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
@@ -368,9 +366,6 @@
         </div>
 
     </div>
-
-
-
 </main>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -398,6 +393,7 @@
                 xhr.open('GET', '/settings/json/');
                 xhr.onload = function () {
                     self.settings = JSON.parse(xhr.responseText);
+                    if ( self.settings.invertTFT ) document.getElementById("invertTFT").checked = true;
                     if ( self.settings.applyCalibration ) document.getElementById("applyCalibration").checked = true;
                     if ( self.settings.tempCorrect ) document.getElementById("tempCorrect").checked = true;
                 };
