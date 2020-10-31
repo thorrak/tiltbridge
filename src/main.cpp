@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 4/26/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 
@@ -99,7 +100,8 @@ void loop() {
 #ifdef DEBUG_PRINTS
     // This is optional & just allows us to print the available ram in case of memory leaks.
     if(trigger_next_data_send <= xTaskGetTickCount()) {  // Every 10 seconds, print some kind of status
-        Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
+        Serial.printf_P(PSTR("Current / Minimim RAM left:  %d  /  "), esp_get_free_heap_size());
+        Serial.printf_P(PSTR("%d\r\n"), esp_get_minimum_free_heap_size());
         trigger_next_data_send = xTaskGetTickCount() + 10000;
     }
 #endif
