@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 6/4/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "wifi_setup.h"
@@ -77,11 +78,11 @@ void init_wifi() {
 //    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
 //    wifiManager.addParameter(&custom_password);
 
-
+    WiFi.setHostname(mdns_id.c_str());
+    WiFi.mode(WIFI_STA);
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
-        WiFi.mode(WIFI_AP_STA);
     } else {
         // If we haven't successfully connected to WiFi, just restart & continue to project the configuration AP.
         // Alternatively, we can hang here.
