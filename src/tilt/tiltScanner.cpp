@@ -1,6 +1,7 @@
 //
 // Created by John Beeler on 5/12/18.
 // Modified by Tim Pletcher on 18-Oct-2020.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "tiltBridge.h"
@@ -170,10 +171,15 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
         return TILT_NONE;
     }
 
-    uint32_t temp = std::stoul(temp_arr,nullptr,16);
-    uint32_t gravity = std::stoul(grav_arr,nullptr,16);
+    uint8_t temp = std::stoul(temp_arr,nullptr,16);
+    uint16_t gravity = std::stoul(grav_arr,nullptr,16);
 
-    m_tilt_devices[m_color]->set_values(temp, gravity);
+    if((temp>=TILT_TEMP_MIN) && (temp<=TILT_TEMP_MAX) && (gravity>=TILT_GRAV_MIN) && (gravity<=TILT_GRAV_MAX)){
+        m_tilt_devices[m_color]->set_values(temp, gravity);
+    }
+    else{
+        return TILT_NONE;
+    }
 
     return m_color;
 }

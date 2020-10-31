@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 5/12/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #ifndef TILTBRIDGE_TILTSCANNER_H
@@ -9,10 +10,12 @@
 #include <nlohmann/json.hpp>
 #include <NimBLEAdvertisedDevice.h>
 
-
+#define TILT_TEMP_MAX                        185
+#define TILT_TEMP_MIN                        0
+#define TILT_GRAV_MAX                        1200
+#define TILT_GRAV_MIN                        990   
 
 #define BLE_SCAN_TIME       5  // Seconds to scan
-
 
 // for convenience
 using json = nlohmann::json;
