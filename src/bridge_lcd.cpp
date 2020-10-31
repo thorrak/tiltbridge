@@ -4,6 +4,7 @@
 //
 
 #include "bridge_lcd.h"
+#include <WiFi.h>
 
 bridge_lcd lcd;
 
