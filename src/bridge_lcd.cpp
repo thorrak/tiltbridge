@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 5/12/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "bridge_lcd.h"
@@ -107,8 +108,25 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     // Clear out the display before we start printing to it
     clear();
 
+    // Display IP address on top row if using Lolin TFT
+    uint8_t header_row = 1;
+    uint8_t first_tilt_row_offset = 2; 
+#ifdef LCD_TFT
+    // Display IP address or indicate if not connected.
+    if ( WiFi.status() == WL_CONNECTED) {
+        char ip[16];
+        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+        print_line("IP Address:", ip, 1);
+    }
+    else {
+        print_line("No Wifi Connection","",1);
+    }
+    header_row = 4;
+    first_tilt_row_offset = 6;
+#endif
+
     // Display the header row
-    print_line("Color", "Temp", "Gravity", 1);
+    print_line("Color", "Temp", "Gravity", header_row);
 
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
@@ -116,7 +134,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
             active_tilts++;
             // This check has the added bonus of limiting the # of displayed tilts to TILTS_PER_PAGE
             if((active_tilts/TILTS_PER_PAGE)==screen_number) {
-                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts+2);
+                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts + first_tilt_row_offset);
                 displayed_tilts++;
             }
         }
