@@ -46,9 +46,13 @@ void isInteger(const char* s, bool &is_int, int32_t &int_value) {
 
 bool isvalidAddress(const char* s) {
     //Rudimentary check that the address is of the form aaa.bbb.ccc
-    //or 111.222.333.444
+    //or 111.222.333.444 and all characters are alphanumeric
     if(strlen(s) > 255){
         return false;
+    }
+    for (int i=0; i < strlen(s); i++) {
+        if (!isalnum(s[i]) && s[i]!='.') 
+            return false;
     }
     int seg_ct = 0;
     char ts[strlen(s)+1];
