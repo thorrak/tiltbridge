@@ -1,4 +1,4 @@
-# TiltBridge
+# TiltBridge fork with MQTT 
 
 [![TiltBridge Logo](http://www.tiltbridge.com/static/img/tiltbridge_logo.png "TiltBridge")](http://www.tiltbridge.com/)
 
@@ -17,6 +17,8 @@ TiltBridge automatically logs your data to the following cloud data services:
 * [Brewfather](https://brewfather.app)
 * Google Sheets
 * [Brewstatus](https://brewstat.us)
+
+This fork can also log to a local or cloud based MQTT broker.
 
 
 #### Features
