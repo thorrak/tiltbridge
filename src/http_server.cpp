@@ -92,6 +92,8 @@ bool processSheetName(const char* varName, const char* colorName) {
 void processConfig() {
     bool restart_tiltbridge = false;
     bool all_settings_valid = true;
+    bool reinit_tft = false;
+
 
     // Generic TiltBridge Settings
     if (server.hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != server.arg("mdnsID").c_str()) ) {
@@ -102,6 +104,16 @@ void processConfig() {
             restart_tiltbridge = true;
         } else {
             all_settings_valid = false;
+        }
+    }
+
+    if (server.hasArg("invertTFT")) {
+        if((server.arg("invertTFT")=="on") && (!app_config.config["invertTFT"].get<bool>())) {
+            app_config.config["invertTFT"] = true;
+            reinit_tft = true;       
+        } else if ((server.arg("invertTFT")=="off") && (app_config.config["invertTFT"].get<bool>())){
+            app_config.config["invertTFT"] = false;
+            reinit_tft = true;
         }
     }
 
@@ -264,7 +276,10 @@ void processConfig() {
         return processConfigError();
     }
 
-
+    if(reinit_tft) {
+        lcd.init();
+    }
+    
     if(restart_tiltbridge) {
         trigger_restart();
     } else {
