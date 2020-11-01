@@ -87,32 +87,22 @@ bool jsonConfigHandler::write_config_to_spiffs() {
 }
 
 
-String fileRead(String name){
-    //read file from SPIFFS and store it as a String variable
-    String contents;
-    File file = SPIFFS.open(name.c_str(), "r");
-    if (!file) {
-        return "";
-    } else {
-        // Read the file into a String
-        while (file.available()){
-            contents += char(file.read());
-        }
-        file.close();
-
-        return contents;
-    }
-}
-
 bool jsonConfigHandler::read_config_from_spiffs() {
-    String json_string;
+    //Modified to eliminate use of string class
+    File file = SPIFFS.open(JSON_CONFIG_FILE);
+    size_t filesize = file.size();
+    char json_string[filesize+1];
+    json_string[0] = '\0';
+    file.read((uint8_t *)json_string,sizeof(json_string));
+    json_string[filesize] = '\0';
+    file.close();
+
     nlohmann::json loaded_config;
 
-    json_string = fileRead(JSON_CONFIG_FILE);
-    if(json_string.length() <= 2)
+    if(strlen(json_string) <= 2)
         return false;  // No data was loaded (empty string or {})
 
-    loaded_config = nlohmann::json::parse(json_string.c_str());
+    loaded_config = nlohmann::json::parse(json_string);
 
     // The assumption that we're going to make is that the saved version of the config may have different keys than the
     // version that is initialized in jsonConfigHandler::initialize(). To that end, we want to leave the initialized
