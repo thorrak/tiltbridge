@@ -66,7 +66,15 @@ void jsonConfigHandler::initialize() {
             {"brewersFriendKey", ""},
 
             // Brewfather
-            {"brewfatherKey", ""}
+            {"brewfatherKey", ""},
+
+            // MQTT Settings
+            {"mqttBrokerIP",""},
+            {"mqttBrokerPort",1883},
+            {"mqttUsername",""},
+            {"mqttPassword",""},
+            {"mqttTopic","tiltbridge"},
+            {"mqttPushEvery",30}
     };
 }
 

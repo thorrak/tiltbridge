@@ -82,6 +82,7 @@ void setup() {
     tilt_scanner.scan();
 
     data_sender.init();  // Initialize the data sender
+    data_sender.init_mqtt(); //Initialize the mqtt server connection if configured.
 
     // Once all this is done, we'll wait until the initial scan completes.
     tilt_scanner.wait_until_scan_complete();

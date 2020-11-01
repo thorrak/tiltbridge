@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 2/18/19.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include<ctime>
@@ -16,7 +17,7 @@ using json = nlohmann::json;
 #include <HTTPClient.h>
 
 #include <WiFi.h>
-
+#include <MQTT.h>
 
 #ifdef USE_SECURE_GSCRIPTS
 #include <WiFiMulti.h>
@@ -26,15 +27,21 @@ using json = nlohmann::json;
 
 dataSendHandler data_sender;  // Global data sender
 
+WiFiClient wClient;
+MQTTClient mqttClient;
+
 dataSendHandler::dataSendHandler() {
-    send_to_brewstatus_at =     40 * 1000; // Trigger the first send to BrewStatus 40 seconds out
-    send_to_fermentrack_at =    45 * 1000; // Trigger the first send to Fermentrack 45 seconds out
-    send_to_brewfather_at =     50 * 1000; // Trigger the first send to Fermentrack 50 seconds out
-    send_to_brewers_friend_at = 55 * 1000; // Trigger the first send to Brewer's Friend 55 seconds out
-    send_to_google_at =         65 * 1000; // Trigger the first send to Google Sheets 65 seconds out
+    send_to_brewstatus_at =     40 * 1000; // Trigger first send to BrewStatus 40 seconds out
+    send_to_fermentrack_at =    45 * 1000; // Trigger first send to Fermentrack 45 seconds out
+    send_to_brewfather_at =     50 * 1000; // Trigger first send to Fermentrack 50 seconds out
+    send_to_brewers_friend_at = 55 * 1000; // Trigger first send to Brewer's Friend 55 seconds out
+    send_to_mqtt_at =           60 * 1000; // Trigger first send to MQTT 60 seconds out
+    send_to_google_at =         70 * 1000; // Trigger first send to Google Sheets 70 seconds out
 #ifdef ENABLE_TEST_CHECKINS
     send_checkin_at =           35 * 1000; // If we have send_checkins enabled (this is a testing thing!) send at 35 seconds
 #endif
+
+    mqtt_alreadyinit = false;
 }
 
 
@@ -63,6 +70,47 @@ void dataSendHandler::init() {
 #endif
 }
 
+void dataSendHandler::init_mqtt() {
+    if(app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH && !mqtt_alreadyinit) {  
+#ifdef DEBUG_PRINTS
+        Serial.print(F("Initializing Connection to MQTTBroker at IP: "));
+        Serial.print(app_config.config["mqttBrokerIP"].get<std::string>().c_str());
+        Serial.print(F(" on port: "));
+        Serial.println(app_config.config["mqttBrokerPort"].get<int>());
+#endif
+        const char * mqttserver = app_config.config["mqttBrokerIP"].get<std::string>().c_str();
+        mqttClient.setKeepAlive(app_config.config["mqttPushEvery"].get<int>() * 1000);
+        mqttClient.begin(mqttserver,app_config.config["mqttBrokerPort"].get<int>(),wClient);
+        mqtt_alreadyinit = true;
+    }
+}
+
+void dataSendHandler::reinit_mqtt() {
+    if(app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH && mqtt_alreadyinit) {  
+        mqttClient.disconnect();
+        delay(250);
+#ifdef DEBUG_PRINTS
+        Serial.print(F("Initializing Connection to MQTTBroker at IP: "));
+        Serial.print(app_config.config["mqttBrokerIP"].get<std::string>().c_str());
+        Serial.print(F(" on port: "));
+        Serial.println(app_config.config["mqttBrokerPort"].get<int>());
+#endif
+        const char * mqttserver = app_config.config["mqttBrokerIP"].get<std::string>().c_str();
+        mqttClient.setHost(mqttserver,app_config.config["mqttBrokerPort"].get<int>());
+        mqttClient.setKeepAlive(app_config.config["mqttPushEvery"].get<int>() * 1000);
+        mqtt_alreadyinit = true;
+    }
+}
+
+void dataSendHandler::connect_mqtt() {
+    if (app_config.config["mqttUsername"].get<std::string>().length()>1){
+        const char * mqttUser = app_config.config["mqttUsername"].get<std::string>().c_str();
+        const char * mqttPass = app_config.config["mqttPassword"].get<std::string>().c_str();
+        mqttClient.connect("tiltbridge",mqttUser,mqttPass);
+    } else {
+        mqttClient.connect("tiltbridge");
+    }   
+}
 
 bool dataSendHandler::send_to_fermentrack() {
     nlohmann::json j;
@@ -342,6 +390,50 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
     return result;
 }
 
+bool dataSendHandler::send_to_mqtt() {
+    bool result = false;
+    const int payload_size = 70;
+    char payload[payload_size];
+    mqttClient.loop();
+    delay(10);
+
+    // The payload formatted to look like this when sent to mqTT:
+    // ('topic,tilt_color=Black specific_gravity=1.001,temperature=78.00')
+    // This is compatible with influxdb format when used with influxdb/telegraf.
+    //
+    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    for(uint8_t i = 0;i<TILT_COLORS;i++) {
+        if(tilt_scanner.tilt(i)->is_loaded()) {
+            snprintf(payload, payload_size,"%s,tilt_color=%s specific_gravity=%.3f,temperature=%.0f",
+                    app_config.config["mqttTopic"].get<std::string>().c_str(), 
+                    tilt_scanner.tilt(i)->color_name().c_str(),
+                    (float) tilt_scanner.tilt(i)->gravity / 1000,
+                    (float) tilt_scanner.tilt(i)->temp);
+            //std::string pang_payload = payload;
+#ifdef DEBUG_PRINTS                    
+            Serial.print(F("Topic: "));
+            Serial.println(app_config.config["mqttTopic"].get<std::string>().c_str());
+            Serial.print(F("Message: "));
+            Serial.println(payload);
+#endif
+            if (!mqttClient.connected()) {
+#ifdef DEBUG_PRINTS
+                Serial.println(F("MQTT disconnected. Attempting to reconnect to MQTT Broker"));
+#endif                
+                connect_mqtt();
+                delay(500);               
+            }
+            result = mqttClient.publish(app_config.config["mqttTopic"].get<std::string>().c_str(),payload);
+#ifdef DEBUG_PRINTS
+                Serial.print(F("Publish Successful: "));
+                Serial.println(result);
+#endif 
+        }
+
+    }
+    return result;
+}
+
 #ifdef ENABLE_TEST_CHECKINS
 u_long checkin_no = 0;
 
@@ -467,6 +559,22 @@ void dataSendHandler::process() {
         } else {
             // If the user adds the setting, we want this to kick in within 10 seconds
             send_to_brewfather_at = xTaskGetTickCount() + 10000;
+        }
+        yield();
+    }
+
+        // Check & send to mqtt broker if necessary
+    if (send_to_mqtt_at <= xTaskGetTickCount()) {
+        if(WiFiClass::status()== WL_CONNECTED && app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH) {   //Check WiFi connection status
+            #ifdef DEBUG_PRINTS
+            Serial.println(F("Publishing available results to MQTT Broker"));
+            #endif
+
+            send_to_mqtt();
+            send_to_mqtt_at = xTaskGetTickCount() + (app_config.config["mqttPushEvery"].get<int>() * 1000);
+        } else {
+            // If the user adds the setting, we want this to kick in within 10 seconds
+            send_to_mqtt_at = xTaskGetTickCount() + 10000;
         }
         yield();
     }

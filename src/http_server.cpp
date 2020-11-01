@@ -44,6 +44,28 @@ void isInteger(const char* s, bool &is_int, int32_t &int_value) {
     is_int = (*p == 0);
 }
 
+inline bool isvalidAddress(const char* s) {
+    //Rudimentary check that the address is of the form aaa.bbb.ccc
+    //or 111.222.333.444
+    if(strlen(s) > 255){
+        return false;
+    }
+    int seg_ct = 0;
+    char ts[strlen(s)+1];
+    strcpy(ts,s);
+    char * item = strtok(ts,".");
+    while (item != NULL) {
+        ++seg_ct;
+        item = strtok(NULL, ".");
+    }
+    if ((seg_ct = 3) || (seg_ct = 4)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 // This is to simplify the redirects in processConfig
 void redirectToConfig() {
     server.sendHeader("Location", "/settings/");
@@ -93,7 +115,7 @@ void processConfig() {
     bool restart_tiltbridge = false;
     bool all_settings_valid = true;
     bool reinit_tft = false;
-
+    bool mqtt_broker_update = false;
 
     // Generic TiltBridge Settings
     if (server.hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != server.arg("mdnsID").c_str()) ) {
@@ -269,11 +291,96 @@ void processConfig() {
         }
     }
 
+    // MQTT
+    if (server.hasArg("mqttBrokerIP") && (app_config.config["mqttBrokerIP"].get<std::string>() != server.arg("mqttBrokerIP").c_str())) {
+        if (isvalidAddress(server.arg("mqttBrokerIP").c_str())){
+            app_config.config["mqttBrokerIP"] = server.arg("mqttBrokerIP").c_str();
+            mqtt_broker_update = true;
+        }
+        else {
+            app_config.config["mqttBrokerIP"] = "";
+        }
+    }   
+
+    if (server.hasArg("mqttBrokerPort")) {
+        int port_number;
+        bool is_int;
+        isInteger(server.arg("mqttBrokerPort").c_str(),is_int,port_number);
+        if (is_int && port_number < 65535 && port_number > 1024) {
+            if (app_config.config["mqttBrokerPort"].get<int>() != port_number) {
+                app_config.config["mqttBrokerPort"] = port_number;
+                mqtt_broker_update = true;
+            }
+        } else {
+            all_settings_valid = false;
+        }
+    }  
+
+    if (server.hasArg("mqttPushEvery")) {
+        int push_every;
+        bool is_int;
+        isInteger(server.arg("mqttPushEvery").c_str(),is_int,push_every);
+        if (is_int && push_every <= 3600 && push_every >=15 ) {
+            app_config.config["mqttPushEvery"] = push_every;
+        } else {
+            all_settings_valid = false;
+        }
+    }
+
+
+    if (server.hasArg("mqttUsername") && (app_config.config["mqttUsername"].get<std::string>() != server.arg("mqttUsername").c_str())) {
+        if (server.arg("mqttUsername").length() <= 50) {
+            if (server.arg("mqttUsername").length() <= 0){
+                app_config.config["mqttUsername"] = "";
+            }else{
+                app_config.config["mqttUsername"] = server.arg("mqttUsername").c_str();
+            }
+            mqtt_broker_update = true;      
+        } else {
+            all_settings_valid = false;
+        }
+    }
+
+    if (server.hasArg("mqttPassword") && (app_config.config["mqttPassword"].get<std::string>() != server.arg("mqttPassword").c_str())) {
+        if (server.arg("mqttPassword").length() <= 128) {
+            if (server.arg("mqttPassword").length() <= 0){
+                app_config.config["mqttPassword"] = "";
+            }else{
+            app_config.config["mqttPassword"] = server.arg("mqttPassword").c_str();
+            }
+            mqtt_broker_update = true;
+        } else {
+            all_settings_valid = false;
+        }
+    }
+
+
+    if (server.hasArg("mqttTopic")) {
+        if (server.arg("mqttTopic").length() <= 255){
+            if (server.arg("mqttTopic").length() <= 2) {
+                app_config.config["mqttTopic"] = "";
+            }else{
+                app_config.config["mqttTopic"] = server.arg("mqttTopic").c_str();
+            }
+        } else {
+            all_settings_valid = false;
+        }
+    }
+
     // If we made it this far, one or more settings were updated. Save.
     if(all_settings_valid) {
         app_config.save();
     } else {
         return processConfigError();
+    }
+
+    if(mqtt_broker_update) {
+        if (!data_sender.mqtt_alreadyinit) {
+            data_sender.init_mqtt();
+        } else {
+            data_sender.reinit_mqtt();
+        }
+        
     }
 
     if(reinit_tft) {
