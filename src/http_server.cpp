@@ -44,7 +44,7 @@ void isInteger(const char* s, bool &is_int, int32_t &int_value) {
     is_int = (*p == 0);
 }
 
-inline bool isvalidAddress(const char* s) {
+bool isvalidAddress(const char* s) {
     //Rudimentary check that the address is of the form aaa.bbb.ccc
     //or 111.222.333.444
     if(strlen(s) > 255){
@@ -58,7 +58,7 @@ inline bool isvalidAddress(const char* s) {
         ++seg_ct;
         item = strtok(NULL, ".");
     }
-    if ((seg_ct = 3) || (seg_ct = 4)) {
+    if ((seg_ct == 3) || (seg_ct == 4)) {
         return true;
     }
     else {
