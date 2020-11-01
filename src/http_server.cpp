@@ -349,28 +349,31 @@ void processCalibration() {
 
 
 //This function is overkill for how we're handling things, but
-bool loadFromSpiffs(String path)
+bool loadFromSpiffs(const char* path)
 {
-    String dataType = "text/plain";
+    char p[strlen(path)+1];
+    strcpy(p,path);
+    char * suffix = strtok(p,".");
+    suffix = strtok(NULL,".");
+    
+    char dataType[25];
 
-    if (path.endsWith(".src")) path = path.substring(0, path.lastIndexOf("."));
-    else if (path.endsWith(".htm")) dataType = "text/html";
-    else if (path.endsWith(".css")) dataType = "text/css";
-    else if (path.endsWith(".js")) dataType = "application/javascript";
-    else if (path.endsWith(".png")) dataType = "image/png";
-    else if (path.endsWith(".gif")) dataType = "image/gif";
-    else if (path.endsWith(".jpg")) dataType = "image/jpeg";
-    else if (path.endsWith(".ico")) dataType = "image/x-icon";
-    else if (path.endsWith(".xml")) dataType = "text/xml";
-    else if (path.endsWith(".pdf")) dataType = "application/pdf";
-    else if (path.endsWith(".zip")) dataType = "application/zip";
+    if (strncmp(suffix,"htm",3)==0) strcpy(dataType,"text/html");
+    else if (strncmp(suffix,"css",3)==0) strcpy(dataType,"text/css");
+    else if (strncmp(suffix,"js",3)==0) strcpy(dataType,"application/javascript");
+    else if (strncmp(suffix,"png",3)==0) strcpy(dataType,"image/png");
+    else if (strncmp(suffix,"gif",3)==0) strcpy(dataType,"image/gif");
+    else if (strncmp(suffix,"jpg",3)==0) strcpy(dataType,"image/jpeg");
+    else if (strncmp(suffix,"ico",3)==0) strcpy(dataType,"image/x-icon");
+    else if (strncmp(suffix,"xml",3)==0) strcpy(dataType,"text/xml");
+    else if (strncmp(suffix,"pdf",3)==0) strcpy(dataType,"application/pdf");
+    else if (strncmp(suffix,"zip",3)==0) strcpy(dataType,"application/zip");
+    else strcpy(dataType,"text/plain");
 
-    File dataFile = SPIFFS.open(path.c_str(), "r");   //open file to read
+    File dataFile = SPIFFS.open(path, "r");   //open file to read
     if (!dataFile)  //unsuccessful open
         return false;
-    if (server.hasArg("download")) dataType = "application/octet-stream";
-    if (server.streamFile(dataFile, dataType) != dataFile.size()) {}    //a lot happening here
-
+    server.streamFile(dataFile, dataType);
     dataFile.close();
 
     return true; //shouldn't always return true, Added false above
