@@ -362,7 +362,7 @@ void processConfig() {
     if (server.hasArg("mqttTopic")) {
         if (server.arg("mqttTopic").length() <= 255){
             if (server.arg("mqttTopic").length() <= 2) {
-                app_config.config["mqttTopic"] = "";
+                app_config.config["mqttTopic"] = "tiltbridge";
             }else{
                 app_config.config["mqttTopic"] = server.arg("mqttTopic").c_str();
             }
@@ -379,12 +379,7 @@ void processConfig() {
     }
 
     if(mqtt_broker_update) {
-        if (!data_sender.mqtt_alreadyinit) {
             data_sender.init_mqtt();
-        } else {
-            data_sender.reinit_mqtt();
-        }
-        
     }
 
     if(reinit_tft) {

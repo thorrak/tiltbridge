@@ -71,7 +71,7 @@ void dataSendHandler::init() {
 }
 
 void dataSendHandler::init_mqtt() {
-    if(app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH && !mqtt_alreadyinit) {  
+    if(app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH){
 #ifdef DEBUG_PRINTS
         Serial.print(F("Initializing Connection to MQTTBroker at IP: "));
         Serial.print(app_config.config["mqttBrokerIP"].get<std::string>().c_str());
@@ -80,25 +80,15 @@ void dataSendHandler::init_mqtt() {
 #endif
         const char * mqttserver = app_config.config["mqttBrokerIP"].get<std::string>().c_str();
         mqttClient.setKeepAlive(app_config.config["mqttPushEvery"].get<int>() * 1000);
-        mqttClient.begin(mqttserver,app_config.config["mqttBrokerPort"].get<int>(),wClient);
-        mqtt_alreadyinit = true;
-    }
-}
 
-void dataSendHandler::reinit_mqtt() {
-    if(app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH && mqtt_alreadyinit) {  
-        mqttClient.disconnect();
-        delay(250);
-#ifdef DEBUG_PRINTS
-        Serial.print(F("Initializing Connection to MQTTBroker at IP: "));
-        Serial.print(app_config.config["mqttBrokerIP"].get<std::string>().c_str());
-        Serial.print(F(" on port: "));
-        Serial.println(app_config.config["mqttBrokerPort"].get<int>());
-#endif
-        const char * mqttserver = app_config.config["mqttBrokerIP"].get<std::string>().c_str();
-        mqttClient.setHost(mqttserver,app_config.config["mqttBrokerPort"].get<int>());
-        mqttClient.setKeepAlive(app_config.config["mqttPushEvery"].get<int>() * 1000);
-        mqtt_alreadyinit = true;
+        if (mqtt_alreadyinit) {
+            mqttClient.disconnect();
+            delay(250);  
+            mqttClient.setHost(mqttserver,app_config.config["mqttBrokerPort"].get<int>());
+        } else {
+            mqttClient.begin(mqttserver,app_config.config["mqttBrokerPort"].get<int>(),wClient);
+        }
+        mqtt_alreadyinit=true;   
     }
 }
 

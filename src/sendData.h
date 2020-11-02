@@ -43,7 +43,6 @@ public:
     dataSendHandler();
     void init();
     void init_mqtt();
-    void reinit_mqtt();
     void process();
     bool mqtt_alreadyinit;
 
