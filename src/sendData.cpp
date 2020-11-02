@@ -249,7 +249,7 @@ bool dataSendHandler::send_to_google() {
 
             payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
             payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
-            payload["SG"] = (float) tilt_scanner.tilt(i)->gravity / 1000;
+            payload["SG"] = tilt_scanner.tilt(i)->converted_gravity();
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["Comment"] = "";
             payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google

@@ -186,8 +186,8 @@ void processConfig() {
     }
 
     // Brewstatus Settings
-    if (server.hasArg("brewstatusURL")) {
-        // TODO - Add a check here to make sure that brewstatusURL actually changed, and return if it didn't
+    if (server.hasArg("brewstatusURL") &&
+            (app_config.config["brewstatusURL"].get<std::string>() != server.arg("brewstatusURL").c_str())) {
         if (server.arg("brewstatusURL").length() <= 255) {
             if (server.arg("brewstatusURL").length() < 12) {
                 app_config.config["brewstatusURL"] = "";
@@ -225,8 +225,8 @@ void processConfig() {
     }
 
     // Google Sheets Settings
-    if (server.hasArg("scriptsURL")) {
-        // TODO - Validate this begins with "https://scripts.google.com/"
+    if (server.hasArg("scriptsURL") && 
+            (strncmp(server.arg("scriptsURL").c_str(),"https://script.google.com/", 26)==0)) {
         if (server.arg("scriptsURL").length() <= 255) {
             if (server.arg("scriptsURL").length() < 12) {
                 app_config.config["scriptsURL"] = "";
@@ -474,7 +474,6 @@ void processCalibration() {
 }
 
 
-//This function is overkill for how we're handling things, but
 bool loadFromSpiffs(const char* path)
 {
     char p[strlen(path)+1];
