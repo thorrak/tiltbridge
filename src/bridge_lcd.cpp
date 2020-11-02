@@ -123,8 +123,8 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     else {
         print_line("No Wifi Connection","",1);
     }
-    header_row = 4;
-    first_tilt_row_offset = 6;
+    header_row = 3;
+    first_tilt_row_offset = 4;
 #endif
 
     // Display the header row
