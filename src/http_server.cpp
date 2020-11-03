@@ -235,13 +235,14 @@ void processConfig() {
     }
 
     // Google Sheets Settings
-    if (server.hasArg("scriptsURL") && 
-            (strncmp(server.arg("scriptsURL").c_str(),"https://script.google.com/", 26)==0)) {
+    if (server.hasArg("scriptsURL")) {
         if (server.arg("scriptsURL").length() <= 255) {
-            if (server.arg("scriptsURL").length() < 12) {
-                app_config.config["scriptsURL"] = "";
-            } else{
+            if (server.arg("scriptsURL").length() > 12 && 
+                (strncmp(server.arg("scriptsURL").c_str(),"https://script.google.com/", 26)==0)) {
+                
             app_config.config["scriptsURL"] = server.arg("scriptsURL").c_str();
+            } else {
+                app_config.config["scriptsURL"] = "";
             }
         } else {
             all_settings_valid = false;
