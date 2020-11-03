@@ -44,10 +44,12 @@ void configModeCallback(WiFiManager *myWiFiManager) {
 }
 
 // Not sure if this is sufficient to test for validity
-bool isValidmDNSName(String mdns_name) {
-    for (std::string::size_type i = 0; i < mdns_name.length(); ++i) {
+bool isValidmDNSName(const char* mdns_name) {
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+        return false;
+    for (int i=0; i < strlen(mdns_name); i++) {
         // For now, we're just checking that every character in the string is alphanumeric. May need to add more validation here.
-        if (!isalnum(mdns_name[i]))
+        if ( !isalnum(mdns_name[i]) && mdns_name[i] != '-' )
             return false;
     }
     return true;
@@ -79,9 +81,7 @@ void init_wifi() {
 //    wifiManager.addParameter(&custom_password);
 
     
-    WiFi.mode(WIFI_STA);
-    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-    WiFi.setHostname(mdns_id.c_str());
+
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
@@ -107,6 +107,12 @@ void init_wifi() {
 //        app_config.config["password"] = custom_password.getValue();
         app_config.save();
     }
+
+    WiFi.mode(WIFI_STA);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(mdns_id.c_str());
+    WiFi.begin();
+    delay(500);
 
     if (!MDNS.begin(mdns_id.c_str())) {
 //        Serial.println("Error setting up MDNS responder!");

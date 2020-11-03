@@ -70,6 +70,16 @@ bool isvalidAddress(const char* s) {
     }
 }
 
+bool isValidmdnsName(const char* mdns_name) {
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+        return false;
+    for (int i=0; i < strlen(mdns_name); i++) {
+        if ( !isalnum(mdns_name[i]) && mdns_name[i] != '-' )
+            return false;
+    }
+    return true;
+}
+
 // This is to simplify the redirects in processConfig
 void redirectToConfig() {
     server.sendHeader("Location", "/settings/");
@@ -123,7 +133,7 @@ void processConfig() {
 
     // Generic TiltBridge Settings
     if (server.hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != server.arg("mdnsID").c_str()) ) {
-        if (server.arg("mdnsID").length() <= 30 && server.arg("mdnsID").length() >= 8) {
+        if (isValidmdnsName(server.arg("mdnsID").c_str())) {
             app_config.config["mdnsID"] = server.arg("mdnsID").c_str();
             // When we update the mDNS ID, a lot of things have to get reset. Rather than doing the hard work of actually
             // resetting those settings & broadcasting the new ID, let's just restart the controller.
