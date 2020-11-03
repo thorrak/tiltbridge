@@ -78,8 +78,10 @@ void init_wifi() {
 //    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
 //    wifiManager.addParameter(&custom_password);
 
-    WiFi.setHostname(mdns_id.c_str());
+    
     WiFi.mode(WIFI_STA);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(mdns_id.c_str());
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
