@@ -121,6 +121,10 @@ void processConfig() {
         app_config.config["tempCorrect"] = false;
     }
 
+    if (server.hasArg("tempUnit")) {
+        app_config.config["tempUnit"] = server.arg("tempUnit").c_str();
+    }
+
     // Fermentrack Settings
     if (server.hasArg("fermentrackURL")) {
         // TODO - Add a check here to make sure that fermentrackURL actually changed, and return if it didn't

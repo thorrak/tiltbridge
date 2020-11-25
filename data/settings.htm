@@ -114,6 +114,33 @@
             <div class="col-12">
                 <div class="card">
                     <h5 class="card-header">
+                        Units
+                    </h5>
+                    
+                    <div class="card-body">
+                        <p class="card-text">These settings control whether to use fahrenheit or celsius.</p>
+                        <form action="/settings/update/" method="POST">
+                            <div class="form-group row">
+                                <label for="tempUnit" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Units used for temperature measurement">Temperature in</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" name="tempUnit" id="tempUnit">
+                                        <option value="C" selected>Celsius (&deg;C)</option>
+                                        <option value="F">Fahrenheit (&deg;F)</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row row-padded">
+            <div class="col-12">
+                <div class="card">
+                    <h5 class="card-header">
                         Fermentrack Target Settings
                     </h5>
                     <div class="card-body">
@@ -400,6 +427,7 @@
                     self.settings = JSON.parse(xhr.responseText);
                     if ( self.settings.applyCalibration ) document.getElementById("applyCalibration").checked = true;
                     if ( self.settings.tempCorrect ) document.getElementById("tempCorrect").checked = true;
+                    document.getElementById("tempUnit").value  = self.settings.tempUnit;
                 };
                 xhr.send()
             }

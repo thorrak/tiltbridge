@@ -213,7 +213,7 @@ void bridge_lcd::display_wifi_reconnect_failed() {
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10], temp[6];
     sprintf(gravity, "%.3f", double_t(tilt->gravity)/1000);
-    sprintf(temp, "%d F", tilt->temp);
+    sprintf(temp, "%d %s", tilt->converted_temp(), tilt->is_celsius() ? "C" : "F");
 
 #ifdef LCD_TFT_ESPI
     tft->setTextColor(tilt->text_color());
