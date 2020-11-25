@@ -351,6 +351,9 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
     oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
     oled_display->drawString(0, starting_pixel_row, left_text);
 
+    oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
+    oled_display->drawString(54, starting_pixel_row, middle_text);
+
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);
 #endif
