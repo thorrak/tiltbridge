@@ -342,7 +342,6 @@ void bridge_lcd::print_line(const String& left_text, const String& right_text, u
 
 void bridge_lcd::print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line) {
 #ifdef LCD_SSD1306
-    // middle_text is ignored for non-TFT displays
     int16_t starting_pixel_row = 0;
 
     starting_pixel_row = (SSD_LINE_CLEARANCE + SSD1306_FONT_HEIGHT) * (line-1) + SSD_LINE_CLEARANCE;
