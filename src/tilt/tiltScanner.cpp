@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 5/12/18.
+// Modified by Tim Pletcher on 18-Oct-2020.
 //
 
 #include "tiltBridge.h"
@@ -15,6 +16,7 @@
 #include <NimBLEScan.h>
 #include <NimBLEAdvertisedDevice.h>
 
+#include <FreeRTOS.h>
 
 // Create the scanner
 BLEScan* pBLEScan;
@@ -69,10 +71,10 @@ void tiltScanner::init() {
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan(); //create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
-    //active scan actively queries devices for more info following detection.
-    // This isn't required for the Tilt to work - I'm just trying it to see if it helps keep v3 tilts awake (it shouldnt)
-    pBLEScan->setActiveScan(true);
-    pBLEScan->setInterval(101);
+    //Active scan actively queries devices for more info following detection.
+    //
+    pBLEScan->setActiveScan(false);
+    pBLEScan->setInterval(100);
     pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 
@@ -131,25 +133,10 @@ bool tiltScanner::wait_until_scan_complete() {
 
 
 uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_hex) {
-    std::stringstream ss;
-    std::string advert_string;
-//    std::string m_part1;
-//    std::string m_end_string;
     uint8_t m_color;
 
     // Check that this is an iBeacon packet
     if(advert_string_hex[0] != 0x4c || advert_string_hex[1] != 0x00 || advert_string_hex[2] != 0x02 || advert_string_hex[3] != 0x15)
-        return TILT_NONE;
-
-    // There is almost certainly a better way to do this
-    char *hex_cstr = NimBLEUtils::buildHexData(nullptr, (uint8_t*)advert_string_hex.data(), advert_string_hex.length());
-    ss.str(hex_cstr);
-    free(hex_cstr);
-    advert_string = ss.str();
-
-
-    // We need the advert_string to be at least 50 characters long
-    if(advert_string.length() < 50)
         return TILT_NONE;
 
     // The advertisement string is the "manufacturer data" part of the following:
@@ -157,16 +144,34 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
     //4c000215a495bb40c5b14b44b5121370f02d74de005004d9c5
     //????????iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttggggXR
     //**********----------**********----------**********
+    char hex_code[3] = {'\0'};
+    char m_color_arr[33] = {'\0'};
+    char temp_arr[5] = {'\0'};
+    char grav_arr[5] = {'\0'};
 
-    m_color = tiltHydrometer::uuid_to_color_no(advert_string.substr(8,32));
+    for (int i = 4; i < advert_string_hex.length(); i++) {
+        sprintf(hex_code, "%.2x", advert_string_hex[i]);
+        //Indices 4 - 19 each generate two characters of the color array
+        if ( (i>3) && (i<20) ){
+            strncat(m_color_arr,hex_code,2);
+        }
+        //Indices 20-21 each generate two characters of the temperature array
+        if ( (i>=20) && (i<22) ) {
+            strncat(temp_arr,hex_code,2);
+        }
+        //Indices 22-23 each generate two characters of the sp_gravity array
+        if ( (i>=22) && (i<24) ) {
+            strncat(grav_arr,hex_code,2);
+        }
+    }
 
-    if(m_color == TILT_NONE) // We didn't match the uuid to a color (should only happen if new colors are released)
+    m_color = tiltHydrometer::uuid_to_color_no(m_color_arr);
+    if(m_color == TILT_NONE) {// We didn't match the uuid to a color (should only happen if new colors are released)
         return TILT_NONE;
+    }
 
-    // TODO - Rewrite this to not cast the grav/temp as a string & then recast it as an int
-    uint32_t temp = std::stoul(advert_string.substr(40,4), nullptr, 16);
-    uint32_t gravity = std::stoul(advert_string.substr(44,4), nullptr, 16);
-//    m_end_string = advert_string.substr(48,2);  // first byte is txpower, second is RSSI
+    uint32_t temp = std::stoul(temp_arr,nullptr,16);
+    uint32_t gravity = std::stoul(grav_arr,nullptr,16);
 
     m_tilt_devices[m_color]->set_values(temp, gravity);
 

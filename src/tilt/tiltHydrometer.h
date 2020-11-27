@@ -45,6 +45,8 @@ public:
     std::string converted_gravity();
     std::string gsheets_beer_name();
     nlohmann::json to_json();
+    uint32_t converted_temp() const;
+    bool is_celsius() const;
     bool is_loaded();
 
     static uint8_t uuid_to_color_no(std::string data);

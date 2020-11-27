@@ -213,7 +213,7 @@ void bridge_lcd::display_wifi_reconnect_failed() {
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
     char gravity[10], temp[6];
     sprintf(gravity, "%.3f", double_t(tilt->gravity)/1000);
-    sprintf(temp, "%d F", tilt->temp);
+    sprintf(temp, "%d %s", tilt->converted_temp(), tilt->is_celsius() ? "C" : "F");
 
 #ifdef LCD_TFT_ESPI
     tft->setTextColor(tilt->text_color());
@@ -342,7 +342,6 @@ void bridge_lcd::print_line(const String& left_text, const String& right_text, u
 
 void bridge_lcd::print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line) {
 #ifdef LCD_SSD1306
-    // middle_text is ignored for non-TFT displays
     int16_t starting_pixel_row = 0;
 
     starting_pixel_row = (SSD_LINE_CLEARANCE + SSD1306_FONT_HEIGHT) * (line-1) + SSD_LINE_CLEARANCE;
@@ -350,6 +349,9 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
     // The coordinates define the left starting point of the text
     oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
     oled_display->drawString(0, starting_pixel_row, left_text);
+
+    oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
+    oled_display->drawString(54, starting_pixel_row, middle_text);
 
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);

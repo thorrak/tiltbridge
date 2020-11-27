@@ -5,7 +5,14 @@
 #include "tiltHydrometer.h"
 #include "jsonConfigHandler.h"
 
+namespace {
 
+uint32_t fahrenheit_to_celsius(uint32_t fahrenheit)
+{
+    return (fahrenheit - 32) * 5 / 9;
+}
+
+}
 
 tiltHydrometer::tiltHydrometer(uint8_t color) {
     m_loaded            = false;
@@ -233,13 +240,21 @@ nlohmann::json tiltHydrometer::to_json() {
     nlohmann::json j;
     j = {
             {"color", color_name()},
-            {"temp", temp},
+            {"temp", converted_temp()},
+            {"tempUnit", is_celsius() ? "C" : "F"},
             {"gravity", converted_gravity()},
             {"gsheets_name", gsheets_beer_name()},
     };
     return j;
 }
 
+uint32_t tiltHydrometer::converted_temp() const {
+    return is_celsius() ? fahrenheit_to_celsius(temp) : temp;
+}
+
+bool tiltHydrometer::is_celsius() const {
+    return app_config.config["tempUnit"] == "C";   
+}
 
 bool tiltHydrometer::is_loaded() {
     // Expire loading after 5 minutes
