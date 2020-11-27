@@ -3,7 +3,7 @@
 Cloud Service Setup
 ===================
 
-Once your tilt has completed the :doc:`initial_setup` process it is ready to begin scanning for `Tilt Hydrometers`_ and
+Once your Tiltbridge has completed the :doc:`initial_setup` process it is ready to begin scanning for `Tilt Hydrometers`_ and
 relay their gravity readings to the cloud. At the moment, TiltBridge supports six cloud service targets for this data:
 
 * `Fermentrack`_
@@ -69,8 +69,7 @@ Congratulations - your Tilt will now send gravity readings to Fermentrack.
 Setting up TiltBridge for BrewPi Remix
 ---------------------------------------
 
-Tiltbridge will operate natively with `BrewPi Remix`_. Tiltbridge is configured to push to BrewPi Remix in the
-same manner it may be manually configured to point to Fermentrack.
+Tiltbridge will operate natively with `BrewPi Remix`_. Tiltbridge is configured to push to BrewPi Remix by first configuring Tiltbridge to forward Tilts to BrewPi Remix, and then for BrewPi Remix to log the appropriate colors.
 
 Adding the TiltBridge to BrewPi Remix
 **************************************
@@ -80,17 +79,15 @@ Adding the TiltBridge to BrewPi Remix
 #. Click the ``Settings`` link at the top of the dashboard
 #. In the ``Local Target Settings`` field enter http://<brewpi_remix__ip_address>//brewpi-api.php and click ``Update``
 
-BrewPi Remix and TiltBridge are now configured to properly communicate. You can log Tilts through TiltBridge in BrewPi Remix.
+BrewPi Remix and TiltBridge are now configured to communicate appropriately. You can now log Tilts through TiltBridge in BrewPi Remix.
 
-Note: If you are using multi-chamber mode you must update the URL accordingly, and you may (currently) only report one Tilt via Tiltbridge. If this impacts you negatively, you should definitely
-log an `issue to the BrewPi Remix project <https://github.com/brewpi-remix/brewpi-tools-rmx/issues>`_.
+Note: If you have BrewPi Remix configured in multi-chamber mode, the same Tiltbridge configuration applies.  The single URL will forward to all chambers.  You must, however, set each chamber's ``config.cfg`` with the corresponding Tilt color.
 
 
 Adding TiltBridge-connected Tilts to BrewPi Remix
 **************************************************
 
-Once the TiltBridge and BrewPi Remix are configured to communicate, you can add the Tilt hydrometers to BrewPi Remix
-that will be pushed via the TiltBridge.
+Once the TiltBridge and BrewPi Remix are configured to communicate, you can add the Tilt hydrometers that will be pushed via the TiltBridge to BrewPi Remix.
 
 #. Connect to your Pi with ssh and login
 #. Edit your config file (``sudo nano /home/brewpi/settings/config.cfg``)
