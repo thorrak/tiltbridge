@@ -141,16 +141,16 @@
             <div class="col-12">
                 <div class="card">
                     <h5 class="card-header">
-                        Fermentrack Target Settings
+                        Local Target Settings
                     </h5>
                     <div class="card-body">
                         <p class="card-text">These settings control how TiltBridge talks to
-                            <a href="https://www.fermentrack.com/">Fermentrack</a>. To disable pushing to Fermentrack, delete
-                            the Fermentrack URL.
+                            <a href="https://www.fermentrack.com/">Fermentrack</a> or <a href="https://www.brewpiremix.com/">BrewPi Remix</a>.
+                            To disable the push, delete the  URL.
                         </p>
                         <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="fermentrackURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target Fermentrack tiltbridge URL. Delete to disable pushing to Fermentrack">Fermentrack URL</label>
+                                <label for="fermentrackURL" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Target URL. Delete to disable the push">Target URL</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="fermentrackURL" id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/" :value="settings.fermentrackURL">
                                 </div>
@@ -160,7 +160,7 @@
 
                         <form action="/settings/update/" method="POST">
                             <div class="form-group row">
-                                <label for="fermentrackPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data to Fermentrack">Push Frequency</label>
+                                <label for="fermentrackPushEvery" class="col-sm-2 col-form-label" data-toggle="tooltip" title="How often (in seconds) to push data">Push Frequency</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="fermentrackPushEvery" id="fermentrackPushEvery" placeholder="30" :value="settings.fermentrackPushEvery">
                                 </div>
