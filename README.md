@@ -1,4 +1,6 @@
-# TiltBridge Project Fork to add MQTT 
+# TiltBridge Project Fork to add MQTT
+
+(This fork also includes various fixes and useability improvements particularly with respect to settings configuration page.)
 
 [![TiltBridge Logo](http://www.tiltbridge.com/static/img/tiltbridge_logo.png "TiltBridge")](http://www.tiltbridge.com/)
 
@@ -17,7 +19,7 @@ TiltBridge automatically logs your data to the following cloud data services:
 * [Brewfather](https://brewfather.app)
 * Google Sheets
 * [Brewstatus](https://brewstat.us)
-* [MQTT](https://mqtt.org/) Broker (added with this Project Fork)
+* [MQTT](https://mqtt.org/) Broker **(added with this Project Fork)**
 
 #### Features
 
