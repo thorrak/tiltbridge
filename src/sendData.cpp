@@ -464,7 +464,7 @@ void dataSendHandler::process() {
     if(send_to_fermentrack_at <= xTaskGetTickCount()) {
         if(WiFiClass::status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > FERMENTRACK_MIN_URL_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
-            Serial.printf("Calling send to Fermentrack\r\n");
+                Serial.printf("Calling send to Fermentrack\r\n");
             #endif
 
             send_to_fermentrack();
@@ -480,7 +480,7 @@ void dataSendHandler::process() {
     if(send_to_brewstatus_at <= xTaskGetTickCount()) {
         if(WiFiClass::status()== WL_CONNECTED && app_config.config["brewstatusURL"].get<std::string>().length() > BREWSTATUS_MIN_URL_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
-            Serial.printf("Calling send to Brewstatus\r\n");
+                Serial.printf("Calling send to Brewstatus\r\n");
             #endif
 
             send_to_brewstatus();
@@ -512,7 +512,7 @@ void dataSendHandler::process() {
     if(send_to_brewers_friend_at <= xTaskGetTickCount()) {
         if(WiFiClass::status()== WL_CONNECTED && app_config.config["brewersFriendKey"].get<std::string>().length() > BREWERS_FRIEND_MIN_KEY_LENGTH) {
             #ifdef DEBUG_PRINTS
-            Serial.printf("Calling send to Brewers Friend\r\n");
+                Serial.printf("Calling send to Brewers Friend\r\n");
             #endif
 
             send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
@@ -541,7 +541,7 @@ void dataSendHandler::process() {
     if (send_to_brewfather_at <= xTaskGetTickCount()) {
         if(WiFiClass::status() == WL_CONNECTED && app_config.config["brewfatherKey"].get<std::string>().length() > BREWFATHER_MIN_KEY_LENGTH) {
             #ifdef DEBUG_PRINTS
-            Serial.printf("Calling send to Brewfather\r\n");
+                Serial.printf("Calling send to Brewfather\r\n");
             #endif
 
             send_to_bf_and_bf(BF_MEANS_BREWFATHER);
@@ -557,7 +557,7 @@ void dataSendHandler::process() {
     if (send_to_mqtt_at <= xTaskGetTickCount()) {
         if(WiFiClass::status()== WL_CONNECTED && app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
-            Serial.println(F("Publishing available results to MQTT Broker"));
+                Serial.println(F("Publishing available results to MQTT Broker"));
             #endif
 
             send_to_mqtt();

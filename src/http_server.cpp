@@ -568,8 +568,7 @@ void settings_json() {
 
 
 void handleNotFound() {
-    String message = "File Not Found\n\n";
-    server.send(404, "text/plain", message);
+    server.send(404, "text/plain", "File Not Found\n\n");
 }
 
 

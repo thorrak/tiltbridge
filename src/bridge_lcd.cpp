@@ -147,7 +147,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 }
 
 
-void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
+void bridge_lcd::display_wifi_connect_screen(const char * ap_name, const char * ap_pass) {
     // This screen is displayed when the user first plugs in an unconfigured TiltBridge
     clear();
     print_line("To configure, connect to", "", 1);
@@ -157,7 +157,7 @@ void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
     display();
 }
 
-void bridge_lcd::display_wifi_success_screen(const String& mdns_url, const String& ip_address_url) {
+void bridge_lcd::display_wifi_success_screen(const char* mdns_url, const char* ip_address_url) {
     // This screen is displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
 #ifdef LCD_TFT_ESPI
@@ -356,7 +356,7 @@ void bridge_lcd::display() {
 }
 
 
-void bridge_lcd::print_line(const String& left_text, const String& right_text, uint8_t line) {
+void bridge_lcd::print_line(const char* left_text, const char* right_text, uint8_t line) {
 #ifdef LCD_TFT_ESPI
     print_line("", left_text, right_text, line);
 #else
@@ -365,7 +365,7 @@ void bridge_lcd::print_line(const String& left_text, const String& right_text, u
 }
 
 
-void bridge_lcd::print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line) {
+void bridge_lcd::print_line(const char* left_text, const char* middle_text, const char* right_text, uint8_t line) {
 #ifdef LCD_SSD1306
     // middle_text is ignored for non-TFT displays
     int16_t starting_pixel_row = 0;

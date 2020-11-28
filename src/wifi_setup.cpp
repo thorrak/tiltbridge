@@ -40,7 +40,7 @@ void configModeCallback(WiFiManager *myWiFiManager) {
     Serial.println(myWiFiManager->getConfigPortalSSID());
 #endif
     // Assuming WIFI_SETUP_AP_PASS here.
-    lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID(), WIFI_SETUP_AP_PASS);
+    lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
 }
 
 // Not sure if this is sufficient to test for validity
@@ -63,25 +63,20 @@ void disconnect_from_wifi_and_restart() {
 void init_wifi() {
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
     wifiManager.setDebugOutput(false); // In case we have a serial connection
-    wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
 
     // The main purpose of this is to set a boolean value which will allow us to know we
     // just saved a new configuration (as opposed to rebooting normally)
     wifiManager.setSaveConfigCallback(saveConfigCallback);
     wifiManager.setAPCallback(configModeCallback);
+    wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
+    wifiManager.setConnectRetries(3);
 
     // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
     // It's nice, but it means the user gets no actual prompt for what they're entering.
     std::string mdns_id = app_config.config["mdnsID"];
     WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
     wifiManager.addParameter(&custom_mdns_name);
-
-//    std::string password = app_config.config["password"];
-//    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
-//    wifiManager.addParameter(&custom_password);
-
     
-
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
@@ -122,12 +117,15 @@ void init_wifi() {
     MDNS.addService("tiltbridge", "tcp", 80);  // for lookups
 
     // Display a screen so the user can see how to access the Tiltbridge
-    String mdns_url = String("http://");
-    mdns_url = mdns_url + mdns_id.c_str();
-    mdns_url = mdns_url + ".local/";
-    String ip_address_url = String("http://");
-    ip_address_url = ip_address_url + WiFi.localIP().toString();
-    ip_address_url.concat("/");
+    char mdns_url[50] = "http://";
+    strncat(mdns_url,mdns_id.c_str(),31);
+    strcat(mdns_url,".local");
+
+    char ip_address_url[25] = "http://";
+    char ip[16];
+    sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+    strncat(ip_address_url,ip,16);
+    strcat(ip_address_url,"/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
     delay(1000);

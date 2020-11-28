@@ -75,7 +75,7 @@ void tiltScanner::init() {
     //Active scan actively queries devices for more info following detection.
     //
     pBLEScan->setActiveScan(false);
-    pBLEScan->setInterval(100);
+    pBLEScan->setInterval(115);
     pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 

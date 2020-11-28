@@ -45,7 +45,6 @@ void setup() {
     Serial.begin(115200);
     Serial.setDebugOutput(false);
 #endif
-
     // Handle all of the config initialization & loading
 #ifdef DEBUG_PRINTS
     Serial.println("Initializing Config...");
@@ -64,7 +63,6 @@ void setup() {
 
     // Handle setting the display up
     lcd.init();  // Intialize the display
-
 
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
