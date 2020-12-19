@@ -62,7 +62,13 @@ void disconnect_from_wifi_and_restart() {
 
 void init_wifi() {
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
+
+#ifndef DEBUG_PRINTS
+    // If debugoutput is not left enabled with serial connection enabled, 
+    // WifiManager won't reconnect reliably with saved credentials on recent build.....
     wifiManager.setDebugOutput(false); // In case we have a serial connection
+#endif    
+    
 
     // The main purpose of this is to set a boolean value which will allow us to know we
     // just saved a new configuration (as opposed to rebooting normally)
@@ -76,7 +82,7 @@ void init_wifi() {
     std::string mdns_id = app_config.config["mdnsID"];
     WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
     wifiManager.addParameter(&custom_mdns_name);
-    
+
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);

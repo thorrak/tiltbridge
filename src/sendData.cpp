@@ -94,11 +94,9 @@ void dataSendHandler::init_mqtt() {
 
 void dataSendHandler::connect_mqtt() {
     if (app_config.config["mqttUsername"].get<std::string>().length()>1){
-        const char * mqttUser = app_config.config["mqttUsername"].get<std::string>().c_str();
-        const char * mqttPass = app_config.config["mqttPassword"].get<std::string>().c_str();
-        mqttClient.connect("tiltbridge",mqttUser,mqttPass);
+        mqttClient.connect(app_config.config["mdnsID"].get<std::string>().c_str(),app_config.config["mqttUsername"].get<std::string>().c_str(),app_config.config["mqttPassword"].get<std::string>().c_str());
     } else {
-        mqttClient.connect("tiltbridge");
+        mqttClient.connect(app_config.config["mdnsID"].get<std::string>().c_str());      
     }   
 }
 
