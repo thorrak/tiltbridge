@@ -39,30 +39,33 @@ class tiltHydrometer {
 public:
     explicit tiltHydrometer(uint8_t color);
 
-    bool set_values(uint32_t i_temp, uint32_t i_grav);
+    bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr);
     std::string color_name();
     uint32_t text_color();
     std::string converted_gravity();
     std::string gsheets_beer_name();
     nlohmann::json to_json();
-    uint32_t converted_temp() const;
+    std::string converted_temp();
     bool is_celsius() const;
     bool is_loaded();
 
     static uint8_t uuid_to_color_no(std::string data);
 
     // There is no real reason these need to be uint32, given that we are receiving 2 bytes each (uint16)
-    uint32_t temp;
-    uint32_t gravity;
-    uint32_t version_code;
+    uint16_t temp;
+    uint16_t gravity;
+    uint16_t version_code;
 
     uint8_t weeks_since_last_battery_change;
+
+    bool receives_battery;
+    bool tilt_pro;
 
 
 private:
     uint8_t m_color;  // TODO - add a getter for this
     bool m_loaded;    // Has data been loaded from an ad string
-    TickType_t m_lastUpdate; // Keep track of when we last updated and stop propigating out stale information
+    TickType_t m_lastUpdate; // Keep track of when we last updated and stop propagating out stale information
 };
 
 

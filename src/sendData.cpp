@@ -137,11 +137,12 @@ bool dataSendHandler::send_to_brewstatus() {
     // BrewStatus wants local time, so we allow the user to specify a time offset.
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    // TODO - Figure out how Brewstatus handles temperature units
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
-            snprintf(payload, payload_size, "SG=%f&Temp=%f&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=", 
-                     (float) tilt_scanner.tilt(i)->gravity / 1000,
-                     (float) tilt_scanner.tilt(i)->temp,
+            snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
+                     tilt_scanner.tilt(i)->converted_gravity().c_str(),
+                     tilt_scanner.tilt(i)->converted_temp().c_str(),
                      tilt_scanner.tilt(i)->color_name().c_str(),
                      ((double) std::time(0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0))
                      / 86400.0 + 25569.0);
@@ -390,13 +391,14 @@ bool dataSendHandler::send_to_mqtt() {
     // This is compatible with influxdb format when used with influxdb/telegraf.
     //
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    // TODO - Figure out how temperature_units factor in here
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
-            snprintf(payload, payload_size,"%s,tilt_color=%s specific_gravity=%.3f,temperature=%.0f",
+            snprintf(payload, payload_size,"%s,tilt_color=%s specific_gravity=%s,temperature=%s",
                     app_config.config["mqttTopic"].get<std::string>().c_str(), 
                     tilt_scanner.tilt(i)->color_name().c_str(),
-                    (float) tilt_scanner.tilt(i)->gravity / 1000,
-                    (float) tilt_scanner.tilt(i)->temp);
+                    tilt_scanner.tilt(i)->converted_gravity().c_str(),
+                    tilt_scanner.tilt(i)->converted_temp().c_str());
             //std::string pang_payload = payload;
 #ifdef DEBUG_PRINTS                    
             Serial.print(F("Topic: "));

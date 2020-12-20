@@ -6,15 +6,6 @@
 #include "tiltHydrometer.h"
 #include "jsonConfigHandler.h"
 
-namespace {
-
-uint32_t fahrenheit_to_celsius(uint32_t fahrenheit)
-{
-    return (fahrenheit - 32) * 5 / 9;
-}
-
-}
-
 tiltHydrometer::tiltHydrometer(uint8_t color) {
     m_loaded            = false;
     m_color             = color;
@@ -22,9 +13,10 @@ tiltHydrometer::tiltHydrometer(uint8_t color) {
     gravity             = 0;
     m_lastUpdate        = 0;
 
-    version_code        = 0;  // Set if captured - only applies to Gen 3 Tilts
-
+    version_code        = 0;  // Set if captured - only applies to Gen 3/Pro Tilts
     weeks_since_last_battery_change = 0;  // Not currently implemented - for future use
+    tilt_pro            = false;
+    receives_battery    = false;
 
 } // tiltHydrometer
 
@@ -128,9 +120,28 @@ std::string tiltHydrometer::gsheets_beer_name() {
 }
 
 
-bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
-    double d_temp = (double) i_temp;
-    double d_grav = (double) i_grav / 1000.0;
+bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr){
+    double d_temp;
+    double d_grav;
+
+    if(i_grav >= 5000)  // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
+        tilt_pro = true;
+
+    if(i_tx_pwr == 197)  // If we received a tx_pwr of 197 this Tilt sends its battery in the tx_pwr field
+        receives_battery = true;
+    else if(receives_battery)  // Its not 197 but we receive battery - set the battery value to tx_pwr
+        weeks_since_last_battery_change = i_tx_pwr;
+
+    if(tilt_pro) {
+        // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
+        d_temp = (double) i_temp / 10.0;
+        d_grav = (double) i_grav / 10000.0;
+    } else {
+        // For regular Tilts we take the temp as-is and divide the gravity by 1000
+        d_temp = (double) i_temp;
+        d_grav = (double) i_grav / 1000.0;
+    }
+
     nlohmann::json cal_params;
 
 #if DEBUG_PRINTS
@@ -215,15 +226,21 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     }
 
     temp = i_temp;
-    gravity = (int) round(d_grav * 1000.0);
+    if(tilt_pro)
+        gravity = (int) round(d_grav * 10000.0);
+    else
+        gravity = (int) round(d_grav * 1000.0);
     m_loaded = true;  // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = xTaskGetTickCount();
     return true;
 }
 
 std::string tiltHydrometer::converted_gravity() {
-    char rnd_gravity[6];
-    snprintf(rnd_gravity, 6,"%.3f",(float) gravity / 1000);
+    char rnd_gravity[7];
+    if(tilt_pro)
+        snprintf(rnd_gravity, 7,"%.4f",(float) gravity / 10000);
+    else
+        snprintf(rnd_gravity, 7,"%.4f",(float) gravity / 1000);
     std::string output = rnd_gravity;
     return output;
 }
@@ -236,12 +253,27 @@ nlohmann::json tiltHydrometer::to_json() {
             {"tempUnit", is_celsius() ? "C" : "F"},
             {"gravity", converted_gravity()},
             {"gsheets_name", gsheets_beer_name()},
+            {"weeks_on_battery", weeks_since_last_battery_change},
     };
     return j;
 }
 
-uint32_t tiltHydrometer::converted_temp() const {
-    return is_celsius() ? fahrenheit_to_celsius(temp) : temp;
+std::string tiltHydrometer::converted_temp() {
+    char rnd_temp[5];
+    double d_temp;
+
+    if(tilt_pro)  // For Tilt Pros we have to divide the temp by 10
+        d_temp = (double) temp / 10.0;
+    else  // For regular Tilts we take the temp as-is
+        d_temp = (double) temp;
+
+    if(is_celsius())
+        d_temp = (d_temp - 32) * 5 / 9;
+
+    snprintf(rnd_temp, 5,"%.1f", d_temp);
+
+    std::string output = rnd_temp;
+    return output;
 }
 
 bool tiltHydrometer::is_celsius() const {

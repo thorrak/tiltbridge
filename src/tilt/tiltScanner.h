@@ -10,11 +10,6 @@
 #include <nlohmann/json.hpp>
 #include <NimBLEAdvertisedDevice.h>
 
-// TODO - Update these for Tilt Pro support
-#define TILT_TEMP_MAX                        185
-#define TILT_TEMP_MIN                        0
-#define TILT_GRAV_MAX                        1200
-#define TILT_GRAV_MIN                        990   
 
 #define BLE_SCAN_TIME       3  // Seconds to scan
 

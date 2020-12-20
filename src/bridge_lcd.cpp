@@ -231,9 +231,9 @@ void bridge_lcd::display_wifi_reconnect_failed() {
 
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
-    char gravity[10], temp[6];
-    sprintf(gravity, "%.3f", double_t(tilt->gravity)/1000);
-    sprintf(temp, "%d %s", tilt->converted_temp(), tilt->is_celsius() ? "C" : "F");
+    char gravity[11], temp[8];
+    sprintf(gravity, "%s", tilt->converted_gravity().c_str());
+    sprintf(temp, "%s %s", tilt->converted_temp().c_str(), tilt->is_celsius() ? "C" : "F");
 
 #ifdef LCD_TFT_ESPI
     tft->setTextColor(tilt->text_color());
@@ -376,7 +376,7 @@ void bridge_lcd::print_line(const char* left_text, const char* middle_text, cons
     oled_display->drawString(0, starting_pixel_row, left_text);
 
     oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
-    oled_display->drawString(54, starting_pixel_row, middle_text);
+    oled_display->drawString(48, starting_pixel_row, middle_text);
 
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);
@@ -393,8 +393,8 @@ void bridge_lcd::print_line(const char* left_text, const char* middle_text, cons
     tft->setCursor(x, y);
     tft->print(left_text);
 
-    // For now, we're just dropping the middle text at pixel 155. No math.
-    tft->setCursor(155, y);
+    // For now, we're just dropping the middle text at pixel 130. No math.
+    tft->setCursor(130, y);
     tft->print(middle_text);
 
     // While the OLED library has functions for printing right-aligned text, Adafruit GFX does not. We'll have to

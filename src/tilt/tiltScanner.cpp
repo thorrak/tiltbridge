@@ -149,6 +149,7 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
     char m_color_arr[33] = {'\0'};
     char temp_arr[5] = {'\0'};
     char grav_arr[5] = {'\0'};
+    char tx_pwr_arr[3] = {'\0'};
 
     for (int i = 4; i < advert_string_hex.length(); i++) {
         sprintf(hex_code, "%.2x", advert_string_hex[i]);
@@ -157,12 +158,16 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
             strncat(m_color_arr,hex_code,2);
         }
         //Indices 20-21 each generate two characters of the temperature array
-        if ( (i>=20) && (i<22) ) {
+        if ( i==20 || i==21 ) {
             strncat(temp_arr,hex_code,2);
         }
         //Indices 22-23 each generate two characters of the sp_gravity array
-        if ( (i>=22) && (i<24) ) {
+        if ( i == 22 || i == 23 ) {
             strncat(grav_arr,hex_code,2);
+        }
+        //Index 24 contains the tx_pwr (which is used by recent tilts to indicate battery age)
+        if ( i == 24 ) {
+            strncat(tx_pwr_arr,hex_code,2);
         }
     }
 
@@ -172,15 +177,11 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
     }
 
     // TODO - Change this when merging tilt pro updates
-    uint8_t temp = std::stoul(temp_arr,nullptr,16);
+    uint16_t temp = std::stoul(temp_arr,nullptr,16);
     uint16_t gravity = std::stoul(grav_arr,nullptr,16);
+    uint8_t tx_pwr = std::stoul(tx_pwr_arr,nullptr,16);
 
-    if((temp>=TILT_TEMP_MIN) && (temp<=TILT_TEMP_MAX) && (gravity>=TILT_GRAV_MIN) && (gravity<=TILT_GRAV_MAX)){
-        m_tilt_devices[m_color]->set_values(temp, gravity);
-    }
-    else{
-        return TILT_NONE;
-    }
+    m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr);
 
     return m_color;
 }
