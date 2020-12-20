@@ -76,6 +76,7 @@ void init_wifi() {
     wifiManager.setAPCallback(configModeCallback);
     wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
     wifiManager.setConnectRetries(3);
+    wifiManager.setCleanConnect(true);
 
     // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
     // It's nice, but it means the user gets no actual prompt for what they're entering.
@@ -86,6 +87,7 @@ void init_wifi() {
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
+        WiFi.mode(WIFI_STA);
     } else {
         // If we haven't successfully connected to WiFi, just restart & continue to project the configuration AP.
         // Alternatively, we can hang here.
@@ -109,11 +111,11 @@ void init_wifi() {
         app_config.save();
     }
 
-    WiFi.mode(WIFI_STA);
-    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-    WiFi.setHostname(mdns_id.c_str());
-    WiFi.begin();
-    delay(500);
+//    WiFi.mode(WIFI_STA);
+//    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+//    WiFi.setHostname(mdns_id.c_str());
+//    WiFi.begin();
+//    delay(500);
 
     if (!MDNS.begin(mdns_id.c_str())) {
 //        Serial.println("Error setting up MDNS responder!");

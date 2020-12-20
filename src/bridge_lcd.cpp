@@ -110,7 +110,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     // Clear out the display before we start printing to it
     clear();
 
-    // Display IP address on top row if using Lolin TFT
+    // Display IP address on bottom row if using Lolin TFT
     uint8_t header_row = 1;
     uint8_t first_tilt_row_offset = 2; 
 #ifdef LCD_TFT
@@ -118,13 +118,13 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     if ( WiFi.status() == WL_CONNECTED) {
         char ip[16];
         sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
-        print_line("IP Address:", ip, 1);
+        print_line("IP Address:", ip, 13);
     }
     else {
-        print_line("No Wifi Connection","",1);
+        print_line("No Wifi Connection","",13);
     }
-    header_row = 3;
-    first_tilt_row_offset = 4;
+    header_row = 1;
+    first_tilt_row_offset = header_row + 1;
 #endif
 
     // Display the header row
