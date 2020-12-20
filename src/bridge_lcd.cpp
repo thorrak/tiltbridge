@@ -1,8 +1,11 @@
 //
 // Created by John Beeler on 5/12/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "bridge_lcd.h"
+#include "jsonConfigHandler.h"
+#include <WiFi.h>
 
 bridge_lcd lcd;
 
@@ -107,8 +110,25 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     // Clear out the display before we start printing to it
     clear();
 
+    // Display IP address on top row if using Lolin TFT
+    uint8_t header_row = 1;
+    uint8_t first_tilt_row_offset = 2; 
+#ifdef LCD_TFT
+    // Display IP address or indicate if not connected.
+    if ( WiFi.status() == WL_CONNECTED) {
+        char ip[16];
+        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+        print_line("IP Address:", ip, 1);
+    }
+    else {
+        print_line("No Wifi Connection","",1);
+    }
+    header_row = 3;
+    first_tilt_row_offset = 4;
+#endif
+
     // Display the header row
-    print_line("Color", "Temp", "Gravity", 1);
+    print_line("Color", "Temp", "Gravity", header_row);
 
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
@@ -116,7 +136,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
             active_tilts++;
             // This check has the added bonus of limiting the # of displayed tilts to TILTS_PER_PAGE
             if((active_tilts/TILTS_PER_PAGE)==screen_number) {
-                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts+2);
+                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts + first_tilt_row_offset);
                 displayed_tilts++;
             }
         }
@@ -127,7 +147,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 }
 
 
-void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
+void bridge_lcd::display_wifi_connect_screen(const char * ap_name, const char * ap_pass) {
     // This screen is displayed when the user first plugs in an unconfigured TiltBridge
     clear();
     print_line("To configure, connect to", "", 1);
@@ -137,7 +157,7 @@ void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
     display();
 }
 
-void bridge_lcd::display_wifi_success_screen(const String& mdns_url, const String& ip_address_url) {
+void bridge_lcd::display_wifi_success_screen(const char* mdns_url, const char* ip_address_url) {
     // This screen is displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
 #ifdef LCD_TFT_ESPI
@@ -285,7 +305,12 @@ void bridge_lcd::init() {
     // +4 "mirrors" the text (supposedly)
     tft->setRotation(0);
 #else
-    tft->setRotation(3);
+    if(app_config.config["invertTFT"]){
+        tft->setRotation(1);
+    }
+    else{
+        tft->setRotation(3);
+    }
 #endif
     tft->fillScreen(ILI9341_BLACK);
     tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
@@ -331,7 +356,7 @@ void bridge_lcd::display() {
 }
 
 
-void bridge_lcd::print_line(const String& left_text, const String& right_text, uint8_t line) {
+void bridge_lcd::print_line(const char* left_text, const char* right_text, uint8_t line) {
 #ifdef LCD_TFT_ESPI
     print_line("", left_text, right_text, line);
 #else
@@ -340,7 +365,7 @@ void bridge_lcd::print_line(const String& left_text, const String& right_text, u
 }
 
 
-void bridge_lcd::print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line) {
+void bridge_lcd::print_line(const char* left_text, const char* middle_text, const char* right_text, uint8_t line) {
 #ifdef LCD_SSD1306
     int16_t starting_pixel_row = 0;
 

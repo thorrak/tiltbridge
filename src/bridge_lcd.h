@@ -61,16 +61,16 @@ public:
     void init();
     void display_logo();
 
-    void display_wifi_connect_screen(String ap_name, String ap_pass);
-    void display_wifi_success_screen(const String& mdns_url, const String& ip_address_url);
+    void display_wifi_connect_screen(const char* ap_name, const char* ap_pass);
+    void display_wifi_success_screen(const char* mdns_url, const char* ip_address_url);
     void display_wifi_reset_screen();
     void display_ota_update_screen();
 
     void display_wifi_disconnected_screen();
     void display_wifi_reconnect_failed();
 
-    void print_line(const String& left_text, const String& right_text, uint8_t line);
-    void print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line);
+    void print_line(const char* left_text, const char* right_text, uint8_t line);
+    void print_line(const char* left_text, const char* middle_text, const char* right_text, uint8_t line);
 
     void check_screen();
     void clear();

@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 4/28/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "tiltHydrometer.h"
@@ -221,18 +222,9 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
 }
 
 std::string tiltHydrometer::converted_gravity() {
-    // I guarantee there is a better way of doing this conversion, but this works. SG is always 0.000-9.999.
-    int right_of_decimal = gravity % 1000;
-    int left_of_decimal = (gravity - right_of_decimal)/1000;
-
-    std::string output = std::to_string(left_of_decimal) + ".";
-
-    if(right_of_decimal < 100)
-        output += "0";
-    if(right_of_decimal < 10)
-        output += "0";
-    output += std::to_string(right_of_decimal);
-
+    char rnd_gravity[6];
+    snprintf(rnd_gravity, 6,"%.3f",(float) gravity / 1000);
+    std::string output = rnd_gravity;
     return output;
 }
 

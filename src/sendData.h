@@ -27,6 +27,7 @@
 #define BREWSTATUS_MIN_URL_LENGTH       12
 #define GSCRIPTS_MIN_URL_LENGTH         24
 #define GSCRIPTS_MIN_EMAIL_LENGTH       7
+#define IP_MIN_STRING_LENGTH            7  
 
 
 // This is me being simplifying the reuse of code. The formats for Brewers Friend and Brewfather are basically the same
@@ -41,7 +42,9 @@ class dataSendHandler {
 public:
     dataSendHandler();
     void init();
+    void init_mqtt();
     void process();
+    bool mqtt_alreadyinit;
 
 
 private:
@@ -50,6 +53,7 @@ private:
     uint64_t send_to_brewers_friend_at;
     uint64_t send_to_google_at;
     uint64_t send_to_brewfather_at;
+    uint64_t send_to_mqtt_at;
 
 #ifdef ENABLE_TEST_CHECKINS
     // This is for a "heartbeat" checkin to fermentrack.com. Unless you are me (thorrak) don't enable this, please.
@@ -65,6 +69,8 @@ private:
     bool send_to_fermentrack();
     bool send_to_brewstatus();
     bool send_to_google();
+    bool send_to_mqtt();
+    void connect_mqtt(); 
 
     static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char* contentType);
     bool send_to_bf_and_bf(uint8_t which_bf);  // Handler for both Brewer's Friend and Brewfather

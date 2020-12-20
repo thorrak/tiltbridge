@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 4/26/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 
@@ -44,7 +45,6 @@ void setup() {
     Serial.begin(115200);
     Serial.setDebugOutput(false);
 #endif
-
     // Handle all of the config initialization & loading
 #ifdef DEBUG_PRINTS
     Serial.println("Initializing Config...");
@@ -64,7 +64,6 @@ void setup() {
     // Handle setting the display up
     lcd.init();  // Intialize the display
 
-
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
 
@@ -81,6 +80,7 @@ void setup() {
     tilt_scanner.scan();
 
     data_sender.init();  // Initialize the data sender
+    data_sender.init_mqtt(); //Initialize the mqtt server connection if configured.
 
     // Once all this is done, we'll wait until the initial scan completes.
     tilt_scanner.wait_until_scan_complete();
@@ -99,7 +99,8 @@ void loop() {
 #ifdef DEBUG_PRINTS
     // This is optional & just allows us to print the available ram in case of memory leaks.
     if(trigger_next_data_send <= xTaskGetTickCount()) {  // Every 10 seconds, print some kind of status
-        Serial.printf("RAM left %d\r\n", esp_get_free_heap_size());
+        Serial.printf_P(PSTR("Current / Minimum RAM left:  %d  /  "), esp_get_free_heap_size());
+        Serial.printf_P(PSTR("%d\r\n"), esp_get_minimum_free_heap_size());
         trigger_next_data_send = xTaskGetTickCount() + 10000;
     }
 #endif
