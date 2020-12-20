@@ -393,9 +393,10 @@
                         <p class="card-text">These settings control how TiltBridge publishes data to an
                             <a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker, delete
                             the MQTT Broker IP. <br><br>
-
-                            Message payload is formatted to be readily consumed by influxDB endpoint as: <br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;topic,tilt_color=Color specific_gravity=#.###,temperature=##<br>
+                        
+                            Message payload is json format and is formatted as follows: <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;{"color":"Tilt Color","device":"mdnsID","gravity":#.#####,"gravity_unit":"G","temp":##.#,"temp_unit":"F"}
+                            <br>
                         </p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">

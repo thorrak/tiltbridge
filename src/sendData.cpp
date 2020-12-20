@@ -381,30 +381,31 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
 
 bool dataSendHandler::send_to_mqtt() {
     bool result = false;
-    const int payload_size = 70;
-    char payload[payload_size];
+    nlohmann::json payload;
     mqttClient.loop();
     delay(10);
 
-    // The payload formatted to look like this when sent to mqTT:
-    // ('topic,tilt_color=Black specific_gravity=1.001,temperature=78.00')
-    // This is compatible with influxdb format when used with influxdb/telegraf.
+    // The payload formatted as json when sent to mqTT:
+    //{"color":"Black","device":"tiltbridge","gravity":1.003999948501587,"gravity_unit":"G","temp":71,"temp_unit":"F"}
     //
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     // TODO - Figure out how temperature_units factor in here
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
-            snprintf(payload, payload_size,"%s,tilt_color=%s specific_gravity=%s,temperature=%s",
-                    app_config.config["mqttTopic"].get<std::string>().c_str(), 
-                    tilt_scanner.tilt(i)->color_name().c_str(),
-                    tilt_scanner.tilt(i)->converted_gravity().c_str(),
-                    tilt_scanner.tilt(i)->converted_temp().c_str());
-            //std::string pang_payload = payload;
+            payload["color"] = tilt_scanner.tilt(i)->color_name();
+            payload["device"] = app_config.config["mdnsID"].get<std::string>();
+            payload["temp"] = tilt_scanner.tilt(i)->converted_temp().c_str();
+            payload["temp_unit"] = "F";
+
+            payload["gravity"] = tilt_scanner.tilt(i)->converted_gravity().c_str();
+            payload["gravity_unit"] = "G";
+
+
 #ifdef DEBUG_PRINTS                    
             Serial.print(F("Topic: "));
             Serial.println(app_config.config["mqttTopic"].get<std::string>().c_str());
             Serial.print(F("Message: "));
-            Serial.println(payload);
+            Serial.println(payload.dump().c_str());
 #endif
             if (!mqttClient.connected()) {
 #ifdef DEBUG_PRINTS
@@ -413,11 +414,13 @@ bool dataSendHandler::send_to_mqtt() {
                 connect_mqtt();
                 delay(500);               
             }
-            result = mqttClient.publish(app_config.config["mqttTopic"].get<std::string>().c_str(),payload);
+            result = mqttClient.publish(app_config.config["mqttTopic"].get<std::string>().c_str(),payload.dump().c_str());
+
 #ifdef DEBUG_PRINTS
                 Serial.print(F("Publish Successful: "));
                 Serial.println(result);
 #endif 
+            payload.clear();
         }
 
     }
