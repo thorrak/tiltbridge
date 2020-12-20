@@ -395,7 +395,7 @@ bool dataSendHandler::send_to_mqtt() {
             payload["color"] = tilt_scanner.tilt(i)->color_name();
             payload["device"] = app_config.config["mdnsID"].get<std::string>();
             payload["temp"] = tilt_scanner.tilt(i)->converted_temp().c_str();
-            payload["temp_unit"] = "F";
+            payload["temp_unit"] = app_config.config["tempUnit"].get<std::string>();
 
             payload["gravity"] = tilt_scanner.tilt(i)->converted_gravity().c_str();
             payload["gravity_unit"] = "G";
