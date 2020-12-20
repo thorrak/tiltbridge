@@ -78,15 +78,14 @@ void dataSendHandler::init_mqtt() {
         Serial.print(F(" on port: "));
         Serial.println(app_config.config["mqttBrokerPort"].get<int>());
 #endif
-        const char * mqttserver = app_config.config["mqttBrokerIP"].get<std::string>().c_str();
         mqttClient.setKeepAlive(app_config.config["mqttPushEvery"].get<int>() * 1000);
 
         if (mqtt_alreadyinit) {
             mqttClient.disconnect();
             delay(250);  
-            mqttClient.setHost(mqttserver,app_config.config["mqttBrokerPort"].get<int>());
+            mqttClient.setHost(app_config.config["mqttBrokerIP"].get<std::string>().c_str(),app_config.config["mqttBrokerPort"].get<int>());
         } else {
-            mqttClient.begin(mqttserver,app_config.config["mqttBrokerPort"].get<int>(),wClient);
+            mqttClient.begin(app_config.config["mqttBrokerIP"].get<std::string>().c_str(),app_config.config["mqttBrokerPort"].get<int>(),wClient);
         }
         mqtt_alreadyinit=true;   
     }
