@@ -123,6 +123,36 @@ std::string tiltHydrometer::gsheets_beer_name() {
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr){
     double d_temp;
     double d_grav;
+    float grav_scalar;
+    if (tilt_pro) {
+        grav_scalar = 10000.0f;
+    }
+    else {
+        grav_scalar = 1000.0f;
+    }
+
+    //Serial.print("Raw value: ");
+    //Serial.println(i_grav);
+
+    // Implementation of a simple exponential smoothing filter to provide some averaging of 
+    // gravity values received from the sensor between display updates / data reporting.
+
+    if (!m_loaded) {
+        //First pass through after loading tilt, filter_accumulator value must be initalized.
+        filter_accumulator = i_grav;
+    }
+    else{
+        // Effective smoothing filter constant is alpha / alphaScale
+        // Ratio must be between 0 - 1 and lower values provide more smoothing.
+        int alpha = 5;  
+
+        int alphaScale = 10;
+        i_grav = (alpha * i_grav + (alphaScale - alpha) * (filter_accumulator * alphaScale)/alphaScale +alphaScale / 2) / alphaScale;
+        filter_accumulator = i_grav;
+    }
+
+    //Serial.print("Filtered value: ");
+    //Serial.println(i_grav);
 
     if(i_grav >= 5000)  // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
         tilt_pro = true;
@@ -135,11 +165,11 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     if(tilt_pro) {
         // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
         d_temp = (double) i_temp / 10.0;
-        d_grav = (double) i_grav / 10000.0;
+        d_grav = (double) i_grav / grav_scalar;
     } else {
         // For regular Tilts we take the temp as-is and divide the gravity by 1000
         d_temp = (double) i_temp;
-        d_grav = (double) i_grav / 1000.0;
+        d_grav = (double) i_grav / grav_scalar;
     }
 
     nlohmann::json cal_params;
@@ -225,11 +255,12 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #endif
     }
 
+
+
+
+    gravity = (int) round(d_grav * grav_scalar);
     temp = i_temp;
-    if(tilt_pro)
-        gravity = (int) round(d_grav * 10000.0);
-    else
-        gravity = (int) round(d_grav * 1000.0);
+
     m_loaded = true;  // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = xTaskGetTickCount();
     return true;
