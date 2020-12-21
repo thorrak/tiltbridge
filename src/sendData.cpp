@@ -121,7 +121,7 @@ bool dataSendHandler::send_to_brewstatus() {
 
     // The payload should look like this when sent to Brewstatus:
     // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Comment')
-    // BrewStatus ignors Beer, so we just set this to Undefined.
+    // BrewStatus ignores Beer, so we just set this to Undefined.
     // BrewStatus will record Comment if it set, but just leave it blank.
     // The Timepoint is Google Sheets time, which is fractional days since 12/30/1899
     // Using https://www.timeanddate.com/date/durationresult.html?m1=12&d1=30&y1=1899&m2=1&d2=1&y2=1970 gives
@@ -129,12 +129,11 @@ bool dataSendHandler::send_to_brewstatus() {
     // BrewStatus wants local time, so we allow the user to specify a time offset.
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
-    // TODO - Figure out how Brewstatus handles temperature units
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
             snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
                      tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
-                     tilt_scanner.tilt(i)->converted_temp().c_str(),
+                     tilt_scanner.tilt(i)->converted_temp(true).c_str(),  // Only sending Fahrenheit numbers since we don't send units
                      tilt_scanner.tilt(i)->color_name().c_str(),
                      ((double) std::time(0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0))
                      / 86400.0 + 25569.0);
@@ -226,8 +225,7 @@ bool dataSendHandler::send_to_google() {
             }
 
             payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
-            // TODO - Fix this for Tilt Pro support
-            payload["Temp"] = tilt_scanner.tilt(i)->converted_temp();  // Always in Fahrenheit
+            payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true);  // Always in Fahrenheit
             payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["Comment"] = "";
@@ -301,7 +299,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
             Serial.println(tilt_scanner.tilt(i)->color_name().c_str());
 #endif
             j["name"] = tilt_scanner.tilt(i)->color_name();
-            j["temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
+            j["temp"] = tilt_scanner.tilt(i)->converted_temp(true);  // Always in Fahrenheit
             j["temp_unit"] = "F";
             j["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false);
             j["gravity_unit"] = "G";
@@ -368,12 +366,11 @@ bool dataSendHandler::send_to_mqtt() {
     //{"color":"Black","device":"tiltbridge","gravity":1.003999948501587,"gravity_unit":"G","temp":71,"temp_unit":"F"}
     //
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
-    // TODO - Figure out how temperature_units factor in here
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
             payload["color"] = tilt_scanner.tilt(i)->color_name();
             payload["device"] = app_config.config["mdnsID"].get<std::string>();
-            payload["temp"] = tilt_scanner.tilt(i)->converted_temp().c_str();
+            payload["temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
             payload["temp_unit"] = app_config.config["tempUnit"].get<std::string>();
 
             payload["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();

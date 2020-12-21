@@ -276,7 +276,7 @@ nlohmann::json tiltHydrometer::to_json(bool use_raw_gravity) {
     nlohmann::json j;
     j = {
             {"color", color_name()},
-            {"temp", converted_temp()},
+            {"temp", converted_temp(false)},
             {"tempUnit", is_celsius() ? "C" : "F"},
             {"gravity", converted_gravity(use_raw_gravity)},
             {"gsheets_name", gsheets_beer_name()},
@@ -285,12 +285,12 @@ nlohmann::json tiltHydrometer::to_json(bool use_raw_gravity) {
     return j;
 }
 
-std::string tiltHydrometer::converted_temp() {
+std::string tiltHydrometer::converted_temp(bool fahrenheit_only) {
     char rnd_temp[5];
     const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
     double d_temp = (double) temp / temp_scalar;
 
-    if(is_celsius())
+    if(is_celsius() && !fahrenheit_only)
         d_temp = (d_temp - 32) * 5 / 9;
 
     snprintf(rnd_temp, 5,"%.1f", d_temp);

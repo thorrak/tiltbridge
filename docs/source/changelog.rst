@@ -7,6 +7,7 @@ v0.2.2 - XXXX XX, 2020 - MQTT and Tilt Pro
 
 - Added support for Tilt Pro devices
 - Added MQTT support (Thanks Pletch!)
+- Add gravity smoothing support - except when sending to Fermentrack/BrewPiRemix (Thanks Pletch!)
 - Numerous bugfixes/cleanups (Thanks Pletch!)
 - Update to latest version of Bluetooth library
 
