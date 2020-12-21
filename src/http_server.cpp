@@ -562,7 +562,7 @@ void http_json() {
     // I probably don't want this inline so that I can add the Allow-Origin header (in case anyone wants to build
     // scripts that pull this data)
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", tilt_scanner.tilt_to_json().dump().c_str());
+    server.send(200, "application/json", tilt_scanner.tilt_to_json(false).dump().c_str());
 }
 
 // settings_json is intended to be used to build the "Change Settings" page

@@ -260,22 +260,25 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     return true;
 }
 
-std::string tiltHydrometer::converted_gravity() {
+std::string tiltHydrometer::converted_gravity(bool use_raw_gravity) {
     char rnd_gravity[7];
     const uint16_t grav_scalar = (tilt_pro) ? 10000 : 1000;
 
-    snprintf(rnd_gravity, 7,"%.4f",(float) gravity / grav_scalar);
+    if (use_raw_gravity)
+        snprintf(rnd_gravity, 7,"%.4f",(float) gravity / grav_scalar);
+    else
+        snprintf(rnd_gravity, 7,"%.4f",(float) gravity_smoothed / grav_scalar);
     std::string output = rnd_gravity;
     return output;
 }
 
-nlohmann::json tiltHydrometer::to_json() {
+nlohmann::json tiltHydrometer::to_json(bool use_raw_gravity) {
     nlohmann::json j;
     j = {
             {"color", color_name()},
             {"temp", converted_temp()},
             {"tempUnit", is_celsius() ? "C" : "F"},
-            {"gravity", converted_gravity()},
+            {"gravity", converted_gravity(use_raw_gravity)},
             {"gsheets_name", gsheets_beer_name()},
             {"weeks_on_battery", weeks_since_last_battery_change},
     };

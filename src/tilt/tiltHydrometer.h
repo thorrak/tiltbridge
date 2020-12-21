@@ -42,9 +42,9 @@ public:
     bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr);
     std::string color_name();
     uint32_t text_color();
-    std::string converted_gravity();
+    std::string converted_gravity(bool use_raw_gravity);
     std::string gsheets_beer_name();
-    nlohmann::json to_json();
+    nlohmann::json to_json(bool use_raw_gravity);
     std::string converted_temp();
     bool is_celsius() const;
     bool is_loaded();

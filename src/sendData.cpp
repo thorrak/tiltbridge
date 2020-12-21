@@ -103,7 +103,7 @@ bool dataSendHandler::send_to_fermentrack() {
     // }
 
     j["mdns_id"] = app_config.config["mdnsID"].get<std::string>();
-    j["tilts"] = tilt_scanner.tilt_to_json();
+    j["tilts"] = tilt_scanner.tilt_to_json(true);
 
 
     if(!send_to_url(app_config.config["fermentrackURL"].get<std::string>().c_str(), "", j.dump().c_str(), "application/json"))
@@ -133,7 +133,7 @@ bool dataSendHandler::send_to_brewstatus() {
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
             snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
-                     tilt_scanner.tilt(i)->converted_gravity().c_str(),
+                     tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
                      tilt_scanner.tilt(i)->converted_temp().c_str(),
                      tilt_scanner.tilt(i)->color_name().c_str(),
                      ((double) std::time(0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0))
@@ -227,8 +227,8 @@ bool dataSendHandler::send_to_google() {
 
             payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
             // TODO - Fix this for Tilt Pro support
-            payload["Temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
-            payload["SG"] = tilt_scanner.tilt(i)->converted_gravity();
+            payload["Temp"] = tilt_scanner.tilt(i)->converted_temp();  // Always in Fahrenheit
+            payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["Comment"] = "";
             payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
@@ -303,7 +303,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
             j["name"] = tilt_scanner.tilt(i)->color_name();
             j["temp"] = tilt_scanner.tilt(i)->temp;  // Always in Fahrenheit
             j["temp_unit"] = "F";
-            j["gravity"] = tilt_scanner.tilt(i)->converted_gravity();
+            j["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false);
             j["gravity_unit"] = "G";
             j["device_source"] = "TiltBridge";
 
@@ -376,7 +376,7 @@ bool dataSendHandler::send_to_mqtt() {
             payload["temp"] = tilt_scanner.tilt(i)->converted_temp().c_str();
             payload["temp_unit"] = app_config.config["tempUnit"].get<std::string>();
 
-            payload["gravity"] = tilt_scanner.tilt(i)->converted_gravity().c_str();
+            payload["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
             payload["gravity_unit"] = "G";
 
 
