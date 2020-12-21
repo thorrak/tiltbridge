@@ -55,6 +55,7 @@ public:
     uint16_t temp;
     uint16_t gravity;
     uint16_t version_code;
+    uint32_t filter_accumulator;
 
     uint8_t weeks_since_last_battery_change;
 
