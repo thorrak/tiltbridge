@@ -143,6 +143,17 @@ void processConfig() {
         }
     }
 
+    if (server.hasArg("smoothFactor")) {
+        int smooth_factor;
+        bool is_int;
+        isInteger(server.arg("smoothFactor").c_str(),is_int,smooth_factor);
+        if (is_int && smooth_factor >= 0 && smooth_factor <= 99) {
+            app_config.config["smoothFactor"] = smooth_factor;
+        } else {
+            all_settings_valid = false;
+        }
+    }
+
     if (server.hasArg("invertTFT")) {
         if((server.arg("invertTFT")=="on") && (!app_config.config["invertTFT"].get<bool>())) {
             app_config.config["invertTFT"] = true;

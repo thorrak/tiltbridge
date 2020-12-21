@@ -25,6 +25,8 @@ void jsonConfigHandler::initialize() {
             {"mdnsID", "tiltbridge"},
             {"invertTFT", false},
             {"update_spiffs", false},
+            {"tempUnit", "F"},
+            {"smoothFactor",40},
 
             // Global Calibration settings
             {"applyCalibration", false},
@@ -38,10 +40,7 @@ void jsonConfigHandler::initialize() {
             {"cal_orange", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
             {"cal_blue", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
             {"cal_yellow", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
-            {"cal_pink", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},
-
-            // Default units
-            {"tempUnit", "F"},
+            {"cal_pink", { {"degree", 1}, {"x0", 0.0}, {"x1", 1.0}, {"x2", 0.0}, {"x3", 0.0}}},            
 
             // Fermentrack Settings
             {"fermentrackURL", ""},
