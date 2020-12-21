@@ -8,16 +8,7 @@
 #include <cstdint>
 
 
-// USE_SECURE_GSCRIPTS is disabled due to memory requirements. For more info, see
-// https://github.com/thorrak/tiltbridge/issues/2
-#define USE_SECURE_GSCRIPTS 1  // Allow for direct posting to Google Scripts via HTTPS
-
-
-#ifdef USE_SECURE_GSCRIPTS
 #define GSCRIPTS_DELAY          (10  * 60 * 1000)  // 10 minute delay between pushes to Google Sheets directly
-#else
-#define GSCRIPTS_DELAY          (15 * 60 * 1000)  // 15 minute delay between pushes to Google Sheets Proxy
-#endif
 #define BREWERS_FRIEND_DELAY    (15 * 60 * 1000)  // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY        (15 * 60 * 1000)  // 15 minute delay between pushes to Brewfather
 
@@ -60,11 +51,8 @@ private:
     uint64_t send_checkin_at;
 #endif
 
-#ifdef USE_SECURE_GSCRIPTS
-    // This is necessary for HTTPS support (which is useless until ESP32 bluetooth support is improved)
     void setClock();
     static bool send_to_url_https(const char *url, const char *apiKey, const char *dataToSend, const char *contentType);
-#endif
 
     bool send_to_fermentrack();
     bool send_to_brewstatus();

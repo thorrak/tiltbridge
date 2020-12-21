@@ -19,11 +19,9 @@ using json = nlohmann::json;
 #include <WiFi.h>
 #include <MQTT.h>
 
-#ifdef USE_SECURE_GSCRIPTS
 #include <WiFiMulti.h>
 #include <WiFiClientSecure.h>
 #include "SecureWithRedirects.h"
-#endif
 
 dataSendHandler data_sender;  // Global data sender
 
@@ -45,8 +43,6 @@ dataSendHandler::dataSendHandler() {
 }
 
 
-#ifdef USE_SECURE_GSCRIPTS
-
 void dataSendHandler::setClock() {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
@@ -61,13 +57,9 @@ void dataSendHandler::setClock() {
     gmtime_r(&nowSecs, &timeinfo);
 }
 
-#endif
-
 
 void dataSendHandler::init() {
-#ifdef USE_SECURE_GSCRIPTS
     setClock();
-#endif
 }
 
 void dataSendHandler::init_mqtt() {
@@ -155,7 +147,6 @@ bool dataSendHandler::send_to_brewstatus() {
 }
 
 
-#ifdef USE_SECURE_GSCRIPTS
 // For sending data to Google Scripts, we have to use secure_client but otherwise we're doing the same thing as before.
 bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend, const char *contentType) {
     // This handles the generic act of sending data to an endpoint
@@ -196,7 +187,6 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
     return result;
 }
 
-#endif
 
 bool dataSendHandler::send_to_google() {
     HTTPClient http;
@@ -243,22 +233,11 @@ bool dataSendHandler::send_to_google() {
             payload["Comment"] = "";
             payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
 
-#ifdef USE_SECURE_GSCRIPTS
             // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
             if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", payload.dump().c_str(), "application/json"))
                 result = false;  // There was an error with the previous send
             payload.clear();
-#else
-            j["gscripts_url"] = app_config.config["scriptsURL"].get<std::string>();
-            j["payload"] = payload;
 
-            // All data for non-secure gscripts goes through the TiltBridge google proxy script. I'm not happy with this
-            // but it's the best I've got until HTTPS can be readded
-            if(!send_to_url("http://www.tiltbridge.com/tiltbridge_google_proxy/", "", j.dump().c_str(), "application/json"))
-                result = false;  // There was an error with the previous send
-            payload.clear();
-            j.clear();
-#endif
         }
     }
     return result;
