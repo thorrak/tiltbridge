@@ -281,6 +281,9 @@ nlohmann::json tiltHydrometer::to_json(bool use_raw_gravity) {
             {"gravity", converted_gravity(use_raw_gravity)},
             {"gsheets_name", gsheets_beer_name()},
             {"weeks_on_battery", weeks_since_last_battery_change},
+            {"sends_battery", receives_battery},
+            {"high_resolution", tilt_pro},
+            {"fwVersion", version_code},
     };
     return j;
 }
