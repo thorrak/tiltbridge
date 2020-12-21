@@ -54,6 +54,7 @@ public:
     // There is no real reason these need to be uint32, given that we are receiving 2 bytes each (uint16)
     uint16_t temp;
     uint16_t gravity;
+    uint16_t gravity_smoothed;
     uint16_t version_code;
     uint32_t filter_accumulator;
 

@@ -123,13 +123,19 @@ std::string tiltHydrometer::gsheets_beer_name() {
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr){
     double d_temp;
     double d_grav;
-    float grav_scalar;
-    if (tilt_pro) {
-        grav_scalar = 10000.0f;
-    }
-    else {
-        grav_scalar = 1000.0f;
-    }
+    double smoothed_d_grav;
+    uint16_t smoothed_i_grav;
+
+    if(i_temp==999) {  // If the temp is 999, the SG actually represents the firmware version of the Tilt.
+        version_code = i_grav;
+        return true;  // This also has the (desired) side effect of not logging the 999 "temperature" and 1.00x "gravity"
+    } else if(i_grav >= 5000)  // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
+        tilt_pro = true;
+
+    // For Tilt Pros, we have to scale the data down
+    const float grav_scalar = (tilt_pro) ? 10000.0f : 1000.0f;
+    const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
+
 
     //Serial.print("Raw value: ");
     //Serial.println(i_grav);
@@ -140,37 +146,31 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     if (!m_loaded) {
         //First pass through after loading tilt, filter_accumulator value must be initalized.
         filter_accumulator = i_grav;
-    }
-    else{
+        smoothed_i_grav = i_grav;
+    } else{
         // Effective smoothing filter constant is alpha / alphaScale
         // Ratio must be between 0 - 1 and lower values provide more smoothing.
         int alpha = 5;  
 
         int alphaScale = 10;
-        i_grav = (alpha * i_grav + (alphaScale - alpha) * (filter_accumulator * alphaScale)/alphaScale +alphaScale / 2) / alphaScale;
-        filter_accumulator = i_grav;
+        smoothed_i_grav = (alpha * i_grav + (alphaScale - alpha) * (filter_accumulator * alphaScale) / alphaScale + alphaScale / 2) / alphaScale;
+        filter_accumulator = smoothed_i_grav;
     }
 
     //Serial.print("Filtered value: ");
     //Serial.println(i_grav);
 
-    if(i_grav >= 5000)  // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
-        tilt_pro = true;
 
     if(i_tx_pwr == 197)  // If we received a tx_pwr of 197 this Tilt sends its battery in the tx_pwr field
         receives_battery = true;
     else if(receives_battery)  // Its not 197 but we receive battery - set the battery value to tx_pwr
         weeks_since_last_battery_change = i_tx_pwr;
 
-    if(tilt_pro) {
-        // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
-        d_temp = (double) i_temp / 10.0;
-        d_grav = (double) i_grav / grav_scalar;
-    } else {
-        // For regular Tilts we take the temp as-is and divide the gravity by 1000
-        d_temp = (double) i_temp;
-        d_grav = (double) i_grav / grav_scalar;
-    }
+    // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
+    d_temp = (double) i_temp / temp_scalar;
+    d_grav = (double) i_grav / grav_scalar;
+    smoothed_d_grav = (double) smoothed_i_grav / grav_scalar;
+
 
     nlohmann::json cal_params;
 
@@ -178,15 +178,6 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     Serial.print("Tilt gravity = ");
     Serial.println(d_grav);
 #endif
-
-    if(i_temp==999) {
-        // If the temp is 999, that's an indicator that the SG actually represents the firmware version of the Tilt.
-        // Although we won't do anything with this data, let's capture it.
-
-        // This also has the (desired) side effect of not logging the 999 "temperature" and 1.00x "gravity"
-        version_code = i_grav;
-        return true;
-    }
 
 
     if (app_config.config["applyCalibration"]) {
@@ -238,6 +229,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
          }
 
          d_grav = x0 + x1 * d_grav + x2 * d_grav * d_grav + x3 * d_grav * d_grav * d_grav;
+         smoothed_d_grav = x0 + x1 * smoothed_d_grav + x2 * smoothed_d_grav * smoothed_d_grav + x3 * smoothed_d_grav * smoothed_d_grav * smoothed_d_grav;
 
 #if DEBUG_PRINTS
         Serial.print("Calibrated gravity = ");
@@ -246,8 +238,9 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     }
 
     if (app_config.config["tempCorrect"]) {
-        double ref_temp = 60.0;
+        const double ref_temp = 60.0;
         d_grav = d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
+        smoothed_d_grav = smoothed_d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
 
 #if DEBUG_PRINTS
         Serial.print("Temperature corrected gravity = ");
@@ -259,6 +252,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
 
     gravity = (int) round(d_grav * grav_scalar);
+    gravity_smoothed = (int) round(smoothed_d_grav * grav_scalar);
     temp = i_temp;
 
     m_loaded = true;  // Setting loaded true now that we have gravity/temp values
@@ -268,10 +262,9 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
 std::string tiltHydrometer::converted_gravity() {
     char rnd_gravity[7];
-    if(tilt_pro)
-        snprintf(rnd_gravity, 7,"%.4f",(float) gravity / 10000);
-    else
-        snprintf(rnd_gravity, 7,"%.4f",(float) gravity / 1000);
+    const uint16_t grav_scalar = (tilt_pro) ? 10000 : 1000;
+
+    snprintf(rnd_gravity, 7,"%.4f",(float) gravity / grav_scalar);
     std::string output = rnd_gravity;
     return output;
 }
@@ -291,18 +284,13 @@ nlohmann::json tiltHydrometer::to_json() {
 
 std::string tiltHydrometer::converted_temp() {
     char rnd_temp[5];
-    double d_temp;
-
-    if(tilt_pro)  // For Tilt Pros we have to divide the temp by 10
-        d_temp = (double) temp / 10.0;
-    else  // For regular Tilts we take the temp as-is
-        d_temp = (double) temp;
+    const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
+    double d_temp = (double) temp / temp_scalar;
 
     if(is_celsius())
         d_temp = (d_temp - 32) * 5 / 9;
 
     snprintf(rnd_temp, 5,"%.1f", d_temp);
-
     std::string output = rnd_temp;
     return output;
 }
