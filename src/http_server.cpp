@@ -147,10 +147,12 @@ void processConfig() {
         int sf;
         bool is_int;
         isInteger(server.arg("smoothFactor").c_str(),is_int,sf);
-        if (is_int && (sf != app_config.config["smoothFactor"].get<int>()) && sf >= 0 && sf <= 99) {
-            app_config.config["smoothFactor"] = sf;
-        } else {
-            all_settings_valid = false;
+        if (sf != app_config.config["smoothFactor"].get<int>()) {
+            if (is_int && sf >= 0 && sf <= 99) {
+                app_config.config["smoothFactor"] = sf;
+            } else {
+                all_settings_valid = false;
+            }
         }
     }
 
