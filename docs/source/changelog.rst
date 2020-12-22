@@ -8,9 +8,12 @@ v0.2.2 - Dec 22, 2020 - MQTT and Tilt Pro
 - Added support for Tilt Pro devices
 - Added MQTT support (Thanks Pletch!)
 - Add gravity smoothing support - except when sending to Fermentrack/BrewPiRemix (Thanks Pletch!)
+- Add toggleable Celsius support (Thanks ricnewton!)
+- Add support for rotated (e.g. Lolin v1.1.0) TFT Screens (Thanks Pletch!)
 - Numerous bugfixes/cleanups (Thanks Pletch!)
 - Properly capture/filter the "version" info sent on wake by v3 Tilts
 - Added version information to about.htm
+- Changing the mDNS ID now resets the controller
 - Update to latest version of Bluetooth library
 
 
