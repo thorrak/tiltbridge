@@ -24,7 +24,7 @@ Although the only required component is the board, you will likely also want the
 - `AliExpress (TFT Screen) <https://www.aliexpress.com/item/32919729730.html>`_
 - `AliExpress (Cable) <https://www.aliexpress.com/item/32848833474.html>`_
 
-.. note:: For the board, you need one of the 16MB variants. Preference should go to the non-LED models.
+.. note:: For the board, you need one of the 16MB variants. Preference should go to the non-LED models (though the LED models work just as well).
 
 
 
