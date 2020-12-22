@@ -13,6 +13,8 @@ v0.2.2 - Dec 22, 2020 - MQTT and Tilt Pro
 - Numerous bugfixes/cleanups (Thanks Pletch!)
 - Properly capture/filter the "version" info sent on wake by v3 Tilts
 - Added version information to about.htm
+- Results are now expired after 5 minutes if no signal is received from a Tilt
+- Renamed Fermentrack support to indicate it also works for BrewPi Remix (Thanks lbussy!)
 - Changing the mDNS ID now resets the controller
 - Update to latest version of Bluetooth library
 
