@@ -21,8 +21,6 @@ tiltHydrometer::tiltHydrometer(uint8_t color) {
 } // tiltHydrometer
 
 
-
-
 uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid) {
 
     if(uuid == TILT_COLOR_RED_UUID) {
@@ -124,7 +122,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     double d_temp;
     double d_grav;
     double smoothed_d_grav;
-    uint16_t smoothed_i_grav;
+    uint32_t smoothed_i_grav_100;
 
     if(i_temp==999) {  // If the temp is 999, the SG actually represents the firmware version of the Tilt.
         version_code = i_grav;
@@ -136,29 +134,27 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     const float grav_scalar = (tilt_pro) ? 10000.0f : 1000.0f;
     const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
 
-
-    //Serial.print("Raw value: ");
-    //Serial.println(i_grav);
-
     // Implementation of a simple exponential smoothing filter to provide some averaging of 
     // gravity values received from the sensor between display updates / data reporting.
+    // The smoothing calculations are done using 32 bit unsigned int and multipling raw
+    // value by 100 to keep precision.
 
     if (!m_loaded) {
-        //First pass through after loading tilt, filter_accumulator value must be initalized.
-        filter_accumulator = i_grav;
-        smoothed_i_grav = i_grav;
+        //First pass through after loading tilt, last_grav_value value must be initalized.
+        last_grav_value_100 = i_grav * 100;
+        smoothed_i_grav_100 = i_grav * 100;
     } else{
-        // Effective smoothing filter constant is alpha / alphaScale
+        // Effective smoothing filter constant is alpha / 100
         // Ratio must be between 0 - 1 and lower values provide more smoothing.
-        int alpha = 5;  
-
-        int alphaScale = 10;
-        smoothed_i_grav = (alpha * i_grav + (alphaScale - alpha) * (filter_accumulator * alphaScale) / alphaScale + alphaScale / 2) / alphaScale;
-        filter_accumulator = smoothed_i_grav;
+        int alpha = (100 - app_config.config["smoothFactor"].get<int>());
+        smoothed_i_grav_100 = (alpha * i_grav * 100 + (100 - alpha) * (last_grav_value_100 * 100) / 100 + 100 / 2) / 100;
+        last_grav_value_100 = smoothed_i_grav_100;
     }
 
-    //Serial.print("Filtered value: ");
-    //Serial.println(i_grav);
+        //Serial.print("Raw grav = ");
+        //Serial.println(i_grav * 100);
+        //Serial.print("Smoothed grav = ");
+        //Serial.println(smoothed_i_grav_100);
 
 
     if(i_tx_pwr == 197)  // If we received a tx_pwr of 197 this Tilt sends its battery in the tx_pwr field
@@ -169,8 +165,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
     d_temp = (double) i_temp / temp_scalar;
     d_grav = (double) i_grav / grav_scalar;
-    smoothed_d_grav = (double) smoothed_i_grav / grav_scalar;
-
+    smoothed_d_grav = (double) smoothed_i_grav_100 / grav_scalar / 100; 
 
     nlohmann::json cal_params;
 

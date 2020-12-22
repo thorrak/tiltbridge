@@ -65,9 +65,27 @@
                         <p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will cause the TiltBridge to restart.</p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
-                                <label for="mdnsID" class="col-sm-2 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
+                                <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mdnsID" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="tempUnit" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Units used for temperature measurement">Temperature Units</label>
+                                <div class="col-sm-8">
+                                    <select class="form-control" name="tempUnit" id="tempUnit">
+                                        <option value="C" selected>Celsius (&deg;C)</option>
+                                        <option value="F">Fahrenheit (&deg;F)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Valid range 0 to 99. Setting affects time constant of
+                                exponentially weighted moving average filter applied to specific gravity reading. 
+                                A value of 0 is equivalent to no averaging. Higher values mean more averaging.
+                                A value of 40 gives time constant of just over 5 seconds while a value of 99 results in over 8 minutes.">Specific Gravity Averaging</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="smoothFactor" id="smoothFactor" placeholder="40" :value="settings.smoothFactor">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -119,34 +137,6 @@
                             </div>
                             <div class="form-group row">
                                 <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- TODO - COme back and integrate temp units with Pletch's changes -->
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Units
-                    </h5>
-
-                    <div class="card-body">
-                        <p class="card-text">These settings control whether to use fahrenheit or celsius.</p>
-                        <form action="/settings/update/" method="POST">
-                            <div class="form-group row">
-                                <label for="tempUnit" class="col-sm-2 col-form-label" data-toggle="tooltip" title="Units used for temperature measurement">Temperature in</label>
-                                <div class="col-sm-8">
-                                    <select class="form-control" name="tempUnit" id="tempUnit">
-                                        <option value="C" selected>Celsius (&deg;C)</option>
-                                        <option value="F">Fahrenheit (&deg;F)</option>
-                                    </select>
-                                </div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
                             </div>
                         </form>
