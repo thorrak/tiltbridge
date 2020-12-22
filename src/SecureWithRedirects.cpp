@@ -59,10 +59,11 @@ bool SecureWithRedirects::send_with_redirects() {
         return false;
     }
 
-
+#ifdef DEBUG_PRINTS
     Serial.print("[SWR::send_with_redirects] Current URL: `");
     Serial.print(url);
     Serial.println("`");
+#endif
 
     https->begin(*secure_client, url);
     https->addHeader("Content-Type", contentType);             //Specify content-type header

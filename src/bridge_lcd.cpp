@@ -1,8 +1,11 @@
 //
 // Created by John Beeler on 5/12/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "bridge_lcd.h"
+#include "jsonConfigHandler.h"
+#include <WiFi.h>
 
 bridge_lcd lcd;
 
@@ -107,8 +110,25 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     // Clear out the display before we start printing to it
     clear();
 
+    // Display IP address on bottom row if using Lolin TFT
+    uint8_t header_row = 1;
+    uint8_t first_tilt_row_offset = 2; 
+#ifdef LCD_TFT
+    // Display IP address or indicate if not connected.
+    if ( WiFi.status() == WL_CONNECTED) {
+        char ip[16];
+        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+        print_line("IP Address:", ip, 13);
+    }
+    else {
+        print_line("No Wifi Connection","",13);
+    }
+    header_row = 1;
+    first_tilt_row_offset = header_row + 1;
+#endif
+
     // Display the header row
-    print_line("Color", "Temp", "Gravity", 1);
+    print_line("Color", "Temp", "Gravity", header_row);
 
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
@@ -116,7 +136,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
             active_tilts++;
             // This check has the added bonus of limiting the # of displayed tilts to TILTS_PER_PAGE
             if((active_tilts/TILTS_PER_PAGE)==screen_number) {
-                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts+2);
+                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts + first_tilt_row_offset);
                 displayed_tilts++;
             }
         }
@@ -127,7 +147,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 }
 
 
-void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
+void bridge_lcd::display_wifi_connect_screen(const char * ap_name, const char * ap_pass) {
     // This screen is displayed when the user first plugs in an unconfigured TiltBridge
     clear();
     print_line("To configure, connect to", "", 1);
@@ -137,7 +157,7 @@ void bridge_lcd::display_wifi_connect_screen(String ap_name, String ap_pass) {
     display();
 }
 
-void bridge_lcd::display_wifi_success_screen(const String& mdns_url, const String& ip_address_url) {
+void bridge_lcd::display_wifi_success_screen(const char* mdns_url, const char* ip_address_url) {
     // This screen is displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
 #ifdef LCD_TFT_ESPI
@@ -211,9 +231,9 @@ void bridge_lcd::display_wifi_reconnect_failed() {
 
 
 void bridge_lcd::print_tilt_to_line(tiltHydrometer* tilt, uint8_t line) {
-    char gravity[10], temp[6];
-    sprintf(gravity, "%.3f", double_t(tilt->gravity)/1000);
-    sprintf(temp, "%d %s", tilt->converted_temp(), tilt->is_celsius() ? "C" : "F");
+    char gravity[11], temp[8];
+    sprintf(gravity, "%s", tilt->converted_gravity(false).c_str());
+    sprintf(temp, "%s %s", tilt->converted_temp(false).c_str(), tilt->is_celsius() ? "C" : "F");
 
 #ifdef LCD_TFT_ESPI
     tft->setTextColor(tilt->text_color());
@@ -285,7 +305,12 @@ void bridge_lcd::init() {
     // +4 "mirrors" the text (supposedly)
     tft->setRotation(0);
 #else
-    tft->setRotation(3);
+    if(app_config.config["invertTFT"]){
+        tft->setRotation(1);
+    }
+    else{
+        tft->setRotation(3);
+    }
 #endif
     tft->fillScreen(ILI9341_BLACK);
     tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
@@ -331,7 +356,7 @@ void bridge_lcd::display() {
 }
 
 
-void bridge_lcd::print_line(const String& left_text, const String& right_text, uint8_t line) {
+void bridge_lcd::print_line(const char* left_text, const char* right_text, uint8_t line) {
 #ifdef LCD_TFT_ESPI
     print_line("", left_text, right_text, line);
 #else
@@ -340,7 +365,7 @@ void bridge_lcd::print_line(const String& left_text, const String& right_text, u
 }
 
 
-void bridge_lcd::print_line(const String& left_text, const String& middle_text, const String& right_text, uint8_t line) {
+void bridge_lcd::print_line(const char* left_text, const char* middle_text, const char* right_text, uint8_t line) {
 #ifdef LCD_SSD1306
     int16_t starting_pixel_row = 0;
 
@@ -351,7 +376,7 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
     oled_display->drawString(0, starting_pixel_row, left_text);
 
     oled_display->setTextAlignment(TEXT_ALIGN_LEFT);
-    oled_display->drawString(54, starting_pixel_row, middle_text);
+    oled_display->drawString(48, starting_pixel_row, middle_text);
 
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);
@@ -368,8 +393,8 @@ void bridge_lcd::print_line(const String& left_text, const String& middle_text, 
     tft->setCursor(x, y);
     tft->print(left_text);
 
-    // For now, we're just dropping the middle text at pixel 155. No math.
-    tft->setCursor(155, y);
+    // For now, we're just dropping the middle text at pixel 130. No math.
+    tft->setCursor(130, y);
     tft->print(middle_text);
 
     // While the OLED library has functions for printing right-aligned text, Adafruit GFX does not. We'll have to

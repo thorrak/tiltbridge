@@ -1,18 +1,10 @@
 //
 // Created by John Beeler on 4/28/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "tiltHydrometer.h"
 #include "jsonConfigHandler.h"
-
-namespace {
-
-uint32_t fahrenheit_to_celsius(uint32_t fahrenheit)
-{
-    return (fahrenheit - 32) * 5 / 9;
-}
-
-}
 
 tiltHydrometer::tiltHydrometer(uint8_t color) {
     m_loaded            = false;
@@ -21,9 +13,12 @@ tiltHydrometer::tiltHydrometer(uint8_t color) {
     gravity             = 0;
     m_lastUpdate        = 0;
 
+    version_code        = 0;  // Set if captured - only applies to Gen 3/Pro Tilts
+    weeks_since_last_battery_change = 0;  // Not currently implemented - for future use
+    tilt_pro            = false;
+    receives_battery    = false;
+
 } // tiltHydrometer
-
-
 
 
 uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid) {
@@ -123,15 +118,62 @@ std::string tiltHydrometer::gsheets_beer_name() {
 }
 
 
-bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
-    double d_temp = (double) i_temp;
-    double d_grav = (double) i_grav / 1000.0;
+bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr){
+    double d_temp;
+    double d_grav;
+    double smoothed_d_grav;
+    uint32_t smoothed_i_grav_100;
+
+    if(i_temp==999) {  // If the temp is 999, the SG actually represents the firmware version of the Tilt.
+        version_code = i_grav;
+        return true;  // This also has the (desired) side effect of not logging the 999 "temperature" and 1.00x "gravity"
+    } else if(i_grav >= 5000)  // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
+        tilt_pro = true;
+
+    // For Tilt Pros, we have to scale the data down
+    const float grav_scalar = (tilt_pro) ? 10000.0f : 1000.0f;
+    const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
+
+    // Implementation of a simple exponential smoothing filter to provide some averaging of 
+    // gravity values received from the sensor between display updates / data reporting.
+    // The smoothing calculations are done using 32 bit unsigned int and multipling raw
+    // value by 100 to keep precision.
+
+    if (!m_loaded) {
+        //First pass through after loading tilt, last_grav_value value must be initalized.
+        last_grav_value_100 = i_grav * 100;
+        smoothed_i_grav_100 = i_grav * 100;
+    } else{
+        // Effective smoothing filter constant is alpha / 100
+        // Ratio must be between 0 - 1 and lower values provide more smoothing.
+        int alpha = (100 - app_config.config["smoothFactor"].get<int>());
+        smoothed_i_grav_100 = (alpha * i_grav * 100 + (100 - alpha) * (last_grav_value_100 * 100) / 100 + 100 / 2) / 100;
+        last_grav_value_100 = smoothed_i_grav_100;
+    }
+
+        //Serial.print("Raw grav = ");
+        //Serial.println(i_grav * 100);
+        //Serial.print("Smoothed grav = ");
+        //Serial.println(smoothed_i_grav_100);
+
+
+    if(i_tx_pwr == 197)  // If we received a tx_pwr of 197 this Tilt sends its battery in the tx_pwr field
+        receives_battery = true;
+    else if(receives_battery)  // Its not 197 but we receive battery - set the battery value to tx_pwr
+        weeks_since_last_battery_change = i_tx_pwr;
+
+    // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
+    d_temp = (double) i_temp / temp_scalar;
+    d_grav = (double) i_grav / grav_scalar;
+    smoothed_d_grav = (double) smoothed_i_grav_100 / grav_scalar / 100; 
+
     nlohmann::json cal_params;
 
 #if DEBUG_PRINTS
     Serial.print("Tilt gravity = ");
     Serial.println(d_grav);
 #endif
+
 
     if (app_config.config["applyCalibration"]) {
         double x0 = 0.0;
@@ -182,6 +224,7 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
          }
 
          d_grav = x0 + x1 * d_grav + x2 * d_grav * d_grav + x3 * d_grav * d_grav * d_grav;
+         smoothed_d_grav = x0 + x1 * smoothed_d_grav + x2 * smoothed_d_grav * smoothed_d_grav + x3 * smoothed_d_grav * smoothed_d_grav * smoothed_d_grav;
 
 #if DEBUG_PRINTS
         Serial.print("Calibrated gravity = ");
@@ -190,8 +233,9 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
     }
 
     if (app_config.config["tempCorrect"]) {
-        double ref_temp = 60.0;
+        const double ref_temp = 60.0;
         d_grav = d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
+        smoothed_d_grav = smoothed_d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
 
 #if DEBUG_PRINTS
         Serial.print("Temperature corrected gravity = ");
@@ -199,43 +243,57 @@ bool tiltHydrometer::set_values(uint32_t i_temp, uint32_t i_grav){
 #endif
     }
 
+
+
+
+    gravity = (int) round(d_grav * grav_scalar);
+    gravity_smoothed = (int) round(smoothed_d_grav * grav_scalar);
     temp = i_temp;
-    gravity = (int) round(d_grav * 1000.0);
+
     m_loaded = true;  // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = xTaskGetTickCount();
     return true;
 }
 
-std::string tiltHydrometer::converted_gravity() {
-    // I guarantee there is a better way of doing this conversion, but this works. SG is always 0.000-9.999.
-    int right_of_decimal = gravity % 1000;
-    int left_of_decimal = (gravity - right_of_decimal)/1000;
+std::string tiltHydrometer::converted_gravity(bool use_raw_gravity) {
+    char rnd_gravity[7];
+    const uint16_t grav_scalar = (tilt_pro) ? 10000 : 1000;
 
-    std::string output = std::to_string(left_of_decimal) + ".";
-
-    if(right_of_decimal < 100)
-        output += "0";
-    if(right_of_decimal < 10)
-        output += "0";
-    output += std::to_string(right_of_decimal);
-
+    if (use_raw_gravity)
+        snprintf(rnd_gravity, 7,"%.4f",(float) gravity / grav_scalar);
+    else
+        snprintf(rnd_gravity, 7,"%.4f",(float) gravity_smoothed / grav_scalar);
+    std::string output = rnd_gravity;
     return output;
 }
 
-nlohmann::json tiltHydrometer::to_json() {
+nlohmann::json tiltHydrometer::to_json(bool use_raw_gravity) {
     nlohmann::json j;
     j = {
             {"color", color_name()},
-            {"temp", converted_temp()},
+            {"temp", converted_temp(false)},
             {"tempUnit", is_celsius() ? "C" : "F"},
-            {"gravity", converted_gravity()},
+            {"gravity", converted_gravity(use_raw_gravity)},
             {"gsheets_name", gsheets_beer_name()},
+            {"weeks_on_battery", weeks_since_last_battery_change},
+            {"sends_battery", receives_battery},
+            {"high_resolution", tilt_pro},
+            {"fwVersion", version_code},
     };
     return j;
 }
 
-uint32_t tiltHydrometer::converted_temp() const {
-    return is_celsius() ? fahrenheit_to_celsius(temp) : temp;
+std::string tiltHydrometer::converted_temp(bool fahrenheit_only) {
+    char rnd_temp[5];
+    const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
+    double d_temp = (double) temp / temp_scalar;
+
+    if(is_celsius() && !fahrenheit_only)
+        d_temp = (d_temp - 32) * 5 / 9;
+
+    snprintf(rnd_temp, 5,"%.1f", d_temp);
+    std::string output = rnd_temp;
+    return output;
 }
 
 bool tiltHydrometer::is_celsius() const {

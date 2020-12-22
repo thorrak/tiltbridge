@@ -17,6 +17,18 @@ To install using BrewFlasher simply connect your ESP32 to your computer, downloa
 screen.
 
 
+Note about MacOS
+~~~~~~~~~~~~~~~~
+
+.. _drivers: https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers
+
+Although the microcontroller used on each ESP32 board is standardized (thats what the "ESP32" is) the serial-to-usb chip
+differs from manufacturer to manufacturer. Some serial-to-USB chips require special drivers to be installed on MacOS in
+order to be recognized by the operating system. Some users who have had difficulty getting MacOS to recognize their
+boards in order to be able to flash them have reported success getting their ESP32-based chips to
+show up in MacOS by installing these drivers_.
+
+
 
 Installation using Fermentrack
 ------------------------------

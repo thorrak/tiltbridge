@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'TiltBridge'
-copyright = '2019, John Beeler'
+copyright = '2020, John Beeler'
 author = 'John Beeler'
 
 # The short X.Y version

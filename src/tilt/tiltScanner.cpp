@@ -1,6 +1,7 @@
 //
 // Created by John Beeler on 5/12/18.
 // Modified by Tim Pletcher on 18-Oct-2020.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "tiltBridge.h"
@@ -74,7 +75,7 @@ void tiltScanner::init() {
     //Active scan actively queries devices for more info following detection.
     //
     pBLEScan->setActiveScan(false);
-    pBLEScan->setInterval(100);
+    pBLEScan->setInterval(115);
     pBLEScan->setWindow(99);  // less or equal setInterval value
 }
 
@@ -106,7 +107,7 @@ bool tiltScanner::scan() {
             Serial.println("Scan already in progress - explicitly stopping.");
 #endif
             pBLEScan->stop();
-            FreeRTOS::sleep(100);
+            delay(100);
             return false;
         } else {
             // We successfully started a scan
@@ -123,7 +124,7 @@ bool tiltScanner::wait_until_scan_complete() {
         return false;  // Return false if there wasn't a scan active when this was called
 
     while(m_scan_active)
-        FreeRTOS::sleep(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
+        delay(100);  // Otherwise, keep sleeping 100ms at a time until the scan completes
 
     //pBLEScan->stop();
     pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
@@ -148,6 +149,7 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
     char m_color_arr[33] = {'\0'};
     char temp_arr[5] = {'\0'};
     char grav_arr[5] = {'\0'};
+    char tx_pwr_arr[3] = {'\0'};
 
     for (int i = 4; i < advert_string_hex.length(); i++) {
         sprintf(hex_code, "%.2x", advert_string_hex[i]);
@@ -156,12 +158,16 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
             strncat(m_color_arr,hex_code,2);
         }
         //Indices 20-21 each generate two characters of the temperature array
-        if ( (i>=20) && (i<22) ) {
+        if ( i==20 || i==21 ) {
             strncat(temp_arr,hex_code,2);
         }
         //Indices 22-23 each generate two characters of the sp_gravity array
-        if ( (i>=22) && (i<24) ) {
+        if ( i == 22 || i == 23 ) {
             strncat(grav_arr,hex_code,2);
+        }
+        //Index 24 contains the tx_pwr (which is used by recent tilts to indicate battery age)
+        if ( i == 24 ) {
+            strncat(tx_pwr_arr,hex_code,2);
         }
     }
 
@@ -170,10 +176,12 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string& advert_string_
         return TILT_NONE;
     }
 
-    uint32_t temp = std::stoul(temp_arr,nullptr,16);
-    uint32_t gravity = std::stoul(grav_arr,nullptr,16);
+    // TODO - Change this when merging tilt pro updates
+    uint16_t temp = std::stoul(temp_arr,nullptr,16);
+    uint16_t gravity = std::stoul(grav_arr,nullptr,16);
+    uint8_t tx_pwr = std::stoul(tx_pwr_arr,nullptr,16);
 
-    m_tilt_devices[m_color]->set_values(temp, gravity);
+    m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr);
 
     return m_color;
 }
@@ -183,11 +191,11 @@ tiltHydrometer* tiltScanner::tilt(uint8_t color) {
     return m_tilt_devices[color];
 }
 
-json tiltScanner::tilt_to_json() {
+json tiltScanner::tilt_to_json(bool use_raw_gravity) {
     json j;
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(m_tilt_devices[i]->is_loaded()) {
-            j[m_tilt_devices[i]->color_name()] = m_tilt_devices[i]->to_json();
+            j[m_tilt_devices[i]->color_name()] = m_tilt_devices[i]->to_json(use_raw_gravity);
         }
     }
     return j;

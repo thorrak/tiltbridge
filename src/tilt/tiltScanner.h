@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 5/12/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #ifndef TILTBRIDGE_TILTSCANNER_H
@@ -10,9 +11,7 @@
 #include <NimBLEAdvertisedDevice.h>
 
 
-
-#define BLE_SCAN_TIME       5  // Seconds to scan
-
+#define BLE_SCAN_TIME       3  // Seconds to scan
 
 // for convenience
 using json = nlohmann::json;
@@ -33,7 +32,7 @@ public:
     bool wait_until_scan_complete();
     void set_scan_active_flag(bool value);
     uint8_t load_tilt_from_advert_hex(const std::string& advert_string_hex);
-    nlohmann::json tilt_to_json();
+    nlohmann::json tilt_to_json(bool use_raw_gravity);
 
 
     tiltHydrometer* tilt(uint8_t color);

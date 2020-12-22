@@ -1,5 +1,6 @@
 //
 // Created by John Beeler on 6/4/18.
+// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "wifi_setup.h"
@@ -39,14 +40,16 @@ void configModeCallback(WiFiManager *myWiFiManager) {
     Serial.println(myWiFiManager->getConfigPortalSSID());
 #endif
     // Assuming WIFI_SETUP_AP_PASS here.
-    lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID(), WIFI_SETUP_AP_PASS);
+    lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
 }
 
 // Not sure if this is sufficient to test for validity
-bool isValidmDNSName(String mdns_name) {
-    for (std::string::size_type i = 0; i < mdns_name.length(); ++i) {
+bool isValidmDNSName(const char* mdns_name) {
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+        return false;
+    for (int i=0; i < strlen(mdns_name); i++) {
         // For now, we're just checking that every character in the string is alphanumeric. May need to add more validation here.
-        if (!isalnum(mdns_name[i]))
+        if ( !isalnum(mdns_name[i]) && mdns_name[i] != '-' )
             return false;
     }
     return true;
@@ -59,13 +62,21 @@ void disconnect_from_wifi_and_restart() {
 
 void init_wifi() {
     WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
+
+#ifndef DEBUG_PRINTS
+    // If debugoutput is not left enabled with serial connection enabled, 
+    // WifiManager won't reconnect reliably with saved credentials on recent build.....
     wifiManager.setDebugOutput(false); // In case we have a serial connection
-    wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
+#endif
+    
 
     // The main purpose of this is to set a boolean value which will allow us to know we
     // just saved a new configuration (as opposed to rebooting normally)
     wifiManager.setSaveConfigCallback(saveConfigCallback);
     wifiManager.setAPCallback(configModeCallback);
+    wifiManager.setConfigPortalTimeout(5 * 60);  // Setting to 5 mins
+    wifiManager.setConnectRetries(3);
+    wifiManager.setCleanConnect(true);
 
     // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
     // It's nice, but it means the user gets no actual prompt for what they're entering.
@@ -73,15 +84,10 @@ void init_wifi() {
     WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
     wifiManager.addParameter(&custom_mdns_name);
 
-//    std::string password = app_config.config["password"];
-//    WiFiManagerParameter custom_password("password", "TiltBridge Password", password.c_str(), 128);
-//    wifiManager.addParameter(&custom_password);
-
-
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         // TODO - Determine if we can merge shouldSaveConfig in here
         WiFi.softAPdisconnect(true);
-        WiFi.mode(WIFI_AP_STA);
+        WiFi.mode(WIFI_STA);
     } else {
         // If we haven't successfully connected to WiFi, just restart & continue to project the configuration AP.
         // Alternatively, we can hang here.
@@ -105,6 +111,12 @@ void init_wifi() {
         app_config.save();
     }
 
+//    WiFi.mode(WIFI_STA);
+//    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+//    WiFi.setHostname(mdns_id.c_str());
+//    WiFi.begin();
+//    delay(500);
+
     if (!MDNS.begin(mdns_id.c_str())) {
 //        Serial.println("Error setting up MDNS responder!");
     }
@@ -113,12 +125,15 @@ void init_wifi() {
     MDNS.addService("tiltbridge", "tcp", 80);  // for lookups
 
     // Display a screen so the user can see how to access the Tiltbridge
-    String mdns_url = String("http://");
-    mdns_url = mdns_url + mdns_id.c_str();
-    mdns_url = mdns_url + ".local/";
-    String ip_address_url = String("http://");
-    ip_address_url = ip_address_url + WiFi.localIP().toString();
-    ip_address_url.concat("/");
+    char mdns_url[50] = "http://";
+    strncat(mdns_url,mdns_id.c_str(),31);
+    strcat(mdns_url,".local");
+
+    char ip_address_url[25] = "http://";
+    char ip[16];
+    sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+    strncat(ip_address_url,ip,16);
+    strcat(ip_address_url,"/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
     delay(1000);

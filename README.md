@@ -13,11 +13,12 @@ TiltBridge is a single-component solution for bridging the gap between your Tilt
 TiltBridge automatically logs your data to the following cloud data services:
 
 * [Fermentrack](https://www.fermentrack.com/)
+* [BrewPi Remix](https://www.brewpiremix.com)
 * [Brewer's Friend](http://www.brewersfriend.com/)
 * [Brewfather](https://brewfather.app)
 * Google Sheets
 * [Brewstatus](https://brewstat.us)
-
+* [MQTT](https://mqtt.org/) Broker
 
 #### Features
 
