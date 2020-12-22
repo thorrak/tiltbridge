@@ -67,7 +67,7 @@ void init_wifi() {
     // If debugoutput is not left enabled with serial connection enabled, 
     // WifiManager won't reconnect reliably with saved credentials on recent build.....
     wifiManager.setDebugOutput(false); // In case we have a serial connection
-#endif    
+#endif
     
 
     // The main purpose of this is to set a boolean value which will allow us to know we
