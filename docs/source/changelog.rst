@@ -2,8 +2,8 @@ Changelog
 #########
 
 
-v0.2.2 - XXXX XX, 2020 - MQTT and Tilt Pro
-------------------------------------------
+v0.2.2 - Dec 22, 2020 - MQTT and Tilt Pro
+-----------------------------------------
 
 - Added support for Tilt Pro devices
 - Added MQTT support (Thanks Pletch!)
