@@ -144,14 +144,19 @@ void processConfig() {
     }
 
     if (server.hasArg("smoothFactor")) {
-        int smooth_factor;
+        int sf;
         bool is_int;
-        isInteger(server.arg("smoothFactor").c_str(),is_int,smooth_factor);
-        if (is_int && smooth_factor >= 0 && smooth_factor <= 99) {
-            app_config.config["smoothFactor"] = smooth_factor;
+        isInteger(server.arg("smoothFactor").c_str(),is_int,sf);
+        if (is_int && (sf != app_config.config["smoothFactor"].get<int>()) && sf >= 0 && sf <= 99) {
+            app_config.config["smoothFactor"] = sf;
         } else {
             all_settings_valid = false;
         }
+    }
+
+    if (server.hasArg("tempUnit") && (app_config.config["tempUnit"] != server.arg("tempUnit").c_str()) ) {
+        // TODO - Come back and re-integrate this with pletch's work
+        app_config.config["tempUnit"] = server.arg("tempUnit").c_str();
     }
 
     if (server.hasArg("invertTFT")) {
@@ -178,11 +183,6 @@ void processConfig() {
         } else if ((server.arg("tempCorrect")=="off") && (app_config.config["tempCorrect"].get<bool>())){
             app_config.config["tempCorrect"] = false;
         }
-    }
-
-    if (server.hasArg("tempUnit")) {
-        // TODO - Come back and re-integrate this with pletch's work
-        app_config.config["tempUnit"] = server.arg("tempUnit").c_str();
     }
 
     // Fermentrack Settings
