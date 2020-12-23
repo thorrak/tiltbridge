@@ -384,9 +384,9 @@
                             <a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker, delete
                             the MQTT Broker IP. <br><br>
                         
-                            Message payload is json format and is formatted as follows: <br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;{"color":"Tilt Color","device":"mdnsID","gravity":#.#####,"gravity_unit":"G","temp":##.#,"temp_unit":"F"}
-                            <br>
+                            Message payload is json and is formatted as follows: <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Topic: topic/tilt_color<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Payload: {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br>
                         </p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
@@ -418,7 +418,7 @@
                             </div>
 
                             <div class="form-group row">
-                                <label for="mqttTopic" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Topic to publish data to.">MQTT Topic</label>
+                                <label for="mqttTopic" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Topic to publish data to. Limited to maximum of 30 characters.">MQTT Topic</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mqttTopic" id="mqttTopic" placeholder="tiltbridge" :value="settings.mqttTopic">
                                 </div>
