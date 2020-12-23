@@ -360,48 +360,85 @@ bool dataSendHandler::send_to_mqtt() {
     bool result = false;
     nlohmann::json payload;
     mqttClient.loop();
-    char tilt_topic[50] = {'\0'};
-    delay(10);
-
-    // The payload formatted as json when sent to mqTT:
-    //{"Color":"Black","SG":"1.0050","Temp":"74.0","fermunits":"SG","tempunits":"F","timeStamp":1608747060}
+    
+    // Function sends three payloads with the first two designed to support autodiscovery and configuration
+    // on Home Assistant.
+    // General payload formatted as json when sent to mqTT:
+    //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
     //
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(tilt_scanner.tilt(i)->is_loaded()) {
+            char tilt_topic[50] = {'\0'};
             snprintf(tilt_topic,50,"%s/tilt_%s",
                 app_config.config["mqttTopic"].get<std::string>().c_str(),
                 tilt_scanner.tilt(i)->color_name().c_str());
-            payload["Color"] = tilt_scanner.tilt(i)->color_name();
-            payload["timeStamp"] = (int) std::time(0);
-            payload["fermunits"] = "SG";
-            payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
-            payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
-            payload["tempunits"] = app_config.config["tempUnit"].get<std::string>();
 
+            for(uint8_t j = 0;j<3;j++){
+                char m_topic[60] = {'\0'};            
+                char tilt_name[35] = {'\0'};
+                char unit[10] = {'\0'};
+                switch(j) {
+                    case 0 : //Home Assistant Config Topic for Temperature
+                        sprintf(m_topic,"homeassistant/sensor/tiltbridge_tilt_%sT/config",
+                            tilt_scanner.tilt(i)->color_name().c_str());
+                        payload["dev_cla"] = "temperature";                        
+                        strcat(unit, "\u00b0");
+                        strcat(unit,app_config.config["tempUnit"].get<std::string>().c_str());
+                        payload["unit_of_meas"] = unit;
+                        payload["ic"] = "mdi:thermometer";
+                        payload["stat_t"] = tilt_topic;
+                        strcat(tilt_name,"Tilt Temperature - ");
+                        strcat(tilt_name,tilt_scanner.tilt(i)->color_name().c_str());
+                        payload["name"] = tilt_name;
+                        payload["val_tpl"] = "{{value_json.Temp}}";
+                        break;
+                    case 1 : //Home Assistant Config Topic for Sp Gravity
+                        sprintf(m_topic,"homeassistant/sensor/tiltbridge_tilt_%sG/config",
+                            tilt_scanner.tilt(i)->color_name().c_str());
+                        payload["dev_cla"] = "None";
+                        payload["unit_of_meas"] = "SG";
+                        payload["ic"] = "";
+                        payload["stat_t"] = tilt_topic;
+                        strcat(tilt_name,"Tilt Specific Gravity - ");
+                        strcat(tilt_name,tilt_scanner.tilt(i)->color_name().c_str());
+                        payload["name"] = tilt_name;
+                        payload["val_tpl"] = "{{value_json.SG|float|round(3)}}";
+                        break;
+                    case 2 : //General payload with sensor data
+                        strcat(m_topic, tilt_topic);
+                        payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                        payload["timeStamp"] = (int) std::time(0);
+                        payload["fermunits"] = "SG";
+                        payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
+                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
+                        payload["tempunits"] = app_config.config["tempUnit"].get<std::string>();
+                        break;
+                }
 
 #ifdef DEBUG_PRINTS                    
             Serial.print(F("Topic: "));
-            Serial.println(tilt_topic);
+            Serial.println(m_topic);
             Serial.print(F("Message: "));
             Serial.println(payload.dump().c_str());
 #endif
-            if (!mqttClient.connected()) {
+                if (!mqttClient.connected()) {
 #ifdef DEBUG_PRINTS
-                Serial.println(F("MQTT disconnected. Attempting to reconnect to MQTT Broker"));
+                    Serial.println(F("MQTT disconnected. Attempting to reconnect to MQTT Broker"));
 #endif                
-                connect_mqtt();
-                delay(500);               
-            }
-            result = mqttClient.publish(tilt_topic,payload.dump().c_str());
+                    connect_mqtt();
+                    delay(500);               
+                }
+                result = mqttClient.publish(m_topic,payload.dump().c_str());
+                delay(10);
 
 #ifdef DEBUG_PRINTS
-                Serial.print(F("Publish Successful: "));
-                Serial.println(result);
+                    Serial.print(F("Publish Successful: "));
+                    Serial.println(result);
 #endif 
-            payload.clear();
+                payload.clear();
+            }
         }
-
     }
     return result;
 }
