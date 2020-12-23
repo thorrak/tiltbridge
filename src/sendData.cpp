@@ -360,6 +360,7 @@ bool dataSendHandler::send_to_mqtt() {
     bool result = false;
     nlohmann::json payload;
     mqttClient.loop();
+    char tilt_topic[50];
     delay(10);
 
     // The payload formatted as json when sent to mqTT:
@@ -367,14 +368,17 @@ bool dataSendHandler::send_to_mqtt() {
     //
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
-        if(tilt_scanner.tilt(i)->is_loaded()) {
-            payload["color"] = tilt_scanner.tilt(i)->color_name();
-            payload["device"] = app_config.config["mdnsID"].get<std::string>();
-            payload["temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
-            payload["temp_unit"] = app_config.config["tempUnit"].get<std::string>();
+        snprintf(tilt_topic,50,"%s/tilt_%s",
+                app_config.config["mqttTopic"].get<std::string>().c_str(),
+                tilt_scanner.tilt(i)->color_name().c_str());
 
-            payload["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
-            payload["gravity_unit"] = "G";
+        if(tilt_scanner.tilt(i)->is_loaded()) {
+            payload["Color"] = tilt_scanner.tilt(i)->color_name();
+            payload["timeStamp"] = (int) std::time(0);
+            payload["fermunits"] = "SG";
+            payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
+            payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
+            payload["tempunits"] = app_config.config["tempUnit"].get<std::string>();
 
 
 #ifdef DEBUG_PRINTS                    
@@ -390,7 +394,7 @@ bool dataSendHandler::send_to_mqtt() {
                 connect_mqtt();
                 delay(500);               
             }
-            result = mqttClient.publish(app_config.config["mqttTopic"].get<std::string>().c_str(),payload.dump().c_str());
+            result = mqttClient.publish(tilt_topic,payload.dump().c_str());
 
 #ifdef DEBUG_PRINTS
                 Serial.print(F("Publish Successful: "));
