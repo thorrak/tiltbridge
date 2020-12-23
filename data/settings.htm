@@ -473,6 +473,7 @@
                 xhr.open('GET', '/settings/json/');
                 xhr.onload = function () {
                     self.settings = JSON.parse(xhr.responseText);
+                    if ( self.settings.all_valid == "0" ) window.alert("Invalid value for one or more parameters!  Please confirm settings and resubmit");
                     if ( self.settings.invertTFT ) document.getElementById("invertTFT").checked = true;
                     if ( self.settings.applyCalibration ) document.getElementById("applyCalibration").checked = true;
                     if ( self.settings.tempCorrect ) document.getElementById("tempCorrect").checked = true;

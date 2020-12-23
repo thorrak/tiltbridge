@@ -33,6 +33,8 @@ httpServer http_server;
 
 WebServer server(80);
 
+char all_valid[2] = "1";
+
 void trigger_restart();
 
 void isInteger(const char* s, bool &is_int, int32_t &int_value) {
@@ -91,6 +93,7 @@ void processConfigError() {
 #ifdef DEBUG_PRINTS
     Serial.println("processConfigError!");
 #endif
+    all_valid[0] = '0';
     redirectToConfig();
 }
 
@@ -331,8 +334,11 @@ void processConfig() {
             app_config.config["mqttBrokerIP"] = server.arg("mqttBrokerIP").c_str();
             mqtt_broker_update = true;
         }
-        else {
+        else if (server.arg("mqttBrokerIP").length() < 2) {
             app_config.config["mqttBrokerIP"] = "";
+        }
+        else {
+            all_settings_valid = false;
         }
     }
 
@@ -581,8 +587,20 @@ void http_json() {
 // settings_json is intended to be used to build the "Change Settings" page
 void settings_json() {
     // Not sure if I want to leave allow-origin here, but for now it's OK.
+    //
+    // Code modified to bundle an all_valid setting on end of json string to allow
+    // javascript code to determine if a bad config value was passed.
+    // Seems like there should be a cleaner way to do this but it works for now.
+    char json_string[strlen(app_config.config.dump().c_str())+16];
+    json_string[0] = {'\0'};
+    strncat(json_string,app_config.config.dump().c_str(),strlen(app_config.config.dump().c_str())-1);
+    strcat(json_string,",\"all_valid\":");
+    strcat(json_string,all_valid);
+    strcat(json_string,"}");
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", app_config.config.dump().c_str());
+    //server.send(200, "application/json", app_config.config.dump().c_str());
+    server.send(200, "application/json", json_string);
+    all_valid[0] = '1';
 }
 
 
