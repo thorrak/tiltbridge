@@ -360,19 +360,18 @@ bool dataSendHandler::send_to_mqtt() {
     bool result = false;
     nlohmann::json payload;
     mqttClient.loop();
-    char tilt_topic[50];
+    char tilt_topic[50] = {'\0'};
     delay(10);
 
     // The payload formatted as json when sent to mqTT:
-    //{"color":"Black","device":"tiltbridge","gravity":1.003999948501587,"gravity_unit":"G","temp":71,"temp_unit":"F"}
+    //{"Color":"Black","SG":"1.0050","Temp":"74.0","fermunits":"SG","tempunits":"F","timeStamp":1608747060}
     //
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
-        snprintf(tilt_topic,50,"%s/tilt_%s",
+        if(tilt_scanner.tilt(i)->is_loaded()) {
+            snprintf(tilt_topic,50,"%s/tilt_%s",
                 app_config.config["mqttTopic"].get<std::string>().c_str(),
                 tilt_scanner.tilt(i)->color_name().c_str());
-
-        if(tilt_scanner.tilt(i)->is_loaded()) {
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["timeStamp"] = (int) std::time(0);
             payload["fermunits"] = "SG";
@@ -383,7 +382,7 @@ bool dataSendHandler::send_to_mqtt() {
 
 #ifdef DEBUG_PRINTS                    
             Serial.print(F("Topic: "));
-            Serial.println(app_config.config["mqttTopic"].get<std::string>().c_str());
+            Serial.println(tilt_topic);
             Serial.print(F("Message: "));
             Serial.println(payload.dump().c_str());
 #endif
