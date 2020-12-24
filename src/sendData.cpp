@@ -26,7 +26,7 @@ using json = nlohmann::json;
 dataSendHandler data_sender;  // Global data sender
 
 WiFiClient wClient;
-MQTTClient mqttClient;
+MQTTClient mqttClient(256);
 
 dataSendHandler::dataSendHandler() {
     send_to_fermentrack_at =    20 * 1000; // Trigger first send to Fermentrack 20 seconds out
@@ -375,12 +375,13 @@ bool dataSendHandler::send_to_mqtt() {
                 tilt_scanner.tilt(i)->color_name().c_str());
 
             for(uint8_t j = 0;j<3;j++){
-                char m_topic[60] = {'\0'};            
+                char m_topic[90] = {'\0'};            
                 char tilt_name[35] = {'\0'};
                 char unit[10] = {'\0'};
                 switch(j) {
                     case 0 : //Home Assistant Config Topic for Temperature
-                        sprintf(m_topic,"homeassistant/sensor/tiltbridge_tilt_%sT/config",
+                        sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sT/config",
+                            app_config.config["mqttTopic"].get<std::string>().c_str(),
                             tilt_scanner.tilt(i)->color_name().c_str());
                         payload["dev_cla"] = "temperature";                        
                         strcat(unit, "\u00b0");
@@ -394,7 +395,8 @@ bool dataSendHandler::send_to_mqtt() {
                         payload["val_tpl"] = "{{value_json.Temp}}";
                         break;
                     case 1 : //Home Assistant Config Topic for Sp Gravity
-                        sprintf(m_topic,"homeassistant/sensor/tiltbridge_tilt_%sG/config",
+                        sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sG/config",
+                            app_config.config["mqttTopic"].get<std::string>().c_str(),
                             tilt_scanner.tilt(i)->color_name().c_str());
                         payload["dev_cla"] = "None";
                         payload["unit_of_meas"] = "SG";
