@@ -384,9 +384,12 @@
                             <a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker, delete
                             the MQTT Broker IP. <br><br>
                         
-                            Message payload is json and is formatted as follows: <br>
+                            MQTT implementation supports <a href="https://www.home-assistant.io/">Home Assistant</a> Auto Discovery of temperature and
+                            specific gravity sensors.<br><br>
+
+                            General message payload is json and is formatted as follows: <br>
                             &nbsp;&nbsp;&nbsp;&nbsp;Topic: topic/tilt_color<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Payload: {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Payload: {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
                         </p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">

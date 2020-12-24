@@ -378,6 +378,7 @@ bool dataSendHandler::send_to_mqtt() {
                 char m_topic[90] = {'\0'};            
                 char tilt_name[35] = {'\0'};
                 char unit[10] = {'\0'};
+                bool retain;
                 switch(j) {
                     case 0 : //Home Assistant Config Topic for Temperature
                         sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sT/config",
@@ -393,6 +394,7 @@ bool dataSendHandler::send_to_mqtt() {
                         strcat(tilt_name,tilt_scanner.tilt(i)->color_name().c_str());
                         payload["name"] = tilt_name;
                         payload["val_tpl"] = "{{value_json.Temp}}";
+                        retain = true;
                         break;
                     case 1 : //Home Assistant Config Topic for Sp Gravity
                         sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sG/config",
@@ -406,6 +408,7 @@ bool dataSendHandler::send_to_mqtt() {
                         strcat(tilt_name,tilt_scanner.tilt(i)->color_name().c_str());
                         payload["name"] = tilt_name;
                         payload["val_tpl"] = "{{value_json.SG}}";
+                        retain = true;
                         break;
                     case 2 : //General payload with sensor data
                         strcat(m_topic, tilt_topic);
@@ -415,6 +418,7 @@ bool dataSendHandler::send_to_mqtt() {
                         payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
                         payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
                         payload["tempunits"] = app_config.config["tempUnit"].get<std::string>();
+                        retain = false;
                         break;
                 }
 
@@ -431,17 +435,8 @@ bool dataSendHandler::send_to_mqtt() {
                     connect_mqtt();
                     delay(500);               
                 }
-                switch(j) {
-                    case 0 :
-                        result = mqttClient.publish(m_topic,payload.dump().c_str(),true,0);
-                        break;
-                    case 1 : //Retain flag must be set for auto discovery config topics
-                        result = mqttClient.publish(m_topic,payload.dump().c_str(),true,0);
-                        break;
-                    case 2 :
-                        result = mqttClient.publish(m_topic,payload.dump().c_str(),false,0);
-                        break;
-                }
+
+                result = mqttClient.publish(m_topic,payload.dump().c_str(),retain,0);
                 delay(10);
 
 #ifdef DEBUG_PRINTS
