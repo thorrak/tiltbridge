@@ -398,14 +398,14 @@ bool dataSendHandler::send_to_mqtt() {
                         sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sG/config",
                             app_config.config["mqttTopic"].get<std::string>().c_str(),
                             tilt_scanner.tilt(i)->color_name().c_str());
-                        payload["dev_cla"] = "None";
+                        //payload["dev_cla"] = "None";
                         payload["unit_of_meas"] = "SG";
-                        payload["ic"] = "";
+                        //payload["ic"] = "";
                         payload["stat_t"] = tilt_topic;
                         strcat(tilt_name,"Tilt Specific Gravity - ");
                         strcat(tilt_name,tilt_scanner.tilt(i)->color_name().c_str());
                         payload["name"] = tilt_name;
-                        payload["val_tpl"] = "{{value_json.SG|float|round(3)}}";
+                        payload["val_tpl"] = "{{value_json.SG}}";
                         break;
                     case 2 : //General payload with sensor data
                         strcat(m_topic, tilt_topic);
