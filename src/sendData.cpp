@@ -431,7 +431,17 @@ bool dataSendHandler::send_to_mqtt() {
                     connect_mqtt();
                     delay(500);               
                 }
-                result = mqttClient.publish(m_topic,payload.dump().c_str());
+                switch(j) {
+                    case 0 :
+                        result = mqttClient.publish(m_topic,payload.dump().c_str(),true,0);
+                        break;
+                    case 1 : //Retain flag must be set for auto discovery config topics
+                        result = mqttClient.publish(m_topic,payload.dump().c_str(),true,0);
+                        break;
+                    case 2 :
+                        result = mqttClient.publish(m_topic,payload.dump().c_str(),false,0);
+                        break;
+                }
                 delay(10);
 
 #ifdef DEBUG_PRINTS
