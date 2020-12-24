@@ -424,7 +424,7 @@ bool dataSendHandler::send_to_mqtt() {
             Serial.print(F("Message: "));
             Serial.println(payload.dump().c_str());
 #endif
-                if (!mqttClient.connected()) {
+                if (!mqttClient.connected() && j == 0) {
 #ifdef DEBUG_PRINTS
                     Serial.println(F("MQTT disconnected. Attempting to reconnect to MQTT Broker"));
 #endif                
