@@ -154,7 +154,7 @@ The first step in Google Sheets integration is preparing Google Sheets to receiv
 use of a Gmail or Google Apps for Domains account. This preparation step only needs to be done once per Google Account
 and once complete can be used with multiple Tilts, TiltBridges, and beer logs.
 
-#. Open the `TiltBridge Master Sheet <https://docs.google.com/spreadsheets/d/1yyqzjzJ7M0LxvQuV-1U7GbdZ_w_vOXV1AR5nivVNVYI/>`_ on Google Sheets. If prompted to login, log into your Gmail or Google Apps for Domains account.
+#. Open the `Tilt Cloud App for TiltBridge <https://docs.google.com/spreadsheets/d/1IBzUfs7zw_eNfaTvBTGT3Lhivy1DRLcQeS_vssGY4jg/>`_ on Google Sheets. If prompted to login, log into your Gmail or Google Apps for Domains account.
 #. As prompted, go to the ``File`` Menu, and select ``Make a Copy``
 #. Enter a name for this sheet (it will be the master sheet to coordinate all your beer logs) and click ``OK``
 #. The copy you just made will open in a new window. Go to the ``Tools`` menu and select ``Script Editor``
@@ -163,13 +163,17 @@ This will then open the Google Script editor. Before you can begin logging to Go
 script that will receive the incoming data. To do so, you can follow these instructions (which are the same as those at
 the top of the window that appears):
 
-#. Go to the ``Publish`` menu and select ``Deploy as web app...``
-#. In the dialog box that appears, set ``Who has access to the app:`` to ``Anyone, even anonymous`` and click ``Deploy``
-#. A dialog box will appear. Select ``Review Permissions``. Another dialog box will appear. Select your Google Account.
-#. A dialog box with ``This app isn't verified`` will appear. Select ``Advanced`` then select ``Go to Tilt Cloud Template for TiltBridge (unsafe)``
-#. A dialog box with permission requests will appear. Select "Allow".
-#. A dialog box confirming the app has been published will appear. Click ``OK``, then Close Script Editor and return to the Google Sheet.
-#. Use the new "Tilt" menu in the Google Sheet to view the cloud URL or email it to yourself.
+#. Go to the ``Deploy`` menu and select ``New Deployment``
+#. In the dialog that pops up, choose ``Web App`` on the left. If you do not see ``Web App``, click the gear icon next to ``Select Type`` and ensure ``Web App`` is checked.
+#. Enter description as "TiltBridge Google Sheets" (or whatever you prefer).
+#. Ensure ``Execute As`` is set to "Me" and ``Who Has Access`` is set to "Anyone"
+#. Click ``Deploy``
+#. Click ``Authorize Access``. A new dialog will pop up. Choose your Google account.
+#. Second dialog *may* appear indicating "Google hasn't verified this app". If it does, click ``Advanced`` and then select ``Go to Tilt Cloud Template for TiltBridge (unsafe)``
+#. A dialog box with permission requests will appear. Select ``Allow``.
+#. The new Deployment summary appears. Copy the URL under Web App - the URL should end in ``/exec``
+
+This URL is the URL you will need to paste into the ``Google Script URL`` field on the settings page of your TiltBridge (below).
 
 
 Configuring the TiltBridge for Google Sheets
@@ -182,6 +186,7 @@ settings on the TiltBridge itself so that it knows where to send the data.
 #. Click the ``Settings`` link at the top of the dashboard
 #. In the ``Google Script URL`` field paste the Google Script URL you made note of during the preparation step above and click ``Update``
 #. After the URL is updated, enter your Gmail (or Google Apps) email address in the ``Google Script Email`` field and click ``Update``
+#. Additionally, ensure the correct time zone offset is entered, and click ``Update`` if needed.
 
 Your TiltBridge should now be configured to send data to Google Sheets. To begin logging a Tilt you will need to enter a
 sheet name for the data to be logged to.
