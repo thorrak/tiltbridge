@@ -25,8 +25,9 @@ void jsonConfigHandler::initialize() {
             {"mdnsID", "tiltbridge"},
             {"invertTFT", false},
             {"update_spiffs", false},
+            {"TZoffset", -5},
             {"tempUnit", "F"},
-            {"smoothFactor",40},
+            {"smoothFactor",60},
 
             // Global Calibration settings
             {"applyCalibration", false},
@@ -49,7 +50,6 @@ void jsonConfigHandler::initialize() {
             // Brewstatus Settings
             {"brewstatusURL", ""},
             {"brewstatusPushEvery", 60},
-            {"brewstatusTZoffset", -5},
 
             // Google Scripts Settings
             {"scriptsURL", ""},

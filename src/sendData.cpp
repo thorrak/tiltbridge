@@ -135,7 +135,7 @@ bool dataSendHandler::send_to_brewstatus() {
                      tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
                      tilt_scanner.tilt(i)->converted_temp(true).c_str(),  // Only sending Fahrenheit numbers since we don't send units
                      tilt_scanner.tilt(i)->color_name().c_str(),
-                     ((double) std::time(0) + (app_config.config["brewstatusTZoffset"].get<double>() * 3600.0))
+                     ((double) std::time(0) + (app_config.config["TZoffset"].get<int8_t>() * 3600.0))
                      / 86400.0 + 25569.0);
             if(!send_to_url(app_config.config["brewstatusURL"].get<std::string>().c_str(), "", payload, "application/x-www-form-urlencoded"))
                 result = false;  // There was an error with the previous send
@@ -230,6 +230,7 @@ bool dataSendHandler::send_to_google() {
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["Comment"] = "";
             payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
+            payload["tzOffset"] = app_config.config["TZoffset"].get<int8_t>();
 
             // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
             if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", payload.dump().c_str(), "application/json"))

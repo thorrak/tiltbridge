@@ -33,6 +33,8 @@ httpServer http_server;
 
 WebServer server(80);
 
+char all_valid[2] = "1";
+
 void trigger_restart();
 
 void isInteger(const char* s, bool &is_int, int32_t &int_value) {
@@ -91,6 +93,7 @@ void processConfigError() {
 #ifdef DEBUG_PRINTS
     Serial.println("processConfigError!");
 #endif
+    all_valid[0] = '0';
     redirectToConfig();
 }
 
@@ -140,6 +143,22 @@ void processConfig() {
             restart_tiltbridge = true;
         } else {
             all_settings_valid = false;
+        }
+    }
+
+    if (server.hasArg("TZoffset")) {
+        if (server.arg("TZoffset").length() > 0 && server.arg("TZoffset").length() <= 3 ) {
+            int tzo;
+            bool is_int;
+            isInteger(server.arg("TZoffset").c_str(),is_int,tzo);
+            if(tzo >= -11 && tzo <= 12) {
+                app_config.config["TZoffset"] = tzo;
+            } else {
+#ifdef DEBUG_PRINTS
+                Serial.println(F("brewstatusTZoffset is not between -11 and 12!"));
+#endif
+                all_settings_valid = false;
+            }
         }
     }
 
@@ -239,20 +258,6 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("brewstatusTZoffset")) {
-        if (server.arg("brewstatusTZoffset").length() > 0 && server.arg("brewstatusTZoffset").length() <= 3 ) {
-            float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
-            if(tzoffset >= -12.0 && tzoffset <= 12.0) {
-                app_config.config["brewstatusTZoffset"] = tzoffset;
-            } else {
-#ifdef DEBUG_PRINTS
-                Serial.println(F("brewstatusTZoffset is not between -12 and 12!"));
-#endif
-                all_settings_valid = false;
-            }
-        }
-    }
-
     // Google Sheets Settings
     if (server.hasArg("scriptsURL")) {
         if (server.arg("scriptsURL").length() <= 255) {
@@ -331,8 +336,11 @@ void processConfig() {
             app_config.config["mqttBrokerIP"] = server.arg("mqttBrokerIP").c_str();
             mqtt_broker_update = true;
         }
-        else {
+        else if (server.arg("mqttBrokerIP").length() < 2) {
             app_config.config["mqttBrokerIP"] = "";
+        }
+        else {
+            all_settings_valid = false;
         }
     }
 
@@ -581,8 +589,20 @@ void http_json() {
 // settings_json is intended to be used to build the "Change Settings" page
 void settings_json() {
     // Not sure if I want to leave allow-origin here, but for now it's OK.
+    //
+    // Code modified to bundle an all_valid setting on end of json string to allow
+    // javascript code to determine if a bad config value was passed.
+    // Seems like there should be a cleaner way to do this but it works for now.
+    char json_string[strlen(app_config.config.dump().c_str())+16];
+    json_string[0] = {'\0'};
+    strncat(json_string,app_config.config.dump().c_str(),strlen(app_config.config.dump().c_str())-1);
+    strcat(json_string,",\"all_valid\":");
+    strcat(json_string,all_valid);
+    strcat(json_string,"}");
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", app_config.config.dump().c_str());
+    //server.send(200, "application/json", app_config.config.dump().c_str());
+    server.send(200, "application/json", json_string);
+    all_valid[0] = '1';
 }
 
 
