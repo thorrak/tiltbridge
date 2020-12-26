@@ -390,7 +390,7 @@ void processConfig() {
 
 
     if (server.hasArg("mqttTopic")) {
-        if (server.arg("mqttTopic").length() <= 255){
+        if (server.arg("mqttTopic").length() <= 30){
             if (server.arg("mqttTopic").length() <= 2) {
                 app_config.config["mqttTopic"] = "tiltbridge";
             }else{
