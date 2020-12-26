@@ -26,7 +26,7 @@ void jsonConfigHandler::initialize() {
             {"invertTFT", false},
             {"update_spiffs", false},
             {"tempUnit", "F"},
-            {"smoothFactor",40},
+            {"smoothFactor",60},
 
             // Global Calibration settings
             {"applyCalibration", false},

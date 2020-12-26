@@ -81,11 +81,11 @@
                             </div>
                             <div class="form-group row">
                                 <label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Valid range 0 to 99. Setting affects time constant of
-                                exponentially weighted moving average filter applied to specific gravity reading. 
-                                A value of 0 is equivalent to no averaging. Higher values mean more averaging.
-                                A value of 40 gives time constant of just over 5 seconds while a value of 99 results in over 8 minutes.">Specific Gravity Averaging</label>
+                                exponentially weighted moving average filter applied to specific gravity reading. In response to a step change, the filtered value should 
+                                reach steady state after ~ 5 time constants. Setting of 0 is equivalent to no averaging (filtering off) while higher values mean more averaging.
+                                Setting of 60 gives time constant of just over 5 seconds while 99 results in ~ 5 minutes.">Specific Gravity Averaging</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="smoothFactor" id="smoothFactor" placeholder="40" :value="settings.smoothFactor">
+                                    <input type="text" class="form-control" name="smoothFactor" id="smoothFactor" placeholder="60" :value="settings.smoothFactor">
                                 </div>
                             </div>
                             <div class="form-group row">
