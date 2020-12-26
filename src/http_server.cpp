@@ -146,6 +146,22 @@ void processConfig() {
         }
     }
 
+    if (server.hasArg("TZoffset")) {
+        if (server.arg("TZoffset").length() > 0 && server.arg("TZoffset").length() <= 3 ) {
+            int tzo;
+            bool is_int;
+            isInteger(server.arg("TZoffset").c_str(),is_int,tzo);
+            if(tzo >= -11 && tzo <= 12) {
+                app_config.config["TZoffset"] = tzo;
+            } else {
+#ifdef DEBUG_PRINTS
+                Serial.println(F("brewstatusTZoffset is not between -11 and 12!"));
+#endif
+                all_settings_valid = false;
+            }
+        }
+    }
+
     if (server.hasArg("smoothFactor")) {
         int sf;
         bool is_int;
@@ -239,20 +255,6 @@ void processConfig() {
             app_config.config["brewstatusPushEvery"] = push_every;
         } else {
             all_settings_valid = false;
-        }
-    }
-
-    if (server.hasArg("brewstatusTZoffset")) {
-        if (server.arg("brewstatusTZoffset").length() > 0 && server.arg("brewstatusTZoffset").length() <= 3 ) {
-            float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
-            if(tzoffset >= -12.0 && tzoffset <= 12.0) {
-                app_config.config["brewstatusTZoffset"] = tzoffset;
-            } else {
-#ifdef DEBUG_PRINTS
-                Serial.println(F("brewstatusTZoffset is not between -12 and 12!"));
-#endif
-                all_settings_valid = false;
-            }
         }
     }
 
