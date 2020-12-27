@@ -156,7 +156,7 @@ void processConfig() {
             int tzo;
             bool is_int;
             isInteger(server.arg("TZoffset").c_str(),is_int,tzo);
-            if(tzo >= -11 && tzo <= 12) {
+            if(tzo >= -12 && tzo <= 14) {
                 app_config.config["TZoffset"] = tzo;
             } else {
 #ifdef DEBUG_PRINTS
