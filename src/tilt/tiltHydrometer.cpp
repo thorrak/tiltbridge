@@ -145,7 +145,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         smoothed_i_grav_100 = i_grav * 100;
     } else{
         // Effective smoothing filter constant is alpha / 100
-        // Ratio must be between 0 - 1 and lower values provide more smoothing.
+        // Ratio must be between 0 - 1 and higher values provide more smoothing in this implementation.
         int alpha = (100 - app_config.config["smoothFactor"].get<int>());
         smoothed_i_grav_100 = (alpha * i_grav * 100 + (100 - alpha) * (last_grav_value_100 * 100) / 100 + 100 / 2) / 100;
         last_grav_value_100 = smoothed_i_grav_100;
