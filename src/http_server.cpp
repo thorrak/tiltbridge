@@ -47,14 +47,11 @@ void isInteger(const char* s, bool &is_int, int32_t &int_value) {
 }
 
 bool isvalidAddress(const char* s) {
-    //Rudimentary check that the address is of the form aaa.bbb.ccc
-    //or 111.222.333.444 and all characters are alphanumeric
-    if(strlen(s) > 255){
+    //Rudimentary check that the address is of the form aaa.bbb.ccc or
+    //aaa.bbb (if DNS) or 111.222.333.444 (if IP). Will not currently catch if integer > 254 
+    // is input when using IP address
+    if(strlen(s) > 253){
         return false;
-    }
-    for (int i=0; i < strlen(s); i++) {
-        if (!isalnum(s[i]) && s[i]!='.')
-            return false;
     }
     int seg_ct = 0;
     char ts[strlen(s)+1];
@@ -64,16 +61,24 @@ bool isvalidAddress(const char* s) {
         ++seg_ct;
         item = strtok(NULL, ".");
     }
-    if ((seg_ct == 3) || (seg_ct == 4)) {
-        return true;
-    }
-    else {
+    if (( s[0] == '-' ) || ( s[0] == '.' ) || ( s[strlen(s)-1] == '-' ) || ( s[strlen(s)-1] == '.' ))
         return false;
+    for (int i=0; i < strlen(s); i++) {
+        if (seg_ct == 2 || seg_ct == 3) { //must be a DNS name if true
+            if ( !isalnum(s[i]) && s[i] != '.' && s[i] != '-' ) 
+                return false;
+        } else if (seg_ct == 4) { //must be an IP if true
+            if ( !isdigit(s[i]) && s[i] != '.' )
+                return false;
+        } else {
+            return false;
+        }
     }
+    return true;
 }
 
 bool isValidmdnsName(const char* mdns_name) {
-    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-' || mdns_name[strlen(mdns_name)-1] == '-')
         return false;
     for (int i=0; i < strlen(mdns_name); i++) {
         if ( !isalnum(mdns_name[i]) && mdns_name[i] != '-' )

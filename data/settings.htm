@@ -65,7 +65,8 @@
                         <p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will cause the TiltBridge to restart.</p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
-                                <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
+                                <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
+                                - 31 characters.">mDNS ID</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mdnsID" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
                                 </div>
@@ -399,7 +400,7 @@
                             </div>
 
                             <div class="form-group row">
-                                <label for="mqttBrokerPort" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Broker Server Port Number">MQTT Broker Port</label>
+                                <label for="mqttBrokerPort" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Broker Server Port Number. Must be > 1024 and < 65535.">MQTT Broker Port</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mqttBrokerPort" id="mqttBrokerPort" placeholder="1883" :value="settings.mqttBrokerPort">
                                 </div>

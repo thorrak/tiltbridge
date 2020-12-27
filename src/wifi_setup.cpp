@@ -45,7 +45,7 @@ void configModeCallback(WiFiManager *myWiFiManager) {
 
 // Not sure if this is sufficient to test for validity
 bool isValidmDNSName(const char* mdns_name) {
-    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-' || mdns_name[strlen(mdns_name)-1] == '-')
         return false;
     for (int i=0; i < strlen(mdns_name); i++) {
         // For now, we're just checking that every character in the string is alphanumeric. May need to add more validation here.
