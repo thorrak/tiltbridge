@@ -63,11 +63,6 @@
 </main>
 
 <script>
-    function sleep(delay) {
-    var start = new Date().getTime();
-    while (new Date().getTime() < start + delay);
-    }
-
     function asleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
