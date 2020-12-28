@@ -63,7 +63,12 @@
 </main>
 
 <script>
-    function sleep(ms) {
+    function sleep(delay) {
+    var start = new Date().getTime();
+    while (new Date().getTime() < start + delay);
+    }
+
+    function asleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
@@ -79,19 +84,20 @@
         });
     }
 
-    function redirect_now() {
-        getmdns("/settings/json/")
+    var newmDNS;
+    getmdns('/settings/json/')
             .then(function(result) {
-                window.location.replace("http://" + result.mdnsID + ".local");
+                newmDNS = result.mdnsID;
+                //console.log(newmDNS);
             })
+
+    function redirect_now() {
+                window.location.replace("http://" + newmDNS + ".local");
     }
 
     async function delayed_redirect() {
-        await sleep(20000);
-        getmdns("/settings/json/")
-            .then(function(result) {
-                window.location.replace("http://" + result.mdnsID + ".local");
-            })
+        await asleep(20000);
+        window.location.replace("http://" + newmDNS + ".local");
     }
 
     delayed_redirect();

@@ -579,9 +579,7 @@ void trigger_wifi_reset() {
 
 void trigger_restart() {
     loadFromSpiffs("/restarting.htm");    // Send a message to the user to let them know what is going on
-    delay(1000);                                // Wait 1 second to let everything send
-    tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    ESP.restart();         // Restart the TiltBridge
+    http_server.restart_requested = true;
 }
 
 void http_json() {
