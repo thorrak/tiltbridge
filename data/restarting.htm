@@ -9,10 +9,8 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-
-    <meta http-equiv="refresh" content="20;url=/" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
     <!-- Custom styles for this template -->
     <style>
@@ -59,10 +57,45 @@
 
     <p>
         Your TiltBridge is currently being restarted. You should be automatically redirected to the TiltBridge's main
-        dashboard in 20 seconds or you can <a href="/">click here</a> once the TiltBridge has finished reconnecting.
+        dashboard in 20 seconds or you can <a href="#" onclick="redirect_now()">click here</a> once the TiltBridge has finished reconnecting.
     </p>
 
 </main>
+
+<script>
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function getmdns(url) {
+        return new Promise(function(resolve) {
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+                resolve(JSON.parse(xhr.responseText));
+            };
+            xhr.open('GET', url);
+            xhr.overrideMimeType("application/json");         
+            xhr.send();
+        });
+    }
+
+    function redirect_now() {
+        getmdns("/settings/json/")
+            .then(function(result) {
+                window.location.replace("http://" + result.mdnsID + ".local");
+            })
+    }
+
+    async function delayed_redirect() {
+        await sleep(20000);
+        getmdns("/settings/json/")
+            .then(function(result) {
+                window.location.replace("http://" + result.mdnsID + ".local");
+            })
+    }
+
+    delayed_redirect();
+</script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
