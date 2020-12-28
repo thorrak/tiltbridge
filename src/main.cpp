@@ -110,7 +110,8 @@ void loop() {
     data_sender.process();
     lcd.check_screen();
     http_server.handleClient();
-    if (http_server.restart_requested){ // Need to let the main loop cycle to ensure that the mDNS name can be grabbed from /settings/json/ if before restart.
+    if (http_server.restart_requested){ // Restart handling put in main loop to ensure that client has opportunity 
+                                        // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
         if(restart_time <= xTaskGetTickCount()) {
             tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
             ESP.restart();         // Restart the TiltBridge
