@@ -30,7 +30,7 @@ jsonConfigHandler app_config;
 #ifdef DEBUG_PRINTS
 uint64_t trigger_next_data_send = 0;
 #endif
-
+uint64_t restart_time = 0;
 
 #include <driver/i2c.h>
 #include <esp_log.h>
@@ -110,5 +110,14 @@ void loop() {
     data_sender.process();
     lcd.check_screen();
     http_server.handleClient();
+    if (http_server.restart_requested){ // Restart handling put in main loop to ensure that client has opportunity 
+                                        // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
+        if(restart_time <= xTaskGetTickCount()) {
+            tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
+            ESP.restart();         // Restart the TiltBridge
+        }
+    } else {
+        restart_time = xTaskGetTickCount() + 5000;
+    }
     yield();
 }
