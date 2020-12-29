@@ -123,12 +123,16 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     double d_grav;
     double smoothed_d_grav;
     uint32_t smoothed_i_grav_100;
+    bool is_pro = tilt_pro;  //Temporarily store whether the model is Pro so we can reset smoothing filter if changed.
 
     if(i_temp==999) {  // If the temp is 999, the SG actually represents the firmware version of the Tilt.
         version_code = i_grav;
         return true;  // This also has the (desired) side effect of not logging the 999 "temperature" and 1.00x "gravity"
-    } else if(i_grav >= 5000)  // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
+    } else if(i_grav >= 5000)  { // If we received a gravity over 5000 then this Tilt is high resolution (Tilt Pro)
         tilt_pro = true;
+    } else if(i_grav < 5000) {
+        tilt_pro = false;
+    }
 
     // For Tilt Pros, we have to scale the data down
     const float grav_scalar = (tilt_pro) ? 10000.0f : 1000.0f;
@@ -139,13 +143,13 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     // The smoothing calculations are done using 32 bit unsigned int and multipling raw
     // value by 100 to keep precision.
 
-    if (!m_loaded) {
+    if (!m_loaded || is_pro != tilt_pro ) {
         //First pass through after loading tilt, last_grav_value value must be initalized.
         last_grav_value_100 = i_grav * 100;
         smoothed_i_grav_100 = i_grav * 100;
-    } else{
+    } else {
         // Effective smoothing filter constant is alpha / 100
-        // Ratio must be between 0 - 1 and lower values provide more smoothing.
+        // Ratio must be between 0 - 1.
         int alpha = (100 - app_config.config["smoothFactor"].get<int>());
         smoothed_i_grav_100 = (alpha * i_grav * 100 + (100 - alpha) * (last_grav_value_100 * 100) / 100 + 100 / 2) / 100;
         last_grav_value_100 = smoothed_i_grav_100;

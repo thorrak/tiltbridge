@@ -33,6 +33,8 @@ httpServer http_server;
 
 WebServer server(80);
 
+char all_valid[2] = "1";
+
 void trigger_restart();
 
 void isInteger(const char* s, bool &is_int, int32_t &int_value) {
@@ -45,14 +47,11 @@ void isInteger(const char* s, bool &is_int, int32_t &int_value) {
 }
 
 bool isvalidAddress(const char* s) {
-    //Rudimentary check that the address is of the form aaa.bbb.ccc
-    //or 111.222.333.444 and all characters are alphanumeric
-    if(strlen(s) > 255){
+    //Rudimentary check that the address is of the form aaa.bbb.ccc or
+    //aaa.bbb (if DNS) or 111.222.333.444 (if IP). Will not currently catch if integer > 254 
+    // is input when using IP address
+    if(strlen(s) > 253){
         return false;
-    }
-    for (int i=0; i < strlen(s); i++) {
-        if (!isalnum(s[i]) && s[i]!='.')
-            return false;
     }
     int seg_ct = 0;
     char ts[strlen(s)+1];
@@ -62,16 +61,24 @@ bool isvalidAddress(const char* s) {
         ++seg_ct;
         item = strtok(NULL, ".");
     }
-    if ((seg_ct == 3) || (seg_ct == 4)) {
-        return true;
-    }
-    else {
+    if (( s[0] == '-' ) || ( s[0] == '.' ) || ( s[strlen(s)-1] == '-' ) || ( s[strlen(s)-1] == '.' ))
         return false;
+    for (int i=0; i < strlen(s); i++) {
+        if (seg_ct == 2 || seg_ct == 3) { //must be a DNS name if true
+            if ( !isalnum(s[i]) && s[i] != '.' && s[i] != '-' ) 
+                return false;
+        } else if (seg_ct == 4) { //must be an IP if true
+            if ( !isdigit(s[i]) && s[i] != '.' )
+                return false;
+        } else {
+            return false;
+        }
     }
+    return true;
 }
 
 bool isValidmdnsName(const char* mdns_name) {
-    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-' || mdns_name[strlen(mdns_name)-1] == '-')
         return false;
     for (int i=0; i < strlen(mdns_name); i++) {
         if ( !isalnum(mdns_name[i]) && mdns_name[i] != '-' )
@@ -91,6 +98,7 @@ void processConfigError() {
 #ifdef DEBUG_PRINTS
     Serial.println("processConfigError!");
 #endif
+    all_valid[0] = '0';
     redirectToConfig();
 }
 
@@ -140,6 +148,22 @@ void processConfig() {
             restart_tiltbridge = true;
         } else {
             all_settings_valid = false;
+        }
+    }
+
+    if (server.hasArg("TZoffset")) {
+        if (server.arg("TZoffset").length() > 0 && server.arg("TZoffset").length() <= 3 ) {
+            int tzo;
+            bool is_int;
+            isInteger(server.arg("TZoffset").c_str(),is_int,tzo);
+            if(tzo >= -12 && tzo <= 14) {
+                app_config.config["TZoffset"] = tzo;
+            } else {
+#ifdef DEBUG_PRINTS
+                Serial.println(F("brewstatusTZoffset is not between -11 and 12!"));
+#endif
+                all_settings_valid = false;
+            }
         }
     }
 
@@ -239,20 +263,6 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("brewstatusTZoffset")) {
-        if (server.arg("brewstatusTZoffset").length() > 0 && server.arg("brewstatusTZoffset").length() <= 3 ) {
-            float tzoffset = strtof(server.arg("brewstatusTZoffset").c_str(), nullptr);
-            if(tzoffset >= -12.0 && tzoffset <= 12.0) {
-                app_config.config["brewstatusTZoffset"] = tzoffset;
-            } else {
-#ifdef DEBUG_PRINTS
-                Serial.println(F("brewstatusTZoffset is not between -12 and 12!"));
-#endif
-                all_settings_valid = false;
-            }
-        }
-    }
-
     // Google Sheets Settings
     if (server.hasArg("scriptsURL")) {
         if (server.arg("scriptsURL").length() <= 255) {
@@ -331,8 +341,11 @@ void processConfig() {
             app_config.config["mqttBrokerIP"] = server.arg("mqttBrokerIP").c_str();
             mqtt_broker_update = true;
         }
-        else {
+        else if (server.arg("mqttBrokerIP").length() < 2) {
             app_config.config["mqttBrokerIP"] = "";
+        }
+        else {
+            all_settings_valid = false;
         }
     }
 
@@ -390,7 +403,7 @@ void processConfig() {
 
 
     if (server.hasArg("mqttTopic")) {
-        if (server.arg("mqttTopic").length() <= 255){
+        if (server.arg("mqttTopic").length() <= 30){
             if (server.arg("mqttTopic").length() <= 2) {
                 app_config.config["mqttTopic"] = "tiltbridge";
             }else{
@@ -566,9 +579,7 @@ void trigger_wifi_reset() {
 
 void trigger_restart() {
     loadFromSpiffs("/restarting.htm");    // Send a message to the user to let them know what is going on
-    delay(1000);                                // Wait 1 second to let everything send
-    tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    ESP.restart();         // Restart the TiltBridge
+    http_server.restart_requested = true;
 }
 
 void http_json() {
@@ -581,8 +592,20 @@ void http_json() {
 // settings_json is intended to be used to build the "Change Settings" page
 void settings_json() {
     // Not sure if I want to leave allow-origin here, but for now it's OK.
+    //
+    // Code modified to bundle an all_valid setting on end of json string to allow
+    // javascript code to determine if a bad config value was passed.
+    // Seems like there should be a cleaner way to do this but it works for now.
+    char json_string[strlen(app_config.config.dump().c_str())+16];
+    json_string[0] = {'\0'};
+    strncat(json_string,app_config.config.dump().c_str(),strlen(app_config.config.dump().c_str())-1);
+    strcat(json_string,",\"all_valid\":");
+    strcat(json_string,all_valid);
+    strcat(json_string,"}");
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", app_config.config.dump().c_str());
+    //server.send(200, "application/json", app_config.config.dump().c_str());
+    server.send(200, "application/json", json_string);
+    all_valid[0] = '1';
 }
 
 

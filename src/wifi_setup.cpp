@@ -45,7 +45,7 @@ void configModeCallback(WiFiManager *myWiFiManager) {
 
 // Not sure if this is sufficient to test for validity
 bool isValidmDNSName(const char* mdns_name) {
-    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-')
+    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-' || mdns_name[strlen(mdns_name)-1] == '-')
         return false;
     for (int i=0; i < strlen(mdns_name); i++) {
         // For now, we're just checking that every character in the string is alphanumeric. May need to add more validation here.
@@ -111,12 +111,6 @@ void init_wifi() {
         app_config.save();
     }
 
-//    WiFi.mode(WIFI_STA);
-//    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-//    WiFi.setHostname(mdns_id.c_str());
-//    WiFi.begin();
-//    delay(500);
-
     if (!MDNS.begin(mdns_id.c_str())) {
 //        Serial.println("Error setting up MDNS responder!");
     }
@@ -136,6 +130,12 @@ void init_wifi() {
     strcat(ip_address_url,"/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
+    // In order to have the system register the mDNS name in DHCP table, it is necessary to flush config
+    // and reinitialize Wifi connection. If this is not done, the DHCP hostname is always just registered 
+    // as espressif.  See: https://github.com/espressif/arduino-esp32/issues/2537
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(mdns_id.c_str());
+    WiFi.begin();
     delay(1000);
 }
 

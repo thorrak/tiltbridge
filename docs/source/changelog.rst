@@ -2,6 +2,16 @@ Changelog
 #########
 
 
+v0.2.3 - Dec 28, 2020 - Performance Tweaks & Home Assistant Support
+-------------------------------------------------------------------
+
+- Added specific MQTT subtopics to support Home Assistant (Thanks Pletch/Kidmock!)
+- Added Google Sheets timezone support (Thanks Pletch!)
+- Fix edge case involving two Tilts of the same color, but of different hardware versions (Thanks Pletch!)
+- Fix race condition involving mDNS updates (Thanks Pletch!)
+- Clean up favicon links (Thanks Pletch!)
+
+
 v0.2.2 - Dec 22, 2020 - MQTT and Tilt Pro
 -----------------------------------------
 

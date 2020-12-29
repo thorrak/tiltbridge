@@ -9,8 +9,8 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
     <style>
         body {padding-top: 5rem; padding-bottom: 5rem;}
@@ -65,9 +65,16 @@
                         <p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will cause the TiltBridge to restart.</p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
-                                <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/)">mDNS ID</label>
+                                <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
+                                - 31 characters.">mDNS ID</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mdnsID" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="TZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Time zone offset from GMT (in hours)">Time Zone Offset</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" name="TZoffset" id="TZoffset" placeholder="-5" :value="settings.TZoffset">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -81,11 +88,11 @@
                             </div>
                             <div class="form-group row">
                                 <label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Valid range 0 to 99. Setting affects time constant of
-                                exponentially weighted moving average filter applied to specific gravity reading. 
-                                A value of 0 is equivalent to no averaging. Higher values mean more averaging.
-                                A value of 40 gives time constant of just over 5 seconds while a value of 99 results in over 8 minutes.">Specific Gravity Averaging</label>
+                                exponentially weighted moving average filter applied to specific gravity reading. In response to a step change, the filtered value should 
+                                reach steady state after ~ 5 time constants. Setting of 0 is equivalent to no averaging (filtering off) while higher values mean more averaging.
+                                Setting of 60 gives time constant of just over 5 seconds while 99 results in ~ 5 minutes.">Specific Gravity Averaging</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="smoothFactor" id="smoothFactor" placeholder="40" :value="settings.smoothFactor">
+                                    <input type="text" class="form-control" name="smoothFactor" id="smoothFactor" placeholder="60" :value="settings.smoothFactor">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -355,13 +362,6 @@
                                     <input type="text" class="form-control" name="brewstatusPushEvery" id="brewstatusPushEvery" placeholder="30" :value="settings.brewstatusPushEvery">
                                 </div>
                             </div>
-
-                            <div class="form-group row">
-                                <label for="brewstatusTZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Time zone offset from UTC (in hours)">Time Zone Offset</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="brewstatusTZoffset" id="brewstatusTZoffset" placeholder="-5" :value="settings.brewstatusTZoffset">
-                                </div>
-                            </div>
                             <div class="form-group row">
                                 <div class="col-sm-5"></div>
                                 <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
@@ -384,9 +384,12 @@
                             <a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker, delete
                             the MQTT Broker IP. <br><br>
                         
-                            Message payload is json format and is formatted as follows: <br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;{"color":"Tilt Color","device":"mdnsID","gravity":#.#####,"gravity_unit":"G","temp":##.#,"temp_unit":"F"}
-                            <br>
+                            MQTT implementation supports <a href="https://www.home-assistant.io/">Home Assistant</a> Auto Discovery of temperature and
+                            specific gravity sensors.<br><br>
+
+                            General message payload is json and is formatted as follows: <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Topic: topic/tilt_color<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Payload: {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
                         </p>
                         <form action="/settings/update/" method="POST" enctype="multipart/form-data">
                             <div class="form-group row">
@@ -397,7 +400,7 @@
                             </div>
 
                             <div class="form-group row">
-                                <label for="mqttBrokerPort" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Broker Server Port Number">MQTT Broker Port</label>
+                                <label for="mqttBrokerPort" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Broker Server Port Number. Must be > 1024 and < 65535.">MQTT Broker Port</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mqttBrokerPort" id="mqttBrokerPort" placeholder="1883" :value="settings.mqttBrokerPort">
                                 </div>
@@ -418,7 +421,7 @@
                             </div>
 
                             <div class="form-group row">
-                                <label for="mqttTopic" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Topic to publish data to.">MQTT Topic</label>
+                                <label for="mqttTopic" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Topic to publish data to. Limited to maximum of 30 characters.">MQTT Topic</label>
                                 <div class="col-sm-8">
                                     <input type="text" class="form-control" name="mqttTopic" id="mqttTopic" placeholder="tiltbridge" :value="settings.mqttTopic">
                                 </div>
@@ -473,6 +476,7 @@
                 xhr.open('GET', '/settings/json/');
                 xhr.onload = function () {
                     self.settings = JSON.parse(xhr.responseText);
+                    if ( self.settings.all_valid == "0" ) window.alert("Invalid value for one or more parameters!  Please confirm settings and resubmit");
                     if ( self.settings.invertTFT ) document.getElementById("invertTFT").checked = true;
                     if ( self.settings.applyCalibration ) document.getElementById("applyCalibration").checked = true;
                     if ( self.settings.tempCorrect ) document.getElementById("tempCorrect").checked = true;
