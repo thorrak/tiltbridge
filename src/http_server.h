@@ -9,7 +9,7 @@
 class httpServer {
 public:
     void init();
-    void handleClient();
+    //void handleClient();
     bool restart_requested = false;
 };
 

@@ -109,7 +109,6 @@ void loop() {
     reconnectIfDisconnected();  // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
     lcd.check_screen();
-    http_server.handleClient();
     if (http_server.restart_requested){ // Restart handling put in main loop to ensure that client has opportunity 
                                         // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
         if(restart_time <= xTaskGetTickCount()) {
