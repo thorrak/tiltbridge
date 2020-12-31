@@ -56,7 +56,7 @@ public:
     uint16_t gravity;
     uint16_t gravity_smoothed;
     uint16_t version_code;
-    uint32_t last_grav_value_100;
+    uint32_t last_grav_value_1000;
 
     uint8_t weeks_since_last_battery_change;
 
