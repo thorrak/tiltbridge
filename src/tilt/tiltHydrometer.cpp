@@ -122,7 +122,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     double d_temp;
     double d_grav;
     double smoothed_d_grav;
-    uint32_t smoothed_i_grav_100;
+    uint32_t smoothed_i_grav_1000;
     bool is_pro = tilt_pro;  //Temporarily store whether the model is Pro so we can reset smoothing filter if changed.
 
     if(i_temp==999) {  // If the temp is 999, the SG actually represents the firmware version of the Tilt.
@@ -141,20 +141,20 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     // Implementation of a simple exponential smoothing filter to provide some averaging of 
     // gravity values received from the sensor between display updates / data reporting.
     // The smoothing calculations are done using 32 bit unsigned int and multipling raw
-    // value by 100 to keep precision.
+    // value by 1000 to keep precision.
     // filtered output = (alpha * sensor_value + (alphaScale - alpha) * lastOutput) / alphaScale
 
     if (!m_loaded || is_pro != tilt_pro ) {
         //First pass through after loading tilt, last_grav_value value must be initalized.
-        last_grav_value_100 = i_grav * 100;
-        smoothed_i_grav_100 = i_grav * 100;
+        last_grav_value_1000 = i_grav * 1000;
+        smoothed_i_grav_1000 = i_grav * 1000;
     } else {
         // Effective smoothing filter constant is alpha / 100
         // Ratio must be between 0 - 1.
         int alpha = (100 - app_config.config["smoothFactor"].get<int>());
         int alphascale = 100;
-        smoothed_i_grav_100 = (alpha * i_grav * 100 + (alphascale - alpha) * last_grav_value_100) / alphascale;
-        last_grav_value_100 = smoothed_i_grav_100;
+        smoothed_i_grav_1000 = (alpha * i_grav * 1000 + (alphascale - alpha) * last_grav_value_1000) / alphascale;
+        last_grav_value_1000 = smoothed_i_grav_1000;
     }
 
         //Serial.print("Raw grav = ");
@@ -171,7 +171,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
     d_temp = (double) i_temp / temp_scalar;
     d_grav = (double) i_grav / grav_scalar;
-    smoothed_d_grav = (double) smoothed_i_grav_100 / grav_scalar / 100; 
+    smoothed_d_grav = (double) smoothed_i_grav_1000 / grav_scalar / 1000; 
 
     nlohmann::json cal_params;
 
