@@ -142,6 +142,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     // gravity values received from the sensor between display updates / data reporting.
     // The smoothing calculations are done using 32 bit unsigned int and multipling raw
     // value by 100 to keep precision.
+    // filtered output = (alpha * sensor_value + (alphaScale - alpha) * lastOutput) / alphaScale
 
     if (!m_loaded || is_pro != tilt_pro ) {
         //First pass through after loading tilt, last_grav_value value must be initalized.
@@ -151,7 +152,8 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         // Effective smoothing filter constant is alpha / 100
         // Ratio must be between 0 - 1.
         int alpha = (100 - app_config.config["smoothFactor"].get<int>());
-        smoothed_i_grav_100 = (alpha * i_grav * 100 + (100 - alpha) * (last_grav_value_100 * 100) / 100 + 100 / 2) / 100;
+        int alphascale = 100;
+        smoothed_i_grav_100 = (alpha * i_grav * 100 + (alphascale - alpha) * last_grav_value_100) / alphascale;
         last_grav_value_100 = smoothed_i_grav_100;
     }
 
