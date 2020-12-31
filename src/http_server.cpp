@@ -564,7 +564,7 @@ void favicon_from_spiffs(AsyncWebServerRequest *request) {
 }
 
 #ifndef DISABLE_OTA_UPDATES
-void trigger_OTA(syncWebServerRequest *request) {
+void trigger_OTA(AsyncWebServerRequest *request) {
     loadFromSpiffs("/updating.htm", request);    // Send a message to the user to let them know what is going on
     app_config.config["update_spiffs"] = true;
     lcd.display_ota_update_screen();    // Trigger this here while everything else is waiting.
@@ -575,8 +575,7 @@ void trigger_OTA(syncWebServerRequest *request) {
 #endif
 
 void trigger_wifi_reset(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/wifi_reset.htm",request);    // Send a message to the user to let them know what is going on
-    delay(1000);                                // Wait 1 second to let everything send
+    loadFromSpiffs("/wifi_reset.htm",request);    // Send a message to the user to let them know what is going on                               // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     disconnect_from_wifi_and_restart();         // Reset the wifi settings
 }
