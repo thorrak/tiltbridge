@@ -5,6 +5,8 @@
 #ifndef TILTBRIDGE_HTTP_SERVER_H
 #define TILTBRIDGE_HTTP_SERVER_H
 
+#include "uptime.h"
+#include "version.h"
 
 class httpServer {
 public:
