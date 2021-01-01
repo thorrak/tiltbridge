@@ -1,493 +1,592 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>TiltBridge - Settings</title>
+    <meta name="description" content="TiltBridge is designed to allow your Tilt Hydrometer to connect directly to WiFi.">
+    <meta name="author" content="John Beeler">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <title>TiltBridge</title>
+
+    <link rel="canonical" href="https://www.tiltbridge.com/">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta name="apple-mobile-web-app-title" content="TiltBridge">
+    <meta name="application-name" content="TiltBridge">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+    <meta name="theme-color" content="#ffffff">
 
-    <style>
-        body {padding-top: 5rem; padding-bottom: 5rem;}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/sandstone/bootstrap.min.css"
+        integrity="sha384-zEpdAL7W11eTKeoBJK1g79kgl9qjP7g84KfK3AZsuonx38n8ad+f5ZgXtoSDxPOh" crossorigin="anonymous">
 
-        .row-padded {
-            padding: 0.75rem 1.25rem;
-        }
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
-    </style>
+    <link rel="stylesheet" href="/common.css">
+
 </head>
 
-<body>
+<body class="d-flex flex-column h-100">
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="/">TiltBridge</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsMain" aria-controls="navbarsMain" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
-    <div class="collapse navbar-collapse" id="navbarsMain">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="/">Home</a>
-            </li>
-            <li class="nav-item active">
-                <a class="nav-link" href="/settings/">Settings <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/calibration/">Calibration</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/about/">About</a>
-            </li>
-        </ul>
-    </div>
-</nav>
-
-<main role="main" class="container">
-
-    <h4>Update Settings</h4>
-
-
-    <div id="settingsapp">
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        TiltBridge Settings
-                    </h5>
-
-                    <div class="card-body">
-                        <p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will cause the TiltBridge to restart.</p>
-                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
-                            <div class="form-group row">
-                                <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
-                                - 31 characters.">mDNS ID</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="mdnsID" id="mdnsID" placeholder="tiltbridge" :value="settings.mdnsID">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="TZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Time zone offset from GMT (in hours)">Time Zone Offset</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="TZoffset" id="TZoffset" placeholder="-5" :value="settings.TZoffset">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="tempUnit" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Units used for temperature measurement">Temperature Units</label>
-                                <div class="col-sm-8">
-                                    <select class="form-control" name="tempUnit" id="tempUnit">
-                                        <option value="C" selected>Celsius (&deg;C)</option>
-                                        <option value="F">Fahrenheit (&deg;F)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Valid range 0 to 99. Setting affects time constant of
-                                exponentially weighted moving average filter applied to specific gravity reading. In response to a step change, the filtered value should 
-                                reach steady state after ~ 5 time constants. Setting of 0 is equivalent to no averaging (filtering off) while higher values mean more averaging.
-                                Setting of 60 gives time constant of just over 5 seconds while 99 results in ~ 5 minutes.">Specific Gravity Averaging</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="smoothFactor" id="smoothFactor" placeholder="60" :value="settings.smoothFactor">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="invertTFT" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Rotate TFT Display 180 degrees">Invert TFT Display</label>
-                                <div class="col-sm-8">
-                                    <input class="form-check-input" value="on" type="checkbox" id="invertTFT" name="invertTFT">
-                                    <input value="off" type="hidden" name="invertTFT">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
-
-                    </div>
-                </div>
-
+            <a class="navbar-brand" href="/">
+                <img src="/logo.png" width:34px;height:25px;>TiltBridge
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/settings/">Settings <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/calibration/">Calibration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/help/">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about/">About</a>
+                    </li>
+                </ul>
             </div>
-        </div>
+        </nav>
+    </header>
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Calibration Settings
-                    </h5>
+    <main role="main" class="flex-shrink-0">
 
-                    <div class="card-body">
-                        <p class="card-text">These settings control whether or not TiltBridge applies <a href="/calibration/">calibration</a> and temperature corrections to the Tilt reading before it is uploaded.</p>
-                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
-                            <div class="form-group row">
-                                <label for="applyCalibration" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Apply calibration to Tilt data">Enable Calibration</label>
-                                <div class="col-sm-8">
-                                    <div class="col-sm-8">
-                                        <input class="form-check-input" value="on" type="checkbox" id="applyCalibration" name="applyCalibration">
-                                        <input value="off" type="hidden" name="applyCalibration">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="tempCorrect" class="col-sm-4 form-check-label" data-toggle="tooltip" title="Apply temperature correction to Tilt data">Enable Temperature Correction to 60 &deg;F</label>
-                                <div class="col-sm-8">
-                                    <div class="col-sm-8">
-                                        <input class="form-check-input" value="on" type="checkbox" id="tempCorrect" name="tempCorrect">
-                                        <input value="off" type="hidden" name="tempCorrect">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
-                    </div>
+        <div class="container" id="templateapp"> <!-- App Container -->
+
+            <div class="card border-dark mb-3"> <!-- TiltBridge Settings Card -->
+
+				<h5 class="card-header">
+					TiltBridge Settings
+				</h5>
+
+				<div class="card-body">
+					<p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will
+						cause the TiltBridge to restart.</p>
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+						<div class="form-group row">
+							<label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
+						- 31 characters.">mDNS ID</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="mdnsID" id="mdnsID"
+									placeholder="tiltbridge" :value="settings.mdnsID">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="TZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Time zone offset from GMT (in hours)">Time Zone Offset</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="TZoffset" id="TZoffset"
+									placeholder="-5" :value="settings.TZoffset">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="tempUnit" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Units used for temperature measurement">Temperature Units</label>
+							<div class="col-sm-8">
+								<select class="form-control" name="tempUnit" id="tempUnit">
+									<option value="C" selected>Celsius (&deg;C)</option>
+									<option value="F">Fahrenheit (&deg;F)</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Valid range 0 to 99. Setting affects time constant of
+						exponentially weighted moving average filter applied to specific gravity reading. In response to a step change, the filtered value should 
+						reach steady state after ~ 5 time constants. Setting of 0 is equivalent to no averaging (filtering off) while higher values mean more averaging.
+						Setting of 60 gives time constant of just over 5 seconds while 99 results in ~ 5 minutes.">Specific
+								Gravity Averaging</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="smoothFactor" id="smoothFactor"
+									placeholder="60" :value="settings.smoothFactor">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="invertTFT" class="col-sm-4 form-check-label" data-toggle="tooltip"
+								title="Rotate TFT Display 180 degrees">Invert TFT Display</label>
+							<div class="col-sm-8">
+								<input class="form-check-input" value="on" type="checkbox" id="invertTFT"
+									name="invertTFT">
+								<input value="off" type="hidden" name="invertTFT">
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
+
                 </div>
+                
+            </div> <!-- TiltBridge Settings Card -->
 
-            </div>
-        </div>
+            <div class="card border-dark mb-3"> <!-- TiltBridge Calibration Card -->
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Local Target Settings
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">These settings control how TiltBridge talks to
-                            <a href="https://www.fermentrack.com/">Fermentrack</a> or <a href="https://www.brewpiremix.com/">BrewPi Remix</a>.
-                            To disable the push, delete the  URL.
-                        </p>
-                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
-                            <div class="form-group row">
-                                <label for="fermentrackURL" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Target URL. Delete to disable the push">Target URL</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="fermentrackURL" id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/" :value="settings.fermentrackURL">
-                                </div>
-                            </div>
+				<h5 class="card-header">
+					Calibration Settings
+				</h5>
 
-                            <div class="form-group row">
-                                <label for="fermentrackPushEvery" class="col-sm-3 col-form-label" data-toggle="tooltip" title="How often to push data (Range: 15 - 3600 seconds)">Push Frequency (s)</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="fermentrackPushEvery" id="fermentrackPushEvery" placeholder="30" :value="settings.fermentrackPushEvery">
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
-
-                    </div>
+				<div class="card-body">
+					<p class="card-text">These settings control whether or not TiltBridge applies <a
+							href="/calibration/">calibration</a> and temperature corrections to the Tilt reading
+						before it is uploaded.</p>
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+						<div class="form-group row">
+							<label for="applyCalibration" class="col-sm-4 form-check-label"
+								data-toggle="tooltip" title="Apply calibration to Tilt data">Enable
+								Calibration</label>
+							<div class="col-sm-8">
+								<div class="col-sm-8">
+									<input class="form-check-input" value="on" type="checkbox"
+										id="applyCalibration" name="applyCalibration">
+									<input value="off" type="hidden" name="applyCalibration">
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="tempCorrect" class="col-sm-4 form-check-label" data-toggle="tooltip"
+								title="Apply temperature correction to Tilt data">Enable Temperature Correction
+								to 60 &deg;F</label>
+							<div class="col-sm-8">
+								<div class="col-sm-8">
+									<input class="form-check-input" value="on" type="checkbox" id="tempCorrect"
+										name="tempCorrect">
+									<input value="off" type="hidden" name="tempCorrect">
+								</div>
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
                 </div>
-            </div>
-        </div>
+                
+            </div> <!-- TiltBridge Calibration Card -->
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Google Sheets Settings
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">
-                            These settings control how TiltBridge talks to Google Sheets. To understand how to set up
-                            this feature (as well as a better explanation of these options), please read the
-                            <a href="http://sheets.tiltbridge.com/">TiltBridge documentation here.</a>
-                        </p>
-                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
-                            <div class="form-group row">
-                                <label for="scriptsURL" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google Script URL</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="scriptsURL" id="scriptsURL" placeholder="https://script.google.com/.../" :value="settings.scriptsURL">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="scriptsEmail" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The Google Scripts email address associated with your deployment of the Tilt logging script">Google Script Email</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="scriptsEmail" id="scriptsEmail" placeholder="you@gmail.com" :value="settings.scriptsEmail">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_red" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the red Tilt will be written">Red Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_red" id="sheetName_red" placeholder="BeerName" :value="settings.sheetName_red">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_green" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the green Tilt will be written">Green Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_green" id="sheetName_green" placeholder="BeerName" :value="settings.sheetName_green">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_black" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the black Tilt will be written">Black Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_black" id="sheetName_black" placeholder="BeerName" :value="settings.sheetName_black">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_purple" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the purple Tilt will be written">Purple Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_purple" id="sheetName_purple" placeholder="BeerName" :value="settings.sheetName_purple">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_orange" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the orange Tilt will be written">Orange Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_orange" id="sheetName_orange" placeholder="BeerName" :value="settings.sheetName_orange">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_blue" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the blue Tilt will be written">Blue Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_blue" id="sheetName_blue" placeholder="BeerName" :value="settings.sheetName_blue">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_yellow" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the yellow Tilt will be written">Yellow Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_yellow" id="sheetName_yellow" placeholder="BeerName" :value="settings.sheetName_yellow">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label for="sheetName_pink" class="col-sm-3 col-form-label" data-toggle="tooltip" title="The name of the spreadsheet to which log points for the pink Tilt will be written">Pink Tilt Sheet Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="sheetName_pink" id="sheetName_pink" placeholder="BeerName" :value="settings.sheetName_pink">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
+            <div class="card border-dark mb-3"> <!-- TiltBridge Target Card -->
 
-                    </div>
+				<h5 class="card-header">
+					Local Target Settings
+				</h5>
+				<div class="card-body">
+					<p class="card-text">These settings control how TiltBridge talks to
+						<a href="https://www.fermentrack.com/">Fermentrack</a> or <a
+							href="https://www.brewpiremix.com/">BrewPi Remix</a>.
+						To disable the push, delete the URL.
+					</p>
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+						<div class="form-group row">
+							<label for="fermentrackURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Target URL. Delete to disable the push">Target URL</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="fermentrackURL"
+									id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/"
+									:value="settings.fermentrackURL">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="fermentrackPushEvery" class="col-sm-3 col-form-label"
+								data-toggle="tooltip"
+								title="How often to push data (Range: 15 - 3600 seconds)">Push Frequency
+								(s)</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="fermentrackPushEvery"
+									id="fermentrackPushEvery" placeholder="30"
+									:value="settings.fermentrackPushEvery">
+							</div>
+
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
+
                 </div>
-            </div>
-        </div>
+                
+            </div> <!-- TiltBridge Target Card -->
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Brewer's Friend Settings
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">
-                            These settings control how TiltBridge talks to <a href="http://www.brewersfriend.com/">Brewer's
-                            Friend.</a> With a premium account, Brewer's Friend supports logging from gravity sensors such
-                            as the Tilt Hydrometer. To find your API key, log into your Brewer's Friend account and go
-                            to Profile > Account. Your API key will be a string of letters and numbers (not a URL).
-                        </p>
-                        <form action="/settings/update/" method="POST">
-                            <div class="form-group row">
-                                <label for="brewersFriendKey" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Your Brewers Friend API key">Brewers Friend API Key</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="brewersFriendKey" id="brewersFriendKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewersFriendKey">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
+            <div class="card border-dark mb-3"> <!-- TiltBridge Google Card -->
 
-                    </div>
+				<h5 class="card-header">
+					Google Sheets Settings
+				</h5>
+				<div class="card-body">
+					<p class="card-text">
+						These settings control how TiltBridge talks to Google Sheets. To understand how to set
+						up
+						this feature (as well as a better explanation of these options), please read the
+						<a href="http://sheets.tiltbridge.com/">TiltBridge documentation here.</a>
+					</p>
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+						<div class="form-group row">
+							<label for="scriptsURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google
+								Script URL</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="scriptsURL" id="scriptsURL"
+									placeholder="https://script.google.com/.../" :value="settings.scriptsURL">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="scriptsEmail" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The Google Scripts email address associated with your deployment of the Tilt logging script">Google
+								Script Email</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="scriptsEmail" id="scriptsEmail"
+									placeholder="you@gmail.com" :value="settings.scriptsEmail">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_red" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the red Tilt will be written">Red
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_red" id="sheetName_red"
+									placeholder="BeerName" :value="settings.sheetName_red">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_green" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the green Tilt will be written">Green
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_green"
+									id="sheetName_green" placeholder="BeerName"
+									:value="settings.sheetName_green">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_black" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the black Tilt will be written">Black
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_black"
+									id="sheetName_black" placeholder="BeerName"
+									:value="settings.sheetName_black">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_purple" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the purple Tilt will be written">Purple
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_purple"
+									id="sheetName_purple" placeholder="BeerName"
+									:value="settings.sheetName_purple">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_orange" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the orange Tilt will be written">Orange
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_orange"
+									id="sheetName_orange" placeholder="BeerName"
+									:value="settings.sheetName_orange">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_blue" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the blue Tilt will be written">Blue
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_blue"
+									id="sheetName_blue" placeholder="BeerName" :value="settings.sheetName_blue">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_yellow" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the yellow Tilt will be written">Yellow
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_yellow"
+									id="sheetName_yellow" placeholder="BeerName"
+									:value="settings.sheetName_yellow">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label for="sheetName_pink" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="The name of the spreadsheet to which log points for the pink Tilt will be written">Pink
+								Tilt Sheet Name</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="sheetName_pink"
+									id="sheetName_pink" placeholder="BeerName" :value="settings.sheetName_pink">
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
+
                 </div>
-            </div>
-        </div>
+                
+            </div> <!-- TiltBridge Google Card -->
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Brewfather Settings
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">
-                            These settings control how TiltBridge talks to <a href="http://www.brewfather.net/">Brewfather</a>
-                            With a premium account, Brewfather supports logging from gravity sensors such
-                            as the Tilt Hydrometer. To find your API key, log into your Brewfather account and go
-                            to Settings > Custom Stream. Your Stream key will be a string of letters and numbers (not a URL).
-                        </p>
-                        <form action="/settings/update/" method="POST">
-                            <div class="form-group row">
-                                <label for="brewfatherKey" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Your Brewfather Stream key">Brewfather Stream key</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="brewfatherKey" id="brewfatherKey" placeholder="000ad814c6af391dee8f91" :value="settings.brewfatherKey">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
+            <div class="card border-dark mb-3"> <!-- TiltBridge BF Card -->
 
-                    </div>
+				<h5 class="card-header">
+					Brewer's Friend Settings
+				</h5>
+				<div class="card-body">
+					<p class="card-text">
+						These settings control how TiltBridge talks to <a
+							href="http://www.brewersfriend.com/">Brewer's
+							Friend.</a> With a premium account, Brewer's Friend supports logging from gravity
+						sensors such
+						as the Tilt Hydrometer. To find your API key, log into your Brewer's Friend account and
+						go
+						to Profile > Account. Your API key will be a string of letters and numbers (not a URL).
+					</p>
+					<form action="/settings/update/" method="POST">
+						<div class="form-group row">
+							<label for="brewersFriendKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Your Brewers Friend API key">Brewers Friend API Key</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="brewersFriendKey"
+									id="brewersFriendKey" placeholder="000ad814c6af391dee8f91"
+									:value="settings.brewersFriendKey">
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
                 </div>
+                
             </div>
-        </div>
 
+            <div class="card border-dark mb-3"> <!-- TiltBridge Brewfather Card -->
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        BrewStatus Settings
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">These settings control how TiltBridge talks to
-                            <a href="https://www.brewstat.us/">BrewStatus</a>. To disable pushing to BrewStatus, delete
-                            the BrewStatus URL.
-                        </p>
-                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
-                            <div class="form-group row">
-                                <label for="brewstatusURL" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus URL</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="brewstatusURL" id="brewstatusURL" placeholder="https://www.brewstat.us/tilt/xxxxxxxxxx/log" :value="settings.brewstatusURL">
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="brewstatusPushEvery" class="col-sm-3 col-form-label" data-toggle="tooltip" title="How often to push data to BrewStatus (Range: 30 - 3600 seconds)">Push Frequency (s)</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="brewstatusPushEvery" id="brewstatusPushEvery" placeholder="30" :value="settings.brewstatusPushEvery">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
-
-                    </div>
+				<h5 class="card-header">
+					Brewfather Settings
+				</h5>
+				<div class="card-body">
+					<p class="card-text">
+						These settings control how TiltBridge talks to <a
+							href="http://www.brewfather.net/">Brewfather</a>
+						With a premium account, Brewfather supports logging from gravity sensors such
+						as the Tilt Hydrometer. To find your API key, log into your Brewfather account and go
+						to Settings > Custom Stream. Your Stream key will be a string of letters and numbers
+						(not a URL).
+					</p>
+					<form action="/settings/update/" method="POST">
+						<div class="form-group row">
+							<label for="brewfatherKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Your Brewfather Stream key">Brewfather Stream key</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="brewfatherKey" id="brewfatherKey"
+									placeholder="000ad814c6af391dee8f91" :value="settings.brewfatherKey">
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
                 </div>
+                
             </div>
-        </div>
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        MQTT Settings
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">These settings control how TiltBridge publishes data to an
-                            <a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker, delete
-                            the MQTT Broker IP. <br><br>
-                        
-                            MQTT implementation supports <a href="https://www.home-assistant.io/">Home Assistant</a> Auto Discovery of temperature and
-                            specific gravity sensors.<br><br>
+            <div class="card border-dark mb-3"> <!-- TiltBridge BrewStatus Card -->
 
-                            General message payload is json and is formatted as follows: <br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Topic: topic/tilt_color<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Payload: {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
-                        </p>
-                        <form action="/settings/update/" method="POST" enctype="multipart/form-data">
-                            <div class="form-group row">
-                                <label for="mqttBrokerIP" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Broker Server address. Delete to disable pushing to MQTT">MQTT Broker Address</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="mqttBrokerIP" id="mqttBrokerIP" placeholder="DNS or IP address" :value="settings.mqttBrokerIP">
-                                </div>
-                            </div>
+				<h5 class="card-header">
+					BrewStatus Settings
+				</h5>
+				<div class="card-body">
+					<p class="card-text">These settings control how TiltBridge talks to
+						<a href="https://www.brewstat.us/">BrewStatus</a>. To disable pushing to BrewStatus,
+						delete
+						the BrewStatus URL.
+					</p>
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+						<div class="form-group row">
+							<label for="brewstatusURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus
+								URL</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="brewstatusURL" id="brewstatusURL"
+									placeholder="https://www.brewstat.us/tilt/xxxxxxxxxx/log"
+									:value="settings.brewstatusURL">
+							</div>
+						</div>
 
-                            <div class="form-group row">
-                                <label for="mqttBrokerPort" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Broker Server Port Number. Must be > 1024 and < 65535.">MQTT Broker Port</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="mqttBrokerPort" id="mqttBrokerPort" placeholder="1883" :value="settings.mqttBrokerPort">
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="mqttUsername" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Username if using authentication for MQTT">MQTT Username</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="mqttUsername" id="mqttUsername" placeholder="" :value="settings.mqttUsername">
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="mqttPassword" class="col-sm-3 col-form-label" data-toggle="tooltip" title="Password if using authentication for MQTT">MQTT Password</label>
-                                <div class="col-sm-8">
-                                    <input type="password" class="form-control" name="mqttPassword" id="mqttPassword" placeholder="" :value="settings.mqttPassword">
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="mqttTopic" class="col-sm-3 col-form-label" data-toggle="tooltip" title="MQTT Topic to publish data to. Limited to maximum of 30 characters.">MQTT Topic</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="mqttTopic" id="mqttTopic" placeholder="tiltbridge" :value="settings.mqttTopic">
-                                </div>
-
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="mqttPushEvery" class="col-sm-3 col-form-label" data-toggle="tooltip" title="How often to push data to MQTT (Range: 30 - 3600 seconds)">Push Frequency (s)</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control" name="mqttPushEvery" id="mqttPushEvery" placeholder="30" :value="settings.mqttPushEvery">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-sm-5"></div>
-                                <div class="col-sm-2"><button type="submit" class="btn btn-primary">Update</button></div>
-                            </div>
-                        </form>
-
-                    </div>
+						<div class="form-group row">
+							<label for="brewstatusPushEvery" class="col-sm-3 col-form-label"
+								data-toggle="tooltip"
+								title="How often to push data to BrewStatus (Range: 30 - 3600 seconds)">Push
+								Frequency (s)</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="brewstatusPushEvery"
+									id="brewstatusPushEvery" placeholder="30"
+									:value="settings.brewstatusPushEvery">
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
                 </div>
+                
             </div>
+
+            <div class="card border-dark mb-3"> <!-- TiltBridge MQTT Card -->
+
+				<h5 class="card-header">
+					MQTT Settings
+				</h5>
+				<div class="card-body">
+					<p class="card-text">These settings control how TiltBridge publishes data to an
+						<a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker,
+						delete
+						the MQTT Broker IP. <br><br>
+
+						MQTT implementation supports <a href="https://www.home-assistant.io/">Home Assistant</a>
+						Auto Discovery of temperature and
+						specific gravity sensors.<br><br>
+
+						General message payload is json and is formatted as follows: <br>
+						&nbsp;&nbsp;&nbsp;&nbsp;Topic: topic/tilt_color<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;Payload:
+						{"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
+					</p>
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+						<div class="form-group row">
+							<label for="mqttBrokerIP" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="MQTT Broker Server address. Delete to disable pushing to MQTT">MQTT
+								Broker Address</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="mqttBrokerIP" id="mqttBrokerIP"
+									placeholder="DNS or IP address" :value="settings.mqttBrokerIP">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="mqttBrokerPort" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="MQTT Broker Server Port Number. Must be > 1024 and < 65535.">MQTT Broker
+								Port</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="mqttBrokerPort"
+									id="mqttBrokerPort" placeholder="1883" :value="settings.mqttBrokerPort">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="mqttUsername" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Username if using authentication for MQTT">MQTT Username</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="mqttUsername" id="mqttUsername"
+									placeholder="" :value="settings.mqttUsername">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="mqttPassword" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="Password if using authentication for MQTT">MQTT Password</label>
+							<div class="col-sm-8">
+								<input type="password" class="form-control" name="mqttPassword"
+									id="mqttPassword" placeholder="" :value="settings.mqttPassword">
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label for="mqttTopic" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="MQTT Topic to publish data to. Limited to maximum of 30 characters.">MQTT
+								Topic</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="mqttTopic" id="mqttTopic"
+									placeholder="tiltbridge" :value="settings.mqttTopic">
+							</div>
+
+						</div>
+
+						<div class="form-group row">
+							<label for="mqttPushEvery" class="col-sm-3 col-form-label" data-toggle="tooltip"
+								title="How often to push data to MQTT (Range: 30 - 3600 seconds)">Push Frequency
+								(s)</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" name="mqttPushEvery" id="mqttPushEvery"
+									placeholder="30" :value="settings.mqttPushEvery">
+							</div>
+						</div>
+						<div class="row col-sm-12 justify-content-center">
+							<button type="submit" class="btn btn-primary">Update</button>
+						</div>
+					</form>
+                </div>
+                
+            </div> <!-- TiltBridge MQTT Card -->
+
+            <div class="card border-dark mb-3"> <!-- TiltBridge WiFi Card -->
+
+				<h5 class="card-header">
+					Reset Wifi
+				</h5>
+				<div class="card-body">
+					<p class="card-text">
+						<!-- Your TiltBridge can be updated over the internet to the latest version of the TiltBridge-->
+						<!-- firmware by clicking the "Update Firmware" button below.-->
+						If you plan on relocating your TiltBridge to a new network, you can reset the WiFi
+						connection settings by clicking "Reset WiFi".
+					</p>
+					<div class="row col-sm-12 justify-content-center">
+						<a href="/wifi/" class="btn btn-danger">Reset WiFi</a>
+					</div>
+				</div>
+
+            </div> <!-- TiltBridge WiFi Card -->
+
+        </div> <!-- Container -->
+
+    </main>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span class="text-muted">Copyright © 2018-2021, John Beeler</span>
         </div>
+    </footer>
 
-    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous">
+    </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous">
+    </script>
 
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous">
+    </script>
 
-</main>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"
+        integrity="sha384-c8inZyD0O4L/ErSuX3RVWgqsgtiAUw34TeSWiUwbKaXaI2RQg8SKVe80cipDBf0D"
+        crossorigin="anonymous">
+    </script>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"></script>
-
-<script type="text/javascript">
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    });
-
-    var vm = new Vue({
-        el: '#settingsapp',
-        data: {
-            settings: []
-        },
-        mounted: function () {
-            this.getSettings();
-        },
-        methods: {
-            getSettings: function() {
-                var xhr = new XMLHttpRequest();
-                var self = this;
-                xhr.open('GET', '/settings/json/');
-                xhr.onload = function () {
-                    self.settings = JSON.parse(xhr.responseText);
-                    if ( self.settings.all_valid == "0" ) window.alert("Invalid value for one or more parameters!  Please confirm settings and resubmit");
-                    if ( self.settings.invertTFT ) document.getElementById("invertTFT").checked = true;
-                    if ( self.settings.applyCalibration ) document.getElementById("applyCalibration").checked = true;
-                    if ( self.settings.tempCorrect ) document.getElementById("tempCorrect").checked = true;
-                    document.getElementById("tempUnit").value  = self.settings.tempUnit;
-                };
-                xhr.send()
-            }
-        }
-    });
-</script>
-
+    <script src="/settings.js"></script>
 
 </body>
+
 </html>
