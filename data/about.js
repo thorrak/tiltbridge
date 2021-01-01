@@ -92,10 +92,10 @@ function loadUptime(callback = null) { // Get uptime information
     })
         .done(function (uptime) {
             try {
-                var days = uptime.u.days.toString();
-                var hours = uptime.u.hours.toString();
-                var minutes = uptime.u.minutes.toString();
-                var seconds = uptime.u.seconds.toString();
+                var days = uptime.days.toString();
+                var hours = uptime.hours.toString();
+                var minutes = uptime.minutes.toString();
+                var seconds = uptime.seconds.toString();
 
                 var uptime = "Days: " + days + ", Hours: " + hours + ", Minutes: " + minutes + ", Seconds: " + seconds;
                 $('#uptime').text(uptime);
@@ -123,9 +123,9 @@ function loadHeap(callback = null) { // Get heap information
     })
         .done(function (heap) {
             try {
-                var free = heap.h.free;
-                var max = heap.h.max;
-                var frag = heap.h.frag;
+                var free = heap.free;
+                var max = heap.max;
+                var frag = heap.frag;
 
                 var heapinfo = "Free Heap: " + free + ", Max: " + max + ", Frags: " + frag;
                 $('#heap').text(heapinfo);
@@ -153,8 +153,8 @@ function loadResetReason(callback = null) { // Get last reset reason
     })
         .done(function (reset) {
             try {
-                var resetReason = reset.r.reason;
-                var resetDescription = reset.r.description;
+                var resetReason = reset.reason;
+                var resetDescription = reset.description;
 
                 var resetText = "Reason: " + resetReason + ", Description: " + resetDescription;
                 $('#resetreason').text(resetText);
