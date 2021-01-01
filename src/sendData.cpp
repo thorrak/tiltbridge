@@ -487,11 +487,11 @@ void send_checkin_stat() {
 void dataSendHandler::process() {
     // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
 
-    // Check & send to Fermentrack if necessary
+    // Check & send to Local Target if necessary
     if(send_to_fermentrack_at <= xTaskGetTickCount()) {
         if(WiFiClass::status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > FERMENTRACK_MIN_URL_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
-                Serial.printf("Calling send to Fermentrack\r\n");
+                Serial.printf("Calling send to Local Target\r\n");
             #endif
 
             send_to_fermentrack();
