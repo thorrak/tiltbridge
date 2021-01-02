@@ -4,6 +4,7 @@
 //
 
 #include <nlohmann/json.hpp>
+#include "resetreasons.h"
 
 // for convenience
 using json = nlohmann::json;
@@ -37,7 +38,28 @@ AsyncWebServer server(80);
 
 char all_valid[2] = "1";
 
+#define FILESYSTEM SPIFFS
+
+#if FILESYSTEM == SPIFFS
+#include "SPIFFS.h"
+#endif
+
+#define DBG_OUTPUT_PORT Serial
+
+//void trigger_restart();
 void trigger_restart(AsyncWebServerRequest *request);
+
+bool exists(String path)
+{
+    bool yes = false;
+    File file = FILESYSTEM.open(path, "r");
+    if (!file.isDirectory())
+    {
+        yes = true;
+    }
+    file.close();
+    return yes;
+}
 
 void isInteger(const char* s, bool &is_int, int32_t &int_value) {
     if( (strlen(s) <= 0) || (!isdigit(s[0])) ) {
@@ -99,7 +121,7 @@ void redirectToConfig(AsyncWebServerRequest *request) {
 
 void processConfigError(AsyncWebServerRequest *request) {
 #ifdef DEBUG_PRINTS
-    Serial.println("processConfigError!");
+    DBG_OUTPUT_PORT.println("processConfigError!");
 #endif
     all_valid[0] = '0';
     redirectToConfig(request);
@@ -115,7 +137,7 @@ void redirectToCalibration(AsyncWebServerRequest *request) {
 
 void processCalibrationError(AsyncWebServerRequest *request) {
 #ifdef DEBUG_PRINTS
-    Serial.println("processCalibrationError!");
+    DBG_OUTPUT_PORT.println("processCalibrationError!");
 #endif
     redirectToCalibration(request);
 }
@@ -144,7 +166,7 @@ void processConfig(AsyncWebServerRequest *request) {
     bool mqtt_broker_update = false;
 
     // Generic TiltBridge Settings
-    if (request->hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != request->arg("mdnsID").c_str()) ) {
+    if (request->hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != request->arg("mdnsID").c_str())) {
         if (isValidmdnsName(request->arg("mdnsID").c_str())) {
             app_config.config["mdnsID"] = request->arg("mdnsID").c_str();
             // When we update the mDNS ID, a lot of things have to get reset. Rather than doing the hard work of actually
@@ -164,7 +186,7 @@ void processConfig(AsyncWebServerRequest *request) {
                 app_config.config["TZoffset"] = tzo;
             } else {
 #ifdef DEBUG_PRINTS
-                Serial.println(F("brewstatusTZoffset is not between -11 and 12!"));
+                DBG_OUTPUT_PORT.println(F("brewstatusTZoffset is not between -12 and 14!"));
 #endif
                 all_settings_valid = false;
             }
@@ -420,17 +442,17 @@ void processConfig(AsyncWebServerRequest *request) {
 
     // If we made it this far, one or more settings were updated. Save.
     if(all_settings_valid) {
-        app_config.save();
+        http_server.config_updated = true;
     } else {
         return processConfigError(request);
     }
 
     if(mqtt_broker_update) {
-            data_sender.init_mqtt();
+        http_server.mqtt_init_rqd = true;
     }
 
     if(reinit_tft) {
-        lcd.init();
+        http_server.lcd_init_rqd = true;
     }
 
     if(restart_tiltbridge) {
@@ -515,36 +537,84 @@ void processCalibration(AsyncWebServerRequest *request) {
     redirectToCalibration(request);
 }
 
-
-bool loadFromSpiffs(const char* path, AsyncWebServerRequest *request)
+String getContentType(String filename, AsyncWebServerRequest *request)
 {
-    char p[strlen(path)+1];
-    strcpy(p,path);
-    char * suffix = strtok(p,".");
-    suffix = strtok(NULL,".");
-
-    char dataType[25];
-
-    if (strncmp(suffix,"htm",3)==0) strcpy(dataType,"text/html");
-    else if (strncmp(suffix,"css",3)==0) strcpy(dataType,"text/css");
-    else if (strncmp(suffix,"js",3)==0) strcpy(dataType,"application/javascript");
-    else if (strncmp(suffix,"png",3)==0) strcpy(dataType,"image/png");
-    else if (strncmp(suffix,"gif",3)==0) strcpy(dataType,"image/gif");
-    else if (strncmp(suffix,"jpg",3)==0) strcpy(dataType,"image/jpeg");
-    else if (strncmp(suffix,"ico",3)==0) strcpy(dataType,"image/x-icon");
-    else if (strncmp(suffix,"xml",3)==0) strcpy(dataType,"text/xml");
-    else if (strncmp(suffix,"pdf",3)==0) strcpy(dataType,"application/pdf");
-    else if (strncmp(suffix,"zip",3)==0) strcpy(dataType,"application/zip");
-    else strcpy(dataType,"text/plain");
-
-    File dataFile = SPIFFS.open(path, "r");   //open file to read
-    if (!dataFile)  //unsuccessful open
-        return false;
-    request->send(SPIFFS,path,dataType);
-    dataFile.close();
-
-    return true; //shouldn't always return true, Added false above
+    if (request->hasArg("download"))
+    {
+        return "application/octet-stream";
+    }
+    else if (filename.endsWith(".htm"))
+    {
+        return "text/html";
+    }
+    else if (filename.endsWith(".html"))
+    {
+        return "text/html";
+    }
+    else if (filename.endsWith(".css"))
+    {
+        return "text/css";
+    }
+    else if (filename.endsWith(".js"))
+    {
+        return "application/javascript";
+    }
+    else if (filename.endsWith(".png"))
+    {
+        return "image/png";
+    }
+    else if (filename.endsWith(".gif"))
+    {
+        return "image/gif";
+    }
+    else if (filename.endsWith(".jpg"))
+    {
+        return "image/jpeg";
+    }
+    else if (filename.endsWith(".ico"))
+    {
+        return "image/x-icon";
+    }
+    else if (filename.endsWith(".xml"))
+    {
+        return "text/xml";
+    }
+    else if (filename.endsWith(".pdf"))
+    {
+        return "application/x-pdf";
+    }
+    else if (filename.endsWith(".zip"))
+    {
+        return "application/x-zip";
+    }
+    else if (filename.endsWith(".gz"))
+    {
+        return "application/x-gzip";
+    }
+    return "text/plain";
 }
+
+bool loadFromSpiffs(String path, AsyncWebServerRequest *request )
+{
+    DBG_OUTPUT_PORT.println("handleFileRead: " + path);
+    if (path.endsWith("/"))
+    {
+        path += "index.htm";
+    }
+    String contentType = getContentType(path, request);
+    String pathWithGz = path + ".gz";
+    if (exists(pathWithGz) || exists(path))
+    {
+        if (exists(pathWithGz))
+        {
+            path += ".gz";
+        }
+        request->send(SPIFFS,path,contentType);
+        return true;
+    }
+    return false;
+}
+
 //-----------------------------------------------------------------------------------------
 
 void root_from_spiffs(AsyncWebServerRequest *request) {
@@ -556,11 +626,11 @@ void settings_from_spiffs(AsyncWebServerRequest *request) {
 void calibration_from_spiffs(AsyncWebServerRequest *request) {
     loadFromSpiffs("/calibration.htm", request);
 }
+void help_from_spiffs(AsyncWebServerRequest *request) {
+    loadFromSpiffs("/help.htm", request);
+}
 void about_from_spiffs(AsyncWebServerRequest *request) {
     loadFromSpiffs("/about.htm", request);
-}
-void favicon_from_spiffs(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/favicon.ico", request);
 }
 
 #ifndef DISABLE_OTA_UPDATES
@@ -610,12 +680,69 @@ void settings_json(AsyncWebServerRequest *request) {
     all_valid[0] = '1';
 }
 
+// About page Handlers
+//
 
-void handleNotFound(AsyncWebServerRequest *request) {
-    AsyncWebServerResponse *response = request->beginResponse(404,"text/plain","File Not Found\n\n");
+void this_version(AsyncWebServerRequest *request) {
+    json ver;
+
+    ver["version"] = version();
+    ver["branch"] = branch();
+    ver["build"] = build();
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",ver.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
 }
 
+void uptime(AsyncWebServerRequest *request) {
+    json up;
+
+    const int days = uptimeDays();
+    const int hours = uptimeHours();
+    const int minutes = uptimeMinutes();
+    const int seconds = uptimeSeconds();
+    const int millis = uptimeMillis();
+
+    up["days"] = days;
+    up["hours"] = hours;
+    up["minutes"] = minutes;
+    up["seconds"] = seconds;
+    up["millis"] = millis;
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",up.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+}
+
+void heap(AsyncWebServerRequest *request) {
+    json heap;
+
+    uint32_t free = ESP.getFreeHeap();
+    uint32_t max = ESP.getMaxAllocHeap();;
+    uint8_t frag = 100 - (max * 100) / free;
+
+    heap["free"] = free;
+    heap["max"] = max;
+    heap["frag"] = frag;
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",heap.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+}
+
+void reset_reason(AsyncWebServerRequest *request) {
+    json rst;
+
+    int reset = (int)esp_reset_reason();
+
+    rst["reason"] = resetReason[reset];
+    rst["description"] = resetDescription[reset];
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",rst.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+}
 
 
 void httpServer::init(){
@@ -643,6 +770,24 @@ void httpServer::init(){
     server.on("/settings/json/",HTTP_GET,[](AsyncWebServerRequest *request){
         settings_json(request);
     });
+    server.on("/help/",HTTP_GET,[](AsyncWebServerRequest *request){
+        help_from_spiffs(request);
+    });
+
+    // About Page Info Handlers
+    server.on("/thisVersion/",HTTP_GET,[](AsyncWebServerRequest *request){
+        this_version(request);
+    });
+    server.on("/uptime/",HTTP_GET,[](AsyncWebServerRequest *request){
+        uptime(request);
+    });
+    server.on("/heap/",HTTP_GET,[](AsyncWebServerRequest *request){
+        heap(request);
+    });
+    server.on("/resetreason/",HTTP_GET,[](AsyncWebServerRequest *request){
+        reset_reason(request);
+    });
+    
 #ifndef DISABLE_OTA_UPDATES
     server.on("/ota/",HTTP_GET,[](AsyncWebServerRequest *request){
         trigger_OTA(request);
@@ -654,10 +799,16 @@ void httpServer::init(){
     server.on("/restart/",HTTP_GET,[](AsyncWebServerRequest *request){
         trigger_restart(request);
     });
-    server.on("/favicon.ico",HTTP_GET,[](AsyncWebServerRequest *request){
-        favicon_from_spiffs(request);
+
+    server.onNotFound([](AsyncWebServerRequest *request) {
+                // Look for other files on FILESYSTEM
+        if (!loadFromSpiffs(request->url(),request))
+        {
+            AsyncWebServerResponse *response = request->beginResponse(404,"text/plain","File Not Found\n\n");
+            request->send(response);
+        }
+
     });
 
-    server.onNotFound(handleNotFound);
     server.begin();
 }

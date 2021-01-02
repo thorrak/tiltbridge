@@ -1,132 +1,166 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>TiltBridge - About</title>
+    <meta name="description" content="TiltBridge is designed to allow your Tilt Hydrometer to connect directly to WiFi.">
+    <meta name="author" content="John Beeler">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <title>TiltBridge</title>
+
+    <link rel="canonical" href="https://www.tiltbridge.com/">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    
-    <style>
-        body {padding-top: 5rem; padding-bottom: 5rem;}
+    <meta name="apple-mobile-web-app-title" content="TiltBridge">
+    <meta name="application-name" content="TiltBridge">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+    <meta name="theme-color" content="#ffffff">
 
-        .row-padded {
-            padding: 0.75rem 1.25rem;
-        }
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/sandstone/bootstrap.min.css"
+        integrity="sha384-zEpdAL7W11eTKeoBJK1g79kgl9qjP7g84KfK3AZsuonx38n8ad+f5ZgXtoSDxPOh" crossorigin="anonymous">
 
-    </style>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/common.css">
+
 </head>
 
-<body>
+<body class="d-flex flex-column h-100">
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="/">TiltBridge</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsMain" aria-controls="navbarsMain" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
-    <div class="collapse navbar-collapse" id="navbarsMain">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="/">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/settings/">Settings</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/calibration/">Calibration</a>
-            </li>
-            <li class="nav-item active">
-                <a class="nav-link" href="/about/">About  <span class="sr-only">(current)</span></a>
-            </li>
-        </ul>
-    </div>
-</nav>
-
-<main role="main" class="container">
-
-    <h4>About Tiltbridge</h4>
-
-
-    <div id="settingsapp">
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        About
-                    </h5>
-
-                    <div class="card-body">
-                        <p class="card-text">
-                            <a href="https://www.tiltbridge.com/">TiltBridge</a> is a project by John Beeler and is
-                            licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 license</a>.
-                        </p>
-
-                        <p class="card-text">
-                            For questions, concerns, and bug reports, please reach out to
-                            <a href="https://www.reddit.com/user/lordfili">lordfili</a> on Reddit,
-                            <a href="https://www.homebrewtalk.com/forum/members/thorrak.221138/">Thorrak</a> on the HBT forums, or
-                            <a href="https://github.com/thorrak">Thorrak</a> on GitHub.
-                            Tilt calibration and temperature correction code
-                            provided by <a href="https://github.com/duncan-brown">duncan-brown</a>.
-                            MQTT integration and other enhancements provided by
-                            <a href="https://github.com/pletch">Tim Pletcher</a>.
-                        </p>
-
-                        <p class="card-text"> TiltBridge documentation and support can be found at the following links:<br>
-                            <a href="https://www.tiltbridge.com/">TiltBridge Homepage</a><br>
-                            <a href="http://docs.tiltbridge.com/">TiltBridge Documentation</a><br>
-                            <a href="https://github.com/thorrak/tiltbridge">GitHub</a><br>
-                            <a href="http://homebrewtalk.tiltbridge.com/">HomeBrewTalk Thread</a>
-                        </p>
-
-                        <p class="card-text">
-                            You are currently running on v0.2.3 of TiltBridge
-                        </p>
-
-                    </div>
-                </div>
-
+            <a class="navbar-brand" href="/">
+                <img src="/logo.png" width:34px;height:25px;>TiltBridge
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings/">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/calibration/">Calibration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/help/">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/about/">About <span class="sr-only">(current)</span></a>
+                    </li>
+                </ul>
             </div>
-        </div>
+        </nav>
+    </header>
 
-        <div class="row row-padded">
-            <div class="col-12">
-                <div class="card">
-                    <h5 class="card-header">
-                        Update/Reset
-                    </h5>
-                    <div class="card-body">
-                        <p class="card-text">
-<!--                            Your TiltBridge can be updated over the internet to the latest version of the TiltBridge-->
-<!--                            firmware by clicking the "Update Firmware" button below.-->
-                            If you plan on relocating your TiltBridge to a new network, you can reset the WiFi
-                            connection settings by clicking "Reset WiFi".
-                        </p>
+    <main role="main" class="flex-shrink-0">
 
-                        <p class="card-text">
-<!--                            <a href="/ota/" class="btn btn-danger">Update Firmware</a>-->
-                            <a href="/restart/" class="btn btn-danger">Restart TiltBridge</a>
-                            <a href="/wifi/" class="btn btn-danger">Reset WiFi</a>
-                        </p>
+        <div class="container" id="aboutapp"><!-- Container -->
 
-                    </div>
+            <div class="card border-dark mb-3"><!-- TiltBridge About Card -->
+
+				<h5 class="card-header">
+					About TiltBridge:
+					<span id="thisVersion">(version loading...)</span>
+					[<span class="text-primary" id="thisBranch"></span>]
+					(<span class="text-warning" id="thisBuild"></span>)
+				</h5>
+
+                <div class="card-body">
+
+					<div class="card-body">
+						<p class="card-text">
+							<a href="https://www.tiltbridge.com/">TiltBridge</a> is a project by John Beeler and is
+							licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0
+								license</a>.
+						</p>
+
+						<ul class="list-group">
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								<strong>Uptime: </strong>
+								<span id="uptime" data-html="true" data-toggle="tooltip">...loading</span>
+							</li>
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								<strong>Reset Reason: </strong>
+								<span id="resetreason" data-html="true" data-toggle="tooltip">...loading</span>
+							</li>
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								<strong>Heap Information: </strong>
+								<span id="heap" data-html="true" data-toggle="tooltip">...loading</span>
+							</li>
+						</ul>
+					</div>
+
                 </div>
-            </div>
+            </div> <!-- TiltBridge About Card -->
+
+            <div class="card border-dark mb-3"><!-- TiltBridge Reset Card -->
+
+				<h5 class="card-header">
+					Restart TiltBridge
+				</h5>
+
+                <div class="card-body">
+
+					<div class="card-body">
+					   <p class="card-text">
+                            If you would like to restart your TiltBridge, you may do so with the button below. This
+                            action is identical to pressing the reset button on the controller and will not erase
+                            your settings.
+						</p>
+
+						<div class="form-group row">
+							<div class="col-sm-5"></div>
+							<div class="col-sm-2">
+								<a href="/restart/" class="btn btn-warning">Restart</a>
+							</div>
+						</div>
+					</div>
+
+                </div>
+            </div> <!-- TiltBridge Reset Card -->
+
+        </div> <!-- Container -->
+
+    </main>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span class="text-muted">Copyright © 2018-2021, John Beeler</span>
         </div>
-    </div>
+    </footer>
 
-</main>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous">
+    </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+
+    <script src="/about.js"></script>
 
 </body>
+
 </html>
