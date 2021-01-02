@@ -597,18 +597,16 @@ String getContentType(String filename, AsyncWebServerRequest *request)
 bool loadFromSpiffs(String path, AsyncWebServerRequest *request )
 {
     DBG_OUTPUT_PORT.println("handleFileRead: " + path);
-    if (path.endsWith("/"))
-    {
-        path += "index.htm";
-    }
     String contentType = getContentType(path, request);
-    String pathWithGz = path + ".gz";
-    if (exists(pathWithGz) || exists(path))
+    //String pathWithGz = path + ".gz";
+    //if (exists(pathWithGz) || exists(path))
+    if (exists(path))
     {
-        if (exists(pathWithGz))
+        /*if (exists(pathWithGz))
         {
             path += ".gz";
-        }
+        }*/
+    
         request->send(SPIFFS,path,contentType);
         return true;
     }
@@ -616,22 +614,6 @@ bool loadFromSpiffs(String path, AsyncWebServerRequest *request )
 }
 
 //-----------------------------------------------------------------------------------------
-
-void root_from_spiffs(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/index.htm", request);
-}
-void settings_from_spiffs(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/settings.htm", request);
-}
-void calibration_from_spiffs(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/calibration.htm", request);
-}
-void help_from_spiffs(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/help.htm", request);
-}
-void about_from_spiffs(AsyncWebServerRequest *request) {
-    loadFromSpiffs("/about.htm", request);
-}
 
 #ifndef DISABLE_OTA_UPDATES
 void trigger_OTA(AsyncWebServerRequest *request) {
@@ -746,20 +728,15 @@ void reset_reason(AsyncWebServerRequest *request) {
 
 
 void httpServer::init(){
-    server.on("/",HTTP_GET,[](AsyncWebServerRequest *request){
-        root_from_spiffs(request);
-    });
-    server.on("/about/",HTTP_GET,[](AsyncWebServerRequest *request){
-        about_from_spiffs(request);
-    });
-    server.on("/settings/",HTTP_GET,[](AsyncWebServerRequest *request){
-        settings_from_spiffs(request);
-    });
+    server.serveStatic("/", SPIFFS, "/");
+    server.rewrite("/", "/index.htm");
+    server.rewrite("/about/","/about.htm");
+    server.rewrite("/settings/","/settings.htm");
+    server.rewrite("/calibration/","/calibration.htm");
+    server.rewrite("/help/","/help.htm");
+
     server.on("/settings/update/",HTTP_POST,[](AsyncWebServerRequest *request){
         processConfig(request);
-    });
-    server.on("/calibration/",HTTP_GET,[](AsyncWebServerRequest *request){
-        calibration_from_spiffs(request);
     });
     server.on("/calibration/update/",HTTP_POST,[](AsyncWebServerRequest *request){
         processCalibration(request);
@@ -770,10 +747,6 @@ void httpServer::init(){
     server.on("/settings/json/",HTTP_GET,[](AsyncWebServerRequest *request){
         settings_json(request);
     });
-    server.on("/help/",HTTP_GET,[](AsyncWebServerRequest *request){
-        help_from_spiffs(request);
-    });
-
     // About Page Info Handlers
     server.on("/thisVersion/",HTTP_GET,[](AsyncWebServerRequest *request){
         this_version(request);
