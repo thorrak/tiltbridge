@@ -1,70 +1,128 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>TiltBridge Updating</title>
+    <meta name="description" content="TiltBridge is designed to allow your Tilt Hydrometer to connect directly to WiFi.">
+    <meta name="author" content="John Beeler">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <title>TiltBridge</title>
+
+    <link rel="canonical" href="https://www.tiltbridge.com/">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta name="apple-mobile-web-app-title" content="TiltBridge">
+    <meta name="application-name" content="TiltBridge">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+    <meta name="theme-color" content="#ffffff">
 
-    <!-- Custom styles for this template -->
-    <style>
-        body {padding-top: 5rem; padding-bottom: 5rem;}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/sandstone/bootstrap.min.css"
+        integrity="sha384-zEpdAL7W11eTKeoBJK1g79kgl9qjP7g84KfK3AZsuonx38n8ad+f5ZgXtoSDxPOh" crossorigin="anonymous">
 
-        @media (min-width: 576px) {
-            .sm-padded {
-                padding: 0.75rem 1.25rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/common.css">
+
 </head>
 
-<body>
+<body class="d-flex flex-column h-100">
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="/">TiltBridge</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/settings/">Settings</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/calibration/">Calibration</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/about/">About</a>
-            </li>
-        </ul>
+            <a class="navbar-brand" href="/">
+                <img src="/logo.png" width:34px;height:25px;>TiltBridge
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings/">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/calibration/">Calibration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/help/">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about/">About</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 
-    </div>
-</nav>
+    <main role="main" class="container">
 
-<main role="main" class="container">
+        <h4>Updating Firmware</h4>
 
-    <h4>Updating Firmware</h4>
+        <p>
+            Your TiltBridge's firmware is being updated to the latest version. This can take up to 5 minutes, during
+            which your TiltBridge will be unresponsive. Please do not disconnect the power or reset your TiltBridge
+            while this process is taking place.
+        </p>
 
-    <p>
-        Your TiltBridge's firmware is being updated to the latest version. This can take up to 5 minutes, during which
-        your TiltBridge will be unresponsive. Please do not disconnect the power or reset your TiltBridge while this
-        process is taking place.
-    </p>
+    </main>
 
-</main>
+    <main role="main" class="flex-shrink-0">
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <div class="container" id="updateapp"><!-- App Container -->
+
+            <div class="card border-dark mb-3"><!-- TiltBridge Update Card -->
+
+                <div class="card-header">
+                    <h5 class="card-title">Updating Firmware</h5>
+                </div>
+
+                <div class="card-body">
+                    <p>
+                        Your TiltBridge's firmware is being updated to the latest version. This can take up to 5 minutes, during
+                        which your TiltBridge will be unresponsive. Please do not disconnect the power or reset your TiltBridge
+                        while this process is taking place.
+                    </p>
+                </div>
+            </div> <!-- TiltBridge Update Card -->
+
+        </div> <!-- Container -->
+
+    </main>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span class="text-muted">Copyright © 2018-2021, John Beeler</span>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous">
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+
 </body>
+
 </html>

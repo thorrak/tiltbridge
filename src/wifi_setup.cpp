@@ -9,7 +9,7 @@
 #include "tiltBridge.h"
 #include <Arduino.h>
 //#include "bridge_lcd.h"
-#include <WiFiManager.h>
+#include <AsyncWiFiManager.h>
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
 
@@ -33,7 +33,7 @@ void saveConfigCallback() {
 }
 
 // callback to display the WiFi LCD notification
-void configModeCallback(WiFiManager *myWiFiManager) {
+void configModeCallback(AsyncWiFiManager *myWiFiManager) {
 #ifdef DEBUG_PRINTS
     Serial.println("Entered config mode");
     Serial.println(WiFi.softAPIP());
@@ -57,11 +57,13 @@ bool isValidmDNSName(const char* mdns_name) {
 
 void disconnect_from_wifi_and_restart() {
     WiFi.disconnect(true, true);
+    WiFi.begin("0","0");
+    delay(1000);
     ESP.restart();
 }
 
 void init_wifi() {
-    WiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
+    AsyncWiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
 
 #ifndef DEBUG_PRINTS
     // If debugoutput is not left enabled with serial connection enabled, 
@@ -81,7 +83,7 @@ void init_wifi() {
     // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
     // It's nice, but it means the user gets no actual prompt for what they're entering.
     std::string mdns_id = app_config.config["mdnsID"];
-    WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
+    AsyncWiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
     wifiManager.addParameter(&custom_mdns_name);
 
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
