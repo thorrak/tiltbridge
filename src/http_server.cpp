@@ -4,6 +4,7 @@
 //
 
 #include <nlohmann/json.hpp>
+#include "resetreasons.h"
 
 // for convenience
 using json = nlohmann::json;
@@ -14,12 +15,14 @@ using json = nlohmann::json;
 
 #include "http_server.h"
 
-
 #include "tilt/tiltScanner.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include <WebServer.h>
+
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+
 #include "SPIFFS.h"
 
 #include <fstream>
@@ -31,11 +34,32 @@ using json = nlohmann::json;
 
 httpServer http_server;
 
-WebServer server(80);
+AsyncWebServer server(80);
 
 char all_valid[2] = "1";
 
-void trigger_restart();
+#define FILESYSTEM SPIFFS
+
+#if FILESYSTEM == SPIFFS
+#include "SPIFFS.h"
+#endif
+
+#define DBG_OUTPUT_PORT Serial
+
+//void trigger_restart();
+void trigger_restart(AsyncWebServerRequest *request);
+
+bool exists(String path)
+{
+    bool yes = false;
+    File file = FILESYSTEM.open(path, "r");
+    if (!file.isDirectory())
+    {
+        yes = true;
+    }
+    file.close();
+    return yes;
+}
 
 void isInteger(const char* s, bool &is_int, int32_t &int_value) {
     if( (strlen(s) <= 0) || (!isdigit(s[0])) ) {
@@ -88,44 +112,46 @@ bool isValidmdnsName(const char* mdns_name) {
 }
 
 // This is to simplify the redirects in processConfig
-void redirectToConfig() {
-    server.sendHeader("Location", "/settings/");
-    server.sendHeader("Cache-Control", "no-cache");
-    server.send(301);
+void redirectToConfig(AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse(301);
+    response->addHeader("Location","/settings/");
+    response->addHeader("Cache-Control","no-cache");
+    request->send(response);
 }
 
-void processConfigError() {
+void processConfigError(AsyncWebServerRequest *request) {
 #ifdef DEBUG_PRINTS
-    Serial.println("processConfigError!");
+    DBG_OUTPUT_PORT.println("processConfigError!");
 #endif
     all_valid[0] = '0';
-    redirectToConfig();
+    redirectToConfig(request);
 }
 
 // This is to simplify the redirects in processCalibration
-void redirectToCalibration() {
-    server.sendHeader("Location", "/calibration/");
-    server.sendHeader("Cache-Control", "no-cache");
-    server.send(301);
+void redirectToCalibration(AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse(301);
+    response->addHeader("Location","/calibration/");
+    response->addHeader("Cache-Control","no-cache");
+    request->send(response);
 }
 
-void processCalibrationError() {
+void processCalibrationError(AsyncWebServerRequest *request) {
 #ifdef DEBUG_PRINTS
-    Serial.println("processCalibrationError!");
+    DBG_OUTPUT_PORT.println("processCalibrationError!");
 #endif
-    redirectToCalibration();
+    redirectToCalibration(request);
 }
 
 
-bool processSheetName(const char* varName, const char* colorName) {
-    if (server.hasArg(varName)) {
-        if (server.arg(varName).length() > 64) {
+bool processSheetName(const char* varName, const char* colorName, AsyncWebServerRequest *request) {
+    if (request->hasArg(varName)) {
+        if (request->arg(varName).length() > 64) {
             return false;
-        } else if (server.arg(varName).length() < 1) {
+        } else if (request->arg(varName).length() < 1) {
             app_config.config[varName] = "";
             return true;
         } else {
-            app_config.config[varName] = server.arg(varName).c_str();
+            app_config.config[varName] = request->arg(varName).c_str();
             return true;
         }
     }
@@ -133,16 +159,16 @@ bool processSheetName(const char* varName, const char* colorName) {
     return true;
 }
 
-void processConfig() {
+void processConfig(AsyncWebServerRequest *request) {
     bool restart_tiltbridge = false;
     bool all_settings_valid = true;
     bool reinit_tft = false;
     bool mqtt_broker_update = false;
 
     // Generic TiltBridge Settings
-    if (server.hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != server.arg("mdnsID").c_str()) ) {
-        if (isValidmdnsName(server.arg("mdnsID").c_str())) {
-            app_config.config["mdnsID"] = server.arg("mdnsID").c_str();
+    if (request->hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != request->arg("mdnsID").c_str())) {
+        if (isValidmdnsName(request->arg("mdnsID").c_str())) {
+            app_config.config["mdnsID"] = request->arg("mdnsID").c_str();
             // When we update the mDNS ID, a lot of things have to get reset. Rather than doing the hard work of actually
             // resetting those settings & broadcasting the new ID, let's just restart the controller.
             restart_tiltbridge = true;
@@ -151,26 +177,26 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("TZoffset")) {
-        if (server.arg("TZoffset").length() > 0 && server.arg("TZoffset").length() <= 3 ) {
+    if (request->hasArg("TZoffset")) {
+        if (request->arg("TZoffset").length() > 0 && request->arg("TZoffset").length() <= 3 ) {
             int tzo;
             bool is_int;
-            isInteger(server.arg("TZoffset").c_str(),is_int,tzo);
+            isInteger(request->arg("TZoffset").c_str(),is_int,tzo);
             if(tzo >= -12 && tzo <= 14) {
                 app_config.config["TZoffset"] = tzo;
             } else {
 #ifdef DEBUG_PRINTS
-                Serial.println(F("brewstatusTZoffset is not between -11 and 12!"));
+                DBG_OUTPUT_PORT.println(F("brewstatusTZoffset is not between -12 and 14!"));
 #endif
                 all_settings_valid = false;
             }
         }
     }
 
-    if (server.hasArg("smoothFactor")) {
+    if (request->hasArg("smoothFactor")) {
         int sf;
         bool is_int;
-        isInteger(server.arg("smoothFactor").c_str(),is_int,sf);
+        isInteger(request->arg("smoothFactor").c_str(),is_int,sf);
         if (sf != app_config.config["smoothFactor"].get<int>()) {
             if (is_int && sf >= 0 && sf <= 99) {
                 app_config.config["smoothFactor"] = sf;
@@ -180,45 +206,45 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("tempUnit") && (app_config.config["tempUnit"] != server.arg("tempUnit").c_str()) ) {
+    if (request->hasArg("tempUnit") && (app_config.config["tempUnit"] != request->arg("tempUnit").c_str()) ) {
         // TODO - Come back and re-integrate this with pletch's work
-        app_config.config["tempUnit"] = server.arg("tempUnit").c_str();
+        app_config.config["tempUnit"] = request->arg("tempUnit").c_str();
     }
 
-    if (server.hasArg("invertTFT")) {
-        if((server.arg("invertTFT")=="on") && (!app_config.config["invertTFT"].get<bool>())) {
+    if (request->hasArg("invertTFT")) {
+        if((request->arg("invertTFT")=="on") && (!app_config.config["invertTFT"].get<bool>())) {
             app_config.config["invertTFT"] = true;
             reinit_tft = true;
-        } else if ((server.arg("invertTFT")=="off") && (app_config.config["invertTFT"].get<bool>())){
+        } else if ((request->arg("invertTFT")=="off") && (app_config.config["invertTFT"].get<bool>())){
             app_config.config["invertTFT"] = false;
             reinit_tft = true;
         }
     }
 
-    if (server.hasArg("applyCalibration")) {
-        if((server.arg("applyCalibration")=="on") && (!app_config.config["applyCalibration"].get<bool>())) {
+    if (request->hasArg("applyCalibration")) {
+        if((request->arg("applyCalibration")=="on") && (!app_config.config["applyCalibration"].get<bool>())) {
             app_config.config["applyCalibration"] = true;
-        } else if ((server.arg("applyCalibration")=="off") && (app_config.config["applyCalibration"].get<bool>())){
+        } else if ((request->arg("applyCalibration")=="off") && (app_config.config["applyCalibration"].get<bool>())){
             app_config.config["applyCalibration"] = false;
         }
     }
 
-    if (server.hasArg("tempCorrect")) {
-        if((server.arg("tempCorrect")=="on") && (!app_config.config["tempCorrect"].get<bool>())) {
+    if (request->hasArg("tempCorrect")) {
+        if((request->arg("tempCorrect")=="on") && (!app_config.config["tempCorrect"].get<bool>())) {
             app_config.config["tempCorrect"] = true;
-        } else if ((server.arg("tempCorrect")=="off") && (app_config.config["tempCorrect"].get<bool>())){
+        } else if ((request->arg("tempCorrect")=="off") && (app_config.config["tempCorrect"].get<bool>())){
             app_config.config["tempCorrect"] = false;
         }
     }
 
     // Fermentrack Settings
-    if (server.hasArg("fermentrackURL") &&
-       (app_config.config["fermentrackURL"].get<std::string>() != server.arg("fermentrackURL").c_str())) {
-        if (server.arg("fermentrackURL").length() <= 255) {
-            if (server.arg("fermentrackURL").length() < 12) {
+    if (request->hasArg("fermentrackURL") &&
+       (app_config.config["fermentrackURL"].get<std::string>() != request->arg("fermentrackURL").c_str())) {
+        if (request->arg("fermentrackURL").length() <= 255) {
+            if (request->arg("fermentrackURL").length() < 12) {
                 app_config.config["fermentrackURL"] = "";
             }else{
-                app_config.config["fermentrackURL"] = server.arg("fermentrackURL").c_str();
+                app_config.config["fermentrackURL"] = request->arg("fermentrackURL").c_str();
             }
         } else {
             all_settings_valid = false;
@@ -226,10 +252,10 @@ void processConfig() {
 
     }
 
-    if (server.hasArg("fermentrackPushEvery")) {
+    if (request->hasArg("fermentrackPushEvery")) {
         int push_every;
         bool is_int;
-        isInteger(server.arg("fermentrackPushEvery").c_str(),is_int,push_every);
+        isInteger(request->arg("fermentrackPushEvery").c_str(),is_int,push_every);
         if (is_int && push_every <= 3600 && push_every >= 15) {
             app_config.config["fermentrackPushEvery"] = push_every;
         } else {
@@ -239,23 +265,23 @@ void processConfig() {
     }
 
     // Brewstatus Settings
-    if (server.hasArg("brewstatusURL") &&
-            (app_config.config["brewstatusURL"].get<std::string>() != server.arg("brewstatusURL").c_str())) {
-        if (server.arg("brewstatusURL").length() <= 255) {
-            if (server.arg("brewstatusURL").length() < 12) {
+    if (request->hasArg("brewstatusURL") &&
+            (app_config.config["brewstatusURL"].get<std::string>() != request->arg("brewstatusURL").c_str())) {
+        if (request->arg("brewstatusURL").length() <= 255) {
+            if (request->arg("brewstatusURL").length() < 12) {
                 app_config.config["brewstatusURL"] = "";
             } else {
-                app_config.config["brewstatusURL"] = server.arg("brewstatusURL").c_str();
+                app_config.config["brewstatusURL"] = request->arg("brewstatusURL").c_str();
             }
         } else {
             all_settings_valid = false;
         }
     }
 
-    if (server.hasArg("brewstatusPushEvery")) {
+    if (request->hasArg("brewstatusPushEvery")) {
         int push_every;
         bool is_int;
-        isInteger(server.arg("brewstatusPushEvery").c_str(),is_int,push_every);
+        isInteger(request->arg("brewstatusPushEvery").c_str(),is_int,push_every);
         if (is_int && push_every <= 3600 && push_every >= 30) {
             app_config.config["brewstatusPushEvery"] = push_every;
         } else {
@@ -264,12 +290,12 @@ void processConfig() {
     }
 
     // Google Sheets Settings
-    if (server.hasArg("scriptsURL")) {
-        if (server.arg("scriptsURL").length() <= 255) {
-            if (server.arg("scriptsURL").length() > 12 &&
-                (strncmp(server.arg("scriptsURL").c_str(),"https://script.google.com/", 26)==0)) {
+    if (request->hasArg("scriptsURL")) {
+        if (request->arg("scriptsURL").length() <= 255) {
+            if (request->arg("scriptsURL").length() > 12 &&
+                (strncmp(request->arg("scriptsURL").c_str(),"https://script.google.com/", 26)==0)) {
 
-            app_config.config["scriptsURL"] = server.arg("scriptsURL").c_str();
+            app_config.config["scriptsURL"] = request->arg("scriptsURL").c_str();
             } else {
                 app_config.config["scriptsURL"] = "";
             }
@@ -278,12 +304,12 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("scriptsEmail")) {
-        if (server.arg("scriptsEmail").length() <= 255) {
-            if (server.arg("scriptsEmail").length() < 7) {
+    if (request->hasArg("scriptsEmail")) {
+        if (request->arg("scriptsEmail").length() <= 255) {
+            if (request->arg("scriptsEmail").length() < 7) {
                 app_config.config["scriptsEmail"] = "";
             } else {
-                app_config.config["scriptsEmail"] = server.arg("scriptsEmail").c_str();
+                app_config.config["scriptsEmail"] = request->arg("scriptsEmail").c_str();
             }
         } else {
             all_settings_valid = false;
@@ -292,30 +318,30 @@ void processConfig() {
 
 
     // Individual Google Sheets Beer Log Names
-    if (!processSheetName("sheetName_red", "Red"))
+    if (!processSheetName("sheetName_red", "Red", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_green", "Green"))
+    if (!processSheetName("sheetName_green", "Green", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_black", "Black"))
+    if (!processSheetName("sheetName_black", "Black", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_purple", "Purple"))
+    if (!processSheetName("sheetName_purple", "Purple", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_orange", "Orange"))
+    if (!processSheetName("sheetName_orange", "Orange", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_blue", "Blue"))
+    if (!processSheetName("sheetName_blue", "Blue", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_yellow", "Yellow"))
+    if (!processSheetName("sheetName_yellow", "Yellow", request))
         all_settings_valid = false;
-    if (!processSheetName("sheetName_pink", "Pink"))
+    if (!processSheetName("sheetName_pink", "Pink", request))
         all_settings_valid = false;
 
     // Brewers Friend Setting
-    if (server.hasArg("brewersFriendKey")) {
-        if (server.arg("brewersFriendKey").length() <= 255) {
-            if (server.arg("brewersFriendKey").length() < BREWERS_FRIEND_MIN_KEY_LENGTH) {
+    if (request->hasArg("brewersFriendKey")) {
+        if (request->arg("brewersFriendKey").length() <= 255) {
+            if (request->arg("brewersFriendKey").length() < BREWERS_FRIEND_MIN_KEY_LENGTH) {
                 app_config.config["brewersFriendKey"] = "";
             }else{
-                app_config.config["brewersFriendKey"] = server.arg("brewersFriendKey").c_str();
+                app_config.config["brewersFriendKey"] = request->arg("brewersFriendKey").c_str();
             }
         } else {
             all_settings_valid = false;
@@ -323,12 +349,12 @@ void processConfig() {
     }
 
     // Brewfather
-    if (server.hasArg("brewfatherKey")) {
-        if (server.arg("brewfatherKey").length() <= 255) {
-            if (server.arg("brewfatherKey").length() < BREWERS_FRIEND_MIN_KEY_LENGTH) {
+    if (request->hasArg("brewfatherKey")) {
+        if (request->arg("brewfatherKey").length() <= 255) {
+            if (request->arg("brewfatherKey").length() < BREWERS_FRIEND_MIN_KEY_LENGTH) {
                 app_config.config["brewfatherKey"] = "";
             }else{
-                app_config.config["brewfatherKey"] = server.arg("brewfatherKey").c_str();
+                app_config.config["brewfatherKey"] = request->arg("brewfatherKey").c_str();
             }
         } else {
             all_settings_valid = false;
@@ -336,12 +362,12 @@ void processConfig() {
     }
 
     // MQTT
-    if (server.hasArg("mqttBrokerIP") && (app_config.config["mqttBrokerIP"].get<std::string>() != server.arg("mqttBrokerIP").c_str())) {
-        if (isvalidAddress(server.arg("mqttBrokerIP").c_str())){
-            app_config.config["mqttBrokerIP"] = server.arg("mqttBrokerIP").c_str();
+    if (request->hasArg("mqttBrokerIP") && (app_config.config["mqttBrokerIP"].get<std::string>() != request->arg("mqttBrokerIP").c_str())) {
+        if (isvalidAddress(request->arg("mqttBrokerIP").c_str())){
+            app_config.config["mqttBrokerIP"] = request->arg("mqttBrokerIP").c_str();
             mqtt_broker_update = true;
         }
-        else if (server.arg("mqttBrokerIP").length() < 2) {
+        else if (request->arg("mqttBrokerIP").length() < 2) {
             app_config.config["mqttBrokerIP"] = "";
         }
         else {
@@ -349,10 +375,10 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("mqttBrokerPort")) {
+    if (request->hasArg("mqttBrokerPort")) {
         int port_number;
         bool is_int;
-        isInteger(server.arg("mqttBrokerPort").c_str(),is_int,port_number);
+        isInteger(request->arg("mqttBrokerPort").c_str(),is_int,port_number);
         if (is_int && port_number < 65535 && port_number > 1024) {
             if (app_config.config["mqttBrokerPort"].get<int>() != port_number) {
                 app_config.config["mqttBrokerPort"] = port_number;
@@ -363,10 +389,10 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("mqttPushEvery")) {
+    if (request->hasArg("mqttPushEvery")) {
         int push_every;
         bool is_int;
-        isInteger(server.arg("mqttPushEvery").c_str(),is_int,push_every);
+        isInteger(request->arg("mqttPushEvery").c_str(),is_int,push_every);
         if (is_int && push_every <= 3600 && push_every >=15 ) {
             app_config.config["mqttPushEvery"] = push_every;
         } else {
@@ -375,12 +401,12 @@ void processConfig() {
     }
 
 
-    if (server.hasArg("mqttUsername") && (app_config.config["mqttUsername"].get<std::string>() != server.arg("mqttUsername").c_str())) {
-        if (server.arg("mqttUsername").length() <= 50) {
-            if (server.arg("mqttUsername").length() <= 0){
+    if (request->hasArg("mqttUsername") && (app_config.config["mqttUsername"].get<std::string>() != request->arg("mqttUsername").c_str())) {
+        if (request->arg("mqttUsername").length() <= 50) {
+            if (request->arg("mqttUsername").length() <= 0){
                 app_config.config["mqttUsername"] = "";
             }else{
-                app_config.config["mqttUsername"] = server.arg("mqttUsername").c_str();
+                app_config.config["mqttUsername"] = request->arg("mqttUsername").c_str();
             }
             mqtt_broker_update = true;
         } else {
@@ -388,12 +414,12 @@ void processConfig() {
         }
     }
 
-    if (server.hasArg("mqttPassword") && (app_config.config["mqttPassword"].get<std::string>() != server.arg("mqttPassword").c_str())) {
-        if (server.arg("mqttPassword").length() <= 128) {
-            if (server.arg("mqttPassword").length() <= 0){
+    if (request->hasArg("mqttPassword") && (app_config.config["mqttPassword"].get<std::string>() != request->arg("mqttPassword").c_str())) {
+        if (request->arg("mqttPassword").length() <= 128) {
+            if (request->arg("mqttPassword").length() <= 0){
                 app_config.config["mqttPassword"] = "";
             }else{
-            app_config.config["mqttPassword"] = server.arg("mqttPassword").c_str();
+            app_config.config["mqttPassword"] = request->arg("mqttPassword").c_str();
             }
             mqtt_broker_update = true;
         } else {
@@ -402,12 +428,12 @@ void processConfig() {
     }
 
 
-    if (server.hasArg("mqttTopic")) {
-        if (server.arg("mqttTopic").length() <= 30){
-            if (server.arg("mqttTopic").length() <= 2) {
+    if (request->hasArg("mqttTopic")) {
+        if (request->arg("mqttTopic").length() <= 30){
+            if (request->arg("mqttTopic").length() <= 2) {
                 app_config.config["mqttTopic"] = "tiltbridge";
             }else{
-                app_config.config["mqttTopic"] = server.arg("mqttTopic").c_str();
+                app_config.config["mqttTopic"] = request->arg("mqttTopic").c_str();
             }
         } else {
             all_settings_valid = false;
@@ -416,23 +442,23 @@ void processConfig() {
 
     // If we made it this far, one or more settings were updated. Save.
     if(all_settings_valid) {
-        app_config.save();
+        http_server.config_updated = true;
     } else {
-        return processConfigError();
+        return processConfigError(request);
     }
 
     if(mqtt_broker_update) {
-            data_sender.init_mqtt();
+        http_server.mqtt_init_rqd = true;
     }
 
     if(reinit_tft) {
-        lcd.init();
+        http_server.lcd_init_rqd = true;
     }
 
     if(restart_tiltbridge) {
-        trigger_restart();
+        trigger_restart(request);
     } else {
-        redirectToConfig();
+        redirectToConfig(request);
     }
 }
 
@@ -443,39 +469,39 @@ constexpr unsigned int str2int(const char* str, int h = 0)
 
 // we don't need to do much input checking on the calibration data as we are
 // looking at numbers generated by the javascript and not a human
-void processCalibration() {
+void processCalibration(AsyncWebServerRequest *request) {
     int tilt_name = 0;
     int degree;
     double x0, x1, x2, x3;
 
-    if (server.hasArg("clearTiltColor")) {
-        tilt_name = str2int(server.arg("clearTiltColor").c_str());
+    if (request->hasArg("clearTiltColor")) {
+        tilt_name = str2int(request->arg("clearTiltColor").c_str());
         degree = 1;
         x1 = 1.0;
         x0 = x2 = x3 = 0.0;
     }
 
-    if (server.hasArg("updateTiltColor")) {
-        tilt_name = str2int(server.arg("updateTiltColor").c_str());
-        if (server.hasArg("linear")) {
+    if (request->hasArg("updateTiltColor")) {
+        tilt_name = str2int(request->arg("updateTiltColor").c_str());
+        if (request->hasArg("linear")) {
            degree = 1;
-           x0 = strtod(server.arg("linearFitx0").c_str(), nullptr);
-           x1 = strtod(server.arg("linearFitx1").c_str(), nullptr);
+           x0 = strtod(request->arg("linearFitx0").c_str(), nullptr);
+           x1 = strtod(request->arg("linearFitx1").c_str(), nullptr);
            x2 = x3 = 0.0;
-        } else if (server.hasArg("quadratic")) {
+        } else if (request->hasArg("quadratic")) {
            degree = 2;
-           x0 = strtod(server.arg("quadraticFitx0").c_str(), nullptr);
-           x1 = strtod(server.arg("quadraticFitx1").c_str(), nullptr);
-           x2 = strtod(server.arg("quadraticFitx2").c_str(), nullptr);
+           x0 = strtod(request->arg("quadraticFitx0").c_str(), nullptr);
+           x1 = strtod(request->arg("quadraticFitx1").c_str(), nullptr);
+           x2 = strtod(request->arg("quadraticFitx2").c_str(), nullptr);
            x3 = 0.0;
-        } else if (server.hasArg("cubic")) {
+        } else if (request->hasArg("cubic")) {
            degree = 2;
-           x0 = strtod(server.arg("cubicFitx0").c_str(), nullptr);
-           x1 = strtod(server.arg("cubicFitx1").c_str(), nullptr);
-           x2 = strtod(server.arg("cubicFitx2").c_str(), nullptr);
-           x3 = strtod(server.arg("cubicFitx3").c_str(), nullptr);
+           x0 = strtod(request->arg("cubicFitx0").c_str(), nullptr);
+           x1 = strtod(request->arg("cubicFitx1").c_str(), nullptr);
+           x2 = strtod(request->arg("cubicFitx2").c_str(), nullptr);
+           x3 = strtod(request->arg("cubicFitx3").c_str(), nullptr);
         } else {
-            processCalibrationError();
+            processCalibrationError(request);
         }
     }
 
@@ -505,63 +531,93 @@ void processCalibration() {
             app_config.config["cal_pink"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
             break;
          default:
-             processCalibrationError();
+             processCalibrationError(request);
      }
 
-    redirectToCalibration();
+    redirectToCalibration(request);
 }
 
-
-bool loadFromSpiffs(const char* path)
+String getContentType(String filename, AsyncWebServerRequest *request)
 {
-    char p[strlen(path)+1];
-    strcpy(p,path);
-    char * suffix = strtok(p,".");
-    suffix = strtok(NULL,".");
-
-    char dataType[25];
-
-    if (strncmp(suffix,"htm",3)==0) strcpy(dataType,"text/html");
-    else if (strncmp(suffix,"css",3)==0) strcpy(dataType,"text/css");
-    else if (strncmp(suffix,"js",3)==0) strcpy(dataType,"application/javascript");
-    else if (strncmp(suffix,"png",3)==0) strcpy(dataType,"image/png");
-    else if (strncmp(suffix,"gif",3)==0) strcpy(dataType,"image/gif");
-    else if (strncmp(suffix,"jpg",3)==0) strcpy(dataType,"image/jpeg");
-    else if (strncmp(suffix,"ico",3)==0) strcpy(dataType,"image/x-icon");
-    else if (strncmp(suffix,"xml",3)==0) strcpy(dataType,"text/xml");
-    else if (strncmp(suffix,"pdf",3)==0) strcpy(dataType,"application/pdf");
-    else if (strncmp(suffix,"zip",3)==0) strcpy(dataType,"application/zip");
-    else strcpy(dataType,"text/plain");
-
-    File dataFile = SPIFFS.open(path, "r");   //open file to read
-    if (!dataFile)  //unsuccessful open
-        return false;
-    server.streamFile(dataFile, dataType);
-    dataFile.close();
-
-    return true; //shouldn't always return true, Added false above
+    if (request->hasArg("download"))
+    {
+        return "application/octet-stream";
+    }
+    else if (filename.endsWith(".htm"))
+    {
+        return "text/html";
+    }
+    else if (filename.endsWith(".html"))
+    {
+        return "text/html";
+    }
+    else if (filename.endsWith(".css"))
+    {
+        return "text/css";
+    }
+    else if (filename.endsWith(".js"))
+    {
+        return "application/javascript";
+    }
+    else if (filename.endsWith(".png"))
+    {
+        return "image/png";
+    }
+    else if (filename.endsWith(".gif"))
+    {
+        return "image/gif";
+    }
+    else if (filename.endsWith(".jpg"))
+    {
+        return "image/jpeg";
+    }
+    else if (filename.endsWith(".ico"))
+    {
+        return "image/x-icon";
+    }
+    else if (filename.endsWith(".xml"))
+    {
+        return "text/xml";
+    }
+    else if (filename.endsWith(".pdf"))
+    {
+        return "application/x-pdf";
+    }
+    else if (filename.endsWith(".zip"))
+    {
+        return "application/x-zip";
+    }
+    else if (filename.endsWith(".gz"))
+    {
+        return "application/x-gzip";
+    }
+    return "text/plain";
 }
+
+bool loadFromSpiffs(String path, AsyncWebServerRequest *request )
+{
+    DBG_OUTPUT_PORT.println("handleFileRead: " + path);
+    String contentType = getContentType(path, request);
+    //String pathWithGz = path + ".gz";
+    //if (exists(pathWithGz) || exists(path))
+    if (exists(path))
+    {
+        /*if (exists(pathWithGz))
+        {
+            path += ".gz";
+        }*/
+    
+        request->send(SPIFFS,path,contentType);
+        return true;
+    }
+    return false;
+}
+
 //-----------------------------------------------------------------------------------------
 
-void root_from_spiffs() {
-    loadFromSpiffs("/index.htm");
-}
-void settings_from_spiffs() {
-    loadFromSpiffs("/settings.htm");
-}
-void calibration_from_spiffs() {
-    loadFromSpiffs("/calibration.htm");
-}
-void about_from_spiffs() {
-    loadFromSpiffs("/about.htm");
-}
-void favicon_from_spiffs() {
-    loadFromSpiffs("/favicon.ico");
-}
-
 #ifndef DISABLE_OTA_UPDATES
-void trigger_OTA() {
-    loadFromSpiffs("/updating.htm");    // Send a message to the user to let them know what is going on
+void trigger_OTA(AsyncWebServerRequest *request) {
+    loadFromSpiffs("/updating.htm", request);    // Send a message to the user to let them know what is going on
     app_config.config["update_spiffs"] = true;
     lcd.display_ota_update_screen();    // Trigger this here while everything else is waiting.
     delay(1000);                        // Wait 1 second to let everything send
@@ -570,27 +626,25 @@ void trigger_OTA() {
 }
 #endif
 
-void trigger_wifi_reset() {
-    loadFromSpiffs("/wifi_reset.htm");    // Send a message to the user to let them know what is going on
-    delay(1000);                                // Wait 1 second to let everything send
+void trigger_wifi_reset(AsyncWebServerRequest *request) {
+    loadFromSpiffs("/wifi_reset.htm",request);    // Send a message to the user to let them know what is going on                               // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     disconnect_from_wifi_and_restart();         // Reset the wifi settings
 }
 
-void trigger_restart() {
-    loadFromSpiffs("/restarting.htm");    // Send a message to the user to let them know what is going on
+void trigger_restart(AsyncWebServerRequest *request) {
+    loadFromSpiffs("/restarting.htm", request);    // Send a message to the user to let them know what is going on
     http_server.restart_requested = true;
 }
 
-void http_json() {
-    // I probably don't want this inline so that I can add the Allow-Origin header (in case anyone wants to build
-    // scripts that pull this data)
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", tilt_scanner.tilt_to_json(false).dump().c_str());
+void http_json(AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",tilt_scanner.tilt_to_json(false).dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
 }
 
 // settings_json is intended to be used to build the "Change Settings" page
-void settings_json() {
+void settings_json(AsyncWebServerRequest *request) {
     // Not sure if I want to leave allow-origin here, but for now it's OK.
     //
     // Code modified to bundle an all_valid setting on end of json string to allow
@@ -602,40 +656,132 @@ void settings_json() {
     strcat(json_string,",\"all_valid\":");
     strcat(json_string,all_valid);
     strcat(json_string,"}");
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    //server.send(200, "application/json", app_config.config.dump().c_str());
-    server.send(200, "application/json", json_string);
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",json_string);
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
     all_valid[0] = '1';
 }
 
+// About page Handlers
+//
 
-void handleNotFound() {
-    server.send(404, "text/plain", "File Not Found\n\n");
+void this_version(AsyncWebServerRequest *request) {
+    json ver;
+
+    ver["version"] = version();
+    ver["branch"] = branch();
+    ver["build"] = build();
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",ver.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+}
+
+void uptime(AsyncWebServerRequest *request) {
+    json up;
+
+    const int days = uptimeDays();
+    const int hours = uptimeHours();
+    const int minutes = uptimeMinutes();
+    const int seconds = uptimeSeconds();
+    const int millis = uptimeMillis();
+
+    up["days"] = days;
+    up["hours"] = hours;
+    up["minutes"] = minutes;
+    up["seconds"] = seconds;
+    up["millis"] = millis;
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",up.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+}
+
+void heap(AsyncWebServerRequest *request) {
+    json heap;
+
+    uint32_t free = ESP.getFreeHeap();
+    uint32_t max = ESP.getMaxAllocHeap();;
+    uint8_t frag = 100 - (max * 100) / free;
+
+    heap["free"] = free;
+    heap["max"] = max;
+    heap["frag"] = frag;
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",heap.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+}
+
+void reset_reason(AsyncWebServerRequest *request) {
+    json rst;
+
+    int reset = (int)esp_reset_reason();
+
+    rst["reason"] = resetReason[reset];
+    rst["description"] = resetDescription[reset];
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",rst.dump().c_str());
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
 }
 
 
 void httpServer::init(){
-    server.on("/", root_from_spiffs);
-    server.on("/about/", about_from_spiffs);
-    server.on("/settings/", settings_from_spiffs);
-    server.on("/settings/update/", processConfig);
+    server.serveStatic("/", SPIFFS, "/");
+    server.rewrite("/", "/index.htm");
+    server.rewrite("/about/","/about.htm");
+    server.rewrite("/settings/","/settings.htm");
+    server.rewrite("/calibration/","/calibration.htm");
+    server.rewrite("/help/","/help.htm");
 
-    server.on("/calibration/", calibration_from_spiffs);
-    server.on("/calibration/update/", processCalibration);
-
-    server.on("/json/", http_json);
-    server.on("/settings/json/", settings_json);
+    server.on("/settings/update/",HTTP_POST,[](AsyncWebServerRequest *request){
+        processConfig(request);
+    });
+    server.on("/calibration/update/",HTTP_POST,[](AsyncWebServerRequest *request){
+        processCalibration(request);
+    });
+    server.on("/json/",HTTP_GET,[](AsyncWebServerRequest *request){
+        http_json(request);
+    });
+    server.on("/settings/json/",HTTP_GET,[](AsyncWebServerRequest *request){
+        settings_json(request);
+    });
+    // About Page Info Handlers
+    server.on("/thisVersion/",HTTP_GET,[](AsyncWebServerRequest *request){
+        this_version(request);
+    });
+    server.on("/uptime/",HTTP_GET,[](AsyncWebServerRequest *request){
+        uptime(request);
+    });
+    server.on("/heap/",HTTP_GET,[](AsyncWebServerRequest *request){
+        heap(request);
+    });
+    server.on("/resetreason/",HTTP_GET,[](AsyncWebServerRequest *request){
+        reset_reason(request);
+    });
+    
 #ifndef DISABLE_OTA_UPDATES
-    server.on("/ota/", trigger_OTA);
+    server.on("/ota/",HTTP_GET,[](AsyncWebServerRequest *request){
+        trigger_OTA(request);
+    });
 #endif
-    server.on("/wifi/", trigger_wifi_reset);
-    server.on("/restart/", trigger_restart);
-    server.on("/favicon.ico", favicon_from_spiffs);
+    server.on("/wifi/",HTTP_GET,[](AsyncWebServerRequest *request){
+        trigger_wifi_reset(request);
+    });
+    server.on("/restart/",HTTP_GET,[](AsyncWebServerRequest *request){
+        trigger_restart(request);
+    });
 
-    server.onNotFound(handleNotFound);
+    server.onNotFound([](AsyncWebServerRequest *request) {
+                // Look for other files on FILESYSTEM
+        if (!loadFromSpiffs(request->url(),request))
+        {
+            AsyncWebServerResponse *response = request->beginResponse(404,"text/plain","File Not Found\n\n");
+            request->send(response);
+        }
+
+    });
+
     server.begin();
-}
-
-void httpServer::handleClient(){
-    server.handleClient();
 }

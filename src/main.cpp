@@ -20,7 +20,7 @@ using json = nlohmann::json;
 #include "SPIFFS.h"
 //#include "bridge_lcd.h"
 #ifdef DEBUG_PRINTS
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <AsyncWiFiManager.h> // https://github.com/tzapu/WiFiManager
 #endif
 
 #include "http_server.h"
@@ -109,7 +109,9 @@ void loop() {
     reconnectIfDisconnected();  // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
     lcd.check_screen();
-    http_server.handleClient();
+    if (http_server.config_updated) {
+        app_config.save();
+    }
     if (http_server.restart_requested){ // Restart handling put in main loop to ensure that client has opportunity 
                                         // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
         if(restart_time <= xTaskGetTickCount()) {
@@ -119,5 +121,12 @@ void loop() {
     } else {
         restart_time = xTaskGetTickCount() + 5000;
     }
+    if (http_server.mqtt_init_rqd) {
+        data_sender.init_mqtt();
+    }
+    if (http_server.lcd_init_rqd) {
+        lcd.init();
+    }
+
     yield();
 }
