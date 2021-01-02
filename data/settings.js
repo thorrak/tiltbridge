@@ -1,3 +1,5 @@
+var posted = false;
+
 $(function () {
     $('[data-toggle="tooltip"]').tooltip()
 });
@@ -44,5 +46,33 @@ var vm = new Vue({
             };
             xhr.send()
         }
+    },
+    updated: function () {
+        this.$nextTick(function () {
+            // Code that will run only after the
+            // entire view has been re-rendered
+            posted = true;
+        })
     }
 });
+
+function buttonDisable() {
+    posted = false;
+    $("button[id='submitSettings']").prop('disabled', true);
+    $("button[id='submitSettings']").html('<i class="fa fa-spinner fa-spin"></i> Updating');
+    $("button[id='resetWiFi']").prop('disabled', true);
+    $("button[id='resetWiFi']").html('<i class="fa fa-spinner fa-spin"></i> Updating');
+    buttonClearDelay();
+}
+
+function buttonClearDelay() { // Poll to see if entire page is loaded
+    if (posted) {
+        $("button[id='submitSettings']").prop('disabled', false);
+        $("button[id='submitSettings']").html('Update');
+        $("button[id='resetWiFi']").prop('disabled', false);
+        $("button[id='resetWiFi']").html('Reset WiFi');
+        posted = false;
+    } else {
+        setTimeout(buttonClearDelay, 500); // try again in 300 milliseconds
+    }
+}

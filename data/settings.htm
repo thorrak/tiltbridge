@@ -83,7 +83,7 @@
 				<div class="card-body">
 					<p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will
 						cause the TiltBridge to restart.</p>
-					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
 						- 31 characters.">mDNS ID</label>
@@ -132,7 +132,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
 
@@ -150,7 +150,7 @@
 					<p class="card-text">These settings control whether or not TiltBridge applies <a
 							href="/calibration/">calibration</a> and temperature corrections to the Tilt reading
 						before it is uploaded.</p>
-					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="applyCalibration" class="col-sm-4 form-check-label"
 								data-toggle="tooltip" title="Apply calibration to Tilt data">Enable
@@ -176,7 +176,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
                 </div>
@@ -194,7 +194,7 @@
 							href="https://www.brewpiremix.com/">BrewPi Remix</a>.
 						To disable the push, delete the URL.
 					</p>
-					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="fermentrackURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
 								title="Target URL. Delete to disable the push">Target URL</label>
@@ -218,7 +218,7 @@
 
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
 
@@ -238,7 +238,7 @@
 						this feature (as well as a better explanation of these options), please read the
 						<a href="http://sheets.tiltbridge.com/">TiltBridge documentation here.</a>
 					</p>
-					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="scriptsURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
 								title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google
@@ -335,7 +335,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
 
@@ -358,7 +358,7 @@
 						go
 						to Profile > Account. Your API key will be a string of letters and numbers (not a URL).
 					</p>
-					<form action="/settings/update/" method="POST">
+					<form action="/settings/update/" method="POST" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="brewersFriendKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
 								title="Your Brewers Friend API key">Brewers Friend API Key</label>
@@ -369,7 +369,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
                 </div>
@@ -390,7 +390,7 @@
 						to Settings > Custom Stream. Your Stream key will be a string of letters and numbers
 						(not a URL).
 					</p>
-					<form action="/settings/update/" method="POST">
+					<form action="/settings/update/"  onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="brewfatherKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
 								title="Your Brewfather Stream key">Brewfather Stream key</label>
@@ -400,7 +400,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
                 </div>
@@ -418,7 +418,7 @@
 						delete
 						the BrewStatus URL.
 					</p>
-					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="brewstatusURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
 								title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus
@@ -442,7 +442,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
                 </div>
@@ -469,7 +469,7 @@
 						&nbsp;&nbsp;&nbsp;&nbsp;Payload:
 						{"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
 					</p>
-					<form action="/settings/update/" method="POST" enctype="multipart/form-data">
+					<form action="/settings/update/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
 						<div class="form-group row">
 							<label for="mqttBrokerIP" class="col-sm-3 col-form-label" data-toggle="tooltip"
 								title="MQTT Broker Server address. Delete to disable pushing to MQTT">MQTT
@@ -529,7 +529,7 @@
 							</div>
 						</div>
 						<div class="row col-sm-12 justify-content-center">
-							<button type="submit" class="btn btn-primary">Update</button>
+							<button type="submit" id="submitSettings" class="btn btn-primary">Update</button>
 						</div>
 					</form>
                 </div>
@@ -549,7 +549,7 @@
 						connection settings by clicking "Reset WiFi".
 					</p>
 					<div class="row col-sm-12 justify-content-center">
-						<a href="/wifi/" class="btn btn-danger">Reset WiFi</a>
+						<a href="/wifi/" id="resetWiFi" class="btn btn-danger">Reset WiFi</a>
 					</div>
 				</div>
 

@@ -83,7 +83,7 @@
                 <div class="card-body">
                     <p class="card-text">Select the tilt color to delete the current calibration. The current
                         calibration should be deleted before re-calibrating the Tilt.</p>
-                    <form action="/calibration/update/" method="POST">
+                    <form action="/calibration/update/" method="POST" onsubmit="buttonDisable();">
                         <div class="form-group row">
                             <label for="clearTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip"
                                 title="Select the color of the tilt to clear">Tilt Color</label>
@@ -100,7 +100,7 @@
                                 </select>
                             </div>
                             <div class="col-sm-2">
-                                <button type="submit" class="btn btn-primary">Clear</button>
+                                <button type="submit" id="clearSettings" class="btn btn-primary">Clear</button>
                             </div>
                         </div>
                     </form>
@@ -120,7 +120,7 @@
                         enter more calibration points, a quadratic and then a cubic fit will be estimated. Once you
                         have entered your calibration points the calibration correction is displayed and you can
                         apply it to the selected Tilt.</p>
-                    <form action="/calibration/update/" method="POST">
+                    <form action="/calibration/update/" method="POST" onsubmit="buttonDisable();">
                         <div class="form-group row">
                             <label for="updateTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip"
                                 title="Select the color of the tilt to calibrate">Tilt Color</label>
@@ -156,7 +156,7 @@
                                         placeholder="0" readonly>
                                 </div>
                                 <div class="col-sm-2">
-                                    <button type="submit" class="btn btn-primary" name="linear" value="linear">Apply</button>
+                                    <button type="submit" id="applySettings" class="btn btn-primary" name="linear" value="linear">Apply</button>
                                 </div>
                             </div>
                         </div>
@@ -187,7 +187,7 @@
                                         class="form-control" placeholder="0" readonly>
                                 </div>
                                 <div class="col-sm-2">
-                                    <button type="submit" class="btn btn-primary" name="quadratic" value="quadratic">Apply</button>
+                                    <button type="submit" id="applySettings" class="btn btn-primary" name="quadratic" value="quadratic">Apply</button>
                                 </div>
                             </div>
                         </div>
@@ -224,7 +224,7 @@
                                         placeholder="0" readonly>
                                 </div>
                                 <div class="col-sm-2">
-                                    <button type="submit" class="btn btn-primary" name="cubic" value="cubic">Apply</button>
+                                    <button type="submit" id="applySettings" class="btn btn-primary" name="cubic" value="cubic">Apply</button>
                                 </div>
                             </div>
 
@@ -343,7 +343,7 @@
                                     onchange="sgchanged()">
                             </div>
                             <div class="col-sm-2">
-                                <button type="submit" class="btn btn-primary">Clear</button>
+                                <button type="submit" id="clearSettings" class="btn btn-primary">Clear</button>
                             </div>
                         </div>
                     </fieldset>
