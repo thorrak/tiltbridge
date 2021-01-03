@@ -72,7 +72,7 @@
 
     <main role="main" class="flex-shrink-0">
 
-        <div class="container" id="gravapp"> <!-- Start vue Sensor container -->
+        <div v-cloak class="container" id="gravapp"> <!-- Start vue Sensor container -->
 
             <div class="card border-dark mb-3"><!-- TiltBridge Sensor Card -->
 
@@ -88,8 +88,7 @@
 
                             <div class="card mb-3"> <!-- Card -->
 
-                                <!-- div v-bind:class="[headerClass, textClass, backgroundClass, borderClass]"> --> <!-- Tilt Line -->
-                                <div class="card-header text-red-bg bg-red border-red"> <!-- Tilt Line -->
+                                <div class="card-header" v-bind:class="[sensor.textClass, sensor.bgClass, sensor.borderClass]"> <!-- Tilt Line -->
                                     <h5 class="card-title">{{sensor.color}} Tilt</h5>
                                     <h6 class="card-subtitle">Google Sheets: {{sensor.gsheets_name}}</h6>
                                 </div>
@@ -130,8 +129,8 @@
         crossorigin="anonymous">
     </script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.6.0/umd/popper.min.js"
+        integrity="sha384-KsvD1yqQ1/1+IA7gi3P0tyJcT3vR+NdBTt13hSJ2lnve8agRGXTTyNaBYmCR/Nwi"
         crossorigin="anonymous">
     </script>
 
@@ -140,8 +139,8 @@
         crossorigin="anonymous">
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"
-        integrity="sha384-c8inZyD0O4L/ErSuX3RVWgqsgtiAUw34TeSWiUwbKaXaI2RQg8SKVe80cipDBf0D"
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"
+        integrity="sha384-cwVe6U8Tq7F/3JIj6xeDzOwuqeChcmRcdYqDGfoYmdAurw7L3f4dFHhEJKfxv96A"
         crossorigin="anonymous">
     </script>
 
