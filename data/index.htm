@@ -72,54 +72,50 @@
 
     <main role="main" class="flex-shrink-0">
 
-        <div class="container"><!-- Container -->
+        <div class="container" id="gravapp"> <!-- Start vue Sensor container -->
 
-            <div class="card border-dark mb-3"> <!-- TiltBridge Main Card -->
+            <div class="card border-dark mb-3"><!-- TiltBridge Sensor Card -->
 
-                <div class="card-header">
-                    <h5 class="card-title">Available Tilts</h5>
+                <div class="card-header bg-light border-primary"> <!-- Tilt Line -->
+                    <h5>Available Tilts:</h5>
                 </div>
 
-                <div class="card-body" id="gravapp">
+                <div class="card-body">
 
-                    <div class="container"><!-- App Container -->
+                    <div class="row"> <!-- Row -->
 
-                        <div class="row"> <!-- Tilt Display Row -->
+                        <div class="col-12 col-sm-6" v-for="sensor in sensors"><!-- Start vue Sensor loop div -->
 
-                            <!-- Start vue Sensor loop div -->
-                            <div class="col-12 col-sm-6 sm-padded" v-for="sensor in sensors">
-                            
-                                <div class="card"> <!-- Tilt Card -->
+                            <div class="card mb-3"> <!-- Card -->
+
+                                <!-- div v-bind:class="[headerClass, textClass, backgroundClass, borderClass]"> --> <!-- Tilt Line -->
+                                <div class="card-header text-red-bg bg-red border-red"> <!-- Tilt Line -->
+                                    <h5 class="card-title">{{sensor.color}} Tilt</h5>
+                                    <h6 class="card-subtitle">Google Sheets: {{sensor.gsheets_name}}</h6>
+                                </div>
             
-                                    <div class="card-header">
-                                        <h5 class="card-title">{{sensor.color}} Tilt</h5>
-                                        <h6 class="card-subtitle mb-2 text-muted">Google Sheets: {{sensor.gsheets_name}}</h6>
+                                <div class="row">
+                                    <div class="col-6 d-flex flex-column text-center">
+                                        <div class="h5">Gravity</div>
+                                        <div class="">{{sensor.gravity | numeral('0.0000')}}</div> 
                                     </div>
-            
-                                    <div class="row"> <!-- Tilt Line -->
-                                        <div class="col-6 d-flex flex-column text-center">
-                                            <div class="p-2 h3">Gravity</div>
-                                            <div class="p-2">{{sensor.gravity | numeral('0.0000')}}</div>
-                                        </div>
-                                        <div class="col-6 d-flex flex-column text-center">
-                                            <div class="p-2 h3">Temperature</div>
-                                            <div class="p-2 text-center">{{sensor.temp}} &deg;{{sensor.tempUnit}}</div>
-                                        </div>
-                                    </div> <!-- Tilt Line -->
-            
-                                </div> <!-- Tilt Card -->
-            
-                            </div> <!-- End vue Sensor loop div -->
-            
-                        </div> <!-- Tilt Display Row -->
+                                    <div class="col-6 d-flex flex-column text-center">
+                                        <div class="h5">Temp</div>
+                                        <div class="text-center">{{sensor.temp}} &deg;{{sensor.tempUnit}}</div>
+                                    </div>
+                                </div><!-- End Tilt Line -->
+                                    
+                            </div> <!-- End Card -->
+                            
+                        </div> <!-- End vue Sensor loop div -->
 
-                    </div> <!-- App Container -->
+                    </div>  <!-- Row -->
 
                 </div>
 
-            </div> <!-- TiltBridge Main Card -->
+            </div>
 
-        </div> <!-- Container -->
+        </div> <!-- End vue application container -->
 
     </main>
 
