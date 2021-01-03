@@ -21,7 +21,19 @@ main>.container {
     padding-left: 15px;
 }
 
+[v-cloak] {
+	display: none;
+}
+
 /* Add dedicated colors so they do not change with Bootswatch */
+
+/*
+TODO:
+	- Review header colors (make them vivid)
+	- Review these:
+		- https://www.w3schools.com/colors/colors_schemes.asp
+		- https://www.sessions.edu/color-calculator/
+*/
 
 /* Black Tilt and Matching Text */
 .bg-black {
