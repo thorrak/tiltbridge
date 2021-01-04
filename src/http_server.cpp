@@ -4,36 +4,12 @@
 //
 
 #include "resetreasons.h"
-#include "tiltBridge.h"
-#include "wifi_setup.h"
 #include "http_server.h"
-#include "tilt/tiltScanner.h"
-#include "OTAUpdate.h"
-#include "sendData.h"
-
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-
-#include "SPIFFS.h"
-
-#include <fstream>
-#include <string>
-#include <iostream>
-
 httpServer http_server;
 
 AsyncWebServer server(80);
 
 char all_valid[2] = "1";
-
-#define FILESYSTEM SPIFFS
-
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#endif
 
 #define DBG_OUTPUT_PORT Serial
 
@@ -829,7 +805,7 @@ bool loadFromSpiffs(String path, AsyncWebServerRequest *request)
             path += ".gz";
         }*/
 
-        request->send(SPIFFS, path, contentType);
+        request->send(FILESYSTEM, path, contentType);
         return true;
     }
     return false;
@@ -977,7 +953,7 @@ void reset_reason(AsyncWebServerRequest *request)
 
 void httpServer::init()
 {
-    server.serveStatic("/", SPIFFS, "/");
+    server.serveStatic("/", FILESYSTEM, "/");
     server.rewrite("/", "/index.htm");
     server.rewrite("/about/", "/about.htm");
     server.rewrite("/settings/", "/settings.htm");
