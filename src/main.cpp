@@ -133,6 +133,7 @@ void loop() {
     }
     if (http_server.lcd_init_rqd) {
         lcd.init();
+        http_server.lcd_init_rqd = false;
     }
 
     yield();
