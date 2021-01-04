@@ -20,7 +20,7 @@
 #include "SPIFFS.h"
 //#include "bridge_lcd.h"
 #ifdef DEBUG_PRINTS
-//#include <AsyncWiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <AsyncWiFiManager.h> // https://github.com/tzapu/WiFiManager
 #endif
 
 #include "http_server.h"
@@ -42,30 +42,34 @@ uint64_t restart_time = 0;
 
 void setup() {
 #ifdef DEBUG_PRINTS
-    //Serial.begin(115200);
-    //Serial.setDebugOutput(false);
+    Serial.begin(115200);
+    Serial.setDebugOutput(false);
+    Serial.println("Initializing SPIFFS...");
 #endif
     // Handle all of the config initialization & loading
-#ifdef DEBUG_PRINTS
-    Serial.println("Initializing Config...");
-#endif
     SPIFFS.begin(true);
 
 #ifdef DEBUG_PRINTS
     Serial.println("Loading Config...");
 #endif
     app_config.load();
+
 #ifdef DEBUG_PRINTS
     char * config_js = (char *) malloc(sizeof(char) * 2500);
     app_config.dump_config(config_js);
-    free(config_js);
     Serial.println(config_js);
+    free(config_js);
 #endif
-    
+
+#ifdef DEBUG_PRINTS
     Serial.println(F("init lcd"));
+#endif
     // Handle setting the display up
     lcd.init();  // Intialize the display
+
+#ifdef DEBUG_PRINTS
     Serial.println(F("init wifi"));
+#endif
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
 

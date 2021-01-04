@@ -143,6 +143,7 @@ void processCalibrationError(AsyncWebServerRequest *request) {
 }
 
 
+// TODO - This should be refactored to accept pointers to the string we were passed and the string to wet
 void processSheetName(const char* varName, bool &is_empty, bool &is_valid, AsyncWebServerRequest *request) {
     is_valid = false;
     is_empty = false;
@@ -681,7 +682,8 @@ void trigger_OTA(AsyncWebServerRequest *request) {
 void trigger_wifi_reset(AsyncWebServerRequest *request) {
     loadFromSpiffs("/wifi_reset.htm",request);    // Send a message to the user to let them know what is going on                               // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    //disconnect_from_wifi_and_restart();         // Reset the wifi settings
+    // TODO - Come back and refactor this lightly to use similar logic to restart_requested
+    disconnect_from_wifi_and_restart();         // Reset the wifi settings
 }
 
 void trigger_restart(AsyncWebServerRequest *request) {
