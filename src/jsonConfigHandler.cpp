@@ -4,6 +4,7 @@
 //
 
 #include "jsonConfigHandler.h"
+#include <FS.h>
 
 void jsonConfigHandler::initialize()
 {
@@ -195,8 +196,7 @@ bool jsonConfigHandler::read_config_from_spiffs()
     strlcpy(config.mqttPassword, loaded_config["mqttPassword"] | "", 65);
     strlcpy(config.mqttTopic, loaded_config["mqttTopic"] | "tiltbridge", 31);
     config.mqttPushEvery = loaded_config["mqttPushEvery"] | 30;
-    Serial.println("Config file successfully loaded");
-
+    Log.verbose(F("Config file successfully loaded." CR));
     return true;
 }
 

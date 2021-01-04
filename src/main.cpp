@@ -3,55 +3,41 @@
 // Modified by Tim Pletcher on 31-Oct-2020.
 //
 
-//#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
-//#include "esp_log.h"
-
 #include "http_server.h"
 #include "sendData.h"
 #include "tiltBridge.h"
 #include "wifi_setup.h"
+#include "serialhandler.h"
 #include <Arduino.h>
 #include <driver/i2c.h>
-#include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <stdio.h>
 #include <sdkconfig.h>
 
 jsonConfigHandler app_config;
-#ifdef DEBUG_PRINTS
-uint64_t trigger_next_data_send = 0;
-#endif
+uint64_t trigger_next_data_send = 0; // For DEBUG mem printing
 uint64_t restart_time = 0;
 
 void setup()
 {
-#ifdef DEBUG_PRINTS
-    Serial.begin(BAUD);
-    Serial.setDebugOutput(false);
-#endif
+    serial();
 
-#ifdef DEBUG_PRINTS
-    Serial.println("Loading Config...");
-#endif
+    FILESYSTEM.begin();
+
+    Log.verbose(F("Loading config." CR));
     app_config.load();
 
-#ifdef _DEBUG_PRINTS // Disabled
-    char *config_js = (char *)malloc(sizeof(char) * 2500);
-    app_config.dump_config(config_js);
-    Serial.println(config_js);
-    free(config_js);
-#endif
+    // char *config_js = (char *)malloc(sizeof(char) * 2500);
+    // app_config.dump_config(config_js);
+    // Serial.println(config_js);
+    // free(config_js);
 
-#ifdef DEBUG_PRINTS
-    Serial.println(F("init lcd"));
-#endif
+    Log.verbose(F("Initializing LCD." CR));
     // Handle setting the display up
     lcd.init(); // Initialize the display
 
-#ifdef DEBUG_PRINTS
-    Serial.println(F("init wifi"));
-#endif
+    Log.verbose(F("Initializing WiFi." CR));
     init_wifi(); // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
 
@@ -76,6 +62,7 @@ void setup()
 
 void loop()
 {
+    serialLoop();
 
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if (tilt_scanner.scan())
@@ -83,15 +70,12 @@ void loop()
         // If we need to do anything when a new scan is started, trigger it here.
     }
 
-#ifdef DEBUG_PRINTS
     // This is optional & just allows us to print the available ram in case of memory leaks.
     if (trigger_next_data_send <= xTaskGetTickCount())
     { // Every 10 seconds, print some kind of status
-        Serial.printf_P(PSTR("Current / Minimum RAM left:  %d  /  "), esp_get_free_heap_size());
-        Serial.printf_P(PSTR("%d\r\n"), esp_get_minimum_free_heap_size());
+        Log.verbose(F("Current RAM: %d / Minumum RAM left: %d." CR), esp_get_free_heap_size(), esp_get_minimum_free_heap_size());
         trigger_next_data_send = xTaskGetTickCount() + 10000;
     }
-#endif
 
     //handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect

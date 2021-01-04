@@ -6,6 +6,7 @@
 #define TILTBRIDGE_JSONCONFIGHANDLER_H
 
 #include "sendData.h"
+#include "serialhandler.h"
 
 #include <Arduino.h>
 #include <fstream>
@@ -13,10 +14,9 @@
 #include <iostream>
 #include <ArduinoJson.h>
 
-#define FILESYSTEM SPIFFS
-
 #if FILESYSTEM == SPIFFS
 #include <SPIFFS.h>
+#include <FS.h>
 #endif
 
 #define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
