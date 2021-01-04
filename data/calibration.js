@@ -452,8 +452,8 @@ function buttonDisable() {
     // All this is going to do is disable the buttons, the whole page
     // (currently) reloads.  The work we do in settings is a little
     // more glamorous.
-    $("button[id='clearSettings']").prop('disabled', true);
-    $("button[id='clearSettings']").html('<i class="fa fa-spinner fa-spin"></i> Updating');
-    $("button[id='applySettings']").prop('disabled', true);
-    $("button[id='applySettings']").html('<i class="fa fa-spinner fa-spin"></i> Updating');
+    $( ".button-clearsettings" ).prop('disabled', true);
+    $( ".button-clearsettings" ).html('<i class="fa fa-spinner fa-spin"></i> Clearing');
+    $( ".button-applysettings" ).prop('disabled', true);
+    $( ".button-applysettings" ).html('<i class="fa fa-spinner fa-spin"></i> Updating');
 }
