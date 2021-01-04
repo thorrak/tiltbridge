@@ -5,6 +5,12 @@
 #ifndef TILTBRIDGE_WIFI_SETUP_H
 #define TILTBRIDGE_WIFI_SETUP_H
 
+#include "serialhandler.h"
+#include "tiltBridge.h"
+#include <Arduino.h>
+#include <AsyncWiFiManager.h>
+#include <ESPmDNS.h>
+#include <WiFiClient.h>
 
 void init_wifi();
 void initWiFiResetButton();
