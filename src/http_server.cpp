@@ -3,11 +3,11 @@
 // Modified by Tim Pletcher 31-Oct-2020.
 //
 
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 #include "resetreasons.h"
 
 // for convenience
-using json = nlohmann::json;
+//using json = nlohmann::json;
 
 
 #include "tiltBridge.h"
@@ -143,20 +143,22 @@ void processCalibrationError(AsyncWebServerRequest *request) {
 }
 
 
-bool processSheetName(const char* varName, const char* colorName, AsyncWebServerRequest *request) {
+void processSheetName(const char* varName, bool &is_empty, bool &is_valid, AsyncWebServerRequest *request) {
+    is_valid = false;
+    is_empty = false;
     if (request->hasArg(varName)) {
         if (request->arg(varName).length() > 64) {
-            return false;
+            is_empty = false;
+            is_valid = false;
         } else if (request->arg(varName).length() < 1) {
-            app_config.config[varName] = "";
-            return true;
+            is_empty = true;
+            is_valid = true;
         } else {
-            app_config.config[varName] = request->arg(varName).c_str();
-            return true;
+            is_valid = true;
+            is_empty = false;
         }
     }
     // True or false is error state - not if it was processed
-    return true;
 }
 
 void processConfig(AsyncWebServerRequest *request) {
@@ -166,24 +168,23 @@ void processConfig(AsyncWebServerRequest *request) {
     bool mqtt_broker_update = false;
 
     // Generic TiltBridge Settings
-    if (request->hasArg("mdnsID") && (app_config.config["mdnsID"].get<std::string>() != request->arg("mdnsID").c_str())) {
-        if (isValidmdnsName(request->arg("mdnsID").c_str())) {
-            app_config.config["mdnsID"] = request->arg("mdnsID").c_str();
-            // When we update the mDNS ID, a lot of things have to get reset. Rather than doing the hard work of actually
-            // resetting those settings & broadcasting the new ID, let's just restart the controller.
-            restart_tiltbridge = true;
-        } else {
-            all_settings_valid = false;
+    if (request->hasArg("mdnsID") ) {
+        if (strncmp(app_config.config.mdnsID,request->arg("mdnsID").c_str(),32) != 0) {
+            if (isValidmdnsName(request->arg("mdnsID").c_str())) {
+                strlcpy(app_config.config.mdnsID, request->arg("mdnsID").c_str(), 32);
+                // When we update the mDNS ID, a lot of things have to get reset. Rather than doing the hard work of actually
+                // resetting those settings & broadcasting the new ID, let's just restart the controller.
+                restart_tiltbridge = true;
+            } else {
+                all_settings_valid = false;
+            }
         }
-    }
-
-    if (request->hasArg("TZoffset")) {
         if (request->arg("TZoffset").length() > 0 && request->arg("TZoffset").length() <= 3 ) {
             int tzo;
             bool is_int;
             isInteger(request->arg("TZoffset").c_str(),is_int,tzo);
             if(tzo >= -12 && tzo <= 14) {
-                app_config.config["TZoffset"] = tzo;
+                app_config.config.TZoffset = tzo;
             } else {
 #ifdef DEBUG_PRINTS
                 DBG_OUTPUT_PORT.println(F("brewstatusTZoffset is not between -12 and 14!"));
@@ -191,73 +192,61 @@ void processConfig(AsyncWebServerRequest *request) {
                 all_settings_valid = false;
             }
         }
-    }
 
-    if (request->hasArg("smoothFactor")) {
         int sf;
         bool is_int;
         isInteger(request->arg("smoothFactor").c_str(),is_int,sf);
-        if (sf != app_config.config["smoothFactor"].get<int>()) {
+        if (sf != app_config.config.smoothFactor) {
             if (is_int && sf >= 0 && sf <= 99) {
-                app_config.config["smoothFactor"] = sf;
+                app_config.config.smoothFactor = sf;
             } else {
                 all_settings_valid = false;
             }
         }
-    }
 
-    if (request->hasArg("tempUnit") && (app_config.config["tempUnit"] != request->arg("tempUnit").c_str()) ) {
-        // TODO - Come back and re-integrate this with pletch's work
-        app_config.config["tempUnit"] = request->arg("tempUnit").c_str();
-    }
+        strlcpy(app_config.config.tempUnit,request->arg("tempUnit").c_str(),2);
 
-    if (request->hasArg("invertTFT")) {
-        if((request->arg("invertTFT")=="on") && (!app_config.config["invertTFT"].get<bool>())) {
-            app_config.config["invertTFT"] = true;
+        if( request->arg("invertTFT")=="on" && !app_config.config.invertTFT ) {
+            app_config.config.invertTFT = true;
             reinit_tft = true;
-        } else if ((request->arg("invertTFT")=="off") && (app_config.config["invertTFT"].get<bool>())){
-            app_config.config["invertTFT"] = false;
+        } else if ( request->arg("invertTFT")=="off" && app_config.config.invertTFT ){
+            app_config.config.invertTFT = false;
             reinit_tft = true;
         }
     }
 
     if (request->hasArg("applyCalibration")) {
-        if((request->arg("applyCalibration")=="on") && (!app_config.config["applyCalibration"].get<bool>())) {
-            app_config.config["applyCalibration"] = true;
-        } else if ((request->arg("applyCalibration")=="off") && (app_config.config["applyCalibration"].get<bool>())){
-            app_config.config["applyCalibration"] = false;
+        if( request->arg("applyCalibration")=="on" &&  !app_config.config.applyCalibration ) {
+            app_config.config.applyCalibration = true;
+        } else if ( request->arg("applyCalibration") == "off" && app_config.config.applyCalibration ){
+            app_config.config.applyCalibration = false;
         }
+
+        if( request->arg("tempCorrect") == "on" && !app_config.config.tempCorrect ) {
+            app_config.config.tempCorrect = true;
+        } else if ( request->arg("tempCorrect")=="off" && app_config.config.tempCorrect ) {
+            app_config.config.tempCorrect = false;
+        }
+    
     }
 
-    if (request->hasArg("tempCorrect")) {
-        if((request->arg("tempCorrect")=="on") && (!app_config.config["tempCorrect"].get<bool>())) {
-            app_config.config["tempCorrect"] = true;
-        } else if ((request->arg("tempCorrect")=="off") && (app_config.config["tempCorrect"].get<bool>())){
-            app_config.config["tempCorrect"] = false;
-        }
-    }
-
-    // Fermentrack Settings
-    if (request->hasArg("fermentrackURL") &&
-       (app_config.config["fermentrackURL"].get<std::string>() != request->arg("fermentrackURL").c_str())) {
-        if (request->arg("fermentrackURL").length() <= 255) {
-            if (request->arg("fermentrackURL").length() < 12) {
-                app_config.config["fermentrackURL"] = "";
+    // LocalTarget Settings
+    if (request->hasArg("localTargetURL")) {
+        if (request->arg("localTargetURL").length() <= 255) {
+            if (request->arg("localTargetURL").length() < 12) {
+                strlcpy(app_config.config.localTargetURL,"",2);
             }else{
-                app_config.config["fermentrackURL"] = request->arg("fermentrackURL").c_str();
+                strlcpy(app_config.config.localTargetURL,request->arg("localTargetURL").c_str(),256);
             }
         } else {
             all_settings_valid = false;
         }
 
-    }
-
-    if (request->hasArg("fermentrackPushEvery")) {
         int push_every;
         bool is_int;
-        isInteger(request->arg("fermentrackPushEvery").c_str(),is_int,push_every);
+        isInteger(request->arg("localTargetPushEvery").c_str(),is_int,push_every);
         if (is_int && push_every <= 3600 && push_every >= 15) {
-            app_config.config["fermentrackPushEvery"] = push_every;
+            app_config.config.localTargetPushEvery = push_every;
         } else {
             all_settings_valid = false;
         }
@@ -265,25 +254,22 @@ void processConfig(AsyncWebServerRequest *request) {
     }
 
     // Brewstatus Settings
-    if (request->hasArg("brewstatusURL") &&
-            (app_config.config["brewstatusURL"].get<std::string>() != request->arg("brewstatusURL").c_str())) {
+    if (request->hasArg("brewstatusURL")) {
         if (request->arg("brewstatusURL").length() <= 255) {
             if (request->arg("brewstatusURL").length() < 12) {
-                app_config.config["brewstatusURL"] = "";
+                strlcpy(app_config.config.brewstatusURL,"",2);
             } else {
-                app_config.config["brewstatusURL"] = request->arg("brewstatusURL").c_str();
+                strlcpy(app_config.config.brewstatusURL, request->arg("brewstatusURL").c_str(),256);
             }
         } else {
             all_settings_valid = false;
         }
-    }
 
-    if (request->hasArg("brewstatusPushEvery")) {
         int push_every;
         bool is_int;
         isInteger(request->arg("brewstatusPushEvery").c_str(),is_int,push_every);
         if (is_int && push_every <= 3600 && push_every >= 30) {
-            app_config.config["brewstatusPushEvery"] = push_every;
+            app_config.config.brewstatusPushEvery = push_every;
         } else {
             all_settings_valid = false;
         }
@@ -294,54 +280,99 @@ void processConfig(AsyncWebServerRequest *request) {
         if (request->arg("scriptsURL").length() <= 255) {
             if (request->arg("scriptsURL").length() > 12 &&
                 (strncmp(request->arg("scriptsURL").c_str(),"https://script.google.com/", 26)==0)) {
-
-            app_config.config["scriptsURL"] = request->arg("scriptsURL").c_str();
+                strlcpy(app_config.config.scriptsURL,request->arg("scriptsURL").c_str(),256);
             } else {
-                app_config.config["scriptsURL"] = "";
+                strlcpy(app_config.config.scriptsURL,"",2);
             }
         } else {
             all_settings_valid = false;
         }
-    }
 
-    if (request->hasArg("scriptsEmail")) {
         if (request->arg("scriptsEmail").length() <= 255) {
             if (request->arg("scriptsEmail").length() < 7) {
-                app_config.config["scriptsEmail"] = "";
+                strlcpy(app_config.config.scriptsEmail,"",2);
             } else {
-                app_config.config["scriptsEmail"] = request->arg("scriptsEmail").c_str();
+                strlcpy(app_config.config.scriptsEmail,request->arg("scriptsEmail").c_str(),256);
             }
         } else {
             all_settings_valid = false;
         }
-    }
-
 
     // Individual Google Sheets Beer Log Names
-    if (!processSheetName("sheetName_red", "Red", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_green", "Green", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_black", "Black", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_purple", "Purple", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_orange", "Orange", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_blue", "Blue", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_yellow", "Yellow", request))
-        all_settings_valid = false;
-    if (!processSheetName("sheetName_pink", "Pink", request))
-        all_settings_valid = false;
-
+        bool is_empty;
+        bool is_valid;
+        processSheetName("sheetName_red", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_red,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_red,request->arg("sheetName_red").c_str(),25);
+        }
+        processSheetName("sheetName_green", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_green,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_green,request->arg("sheetName_green").c_str(),25);
+        }
+        processSheetName("sheetName_black", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_black,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_black,request->arg("sheetName_black").c_str(),25);
+        }
+        processSheetName("sheetName_purple", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_purple,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_purple,request->arg("sheetName_purple").c_str(),25);
+        }
+        processSheetName("sheetName_orange", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_orange,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_orange,request->arg("sheetName_orange").c_str(),25);
+        }
+        processSheetName("sheetName_blue", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_blue,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_blue,request->arg("sheetName_blue").c_str(),25);
+        }
+        processSheetName("sheetName_yellow", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_yellow,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_yellow,request->arg("sheetName_yellow").c_str(),25);
+        }
+        processSheetName("sheetName_pink", is_empty,is_valid,request);
+        if (!is_valid) {
+            all_settings_valid = false;
+        } else if (is_empty) {
+            strlcpy(app_config.config.sheetName_pink,"",2);
+        } else {
+            strlcpy(app_config.config.sheetName_pink,request->arg("sheetName_pink").c_str(),25);
+        }
+    }
     // Brewers Friend Setting
     if (request->hasArg("brewersFriendKey")) {
         if (request->arg("brewersFriendKey").length() <= 255) {
             if (request->arg("brewersFriendKey").length() < BREWERS_FRIEND_MIN_KEY_LENGTH) {
-                app_config.config["brewersFriendKey"] = "";
+                strlcpy(app_config.config.brewersFriendKey,"",2);
             }else{
-                app_config.config["brewersFriendKey"] = request->arg("brewersFriendKey").c_str();
+                strlcpy(app_config.config.brewersFriendKey,request->arg("brewersFriendKey").c_str(),25);
             }
         } else {
             all_settings_valid = false;
@@ -352,9 +383,9 @@ void processConfig(AsyncWebServerRequest *request) {
     if (request->hasArg("brewfatherKey")) {
         if (request->arg("brewfatherKey").length() <= 255) {
             if (request->arg("brewfatherKey").length() < BREWERS_FRIEND_MIN_KEY_LENGTH) {
-                app_config.config["brewfatherKey"] = "";
+                strlcpy(app_config.config.brewfatherKey,"",2);
             }else{
-                app_config.config["brewfatherKey"] = request->arg("brewfatherKey").c_str();
+                strlcpy(app_config.config.brewfatherKey,request->arg("brewfatherKey").c_str(),25);
             }
         } else {
             all_settings_valid = false;
@@ -362,83 +393,72 @@ void processConfig(AsyncWebServerRequest *request) {
     }
 
     // MQTT
-    if (request->hasArg("mqttBrokerIP") && (app_config.config["mqttBrokerIP"].get<std::string>() != request->arg("mqttBrokerIP").c_str())) {
+    if (request->hasArg("mqttBrokerIP")) {
         if (isvalidAddress(request->arg("mqttBrokerIP").c_str())){
-            app_config.config["mqttBrokerIP"] = request->arg("mqttBrokerIP").c_str();
+            strlcpy(app_config.config.mqttBrokerIP,request->arg("mqttBrokerIP").c_str(),254);
             mqtt_broker_update = true;
         }
         else if (request->arg("mqttBrokerIP").length() < 2) {
-            app_config.config["mqttBrokerIP"] = "";
+            strlcpy(app_config.config.mqttBrokerIP,"",2);
         }
         else {
             all_settings_valid = false;
         }
-    }
-
-    if (request->hasArg("mqttBrokerPort")) {
+    
         int port_number;
         bool is_int;
         isInteger(request->arg("mqttBrokerPort").c_str(),is_int,port_number);
         if (is_int && port_number < 65535 && port_number > 1024) {
-            if (app_config.config["mqttBrokerPort"].get<int>() != port_number) {
-                app_config.config["mqttBrokerPort"] = port_number;
+            if (app_config.config.mqttBrokerPort != port_number) {
+                app_config.config.mqttBrokerPort = port_number;
                 mqtt_broker_update = true;
             }
         } else {
             all_settings_valid = false;
         }
-    }
 
-    if (request->hasArg("mqttPushEvery")) {
         int push_every;
-        bool is_int;
         isInteger(request->arg("mqttPushEvery").c_str(),is_int,push_every);
         if (is_int && push_every <= 3600 && push_every >=15 ) {
-            app_config.config["mqttPushEvery"] = push_every;
+            app_config.config.mqttPushEvery = push_every;
         } else {
             all_settings_valid = false;
         }
-    }
 
-
-    if (request->hasArg("mqttUsername") && (app_config.config["mqttUsername"].get<std::string>() != request->arg("mqttUsername").c_str())) {
         if (request->arg("mqttUsername").length() <= 50) {
             if (request->arg("mqttUsername").length() <= 0){
-                app_config.config["mqttUsername"] = "";
+                strlcpy(app_config.config.mqttUsername,"",2);
             }else{
-                app_config.config["mqttUsername"] = request->arg("mqttUsername").c_str();
+                strlcpy(app_config.config.mqttUsername,request->arg("mqttUsername").c_str(),51);
             }
             mqtt_broker_update = true;
         } else {
             all_settings_valid = false;
         }
-    }
 
-    if (request->hasArg("mqttPassword") && (app_config.config["mqttPassword"].get<std::string>() != request->arg("mqttPassword").c_str())) {
         if (request->arg("mqttPassword").length() <= 128) {
             if (request->arg("mqttPassword").length() <= 0){
-                app_config.config["mqttPassword"] = "";
+                strlcpy(app_config.config.mqttPassword,"",2);
             }else{
-            app_config.config["mqttPassword"] = request->arg("mqttPassword").c_str();
+                strlcpy(app_config.config.mqttPassword,request->arg("mqttPassword").c_str(),65);
             }
             mqtt_broker_update = true;
         } else {
             all_settings_valid = false;
         }
-    }
 
-
-    if (request->hasArg("mqttTopic")) {
         if (request->arg("mqttTopic").length() <= 30){
             if (request->arg("mqttTopic").length() <= 2) {
-                app_config.config["mqttTopic"] = "tiltbridge";
+                strlcpy(app_config.config.mqttTopic,"tiltbridge",11);
             }else{
-                app_config.config["mqttTopic"] = request->arg("mqttTopic").c_str();
+                strlcpy(app_config.config.mqttTopic,request->arg("mqttTopic").c_str(),31);
             }
         } else {
             all_settings_valid = false;
         }
     }
+
+    
 
     // If we made it this far, one or more settings were updated. Save.
     if(all_settings_valid) {
@@ -507,28 +527,60 @@ void processCalibration(AsyncWebServerRequest *request) {
 
     switch( tilt_name ) {
         case str2int("red"):
-            app_config.config["cal_red"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_red_degree = degree;
+            app_config.config.cal_red_x0 = x0;
+            app_config.config.cal_red_x1 = x1;
+            app_config.config.cal_red_x2 = x2;
+            app_config.config.cal_red_x3 = x3;
             break;
         case str2int("green"):
-            app_config.config["cal_green"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_green_degree = degree;
+            app_config.config.cal_green_x0 = x0;
+            app_config.config.cal_green_x1 = x1;
+            app_config.config.cal_green_x2 = x2;
+            app_config.config.cal_green_x3 = x3;
             break;
         case str2int("black"):
-            app_config.config["cal_black"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_black_degree = degree;
+            app_config.config.cal_black_x0 = x0;
+            app_config.config.cal_black_x1 = x1;
+            app_config.config.cal_black_x2 = x2;
+            app_config.config.cal_black_x3 = x3;
             break;
         case str2int("purple"):
-            app_config.config["cal_purple"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_purple_degree = degree;
+            app_config.config.cal_purple_x0 = x0;
+            app_config.config.cal_purple_x1 = x1;
+            app_config.config.cal_purple_x2 = x2;
+            app_config.config.cal_purple_x3 = x3;
             break;
         case str2int("orange"):
-            app_config.config["cal_orange"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_orange_degree = degree;
+            app_config.config.cal_orange_x0 = x0;
+            app_config.config.cal_orange_x1 = x1;
+            app_config.config.cal_orange_x2 = x2;
+            app_config.config.cal_orange_x3 = x3;
             break;
         case str2int("blue"):
-            app_config.config["cal_blue"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_blue_degree = degree;
+            app_config.config.cal_blue_x0 = x0;
+            app_config.config.cal_blue_x1 = x1;
+            app_config.config.cal_blue_x2 = x2;
+            app_config.config.cal_blue_x3 = x3;
             break;
         case str2int("yellow"):
-            app_config.config["cal_yellow"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_yellow_degree = degree;
+            app_config.config.cal_yellow_x0 = x0;
+            app_config.config.cal_yellow_x1 = x1;
+            app_config.config.cal_yellow_x2 = x2;
+            app_config.config.cal_yellow_x3 = x3;
             break;
         case str2int("pink"):
-            app_config.config["cal_pink"] =  {{"degree", degree}, {"x0", x0}, {"x1", x1}, {"x2", x2}, {"x3", x3}};
+            app_config.config.cal_pink_degree = degree;
+            app_config.config.cal_pink_x0 = x0;
+            app_config.config.cal_pink_x1 = x1;
+            app_config.config.cal_pink_x2 = x2;
+            app_config.config.cal_pink_x3 = x3;
             break;
          default:
              processCalibrationError(request);
@@ -629,7 +681,7 @@ void trigger_OTA(AsyncWebServerRequest *request) {
 void trigger_wifi_reset(AsyncWebServerRequest *request) {
     loadFromSpiffs("/wifi_reset.htm",request);    // Send a message to the user to let them know what is going on                               // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    disconnect_from_wifi_and_restart();         // Reset the wifi settings
+    //disconnect_from_wifi_and_restart();         // Reset the wifi settings
 }
 
 void trigger_restart(AsyncWebServerRequest *request) {
@@ -638,7 +690,9 @@ void trigger_restart(AsyncWebServerRequest *request) {
 }
 
 void http_json(AsyncWebServerRequest *request) {
-    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",tilt_scanner.tilt_to_json(false).dump().c_str());
+    char tilt_data[1600];
+    tilt_scanner.tilt_to_json_string(tilt_data,false);
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",tilt_data);
     response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
 }
@@ -650,15 +704,17 @@ void settings_json(AsyncWebServerRequest *request) {
     // Code modified to bundle an all_valid setting on end of json string to allow
     // javascript code to determine if a bad config value was passed.
     // Seems like there should be a cleaner way to do this but it works for now.
-    char json_string[strlen(app_config.config.dump().c_str())+16];
-    json_string[0] = {'\0'};
-    strncat(json_string,app_config.config.dump().c_str(),strlen(app_config.config.dump().c_str())-1);
-    strcat(json_string,",\"all_valid\":");
-    strcat(json_string,all_valid);
-    strcat(json_string,"}");
-    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",json_string);
+
+    char * config_js = (char *) malloc(sizeof(char) * 2500);
+    app_config.dump_config(config_js);
+    config_js[strlen(config_js)-1] = {'\0'};
+    strcat(config_js,",\"all_valid\":");
+    strcat(config_js,all_valid);
+    strcat(config_js,"}");
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",config_js);
     response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
+    free(config_js);
     all_valid[0] = '1';
 }
 
@@ -666,19 +722,22 @@ void settings_json(AsyncWebServerRequest *request) {
 //
 
 void this_version(AsyncWebServerRequest *request) {
-    json ver;
+    StaticJsonDocument<200> ver;
 
     ver["version"] = version();
     ver["branch"] = branch();
     ver["build"] = build();
 
-    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",ver.dump().c_str());
+    char output[200];
+    serializeJson(ver,output);
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",output);
     response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
 }
 
 void uptime(AsyncWebServerRequest *request) {
-    json up;
+    StaticJsonDocument<200> up;
 
     const int days = uptimeDays();
     const int hours = uptimeHours();
@@ -692,13 +751,16 @@ void uptime(AsyncWebServerRequest *request) {
     up["seconds"] = seconds;
     up["millis"] = millis;
 
-    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",up.dump().c_str());
+    char output[200];
+    serializeJson(up,output);
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",output);
     response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
 }
 
 void heap(AsyncWebServerRequest *request) {
-    json heap;
+    StaticJsonDocument<200> heap;
 
     uint32_t free = ESP.getFreeHeap();
     uint32_t max = ESP.getMaxAllocHeap();;
@@ -708,20 +770,26 @@ void heap(AsyncWebServerRequest *request) {
     heap["max"] = max;
     heap["frag"] = frag;
 
-    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",heap.dump().c_str());
+    char output[200];
+    serializeJson(heap,output);
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",output);
     response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
 }
 
 void reset_reason(AsyncWebServerRequest *request) {
-    json rst;
+    StaticJsonDocument<200> rst;
 
     int reset = (int)esp_reset_reason();
 
     rst["reason"] = resetReason[reset];
     rst["description"] = resetDescription[reset];
 
-    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",rst.dump().c_str());
+    char output[200];
+    serializeJson(rst,output);
+
+    AsyncWebServerResponse *response = request->beginResponse(200,"application/json",output);
     response->addHeader("Access-Control-Allow-Origin", "*");
     request->send(response);
 }

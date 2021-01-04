@@ -5,16 +5,19 @@
 
 #include<ctime>
 
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 
 // for convenience
-using json = nlohmann::json;
+//using json = nlohmann::json;
+#include <ArduinoJson.h>
 
 #include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "sendData.h"
 #include <Arduino.h>
 #include <HTTPClient.h>
+#include <FS.h>
+#include "SPIFFS.h"
 
 #include <WiFi.h>
 #include <MQTT.h>
@@ -29,7 +32,7 @@ WiFiClient wClient;
 MQTTClient mqttClient(256);
 
 dataSendHandler::dataSendHandler() {
-    send_to_fermentrack_at =    20 * 1000; // Trigger first send to Fermentrack 20 seconds out
+    send_to_localTarget_at =    20 * 1000; // Trigger first send to Fermentrack 20 seconds out
     send_to_brewstatus_at =     40 * 1000; // Trigger first send to BrewStatus 40 seconds out
     send_to_brewfather_at =     50 * 1000; // Trigger first send to Brewfather 50 seconds out
     send_to_brewers_friend_at = 55 * 1000; // Trigger first send to Brewer's Friend 55 seconds out
@@ -63,38 +66,37 @@ void dataSendHandler::init() {
 }
 
 void dataSendHandler::init_mqtt() {
-    if(app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH){
+    if(strlen(app_config.config.mqttBrokerIP) > IP_MIN_STRING_LENGTH){
 #ifdef DEBUG_PRINTS
         Serial.print(F("Initializing Connection to MQTTBroker at IP: "));
-        Serial.print(app_config.config["mqttBrokerIP"].get<std::string>().c_str());
+        Serial.print(app_config.config.mqttBrokerIP);
         Serial.print(F(" on port: "));
-        Serial.println(app_config.config["mqttBrokerPort"].get<int>());
+        Serial.println(app_config.config.mqttBrokerPort);
 #endif
-        mqttClient.setKeepAlive(app_config.config["mqttPushEvery"].get<int>() * 1000);
+        mqttClient.setKeepAlive(app_config.config.mqttPushEvery * 1000);
 
         if (mqtt_alreadyinit) {
             mqttClient.disconnect();
             delay(250);  
-            mqttClient.setHost(app_config.config["mqttBrokerIP"].get<std::string>().c_str(),app_config.config["mqttBrokerPort"].get<int>());
+            mqttClient.setHost(app_config.config.mqttBrokerIP,app_config.config.mqttBrokerPort);
         } else {
-            mqttClient.begin(app_config.config["mqttBrokerIP"].get<std::string>().c_str(),app_config.config["mqttBrokerPort"].get<int>(),wClient);
+            mqttClient.begin(app_config.config.mqttBrokerIP,app_config.config.mqttBrokerPort,wClient);
         }
         mqtt_alreadyinit=true;   
     }
 }
 
 void dataSendHandler::connect_mqtt() {
-    if (app_config.config["mqttUsername"].get<std::string>().length()>1){
-        mqttClient.connect(app_config.config["mdnsID"].get<std::string>().c_str(),app_config.config["mqttUsername"].get<std::string>().c_str(),app_config.config["mqttPassword"].get<std::string>().c_str());
+    if (strlen(app_config.config.mqttUsername)>1){
+        mqttClient.connect(app_config.config.mdnsID,app_config.config.mqttUsername,app_config.config.mqttPassword);
     } else {
-        mqttClient.connect(app_config.config["mdnsID"].get<std::string>().c_str());      
+        mqttClient.connect(app_config.config.mdnsID);      
     }   
 }
 
-bool dataSendHandler::send_to_fermentrack() {
-    nlohmann::json j;
+bool dataSendHandler::send_to_localTarget() {
     bool result = true;
-
+    DynamicJsonDocument j(1550);
     // This should look like this when sent to Fermentrack:
     // {
     //   'mdns_id': 'mDNS ID Goes Here',
@@ -102,14 +104,17 @@ bool dataSendHandler::send_to_fermentrack() {
     //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
     // }
 
-    j["mdns_id"] = app_config.config["mdnsID"].get<std::string>();
-    j["tilts"] = tilt_scanner.tilt_to_json(true);
+    char payload[1600];
 
-
-    if(!send_to_url(app_config.config["fermentrackURL"].get<std::string>().c_str(), "", j.dump().c_str(), "application/json"))
+    j["mdns_id"] = app_config.config.mdnsID;
+    tilt_scanner.tilt_to_json_string(payload,true);
+    j["tilts"] = serialized(payload);
+   
+    serializeJson(j,payload);    
+    
+    if(!send_to_url(app_config.config.localTargetURL, "", payload, "application/json"))
         result = false;  // There was an error with the previous send
 
-    j.clear();
     return result;
 }
 
@@ -135,9 +140,9 @@ bool dataSendHandler::send_to_brewstatus() {
                      tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
                      tilt_scanner.tilt(i)->converted_temp(true).c_str(),  // Only sending Fahrenheit numbers since we don't send units
                      tilt_scanner.tilt(i)->color_name().c_str(),
-                     ((double) std::time(0) + (app_config.config["TZoffset"].get<int8_t>() * 3600.0))
+                     ((double) std::time(0) + (app_config.config.TZoffset * 3600.0))
                      / 86400.0 + 25569.0);
-            if(!send_to_url(app_config.config["brewstatusURL"].get<std::string>().c_str(), "", payload, "application/x-www-form-urlencoded"))
+            if(!send_to_url(app_config.config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
                 result = false;  // There was an error with the previous send
         }
     }
@@ -189,13 +194,13 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
 
 bool dataSendHandler::send_to_google() {
     HTTPClient http;
-    nlohmann::json j;
-    nlohmann::json payload;
+    StaticJsonDocument<750> payload;
+
     bool result = true;
 
     // There are two configuration options which are mandatory when using the Google Sheets integration
-    if(app_config.config["scriptsURL"].get<std::string>().length() <= GSCRIPTS_MIN_URL_LENGTH ||
-       app_config.config["scriptsEmail"].get<std::string>().length() < GSCRIPTS_MIN_EMAIL_LENGTH) {
+    if(strlen(app_config.config.scriptsURL) <= GSCRIPTS_MIN_URL_LENGTH ||
+       strlen(app_config.config.scriptsEmail) < GSCRIPTS_MIN_EMAIL_LENGTH) {
 //#ifdef DEBUG_PRINTS
 //        Serial.println("Either scriptsURL or scriptsEmail not populated. Returning.");
 //#endif
@@ -229,20 +234,18 @@ bool dataSendHandler::send_to_google() {
             payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["Comment"] = "";
-            payload["Email"] = app_config.config["scriptsEmail"].get<std::string>(); // The gmail email address associated with the script on google
-            payload["tzOffset"] = app_config.config["TZoffset"].get<int8_t>();
+            payload["Email"] = app_config.config.scriptsEmail; // The gmail email address associated with the script on google
+            payload["tzOffset"] = app_config.config.TZoffset;
 
+            char payload_string[500];
+            serializeJson(payload,payload_string);
             // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
-            if(!send_to_url_https(app_config.config["scriptsURL"].get<std::string>().c_str(), "", payload.dump().c_str(), "application/json"))
+            if(!send_to_url_https(app_config.config.scriptsURL, "", payload_string, "application/json"))
                 result = false;  // There was an error with the previous send
-            payload.clear();
-
         }
     }
     return result;
 }
-
-
 
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
@@ -250,30 +253,32 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
     // Once the data is formatted, it is dispatched to send_to_url to be sent out.
 
     bool result = true;
-    nlohmann::json j;
-    std::string apiKeyStr;
-    std::string url;
+    StaticJsonDocument<500> j;
+    char apiKey[26];
+    char url[60];
 
     // As this function is being used for both Brewer's Friend and Brewfather, let's determine which we want and set up
     // the URL/API key accordingly.
     if(which_bf == BF_MEANS_BREWFATHER) {
-        apiKeyStr = app_config.config["brewfatherKey"].get<std::string>();
-        if (apiKeyStr.length() <= BREWFATHER_MIN_KEY_LENGTH) {
+        if (strlen(app_config.config.brewfatherKey) <= BREWFATHER_MIN_KEY_LENGTH) {
 #ifdef DEBUG_PRINTS
             Serial.println("brewfatherKey not populated. Returning.\r\n");
 #endif
             return false;
         }
-        url = "http://log.brewfather.net/stream?id=" + apiKeyStr;
+        strcpy(apiKey,app_config.config.brewfatherKey);
+        strcpy(url,"http://log.brewfather.net/stream?id=");
+        strcat(url,app_config.config.brewfatherKey);
     } else if(which_bf == BF_MEANS_BREWERS_FRIEND) {
-        apiKeyStr = app_config.config["brewersFriendKey"].get<std::string>();
-        if(apiKeyStr.length() <= BREWERS_FRIEND_MIN_KEY_LENGTH) {
+        if(strlen(app_config.config.brewersFriendKey) <= BREWERS_FRIEND_MIN_KEY_LENGTH) {
 #ifdef DEBUG_PRINTS
             Serial.println("brewersFriendKey not populated. Returning.");
 #endif
             return false;
         }
-        url = "http://log.brewersfriend.com/stream/" + apiKeyStr;
+        strcpy(apiKey,app_config.config.brewersFriendKey);
+        strcpy(url,"http://log.brewersfriend.com/stream/");
+        strcat(url,app_config.config.brewersFriendKey);
     } else {
 #ifdef DEBUG_PRINTS
         Serial.println("Invalid value of which_bf passed to send_to_bf_and_bf!");
@@ -306,10 +311,12 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf) {
             j["gravity_unit"] = "G";
             j["device_source"] = "TiltBridge";
 
-            if(!send_to_url(url.c_str(), apiKeyStr.c_str(), j.dump().c_str(), "application/json"))
+            char payload_string[500];
+            serializeJson(j,payload_string);
+
+            if(!send_to_url(url, apiKey,payload_string, "application/json"))
                 result = false;  // There was an error with the previous send
 
-            j.clear();
         }
     }
     return result;
@@ -359,7 +366,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
 
 bool dataSendHandler::send_to_mqtt() {
     bool result = false;
-    nlohmann::json payload;
+    StaticJsonDocument<1500> payload;
     mqttClient.loop();
     
     // Function sends three payloads with the first two designed to support autodiscovery and configuration
@@ -372,7 +379,7 @@ bool dataSendHandler::send_to_mqtt() {
         if(tilt_scanner.tilt(i)->is_loaded()) {
             char tilt_topic[50] = {'\0'};
             snprintf(tilt_topic,50,"%s/tilt_%s",
-                app_config.config["mqttTopic"].get<std::string>().c_str(),
+                app_config.config.mqttTopic,
                 tilt_scanner.tilt(i)->color_name().c_str());
 
             for(uint8_t j = 0;j<3;j++){
@@ -383,11 +390,11 @@ bool dataSendHandler::send_to_mqtt() {
                 switch(j) {
                     case 0 : //Home Assistant Config Topic for Temperature
                         sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sT/config",
-                            app_config.config["mqttTopic"].get<std::string>().c_str(),
+                            app_config.config.mqttTopic,
                             tilt_scanner.tilt(i)->color_name().c_str());
                         payload["dev_cla"] = "temperature";                        
                         strcat(unit, "\u00b0");
-                        strcat(unit,app_config.config["tempUnit"].get<std::string>().c_str());
+                        strcat(unit,app_config.config.tempUnit);
                         payload["unit_of_meas"] = unit;
                         payload["ic"] = "mdi:thermometer";
                         payload["stat_t"] = tilt_topic;
@@ -399,7 +406,7 @@ bool dataSendHandler::send_to_mqtt() {
                         break;
                     case 1 : //Home Assistant Config Topic for Sp Gravity
                         sprintf(m_topic,"homeassistant/sensor/%s_tilt_%sG/config",
-                            app_config.config["mqttTopic"].get<std::string>().c_str(),
+                            app_config.config.mqttTopic,
                             tilt_scanner.tilt(i)->color_name().c_str());
                         //payload["dev_cla"] = "None";
                         payload["unit_of_meas"] = "SG";
@@ -413,21 +420,26 @@ bool dataSendHandler::send_to_mqtt() {
                         break;
                     case 2 : //General payload with sensor data
                         strcat(m_topic, tilt_topic);
+                        char current_grav[8] = {'\0'};
+                        char current_temp[5] = {'\0'};
+                        strcpy(current_grav,tilt_scanner.tilt(i)->converted_gravity(false).c_str());
+                        strcpy(current_temp,tilt_scanner.tilt(i)->converted_temp(false).c_str());
                         payload["Color"] = tilt_scanner.tilt(i)->color_name();
                         payload["timeStamp"] = (int) std::time(0);
                         payload["fermunits"] = "SG";
-                        payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false).c_str();
-                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(false).c_str();
-                        payload["tempunits"] = app_config.config["tempUnit"].get<std::string>();
+                        payload["SG"] = current_grav;
+                        payload["Temp"] = current_temp;
+                        payload["tempunits"] = app_config.config.tempUnit;
                         retain = false;
                         break;
                 }
-
+            char payload_string[300] = {'\0'};
+            serializeJson(payload,payload_string);
 #ifdef DEBUG_PRINTS                    
             Serial.print(F("Topic: "));
             Serial.println(m_topic);
             Serial.print(F("Message: "));
-            Serial.println(payload.dump().c_str());
+            Serial.println(payload_string);
 #endif
                 if (!mqttClient.connected() && j == 0) {
 #ifdef DEBUG_PRINTS
@@ -437,13 +449,13 @@ bool dataSendHandler::send_to_mqtt() {
                     delay(500);               
                 }
 
-                result = mqttClient.publish(m_topic,payload.dump().c_str(),retain,0);
+                result = mqttClient.publish(m_topic,payload_string,retain,0);
                 delay(10);
 
 #ifdef DEBUG_PRINTS
                     Serial.print(F("Publish Successful: "));
                     Serial.println(result);
-#endif 
+#endif     
                 payload.clear();
             }
         }
@@ -488,30 +500,30 @@ void dataSendHandler::process() {
     // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
 
     // Check & send to Local Target if necessary
-    if(send_to_fermentrack_at <= xTaskGetTickCount()) {
-        if(WiFiClass::status()== WL_CONNECTED && app_config.config["fermentrackURL"].get<std::string>().length() > FERMENTRACK_MIN_URL_LENGTH) {   //Check WiFi connection status
+    if(send_to_localTarget_at <= xTaskGetTickCount()) {
+        if(WiFiClass::status()== WL_CONNECTED && strlen(app_config.config.localTargetURL) > LOCALTARGET_MIN_URL_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
                 Serial.printf("Calling send to Local Target\r\n");
             #endif
 
-            send_to_fermentrack();
-            send_to_fermentrack_at = xTaskGetTickCount() + (app_config.config["fermentrackPushEvery"].get<int>() * 1000);
+            send_to_localTarget();
+            send_to_localTarget_at = xTaskGetTickCount() + (app_config.config.localTargetPushEvery * 1000);
         } else {
             // If the user adds the setting, we want this to kick in within 10 seconds
-            send_to_fermentrack_at = xTaskGetTickCount() + 10000;
+            send_to_localTarget_at = xTaskGetTickCount() + 10000;
         }
         yield();
     }
 
     // Check & send to Brewstatus if necessary
     if(send_to_brewstatus_at <= xTaskGetTickCount()) {
-        if(WiFiClass::status()== WL_CONNECTED && app_config.config["brewstatusURL"].get<std::string>().length() > BREWSTATUS_MIN_URL_LENGTH) {   //Check WiFi connection status
+        if(WiFiClass::status()== WL_CONNECTED && strlen(app_config.config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
                 Serial.printf("Calling send to Brewstatus\r\n");
             #endif
 
             send_to_brewstatus();
-            send_to_brewstatus_at = xTaskGetTickCount() + (app_config.config["brewstatusPushEvery"].get<int>() * 1000);
+            send_to_brewstatus_at = xTaskGetTickCount() + (app_config.config.brewstatusPushEvery * 1000);
         } else {
             // If the user adds the setting, we want this to kick in within 10 seconds
             send_to_brewstatus_at = xTaskGetTickCount() + 10000;
@@ -521,7 +533,7 @@ void dataSendHandler::process() {
 
     // Check & send to Google Scripts if necessary
     if(send_to_google_at <= xTaskGetTickCount()) {
-        if(WiFiClass::status()== WL_CONNECTED && app_config.config["scriptsURL"].get<std::string>().length() > GSCRIPTS_MIN_URL_LENGTH) {
+        if(WiFiClass::status()== WL_CONNECTED && strlen(app_config.config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH) {
 #ifdef DEBUG_PRINTS
             Serial.printf("Calling send to Google\r\n");
 #endif
@@ -537,7 +549,7 @@ void dataSendHandler::process() {
 
     // Check & send to Brewers Friend if necessary
     if(send_to_brewers_friend_at <= xTaskGetTickCount()) {
-        if(WiFiClass::status()== WL_CONNECTED && app_config.config["brewersFriendKey"].get<std::string>().length() > BREWERS_FRIEND_MIN_KEY_LENGTH) {
+        if(WiFiClass::status()== WL_CONNECTED && strlen(app_config.config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH) {
             #ifdef DEBUG_PRINTS
                 Serial.printf("Calling send to Brewers Friend\r\n");
             #endif
@@ -566,7 +578,7 @@ void dataSendHandler::process() {
 #endif
 
     if (send_to_brewfather_at <= xTaskGetTickCount()) {
-        if(WiFiClass::status() == WL_CONNECTED && app_config.config["brewfatherKey"].get<std::string>().length() > BREWFATHER_MIN_KEY_LENGTH) {
+        if(WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH) {
             #ifdef DEBUG_PRINTS
                 Serial.printf("Calling send to Brewfather\r\n");
             #endif
@@ -582,13 +594,13 @@ void dataSendHandler::process() {
 
         // Check & send to mqtt broker if necessary
     if (send_to_mqtt_at <= xTaskGetTickCount()) {
-        if(WiFiClass::status()== WL_CONNECTED && app_config.config["mqttBrokerIP"].get<std::string>().length() > IP_MIN_STRING_LENGTH) {   //Check WiFi connection status
+        if(WiFiClass::status()== WL_CONNECTED && strlen(app_config.config.mqttBrokerIP) > IP_MIN_STRING_LENGTH) {   //Check WiFi connection status
             #ifdef DEBUG_PRINTS
                 Serial.println(F("Publishing available results to MQTT Broker"));
             #endif
 
             send_to_mqtt();
-            send_to_mqtt_at = xTaskGetTickCount() + (app_config.config["mqttPushEvery"].get<int>() * 1000);
+            send_to_mqtt_at = xTaskGetTickCount() + (app_config.config.mqttPushEvery * 1000);
         } else {
             // If the user adds the setting, we want this to kick in within 10 seconds
             send_to_mqtt_at = xTaskGetTickCount() + 10000;

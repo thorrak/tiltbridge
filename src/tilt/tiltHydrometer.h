@@ -5,7 +5,8 @@
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
 
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
+#include <ArduinoJson.h>
 #include <Arduino.h>
 
 // There's definitely a better way of doing this
@@ -44,7 +45,7 @@ public:
     uint32_t text_color();
     std::string converted_gravity(bool use_raw_gravity);
     std::string gsheets_beer_name();
-    nlohmann::json to_json(bool use_raw_gravity);
+    void to_json_string(char* json_string , bool use_raw_gravity);
     std::string converted_temp(bool fahrenheit_only);
     bool is_celsius() const;
     bool is_loaded();

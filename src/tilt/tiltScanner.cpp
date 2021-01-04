@@ -191,12 +191,17 @@ tiltHydrometer* tiltScanner::tilt(uint8_t color) {
     return m_tilt_devices[color];
 }
 
-json tiltScanner::tilt_to_json(bool use_raw_gravity) {
-    json j;
+void tiltScanner::tilt_to_json_string(char * all_tilt_json, bool use_raw_gravity) {
+    StaticJsonDocument<1600> j;
     for(uint8_t i = 0;i<TILT_COLORS;i++) {
         if(m_tilt_devices[i]->is_loaded()) {
-            j[m_tilt_devices[i]->color_name()] = m_tilt_devices[i]->to_json(use_raw_gravity);
+            char color[15];
+            strlcpy(color,m_tilt_devices[i]->color_name().c_str(),15);
+            char tilt_data[300];
+            tilt_data[0] = {'\0'};
+            m_tilt_devices[i]->to_json_string(tilt_data,use_raw_gravity);
+            j[color] = serialized(tilt_data);
         }
     }
-    return j;
+    serializeJson(j,all_tilt_json,1600);
 }

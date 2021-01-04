@@ -7,14 +7,14 @@
 #define TILTBRIDGE_TILTSCANNER_H
 
 #include "tiltHydrometer.h"
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 #include <NimBLEAdvertisedDevice.h>
-
+#include <ArduinoJson.h>
 
 #define BLE_SCAN_TIME       3  // Seconds to scan
 
 // for convenience
-using json = nlohmann::json;
+//using json = nlohmann::json;
 
 
 class MyAdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
@@ -32,7 +32,7 @@ public:
     bool wait_until_scan_complete();
     void set_scan_active_flag(bool value);
     uint8_t load_tilt_from_advert_hex(const std::string& advert_string_hex);
-    nlohmann::json tilt_to_json(bool use_raw_gravity);
+    void tilt_to_json_string(char* json_string,bool use_raw_gravity);
 
 
     tiltHydrometer* tilt(uint8_t color);

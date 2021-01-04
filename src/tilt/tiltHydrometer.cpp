@@ -97,21 +97,21 @@ uint32_t tiltHydrometer::text_color() {
 std::string tiltHydrometer::gsheets_beer_name() {
     switch(m_color) {
         case TILT_COLOR_RED:
-            return app_config.config["sheetName_red"];
+            return app_config.config.sheetName_red;
         case TILT_COLOR_GREEN:
-            return app_config.config["sheetName_green"];
+            return app_config.config.sheetName_green;
         case TILT_COLOR_BLACK:
-            return app_config.config["sheetName_black"];
+            return app_config.config.sheetName_black;
         case TILT_COLOR_PURPLE:
-            return app_config.config["sheetName_purple"];
+            return app_config.config.sheetName_purple;
         case TILT_COLOR_ORANGE:
-            return app_config.config["sheetName_orange"];
+            return app_config.config.sheetName_orange;
         case TILT_COLOR_BLUE:
-            return app_config.config["sheetName_blue"];
+            return app_config.config.sheetName_blue;
         case TILT_COLOR_YELLOW:
-            return app_config.config["sheetName_yellow"];
+            return app_config.config.sheetName_yellow;
         case TILT_COLOR_PINK:
-            return app_config.config["sheetName_pink"];
+            return app_config.config.sheetName_pink;
         default:
             return "";
     }
@@ -151,7 +151,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     } else {
         // Effective smoothing filter constant is alpha / 100
         // Ratio must be between 0 - 1.
-        int alpha = (100 - app_config.config["smoothFactor"].get<int>());
+        int alpha = (100 - app_config.config.smoothFactor);
         int alphascale = 100;
         smoothed_i_grav_1000 = (alpha * i_grav * 1000 + (alphascale - alpha) * last_grav_value_1000) / alphascale;
         last_grav_value_1000 = smoothed_i_grav_1000;
@@ -173,15 +173,13 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     d_grav = (double) i_grav / grav_scalar;
     smoothed_d_grav = (double) smoothed_i_grav_1000 / grav_scalar / 1000; 
 
-    nlohmann::json cal_params;
-
 #if DEBUG_PRINTS
     Serial.print("Tilt gravity = ");
     Serial.println(d_grav);
 #endif
 
 
-    if (app_config.config["applyCalibration"]) {
+    if (app_config.config.applyCalibration) {
         double x0 = 0.0;
         double x1 = 1.0;
         double x2 = 0.0;
@@ -189,32 +187,56 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         switch(m_color) {
             case TILT_COLOR_RED:
-                cal_params = app_config.config["cal_red"];
+                x0 = app_config.config.cal_red_x0;
+                x1 = app_config.config.cal_red_x1;
+                x2 = app_config.config.cal_red_x2;
+                x3 = app_config.config.cal_red_x3;
                 break;
             case TILT_COLOR_GREEN:
-                cal_params = app_config.config["cal_green"];
+                x0 = app_config.config.cal_green_x0;
+                x1 = app_config.config.cal_green_x1;
+                x2 = app_config.config.cal_green_x2;
+                x3 = app_config.config.cal_green_x3;
                 break;
             case TILT_COLOR_BLACK:
-                cal_params = app_config.config["cal_black"];
+                x0 = app_config.config.cal_black_x0;
+                x1 = app_config.config.cal_black_x1;
+                x2 = app_config.config.cal_black_x2;
+                x3 = app_config.config.cal_black_x3;
                 break;
             case TILT_COLOR_PURPLE:
-                cal_params = app_config.config["cal_purple"];
+                x0 = app_config.config.cal_purple_x0;
+                x1 = app_config.config.cal_purple_x1;
+                x2 = app_config.config.cal_purple_x2;
+                x3 = app_config.config.cal_purple_x3;
                 break;
             case TILT_COLOR_ORANGE:
-                cal_params = app_config.config["cal_orange"];
+                x0 = app_config.config.cal_orange_x0;
+                x1 = app_config.config.cal_orange_x1;
+                x2 = app_config.config.cal_orange_x2;
+                x3 = app_config.config.cal_orange_x3;
                 break;
             case TILT_COLOR_BLUE:
-                cal_params = app_config.config["cal_blue"];
+                x0 = app_config.config.cal_blue_x0;
+                x1 = app_config.config.cal_blue_x1;
+                x2 = app_config.config.cal_blue_x2;
+                x3 = app_config.config.cal_blue_x3;
                 break;
             case TILT_COLOR_YELLOW:
-                cal_params = app_config.config["cal_yellow"];
+                x0 = app_config.config.cal_yellow_x0;
+                x1 = app_config.config.cal_yellow_x1;
+                x2 = app_config.config.cal_yellow_x2;
+                x3 = app_config.config.cal_yellow_x3;
                 break;
             case TILT_COLOR_PINK:
-                cal_params = app_config.config["cal_pink"];
+                x0 = app_config.config.cal_pink_x0;
+                x1 = app_config.config.cal_pink_x1;
+                x2 = app_config.config.cal_pink_x2;
+                x3 = app_config.config.cal_pink_x3;
                 break;
         }
 
-        for (auto& el : cal_params.items()) {
+ /*       for (auto& el : cal_params.items()) {
             std::string coeff = el.key();
             double val = el.value().get<double>();
 #if DEBUG_PRINTS
@@ -227,18 +249,18 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
             if (!coeff.compare("x1")) x1 = val;
             if (!coeff.compare("x2")) x2 = val;
             if (!coeff.compare("x3")) x3 = val;
-         }
+         }*/
 
          d_grav = x0 + x1 * d_grav + x2 * d_grav * d_grav + x3 * d_grav * d_grav * d_grav;
          smoothed_d_grav = x0 + x1 * smoothed_d_grav + x2 * smoothed_d_grav * smoothed_d_grav + x3 * smoothed_d_grav * smoothed_d_grav * smoothed_d_grav;
 
 #if DEBUG_PRINTS
-        Serial.print("Calibrated gravity = ");
+        Serial.print("Calibrated raw gravity = ");
         Serial.println(d_grav);
 #endif
     }
 
-    if (app_config.config["tempCorrect"]) {
+    if (app_config.config.tempCorrect) {
         const double ref_temp = 60.0;
         d_grav = d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
         smoothed_d_grav = smoothed_d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
@@ -273,20 +295,18 @@ std::string tiltHydrometer::converted_gravity(bool use_raw_gravity) {
     return output;
 }
 
-nlohmann::json tiltHydrometer::to_json(bool use_raw_gravity) {
-    nlohmann::json j;
-    j = {
-            {"color", color_name()},
-            {"temp", converted_temp(false)},
-            {"tempUnit", is_celsius() ? "C" : "F"},
-            {"gravity", converted_gravity(use_raw_gravity)},
-            {"gsheets_name", gsheets_beer_name()},
-            {"weeks_on_battery", weeks_since_last_battery_change},
-            {"sends_battery", receives_battery},
-            {"high_resolution", tilt_pro},
-            {"fwVersion", version_code},
-    };
-    return j;
+void tiltHydrometer::to_json_string(char * json_string, bool use_raw_gravity) {
+    StaticJsonDocument<300> j;
+    j["color"] = color_name();
+    j["temp"] = converted_temp(false);
+    j["tempUnit"] = is_celsius() ? "C" : "F";
+    j["gravity"] = converted_gravity(use_raw_gravity);
+    j["gsheets_name"] = gsheets_beer_name();
+    j["weeks_on_battery"] = weeks_since_last_battery_change;
+    j["sends_battery"] = receives_battery;
+    j["high_resolution"] = tilt_pro;
+    j["fwVersion"] = version_code;
+    serializeJson(j,json_string,300);
 }
 
 std::string tiltHydrometer::converted_temp(bool fahrenheit_only) {
@@ -303,7 +323,7 @@ std::string tiltHydrometer::converted_temp(bool fahrenheit_only) {
 }
 
 bool tiltHydrometer::is_celsius() const {
-    return app_config.config["tempUnit"] == "C";   
+    return strcmp(app_config.config.tempUnit, "C") == 0;   
 }
 
 bool tiltHydrometer::is_loaded() {

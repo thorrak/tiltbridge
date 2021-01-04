@@ -8,6 +8,9 @@
 #include "uptime.h"
 #include "version.h"
 
+#define BREWFATHER_MIN_KEY_LENGTH       5
+#define BREWERS_FRIEND_MIN_KEY_LENGTH   12
+
 class httpServer {
 public:
     void init();
@@ -17,6 +20,7 @@ public:
     bool mqtt_init_rqd = false;
     bool lcd_init_rqd = false;
     bool config_updated = false;
+    bool endpoint_updated = false;
 
 };
 

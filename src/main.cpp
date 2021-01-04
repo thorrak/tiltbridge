@@ -7,11 +7,11 @@
 //#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 //#include "esp_log.h"
 
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 
 // for convenience
-using json = nlohmann::json;
-
+//using json = nlohmann::json;
+#include <ArduinoJson.h>
 
 #include "tiltBridge.h"
 #include "wifi_setup.h"
@@ -20,7 +20,7 @@ using json = nlohmann::json;
 #include "SPIFFS.h"
 //#include "bridge_lcd.h"
 #ifdef DEBUG_PRINTS
-#include <AsyncWiFiManager.h> // https://github.com/tzapu/WiFiManager
+//#include <AsyncWiFiManager.h> // https://github.com/tzapu/WiFiManager
 #endif
 
 #include "http_server.h"
@@ -42,28 +42,30 @@ uint64_t restart_time = 0;
 
 void setup() {
 #ifdef DEBUG_PRINTS
-    Serial.begin(115200);
-    Serial.setDebugOutput(false);
+    //Serial.begin(115200);
+    //Serial.setDebugOutput(false);
 #endif
     // Handle all of the config initialization & loading
 #ifdef DEBUG_PRINTS
     Serial.println("Initializing Config...");
 #endif
-    app_config.initialize();
     SPIFFS.begin(true);
 
 #ifdef DEBUG_PRINTS
-    Serial.println(app_config.config.dump().c_str());
     Serial.println("Loading Config...");
 #endif
     app_config.load();
 #ifdef DEBUG_PRINTS
-    Serial.println(app_config.config.dump().c_str());
+    char * config_js = (char *) malloc(sizeof(char) * 2500);
+    app_config.dump_config(config_js);
+    free(config_js);
+    Serial.println(config_js);
 #endif
-
+    
+    Serial.println(F("init lcd"));
     // Handle setting the display up
     lcd.init();  // Intialize the display
-
+    Serial.println(F("init wifi"));
     init_wifi();  // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
 
@@ -78,7 +80,6 @@ void setup() {
     // Initialize the BLE scanner
     tilt_scanner.init();
     tilt_scanner.scan();
-
     data_sender.init();  // Initialize the data sender
     data_sender.init_mqtt(); //Initialize the mqtt server connection if configured.
 
@@ -90,7 +91,7 @@ void setup() {
 
 
 void loop() {
-
+    
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if(tilt_scanner.scan()) {
         // If we need to do anything when a new scan is started, trigger it here.
@@ -105,7 +106,7 @@ void loop() {
     }
 #endif
 
-    handle_wifi_reset_presses();
+    //handle_wifi_reset_presses();
     reconnectIfDisconnected();  // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
     lcd.check_screen();
@@ -123,10 +124,12 @@ void loop() {
     }
     if (http_server.mqtt_init_rqd) {
         data_sender.init_mqtt();
+        http_server.mqtt_init_rqd = false;
     }
     if (http_server.lcd_init_rqd) {
         lcd.init();
     }
 
     yield();
+    
 }
