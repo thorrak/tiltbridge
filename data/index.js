@@ -40,14 +40,17 @@ var vm = new Vue({
             xhr.onload = function () {
                 self.fullDict = JSON.parse(xhr.responseText);
                 self.sensors = [];
-                
+
                 if (self.fullDict != null) {
                     Object.keys(self.fullDict).forEach(function(key) {
-                    self.sensors.push(self.fullDict[key]);
+                        cardData = self.fullDict[key];
+                        cardData['textClass']='text-' + self.fullDict[key].color.toLowerCase() + '-bg';
+                        cardData['bgClass']='bg-' + self.fullDict[key].color.toLowerCase();
+                        cardData['borderClass']='border-' + self.fullDict[key].color.toLowerCase();
+                        self.sensors.push(cardData);
+                        //console.log(cardData);
                     });
                 }
-                //console.log(self.fullDict);
-                //console.log(self.sensors);
             };
             xhr.send()
         }
