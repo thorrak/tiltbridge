@@ -111,6 +111,7 @@ void loop() {
     lcd.check_screen();
     if (http_server.config_updated) {
         app_config.save();
+        http_server.config_updated = false;
     }
     if (http_server.restart_requested){ // Restart handling put in main loop to ensure that client has opportunity 
                                         // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
