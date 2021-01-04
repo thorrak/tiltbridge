@@ -6,19 +6,17 @@
 
 #ifndef DISABLE_OTA_UPDATES
 
-#include <WiFi.h>
-#include <Update.h>
-
 WiFiClient client;
 
-
 // Utility to extract header value from headers
-String getHeaderValue(String header, String headerName) {
+String getHeaderValue(String header, String headerName)
+{
     return header.substring(strlen(headerName.c_str()));
 }
 
 // OTA Logic
-void execOTA() {
+void execOTA()
+{
     int contentLength = 0;
     bool isValidContentType = false;
 #ifdef LCD_TFT
@@ -32,7 +30,8 @@ void execOTA() {
 
     // Connect to server
     // client.connect(host, port)
-    if (client.connect("www.tiltbridge.com", 80)) {
+    if (client.connect("www.tiltbridge.com", 80))
+    {
         // Connection Succeed - fetch the bin
         client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
                      "Host: www.tiltbridge.com\r\n" +
@@ -40,86 +39,109 @@ void execOTA() {
                      "Connection: close\r\n\r\n");
 
         unsigned long timeout = millis();
-        while (client.available() == 0) {
-            if (millis() - timeout > 5000) {
+        while (client.available() == 0)
+        {
+            if (millis() - timeout > 5000)
+            {
                 client.stop();
                 return;
             }
         }
         // Once the response is available, check it
 
-        while (client.available()) {
-            String line = client.readStringUntil('\n');            // read line till /n
-            line.trim();            // remove space, to check if the line is end of headers
+        while (client.available())
+        {
+            String line = client.readStringUntil('\n'); // read line till /n
+            line.trim();                                // remove space, to check if the line is end of headers
 
             // if the the line is empty,
             // this is end of headers
             // break the while and feed the
             // remaining `client` to the
             // Update.writeStream();
-            if (!line.length()) {
+            if (!line.length())
+            {
                 //headers ended
                 break; // and get the OTA started
             }
 
             // Check if the HTTP Response is 200
             // else break and Exit Update
-            if (line.startsWith("HTTP/1.1")) {
-                if (line.indexOf("200") < 0) {
+            if (line.startsWith("HTTP/1.1"))
+            {
+                if (line.indexOf("200") < 0)
+                {
                     break;
                 }
             }
 
             // extract headers here
             // Start with content length
-            if (line.startsWith("Content-Length: ")) {
+            if (line.startsWith("Content-Length: "))
+            {
                 contentLength = atoi((getHeaderValue(line, "Content-Length: ")).c_str());
             }
 
             // Next, the content type
-            if (line.startsWith("Content-Type: ")) {
-//                String contentType = getHeaderValue(line, "Content-Type: ");
-                if (getHeaderValue(line, "Content-Type: ") == "application/octet-stream") {
+            if (line.startsWith("Content-Type: "))
+            {
+                //                String contentType = getHeaderValue(line, "Content-Type: ");
+                if (getHeaderValue(line, "Content-Type: ") == "application/octet-stream")
+                {
                     isValidContentType = true;
                 }
             }
         }
-    } else {
+    }
+    else
+    {
         // Connection failed
     }
 
     // check contentLength and content type
-    if (contentLength && isValidContentType) {
+    if (contentLength && isValidContentType)
+    {
         // Check if there is enough to OTA Update
         bool canBegin = Update.begin(contentLength);
 
         // If yes, begin
-        if (canBegin) {
-            size_t written = Update.writeStream(client);
+        if (canBegin)
+        {
+            __attribute__((unused)) size_t written = Update.writeStream(client);
 
-//            if (written == contentLength) {
-//                //Succeeded
-//            } else {
-//                // Failed
-//            }
+            //            if (written == contentLength) {
+            //                //Succeeded
+            //            } else {
+            //                // Failed
+            //            }
 
-            if (Update.end()) {
+            if (Update.end())
+            {
                 // OTA update finished
-                if (Update.isFinished()) {
+                if (Update.isFinished())
+                {
                     // Succeeded - restart
                     ESP.restart();
-                } else {
+                }
+                else
+                {
                     // Failed
                 }
-            } else {
+            }
+            else
+            {
                 // Error occured
             }
-        } else {
+        }
+        else
+        {
             // not enough space to begin OTA - check the partition table
             client.flush();
         }
-    } else {
-//        Serial.println("There was no content in the response");
+    }
+    else
+    {
+        //        Serial.println("There was no content in the response");
         client.flush();
     }
 }
