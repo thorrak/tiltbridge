@@ -21,8 +21,9 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-
-#define FILESYSTEM SPIFFS
+#ifdef FSEDIT
+#include <SPIFFSEditor.h>
+#endif
 
 #if FILESYSTEM == SPIFFS
 #include <SPIFFS.h>

@@ -5,28 +5,15 @@
 
 #include "resetreasons.h"
 #include "http_server.h"
+
 httpServer http_server;
 
 AsyncWebServer server(80);
 
 char all_valid[2] = "1";
 
-#define DBG_OUTPUT_PORT Serial
-
 //void trigger_restart();
 void trigger_restart(AsyncWebServerRequest *request);
-
-bool exists(String path)
-{
-    bool yes = false;
-    File file = FILESYSTEM.open(path, "r");
-    if (!file.isDirectory())
-    {
-        yes = true;
-    }
-    file.close();
-    return yes;
-}
 
 void isInteger(const char *s, bool &is_int, int32_t &int_value)
 {
@@ -102,9 +89,7 @@ void redirectToConfig(AsyncWebServerRequest *request)
 
 void processConfigError(AsyncWebServerRequest *request)
 {
-#ifdef DEBUG_PRINTS
-    DBG_OUTPUT_PORT.println("processConfigError!");
-#endif
+    Log.error(F("Error in processConfig." CR));
     all_valid[0] = '0';
     redirectToConfig(request);
 }
@@ -120,9 +105,7 @@ void redirectToCalibration(AsyncWebServerRequest *request)
 
 void processCalibrationError(AsyncWebServerRequest *request)
 {
-#ifdef DEBUG_PRINTS
-    DBG_OUTPUT_PORT.println("processCalibrationError!");
-#endif
+    Log.error(F("Error in processCalibration." CR));
     redirectToCalibration(request);
 }
 
@@ -187,9 +170,7 @@ void processConfig(AsyncWebServerRequest *request)
             }
             else
             {
-#ifdef DEBUG_PRINTS
-                DBG_OUTPUT_PORT.println(F("brewstatusTZoffset is not between -12 and 14!"));
-#endif
+                Log.error(F("Error: brewstatusTZoffset is not between -12 and 14." CR));
                 all_settings_valid = false;
             }
         }
@@ -735,88 +716,12 @@ void processCalibration(AsyncWebServerRequest *request)
     redirectToCalibration(request);
 }
 
-String getContentType(String filename, AsyncWebServerRequest *request)
-{
-    if (request->hasArg("download"))
-    {
-        return "application/octet-stream";
-    }
-    else if (filename.endsWith(".htm"))
-    {
-        return "text/html";
-    }
-    else if (filename.endsWith(".html"))
-    {
-        return "text/html";
-    }
-    else if (filename.endsWith(".css"))
-    {
-        return "text/css";
-    }
-    else if (filename.endsWith(".js"))
-    {
-        return "application/javascript";
-    }
-    else if (filename.endsWith(".png"))
-    {
-        return "image/png";
-    }
-    else if (filename.endsWith(".gif"))
-    {
-        return "image/gif";
-    }
-    else if (filename.endsWith(".jpg"))
-    {
-        return "image/jpeg";
-    }
-    else if (filename.endsWith(".ico"))
-    {
-        return "image/x-icon";
-    }
-    else if (filename.endsWith(".xml"))
-    {
-        return "text/xml";
-    }
-    else if (filename.endsWith(".pdf"))
-    {
-        return "application/x-pdf";
-    }
-    else if (filename.endsWith(".zip"))
-    {
-        return "application/x-zip";
-    }
-    else if (filename.endsWith(".gz"))
-    {
-        return "application/x-gzip";
-    }
-    return "text/plain";
-}
-
-bool loadFromSpiffs(String path, AsyncWebServerRequest *request)
-{
-    DBG_OUTPUT_PORT.println("handleFileRead: " + path);
-    String contentType = getContentType(path, request);
-    //String pathWithGz = path + ".gz";
-    //if (exists(pathWithGz) || exists(path))
-    if (exists(path))
-    {
-        /*if (exists(pathWithGz))
-        {
-            path += ".gz";
-        }*/
-
-        request->send(FILESYSTEM, path, contentType);
-        return true;
-    }
-    return false;
-}
-
 //-----------------------------------------------------------------------------------------
 
 #ifndef DISABLE_OTA_UPDATES
 void trigger_OTA(AsyncWebServerRequest *request)
 {
-    loadFromSpiffs("/updating.htm", request); // Send a message to the user to let them know what is going on
+    server.serveStatic("/updating.htm", FILESYSTEM, "/").setDefaultFile("updating.htm");
     app_config.config.update_spiffs = true;
     lcd.display_ota_update_screen();         // Trigger this here while everything else is waiting.
     delay(1000);                             // Wait 1 second to let everything send
@@ -827,7 +732,7 @@ void trigger_OTA(AsyncWebServerRequest *request)
 
 void trigger_wifi_reset(AsyncWebServerRequest *request)
 {
-    loadFromSpiffs("/wifi_reset.htm", request); // Send a message to the user to let them know what is going on                               // Wait 1 second to let everything send
+    server.serveStatic("/wifi_reset.htm", FILESYSTEM, "/").setDefaultFile("wifi_reset.htm").setCacheControl("max-age=600");
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     // TODO - Come back and refactor this lightly to use similar logic to restart_requested
     disconnect_from_wifi_and_restart(); // Reset the wifi settings
@@ -835,7 +740,7 @@ void trigger_wifi_reset(AsyncWebServerRequest *request)
 
 void trigger_restart(AsyncWebServerRequest *request)
 {
-    loadFromSpiffs("/restarting.htm", request); // Send a message to the user to let them know what is going on
+    server.serveStatic("/restarting.htm", FILESYSTEM, "/").setDefaultFile("/restarting.htm").setCacheControl("max-age=600");
     http_server.restart_requested = true;
 }
 
@@ -953,12 +858,13 @@ void reset_reason(AsyncWebServerRequest *request)
 
 void httpServer::init()
 {
-    server.serveStatic("/", FILESYSTEM, "/");
-    server.rewrite("/", "/index.htm");
-    server.rewrite("/about/", "/about.htm");
-    server.rewrite("/settings/", "/settings.htm");
-    server.rewrite("/calibration/", "/calibration.htm");
-    server.rewrite("/help/", "/help.htm");
+    server.serveStatic("/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
+    server.serveStatic("/index/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
+    server.serveStatic("/settings/", FILESYSTEM, "/").setDefaultFile("settings.htm").setCacheControl("max-age=600");
+    server.serveStatic("/calibration/", FILESYSTEM, "/").setDefaultFile("calibration.htm").setCacheControl("max-age=600");
+    server.serveStatic("/help/", FILESYSTEM, "/").setDefaultFile("help.htm").setCacheControl("max-age=600");
+    server.serveStatic("/about/", FILESYSTEM, "/").setDefaultFile("about.htm").setCacheControl("max-age=600");
+    server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
 
     server.on("/settings/update/", HTTP_POST, [](AsyncWebServerRequest *request) {
         processConfig(request);
@@ -998,14 +904,31 @@ void httpServer::init()
         trigger_restart(request);
     });
 
+#ifdef FSEDIT
+    // Setup Filesystem editor
+    server.addHandler(new SPIFFSEditor(FILESYSTEM, "admin", "p@ssword"));
+
+    server.on("/edit/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->redirect("/edit");
+    });
+#endif
+
+    // File not found handler
     server.onNotFound([](AsyncWebServerRequest *request) {
-        // Look for other files on FILESYSTEM
-        if (!loadFromSpiffs(request->url(), request))
+        if (request->method() == HTTP_OPTIONS)
         {
-            AsyncWebServerResponse *response = request->beginResponse(404, "text/plain", "File Not Found\n\n");
-            request->send(response);
+            request->send(200);
+        }
+        else
+        {
+            Log.verbose(F("Serving 404 for request to %s." CR), request->url().c_str());
+            request->redirect("/404/");
         }
     });
 
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+
     server.begin();
+    Log.notice(F("Async HTTP server started." CR));
+    Log.verbose(F("Open: http://%s.local to view application." CR), WiFi.getHostname());
 }
