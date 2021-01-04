@@ -48,7 +48,7 @@ var vm = new Vue({
                         cardData['bgClass']='bg-' + self.fullDict[key].color.toLowerCase();
                         cardData['borderClass']='border-' + self.fullDict[key].color.toLowerCase();
                         self.sensors.push(cardData);
-                        console.log(cardData);
+                        //console.log(cardData);
                     });
                 }
             };
