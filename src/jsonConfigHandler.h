@@ -5,21 +5,33 @@
 #ifndef TILTBRIDGE_JSONCONFIGHANDLER_H
 #define TILTBRIDGE_JSONCONFIGHANDLER_H
 
+#include "sendData.h"
 
-//#include <nlohmann/json.hpp>
+#include <Arduino.h>
+#include <fstream>
+#include <string>
+#include <iostream>
 #include <ArduinoJson.h>
+
+#define FILESYSTEM SPIFFS
+
+#if FILESYSTEM == SPIFFS
+#include <SPIFFS.h>
+#endif
 
 #define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
 
-class jsonConfigHandler {
+class jsonConfigHandler
+{
 
 public:
     void initialize();
     bool save();
     bool load();
-    bool dump_config(char * json_string);
+    bool dump_config(char *json_string);
 
-    struct Config {
+    struct Config
+    {
         //char *configjs = (char *) malloc(sizeof(char) * 2000);
         char mdnsID[32];
         bool invertTFT;
@@ -78,41 +90,37 @@ public:
         char sheetName_blue[25];
         char sheetName_yellow[25];
         char sheetName_pink[25];
-        
+
         //char localTargetURL[256];
-        char * localTargetURL = (char *) malloc(sizeof(char) * 256);
+        char *localTargetURL = (char *)malloc(sizeof(char) * 256);
         uint16_t localTargetPushEvery;
         //char brewstatusURL[256];
-        char * brewstatusURL = (char *) malloc(sizeof(char) * 256);
+        char *brewstatusURL = (char *)malloc(sizeof(char) * 256);
         uint16_t brewstatusPushEvery;
         //char scriptsURL[256];
-        char * scriptsURL = (char *) malloc(sizeof(char) * 256);
+        char *scriptsURL = (char *)malloc(sizeof(char) * 256);
         //char scriptsEmail[256];
-        char * scriptsEmail = (char *) malloc(sizeof(char) * 256);
+        char *scriptsEmail = (char *)malloc(sizeof(char) * 256);
         //char brewersFriendKey[25];
-        char * brewersFriendKey = (char *) malloc(sizeof(char) * 25);
+        char *brewersFriendKey = (char *)malloc(sizeof(char) * 25);
         //char brewfatherKey[25];
-        char * brewfatherKey = (char *) malloc(sizeof(char) * 25);
+        char *brewfatherKey = (char *)malloc(sizeof(char) * 25);
         //char mqttBrokerIP[254];
-        char * mqttBrokerIP = (char *) malloc(sizeof(char) * 254);
+        char *mqttBrokerIP = (char *)malloc(sizeof(char) * 254);
         uint16_t mqttBrokerPort;
         //char mqttUsername[51];
-        char * mqttUsername = (char *) malloc(sizeof(char) * 51);
+        char *mqttUsername = (char *)malloc(sizeof(char) * 51);
         //char mqttPassword[65];
-        char * mqttPassword = (char *) malloc(sizeof(char) * 65);
+        char *mqttPassword = (char *)malloc(sizeof(char) * 65);
         //char mqttTopic[31];
-        char * mqttTopic = (char *) malloc(sizeof(char) * 31);
+        char *mqttTopic = (char *)malloc(sizeof(char) * 31);
         uint16_t mqttPushEvery;
-        
     };
-    Config config;   
-    
-
+    Config config;
 
 private:
     bool write_config_to_spiffs();
     bool read_config_from_spiffs();
-
 };
 
 extern jsonConfigHandler app_config;
