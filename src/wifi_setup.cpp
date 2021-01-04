@@ -64,12 +64,8 @@ void disconnect_from_wifi_and_restart() {
 
 void init_wifi() {
     AsyncWiFiManager wifiManager;  //Local initialization. Once its business is done, there is no need to keep it around
-
-#ifndef DEBUG_PRINTS
-    // If debugoutput is not left enabled with serial connection enabled, 
-    // WifiManager won't reconnect reliably with saved credentials on recent build.....
     wifiManager.setDebugOutput(false); // In case we have a serial connection
-#endif
+
     
 
     // The main purpose of this is to set a boolean value which will allow us to know we
@@ -82,8 +78,9 @@ void init_wifi() {
 
     // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
     // It's nice, but it means the user gets no actual prompt for what they're entering.
-    std::string mdns_id = app_config.config["mdnsID"];
-    AsyncWiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id.c_str(), 20);
+    char mdns_id[31];
+    strcpy(mdns_id,app_config.config.mdnsID);
+    AsyncWiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id, 20);
     wifiManager.addParameter(&custom_mdns_name);
 
     if(wifiManager.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
@@ -101,8 +98,8 @@ void init_wifi() {
     if (shouldSaveConfig) {
         // If the mDNS name is valid, save it.
         if (isValidmDNSName(custom_mdns_name.getValue())) {
-            app_config.config["mdnsID"] = custom_mdns_name.getValue();
-            mdns_id = app_config.config["mdnsID"];
+            strlcpy(app_config.config.mdnsID, custom_mdns_name.getValue(),31);
+            strcpy(mdns_id,app_config.config.mdnsID);
         } else {
             // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
             // TODO - add an LCD error message here maybe
@@ -113,7 +110,7 @@ void init_wifi() {
         app_config.save();
     }
 
-    if (!MDNS.begin(mdns_id.c_str())) {
+    if (!MDNS.begin(mdns_id)) {
 //        Serial.println("Error setting up MDNS responder!");
     }
 
@@ -122,7 +119,7 @@ void init_wifi() {
 
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
-    strncat(mdns_url,mdns_id.c_str(),31);
+    strncat(mdns_url,mdns_id,31);
     strcat(mdns_url,".local");
 
     char ip_address_url[25] = "http://";
@@ -136,7 +133,7 @@ void init_wifi() {
     // and reinitialize Wifi connection. If this is not done, the DHCP hostname is always just registered 
     // as espressif.  See: https://github.com/espressif/arduino-esp32/issues/2537
     WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-    WiFi.setHostname(mdns_id.c_str());
+    WiFi.setHostname(mdns_id);
     WiFi.begin();
     delay(1000);
 }
@@ -238,4 +235,3 @@ void reconnectIfDisconnected() {
 
     }
 }
-
