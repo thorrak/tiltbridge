@@ -160,11 +160,11 @@ function loadResetReason(callback = null) { // Get last reset reason
                 $('#resetreason').text(resetText);
             }
             catch {
-                $('#resetreason').text("(Error parsing version.)");
+                $('#resetreason').text("(Error parsing reset reason.)");
             }
         })
         .fail(function () {
-            $('#resetreason').text("(Error loading version.)");
+            $('#resetreason').text("(Error loading reset reason.)");
         })
         .always(function () {
             if (loaded < numReq) {
