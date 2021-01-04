@@ -58,19 +58,19 @@ var vm = new Vue({
 
 function buttonDisable() {
     posted = false;
-    $("button[id='submitSettings']").prop('disabled', true);
-    $("button[id='submitSettings']").html('<i class="fa fa-spinner fa-spin"></i> Updating');
-    $("button[id='resetWiFi']").prop('disabled', true);
-    $("button[id='resetWiFi']").html('<i class="fa fa-spinner fa-spin"></i> Updating');
+    $( ".button-update" ).prop('disabled', true);
+    $( ".button-update" ).html('<i class="fa fa-spinner fa-spin"></i> Updating');
+    $( ".button-resetwifi" ).prop('disabled', true);
+    $( ".button-resetwifi" ).html('<i class="fa fa-spinner fa-spin"></i> Updating');
     buttonClearDelay();
 }
 
 function buttonClearDelay() { // Poll to see if entire page is loaded
     if (posted) {
-        $("button[id='submitSettings']").prop('disabled', false);
-        $("button[id='submitSettings']").html('Update');
-        $("button[id='resetWiFi']").prop('disabled', false);
-        $("button[id='resetWiFi']").html('Reset WiFi');
+        $( ".button-update" ).prop('disabled', false);
+        $( ".button-update" ).html('Update');
+        $( ".button-resetwifi" ).prop('disabled', false);
+        $( ".button-resetwifi" ).html('Reset WiFi');
         posted = false;
     } else {
         setTimeout(buttonClearDelay, 500); // try again in 300 milliseconds
