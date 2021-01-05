@@ -3,21 +3,18 @@
 // Modified by Tim Pletcher on 31-Oct-2020.
 //
 
-#include "http_server.h"
-#include "sendData.h"
-#include "tiltBridge.h"
-#include "wifi_setup.h"
-#include "serialhandler.h"
-#include "jsonconfig.h"
-#include <Arduino.h>
-#include <driver/i2c.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <stdio.h>
-#include <sdkconfig.h>
+#include "main.h"
 
-uint64_t trigger_next_data_send = 0; // For DEBUG mem printing
+Ticker memCheck;
 uint64_t restart_time = 0;
+
+void printMem()
+{
+    const uint32_t free = ESP.getFreeHeap();
+    const uint32_t max = ESP.getMaxAllocHeap();
+    const uint8_t frag = 100 - (max * 100) / free;
+    Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d%" CR), free, max, frag);
+}
 
 void setup()
 {
@@ -40,9 +37,11 @@ void setup()
     // enough as-is.
     //    lcd.display_logo();  // Display the Fermentrack logo
 
-    //    esp_log_level_set("*", ESP_LOG_DEBUG);        // set all components to DEBUG level
-    //    esp_log_level_set("wifi", ESP_LOG_WARN);      // enable WARN logs from WiFi stack
-    //    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // enable WARN logs from DHCP client
+#ifdef LOG_LOCAL_LEVEL
+    esp_log_level_set("*", ESP_LOG_DEBUG);        // Det all components to DEBUG level
+    esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
+    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
+#endif
 
     // Initialize the BLE scanner
     tilt_scanner.init();
@@ -53,6 +52,8 @@ void setup()
     // Once all this is done, we'll wait until the initial scan completes.
     tilt_scanner.wait_until_scan_complete();
     http_server.init();
+
+    memCheck.attach(30, printMem);
 }
 
 void loop()
@@ -65,14 +66,7 @@ void loop()
         // If we need to do anything when a new scan is started, trigger it here.
     }
 
-    // This is optional & just allows us to print the available ram in case of memory leaks.
-    if (trigger_next_data_send <= xTaskGetTickCount())
-    { // Every 10 seconds, print some kind of status
-        Log.verbose(F("Current RAM: %d / Minumum RAM left: %d." CR), esp_get_free_heap_size(), esp_get_minimum_free_heap_size());
-        trigger_next_data_send = xTaskGetTickCount() + 10000;
-    }
-
-    //handle_wifi_reset_presses();
+    // handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
     lcd.check_screen();
@@ -82,7 +76,8 @@ void loop()
         http_server.config_updated = false;
     }
     if (http_server.restart_requested)
-    {   // Restart handling put in main loop to ensure that client has opportunity
+    {
+        // Restart handling put in main loop to ensure that client has opportunity
         // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
         if (restart_time <= xTaskGetTickCount())
         {
