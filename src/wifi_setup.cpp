@@ -26,7 +26,7 @@ void saveConfigCallback()
 // callback to display the WiFi LCD notification
 void configModeCallback(AsyncWiFiManager *myWiFiManager)
 {
-    Log.verbose(F("Entered config mode: SSID: %s, IP: %s"), myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
+    Log.verbose(F("Entered config mode: SSID: %s, IP: %s" CR), myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
     // Assuming WIFI_SETUP_AP_PASS here.
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
 }
