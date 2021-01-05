@@ -81,6 +81,7 @@ void dataSendHandler::connect_mqtt()
 
 bool dataSendHandler::send_to_localTarget()
 {
+    // TODO: (JSON) Come back and tighten this up
     bool result = true;
     DynamicJsonDocument j(1550);
     // This should look like this when sent to Fermentrack:
@@ -172,6 +173,7 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
 
 bool dataSendHandler::send_to_google()
 {
+    // TODO: (JSON) Come back and tighten this up
     HTTPClient http;
     StaticJsonDocument<750> payload;
 
@@ -230,6 +232,8 @@ bool dataSendHandler::send_to_google()
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 {
+    // TODO: (JSON) Come back and tighten this up
+
     // This function combines the data formatting for both "BF"s - Brewers Friend & Brewfather
     // Once the data is formatted, it is dispatched to send_to_url to be sent out.
 
@@ -340,6 +344,8 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
 
 bool dataSendHandler::send_to_mqtt()
 {
+    // TODO: (JSON) Come back and tighten this up
+
     bool result = false;
     StaticJsonDocument<1500> payload;
     mqttClient.loop();

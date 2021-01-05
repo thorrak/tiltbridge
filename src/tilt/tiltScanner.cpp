@@ -188,6 +188,7 @@ tiltHydrometer *tiltScanner::tilt(uint8_t color)
 
 void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
 {
+    // TODO: (JSON) Come back and tighten this up
     StaticJsonDocument<1600> j;
     for (uint8_t i = 0; i < TILT_COLORS; i++)
     {

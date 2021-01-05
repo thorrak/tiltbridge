@@ -313,6 +313,8 @@ std::string tiltHydrometer::converted_gravity(bool use_raw_gravity)
 
 void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
+    // TODO: (JSON) Come back and tighten this up
+
     StaticJsonDocument<300> j;
     j["color"] = color_name();
     j["temp"] = converted_temp(false);

@@ -770,6 +770,7 @@ void settings_json(AsyncWebServerRequest *request)
 
 void this_version(AsyncWebServerRequest *request)
 {
+    Log.verbose(F("Serving version." CR));
     DynamicJsonDocument doc(96);
 
     doc["version"] = version();
@@ -784,6 +785,7 @@ void this_version(AsyncWebServerRequest *request)
 
 void uptime(AsyncWebServerRequest *request)
 {
+    Log.verbose(F("Serving uptime." CR));
     DynamicJsonDocument doc(96);
 
     const int days = uptimeDays();
@@ -806,6 +808,7 @@ void uptime(AsyncWebServerRequest *request)
 
 void heap(AsyncWebServerRequest *request)
 {
+    Log.verbose(F("Serving heap information." CR));
     DynamicJsonDocument doc(48);
 
     const uint32_t free = ESP.getFreeHeap();
@@ -824,6 +827,7 @@ void heap(AsyncWebServerRequest *request)
 
 void reset_reason(AsyncWebServerRequest *request)
 {
+    Log.verbose(F("Serving reset reason." CR));
     DynamicJsonDocument doc(128);
 
     const int reset = (int)esp_reset_reason();
