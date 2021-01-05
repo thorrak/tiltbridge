@@ -12,6 +12,7 @@
 #include "tilt/tiltScanner.h"
 #include "OTAUpdate.h"
 #include "sendData.h"
+#include "jsonconfig.h"
 
 #include <Arduino.h>
 #include <WiFi.h>
