@@ -887,7 +887,7 @@ void Config::load(JsonObjectConst obj)
     }
     else
     {
-        const char *su = obj["ssid"];
+        const char *su = obj["scriptsURL"];
         strlcpy(scriptsURL, su, sizeof(scriptsURL));
     }
 
