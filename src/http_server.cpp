@@ -750,7 +750,8 @@ void trigger_restart(AsyncWebServerRequest *request)
 
 void http_json(AsyncWebServerRequest *request)
 {
-    char tilt_data[1600]; // TODO: JSON Go rework this
+     // TODO: JSON Go rework this
+    char tilt_data[1600];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
     AsyncWebServerResponse *response = request->beginResponse(200, "application/json", tilt_data);
     request->send(response);

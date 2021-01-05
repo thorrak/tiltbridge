@@ -345,7 +345,6 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
 bool dataSendHandler::send_to_mqtt()
 {
     // TODO: (JSON) Come back and tighten this up
-
     bool result = false;
     StaticJsonDocument<1500> payload;
     mqttClient.loop();

@@ -16,8 +16,6 @@
 #include <NimBLEUtils.h>
 #include <NimBLEScan.h>
 #include <NimBLEAdvertisedDevice.h>
-#include <FreeRTOS.h>
-#include <Arduino.h>
 
 #define BLE_SCAN_TIME 3 // Seconds to scan
 
