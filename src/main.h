@@ -14,6 +14,7 @@
 #include <esp_log.h>
 #endif
 
+void printMem();
 void setup();
 void loop();
 

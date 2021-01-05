@@ -732,9 +732,8 @@ void trigger_OTA(AsyncWebServerRequest *request)
 
 void trigger_wifi_reset(AsyncWebServerRequest *request)
 {
-    // TODO:  This is broken
     Log.verbose(F("Resetting WiFi." CR));
-    server.serveStatic("/wifi_reset.htm", FILESYSTEM, "/").setDefaultFile("wifi_reset.htm").setCacheControl("max-age=600");
+    request->send(FILESYSTEM, "/restarting.htm", "text/html")
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     // TODO - Come back and refactor this lightly to use similar logic to restart_requested
     disconnect_from_wifi_and_restart(); // Reset the wifi settings
@@ -742,9 +741,8 @@ void trigger_wifi_reset(AsyncWebServerRequest *request)
 
 void trigger_restart(AsyncWebServerRequest *request)
 {
-    // TODO:  This is broken
     Log.verbose(F("Resetting controller." CR));
-    server.serveStatic("/restarting.htm", FILESYSTEM, "/").setDefaultFile("/restarting.htm").setCacheControl("max-age=600");
+    request->send(FILESYSTEM,"/restarting.htm","text/html")
     http_server.restart_requested = true;
 }
 
@@ -796,12 +794,12 @@ void uptime(AsyncWebServerRequest *request)
     const int days = uptimeDays();
     const int hours = uptimeHours();
     const int minutes = uptimeMinutes();
-    const int seconds = uptimeSeconds();
+    const int seconds = uptimeSeconds();;
     const int millis = uptimeMillis();
 
     doc["days"] = days;
     doc["hours"] = hours;
-    doc["minutes"] = minutes;
+    doc["minutes"] = minutes;;
     doc["seconds"] = seconds;
     doc["millis"] = millis;
 
