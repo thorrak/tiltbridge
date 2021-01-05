@@ -733,7 +733,7 @@ void trigger_OTA(AsyncWebServerRequest *request)
 void trigger_wifi_reset(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Resetting WiFi." CR));
-    request->send(FILESYSTEM, "/restarting.htm", "text/html")
+    request->send(FILESYSTEM, "/restarting.htm", "text/html");
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     // TODO - Come back and refactor this lightly to use similar logic to restart_requested
     disconnect_from_wifi_and_restart(); // Reset the wifi settings
@@ -742,7 +742,7 @@ void trigger_wifi_reset(AsyncWebServerRequest *request)
 void trigger_restart(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Resetting controller." CR));
-    request->send(FILESYSTEM,"/restarting.htm","text/html")
+    request->send(FILESYSTEM, "/restarting.htm", "text/html");
     http_server.restart_requested = true;
 }
 
