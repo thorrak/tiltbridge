@@ -370,7 +370,7 @@ bool dataSendHandler::send_to_mqtt()
                 char m_topic[90] = {'\0'};
                 char tilt_name[35] = {'\0'};
                 char unit[10] = {'\0'};
-                bool retain;
+                bool retain = false;
                 switch (j)
                 {
                 case 0: //Home Assistant Config Topic for Temperature
