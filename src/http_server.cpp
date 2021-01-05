@@ -732,6 +732,8 @@ void trigger_OTA(AsyncWebServerRequest *request)
 
 void trigger_wifi_reset(AsyncWebServerRequest *request)
 {
+    // TODO:  This is broken
+    Log.verbose(F("Resetting WiFi." CR));
     server.serveStatic("/wifi_reset.htm", FILESYSTEM, "/").setDefaultFile("wifi_reset.htm").setCacheControl("max-age=600");
     tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
     // TODO - Come back and refactor this lightly to use similar logic to restart_requested
@@ -740,6 +742,8 @@ void trigger_wifi_reset(AsyncWebServerRequest *request)
 
 void trigger_restart(AsyncWebServerRequest *request)
 {
+    // TODO:  This is broken
+    Log.verbose(F("Resetting controller." CR));
     server.serveStatic("/restarting.htm", FILESYSTEM, "/").setDefaultFile("/restarting.htm").setCacheControl("max-age=600");
     http_server.restart_requested = true;
 }
