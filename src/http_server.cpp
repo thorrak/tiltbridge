@@ -770,21 +770,21 @@ void settings_json(AsyncWebServerRequest *request)
 
 void this_version(AsyncWebServerRequest *request)
 {
-    StaticJsonDocument<200> ver; // TODO:  JSON Size this
+    DynamicJsonDocument doc(96);
 
-    ver["version"] = version();
-    ver["branch"] = branch();
-    ver["build"] = build();
+    doc["version"] = version();
+    doc["branch"] = branch();
+    doc["build"] = build();
 
-    char output[200];
-    serializeJson(ver, output);
+    String output;
+    serializeJson(doc, output);
 
     request->send(200, "application/json", output);
 }
 
 void uptime(AsyncWebServerRequest *request)
 {
-    StaticJsonDocument<200> up; // TODO:  JSON Size this
+    DynamicJsonDocument doc(96);
 
     const int days = uptimeDays();
     const int hours = uptimeHours();
@@ -792,48 +792,47 @@ void uptime(AsyncWebServerRequest *request)
     const int seconds = uptimeSeconds();
     const int millis = uptimeMillis();
 
-    up["days"] = days;
-    up["hours"] = hours;
-    up["minutes"] = minutes;
-    up["seconds"] = seconds;
-    up["millis"] = millis;
+    doc["days"] = days;
+    doc["hours"] = hours;
+    doc["minutes"] = minutes;
+    doc["seconds"] = seconds;
+    doc["millis"] = millis;
 
-    char output[200];
-    serializeJson(up, output);
+    String output;
+    serializeJson(doc, output);
 
     request->send(200, "application/json", output);
 }
 
 void heap(AsyncWebServerRequest *request)
 {
-    StaticJsonDocument<200> heap; // TODO:  JSON Size this
+    DynamicJsonDocument doc(48);
 
-    uint32_t free = ESP.getFreeHeap();
-    uint32_t max = ESP.getMaxAllocHeap();
-    ;
-    uint8_t frag = 100 - (max * 100) / free;
+    const uint32_t free = ESP.getFreeHeap();
+    const uint32_t max = ESP.getMaxAllocHeap();
+    const uint8_t frag = 100 - (max * 100) / free;
 
-    heap["free"] = free;
-    heap["max"] = max;
-    heap["frag"] = frag;
+    doc["free"] = free;
+    doc["max"] = max;
+    doc["frag"] = frag;
 
-    char output[200];
-    serializeJson(heap, output);
+    String output;
+    serializeJson(doc, output);
 
     request->send(200, "application/json", output);
 }
 
 void reset_reason(AsyncWebServerRequest *request)
 {
-    StaticJsonDocument<200> rst; // TODO:  JSON Size this
+    DynamicJsonDocument doc(128);
 
-    int reset = (int)esp_reset_reason();
+    const int reset = (int)esp_reset_reason();
 
-    rst["reason"] = resetReason[reset];
-    rst["description"] = resetDescription[reset];
+    doc["reason"] = resetReason[reset];
+    doc["description"] = resetDescription[reset];
 
-    char output[200];
-    serializeJson(rst, output);
+    String output;
+    serializeJson(doc, output);
 
     request->send(200, "application/json", output);
 }
