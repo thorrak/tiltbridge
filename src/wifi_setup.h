@@ -7,6 +7,7 @@
 
 #include "serialhandler.h"
 #include "tiltBridge.h"
+#include "jsonconfig.h"
 #include <Arduino.h>
 #include <AsyncWiFiManager.h>
 #include <ESPmDNS.h>

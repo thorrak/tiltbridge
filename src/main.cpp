@@ -8,6 +8,7 @@
 #include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "serialhandler.h"
+#include "jsonconfig.h"
 #include <Arduino.h>
 #include <driver/i2c.h>
 #include <freertos/FreeRTOS.h>
@@ -15,7 +16,6 @@
 #include <stdio.h>
 #include <sdkconfig.h>
 
-jsonConfigHandler app_config;
 uint64_t trigger_next_data_send = 0; // For DEBUG mem printing
 uint64_t restart_time = 0;
 
@@ -26,12 +26,7 @@ void setup()
     FILESYSTEM.begin();
 
     Log.verbose(F("Loading config." CR));
-    app_config.load();
-
-    // char *config_js = (char *)malloc(sizeof(char) * 2500);
-    // app_config.dump_config(config_js);
-    // Serial.println(config_js);
-    // free(config_js);
+    loadConfig();
 
     Log.verbose(F("Initializing LCD." CR));
     // Handle setting the display up
@@ -83,7 +78,7 @@ void loop()
     lcd.check_screen();
     if (http_server.config_updated)
     {
-        app_config.save();
+        saveConfig();
         http_server.config_updated = false;
     }
     if (http_server.restart_requested)

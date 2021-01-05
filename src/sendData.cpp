@@ -48,20 +48,20 @@ void dataSendHandler::init()
 
 void dataSendHandler::init_mqtt()
 {
-    if (strlen(app_config.config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
+    if (strlen(config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
     {
-        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: $d" CR), app_config.config.mqttBrokerIP, app_config.config.mqttBrokerPort);
-        mqttClient.setKeepAlive(app_config.config.mqttPushEvery * 1000);
+        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: $d" CR), config.mqttBrokerIP, config.mqttBrokerPort);
+        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
 
         if (mqtt_alreadyinit)
         {
             mqttClient.disconnect();
             delay(250);
-            mqttClient.setHost(app_config.config.mqttBrokerIP, app_config.config.mqttBrokerPort);
+            mqttClient.setHost(config.mqttBrokerIP, config.mqttBrokerPort);
         }
         else
         {
-            mqttClient.begin(app_config.config.mqttBrokerIP, app_config.config.mqttBrokerPort, wClient);
+            mqttClient.begin(config.mqttBrokerIP, config.mqttBrokerPort, wClient);
         }
         mqtt_alreadyinit = true;
     }
@@ -69,13 +69,13 @@ void dataSendHandler::init_mqtt()
 
 void dataSendHandler::connect_mqtt()
 {
-    if (strlen(app_config.config.mqttUsername) > 1)
+    if (strlen(config.mqttUsername) > 1)
     {
-        mqttClient.connect(app_config.config.mdnsID, app_config.config.mqttUsername, app_config.config.mqttPassword);
+        mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
     }
     else
     {
-        mqttClient.connect(app_config.config.mdnsID);
+        mqttClient.connect(config.mdnsID);
     }
 }
 
@@ -92,13 +92,13 @@ bool dataSendHandler::send_to_localTarget()
 
     char payload[1600];
 
-    j["mdns_id"] = app_config.config.mdnsID;
+    j["mdns_id"] = config.mdnsID;
     tilt_scanner.tilt_to_json_string(payload, true);
     j["tilts"] = serialized(payload);
 
     serializeJson(j, payload);
 
-    if (!send_to_url(app_config.config.localTargetURL, "", payload, "application/json"))
+    if (!send_to_url(config.localTargetURL, "", payload, "application/json"))
         result = false; // There was an error with the previous send
 
     return result;
@@ -128,8 +128,8 @@ bool dataSendHandler::send_to_brewstatus()
                      tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
                      tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
                      tilt_scanner.tilt(i)->color_name().c_str(),
-                     ((double)std::time(0) + (app_config.config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-            if (!send_to_url(app_config.config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
+                     ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
+            if (!send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
                 result = false; // There was an error with the previous send
         }
     }
@@ -178,8 +178,8 @@ bool dataSendHandler::send_to_google()
     bool result = true;
 
     // There are two configuration options which are mandatory when using the Google Sheets integration
-    if (strlen(app_config.config.scriptsURL) <= GSCRIPTS_MIN_URL_LENGTH ||
-        strlen(app_config.config.scriptsEmail) < GSCRIPTS_MIN_EMAIL_LENGTH)
+    if (strlen(config.scriptsURL) <= GSCRIPTS_MIN_URL_LENGTH ||
+        strlen(config.scriptsEmail) < GSCRIPTS_MIN_EMAIL_LENGTH)
     {
         // Log.verbose(D("Either scriptsURL or scriptsEmail not populated. Returning." CR));
         return false;
@@ -215,13 +215,13 @@ bool dataSendHandler::send_to_google()
             payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
             payload["Color"] = tilt_scanner.tilt(i)->color_name();
             payload["Comment"] = "";
-            payload["Email"] = app_config.config.scriptsEmail; // The gmail email address associated with the script on google
-            payload["tzOffset"] = app_config.config.TZoffset;
+            payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
+            payload["tzOffset"] = config.TZoffset;
 
             char payload_string[500];
             serializeJson(payload, payload_string);
             // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
-            if (!send_to_url_https(app_config.config.scriptsURL, "", payload_string, "application/json"))
+            if (!send_to_url_https(config.scriptsURL, "", payload_string, "application/json"))
                 result = false; // There was an error with the previous send
         }
     }
@@ -242,25 +242,25 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     // the URL/API key accordingly.
     if (which_bf == BF_MEANS_BREWFATHER)
     {
-        if (strlen(app_config.config.brewfatherKey) <= BREWFATHER_MIN_KEY_LENGTH)
+        if (strlen(config.brewfatherKey) <= BREWFATHER_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Brewfather key not populated. Returning." CR));
             return false;
         }
-        strcpy(apiKey, app_config.config.brewfatherKey);
+        strcpy(apiKey, config.brewfatherKey);
         strcpy(url, "http://log.brewfather.net/stream?id=");
-        strcat(url, app_config.config.brewfatherKey);
+        strcat(url, config.brewfatherKey);
     }
     else if (which_bf == BF_MEANS_BREWERS_FRIEND)
     {
-        if (strlen(app_config.config.brewersFriendKey) <= BREWERS_FRIEND_MIN_KEY_LENGTH)
+        if (strlen(config.brewersFriendKey) <= BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Brewer's Friend key not populated. Returning." CR));
             return false;
         }
-        strcpy(apiKey, app_config.config.brewersFriendKey);
+        strcpy(apiKey, config.brewersFriendKey);
         strcpy(url, "http://log.brewersfriend.com/stream/");
-        strcat(url, app_config.config.brewersFriendKey);
+        strcat(url, config.brewersFriendKey);
     }
     else
     {
@@ -356,7 +356,7 @@ bool dataSendHandler::send_to_mqtt()
         {
             char tilt_topic[50] = {'\0'};
             snprintf(tilt_topic, 50, "%s/tilt_%s",
-                     app_config.config.mqttTopic,
+                     config.mqttTopic,
                      tilt_scanner.tilt(i)->color_name().c_str());
 
             for (uint8_t j = 0; j < 3; j++)
@@ -369,11 +369,11 @@ bool dataSendHandler::send_to_mqtt()
                 {
                 case 0: //Home Assistant Config Topic for Temperature
                     sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sT/config",
-                            app_config.config.mqttTopic,
+                            config.mqttTopic,
                             tilt_scanner.tilt(i)->color_name().c_str());
                     payload["dev_cla"] = "temperature";
                     strcat(unit, "\u00b0");
-                    strcat(unit, app_config.config.tempUnit);
+                    strcat(unit, config.tempUnit);
                     payload["unit_of_meas"] = unit;
                     payload["ic"] = "mdi:thermometer";
                     payload["stat_t"] = tilt_topic;
@@ -385,7 +385,7 @@ bool dataSendHandler::send_to_mqtt()
                     break;
                 case 1: //Home Assistant Config Topic for Sp Gravity
                     sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/config",
-                            app_config.config.mqttTopic,
+                            config.mqttTopic,
                             tilt_scanner.tilt(i)->color_name().c_str());
                     //payload["dev_cla"] = "None";
                     payload["unit_of_meas"] = "SG";
@@ -408,7 +408,7 @@ bool dataSendHandler::send_to_mqtt()
                     payload["fermunits"] = "SG";
                     payload["SG"] = current_grav;
                     payload["Temp"] = current_temp;
-                    payload["tempunits"] = app_config.config.tempUnit;
+                    payload["tempunits"] = config.tempUnit;
                     retain = false;
                     break;
                 }
@@ -478,12 +478,12 @@ void dataSendHandler::process()
     // Check & send to Local Target if necessary
     if (send_to_localTarget_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.localTargetURL) > LOCALTARGET_MIN_URL_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) > LOCALTARGET_MIN_URL_LENGTH)
         { //Check WiFi connection status
             Log.verbose(F("Calling send to Local Target." CR));
 
             send_to_localTarget();
-            send_to_localTarget_at = xTaskGetTickCount() + (app_config.config.localTargetPushEvery * 1000);
+            send_to_localTarget_at = xTaskGetTickCount() + (config.localTargetPushEvery * 1000);
         }
         else
         {
@@ -496,12 +496,12 @@ void dataSendHandler::process()
     // Check & send to Brewstatus if necessary
     if (send_to_brewstatus_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
         { //Check WiFi connection status
             Log.verbose(F("Calling send to Brewstatus." CR));
 
             send_to_brewstatus();
-            send_to_brewstatus_at = xTaskGetTickCount() + (app_config.config.brewstatusPushEvery * 1000);
+            send_to_brewstatus_at = xTaskGetTickCount() + (config.brewstatusPushEvery * 1000);
         }
         else
         {
@@ -514,7 +514,7 @@ void dataSendHandler::process()
     // Check & send to Google Scripts if necessary
     if (send_to_google_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to Google." CR));
             // tilt_scanner.wait_until_scan_complete();
@@ -532,7 +532,7 @@ void dataSendHandler::process()
     // Check & send to Brewers Friend if necessary
     if (send_to_brewers_friend_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Calling send to Brewers Friend." CR));
 
@@ -563,7 +563,7 @@ void dataSendHandler::process()
 
     if (send_to_brewfather_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Calling send to Brewfather." CR));
 
@@ -581,12 +581,12 @@ void dataSendHandler::process()
     // Check & send to mqtt broker if necessary
     if (send_to_mqtt_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(app_config.config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
         { //Check WiFi connection status
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
 
             send_to_mqtt();
-            send_to_mqtt_at = xTaskGetTickCount() + (app_config.config.mqttPushEvery * 1000);
+            send_to_mqtt_at = xTaskGetTickCount() + (config.mqttPushEvery * 1000);
         }
         else
         {

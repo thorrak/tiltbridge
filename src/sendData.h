@@ -9,6 +9,7 @@
 #include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "SecureWithRedirects.h"
+#include "jsonconfig.h"
 
 #include <ctime>
 #include <ArduinoJson.h>

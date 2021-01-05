@@ -6,6 +6,7 @@
 #define TILTBRIDGE_BRIDGE_LCD_H
 
 #include "tilt/tiltScanner.h"
+#include "jsonconfig.h"
 #include <Arduino.h>
 
 #ifdef LCD_SSD1306

@@ -69,7 +69,7 @@ void init_wifi()
     // The third parameter we're passing here (mdns_id.c_str()) is the default name that will appear on the form.
     // It's nice, but it means the user gets no actual prompt for what they're entering.
     char mdns_id[31];
-    strcpy(mdns_id, app_config.config.mdnsID);
+    strcpy(mdns_id, config.mdnsID);
     AsyncWiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id, 20);
     wifiManager.addParameter(&custom_mdns_name);
 
@@ -93,8 +93,8 @@ void init_wifi()
         // If the mDNS name is valid, save it.
         if (isValidmDNSName(custom_mdns_name.getValue()))
         {
-            strlcpy(app_config.config.mdnsID, custom_mdns_name.getValue(), 31);
-            strcpy(mdns_id, app_config.config.mdnsID);
+            strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
+            strcpy(mdns_id, config.mdnsID);
         }
         else
         {
@@ -104,12 +104,12 @@ void init_wifi()
         }
 
         //        app_config.config["password"] = custom_password.getValue();
-        app_config.save();
+        saveConfig();
     }
 
     if (!MDNS.begin(mdns_id))
     {
-        //        Serial.println("Error setting up MDNS responder!");
+        Log.error(F("Error setting up MDNS responder." CR));
     }
 
     MDNS.addService("http", "tcp", 80);       // technically we should wait on this, but I'm impatient.

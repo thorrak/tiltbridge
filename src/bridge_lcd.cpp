@@ -4,7 +4,7 @@
 //
 
 #include "bridge_lcd.h"
-#include "jsonConfigHandler.h"
+#include "jsonconfig.h"
 #include <WiFi.h>
 
 bridge_lcd lcd;
@@ -325,7 +325,7 @@ void bridge_lcd::init()
     // +4 "mirrors" the text (supposedly)
     tft->setRotation(0);
 #else
-    if (app_config.config.invertTFT)
+    if (config.invertTFT)
     {
         tft->setRotation(1);
     }

@@ -5,6 +5,7 @@
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
 
+#include "jsonconfig.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
 
