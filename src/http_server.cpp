@@ -10,7 +10,7 @@ httpServer http_server;
 
 AsyncWebServer server(80);
 
-char all_valid[2] = "1";
+static char all_valid[2] = "1";
 
 //void trigger_restart();
 void trigger_restart(AsyncWebServerRequest *request);
