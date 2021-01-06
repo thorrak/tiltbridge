@@ -55,23 +55,23 @@ tiltScanner::tiltScanner()
 void tiltScanner::init()
 {
     NimBLEDevice::init("");
-    pBLEScan = NimBLEDevice::getScan(); //create new scan
+    pBLEScan = NimBLEDevice::getScan(); // Create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
-    //Active scan actively queries devices for more info following detection.
+    // Active scan actively queries devices for more info following detection.
     //
     pBLEScan->setActiveScan(false);
-    pBLEScan->setInterval(53);  //Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
-    pBLEScan->setWindow(37); // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
+    pBLEScan->setInterval(53); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
+    pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
 }
 
 void tiltScanner::deinit()
 {
-    //pBLEScan->stop();
+    // pBLEScan->stop();
     wait_until_scan_complete();
     // NimBLE fails to reinitialize after a call to deinit() (but thankfully it's light enough weight that we don't
     // have to call deinit to use https any longer)
     // https://github.com/h2zero/NimBLE-Arduino/issues/23
-    //NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
+    // NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
 }
 
 void tiltScanner::set_scan_active_flag(bool value)
@@ -115,7 +115,7 @@ bool tiltScanner::wait_until_scan_complete()
     while (m_scan_active)
         delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
 
-    //pBLEScan->stop();
+    // pBLEScan->stop();
     pBLEScan->clearResults(); // delete results fromBLEScan buffer to release memory
 
     return true;
