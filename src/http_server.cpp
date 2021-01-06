@@ -749,6 +749,7 @@ void trigger_restart(AsyncWebServerRequest *request)
 void http_json(AsyncWebServerRequest *request)
 {
      // TODO: JSON Go rework this
+    Log.verbose(F("Serving Tilt JSON." CR));
     char tilt_data[1600];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
     AsyncWebServerResponse *response = request->beginResponse(200, "application/json", tilt_data);
@@ -758,6 +759,7 @@ void http_json(AsyncWebServerRequest *request)
 // settings_json is intended to be used to build the "Change Settings" page
 void settings_json(AsyncWebServerRequest *request)
 {
+    Log.verbose(F("Serving settings JSON." CR));
     DynamicJsonDocument doc(3072);
     JsonObject root = doc.to<JsonObject>();
     config.save(root);
