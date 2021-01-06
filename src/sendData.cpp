@@ -50,7 +50,7 @@ void dataSendHandler::init_mqtt()
 {
     if (strlen(config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
     {
-        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: $d" CR), config.mqttBrokerIP, config.mqttBrokerPort);
+        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: %d" CR), config.mqttBrokerIP, config.mqttBrokerPort);
         mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
 
         if (mqtt_alreadyinit)
@@ -427,7 +427,6 @@ bool dataSendHandler::send_to_mqtt()
                 {
                     Log.verbose(F("MQTT disconnected. Attempting to reconnect to MQTT Broker" CR));
                     connect_mqtt();
-                    delay(500);
                 }
 
                 result = mqttClient.publish(m_topic, payload_string, retain, 0);
