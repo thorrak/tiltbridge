@@ -202,7 +202,9 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     d_grav = (double)i_grav / grav_scalar;
     smoothed_d_grav = (double)smoothed_i_grav_1000 / grav_scalar / 1000;
 
-    Log.verbose(F("Tilt gravity = %D" CR), d_grav);
+    char value[7];
+    sprintf(value, "%.4f", d_grav);
+    Log.verbose(F("Tilt gravity = %s" CR), value);
 
     if (config.applyCalibration)
     {
