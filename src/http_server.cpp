@@ -776,13 +776,13 @@ void settings_json(AsyncWebServerRequest *request)
 void this_version(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving version." CR));
-    DynamicJsonDocument doc(96);
+    StaticJsonDocument<96> doc;
 
     doc["version"] = version();
     doc["branch"] = branch();
     doc["build"] = build();
 
-    String output;
+    char output[96];
     serializeJson(doc, output);
 
     request->send(200, "application/json", output);
@@ -791,7 +791,7 @@ void this_version(AsyncWebServerRequest *request)
 void uptime(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving uptime." CR));
-    DynamicJsonDocument doc(96);
+    StaticJsonDocument<96> doc;
 
     const int days = uptimeDays();
     const int hours = uptimeHours();
@@ -805,7 +805,7 @@ void uptime(AsyncWebServerRequest *request)
     doc["seconds"] = seconds;
     doc["millis"] = millis;
 
-    String output;
+    char output[96];
     serializeJson(doc, output);
 
     request->send(200, "application/json", output);
@@ -814,7 +814,7 @@ void uptime(AsyncWebServerRequest *request)
 void heap(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving heap information." CR));
-    DynamicJsonDocument doc(48);
+    StaticJsonDocument<48> doc;
 
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
@@ -824,7 +824,7 @@ void heap(AsyncWebServerRequest *request)
     doc["max"] = max;
     doc["frag"] = frag;
 
-    String output;
+    char output[48];
     serializeJson(doc, output);
 
     request->send(200, "application/json", output);
@@ -833,14 +833,14 @@ void heap(AsyncWebServerRequest *request)
 void reset_reason(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving reset reason." CR));
-    DynamicJsonDocument doc(128);
+    StaticJsonDocument<128> doc;
 
     const int reset = (int)esp_reset_reason();
 
     doc["reason"] = resetReason[reset];
     doc["description"] = resetDescription[reset];
 
-    String output;
+    char output[128];
     serializeJson(doc, output);
 
     request->send(200, "application/json", output);
