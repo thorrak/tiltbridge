@@ -287,12 +287,12 @@ void Config::load(JsonObjectConst obj)
     //
     if (obj["mdnsID"].isNull())
     {
-        strlcpy(mdnsID, "tiltbridge", sizeof(mdnsID));
+        strlcpy(mdnsID, "tiltbridge", 32);
     }
     else
     {
         const char *md = obj["mdnsID"];
-        strlcpy(mdnsID, md, sizeof(mdnsID));
+        strlcpy(mdnsID, md, 32);
     }
 
 	if (obj["invertTFT"].isNull())
@@ -325,12 +325,12 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["tempUnit"].isNull())
     {
-        strlcpy(tempUnit, "F", sizeof(tempUnit));
+        strlcpy(tempUnit, "F", 2);
     }
     else
     {
         const char *tu = obj["tempUnit"];
-        strlcpy(tempUnit, tu, sizeof(tempUnit));
+        strlcpy(tempUnit, tu, 2);
     }
 
     if (obj["smoothFactor"].isNull())
@@ -763,92 +763,92 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["sheetName_red"].isNull())
     {
-        strlcpy(sheetName_red, "", sizeof(sheetName_red));
+        strlcpy(sheetName_red, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_red"];
-        strlcpy(sheetName_red, sn, sizeof(sheetName_red));
+        strlcpy(sheetName_red, sn, 25);
     }
 
     if (obj["sheetName_green"].isNull())
     {
-        strlcpy(sheetName_green, "", sizeof(sheetName_green));
+        strlcpy(sheetName_green, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_green"];
-        strlcpy(sheetName_green, sn, sizeof(sheetName_green));
+        strlcpy(sheetName_green, sn, 25);
     }
 
     if (obj["sheetName_black"].isNull())
     {
-        strlcpy(sheetName_black, "", sizeof(sheetName_black));
+        strlcpy(sheetName_black, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_black"];
-        strlcpy(sheetName_black, sn, sizeof(sheetName_black));
+        strlcpy(sheetName_black, sn, 25);
     }
 
     if (obj["sheetName_purple"].isNull())
     {
-        strlcpy(sheetName_purple, "", sizeof(sheetName_purple));
+        strlcpy(sheetName_purple, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_purple"];
-        strlcpy(sheetName_purple, sn, sizeof(sheetName_purple));
+        strlcpy(sheetName_purple, sn, 25);
     }
 
     if (obj["sheetName_orange"].isNull())
     {
-        strlcpy(sheetName_orange, "", sizeof(sheetName_orange));
+        strlcpy(sheetName_orange, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_orange"];
-        strlcpy(sheetName_orange, sn, sizeof(sheetName_orange));
+        strlcpy(sheetName_orange, sn, 25);
     }
 
     if (obj["sheetName_blue"].isNull())
     {
-        strlcpy(sheetName_blue, "", sizeof(sheetName_blue));
+        strlcpy(sheetName_blue, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_blue"];
-        strlcpy(sheetName_blue, sn, sizeof(sheetName_blue));
+        strlcpy(sheetName_blue, sn, 25);
     }
 
     if (obj["sheetName_yellow"].isNull())
     {
-        strlcpy(sheetName_yellow, "", sizeof(sheetName_yellow));
+        strlcpy(sheetName_yellow, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_yellow"];
-        strlcpy(sheetName_yellow, sn, sizeof(sheetName_yellow));
+        strlcpy(sheetName_yellow, sn, 25);
     }
 
     if (obj["sheetName_pink"].isNull())
     {
-        strlcpy(sheetName_pink, "", sizeof(sheetName_pink));
+        strlcpy(sheetName_pink, "", 25);
     }
     else
     {
         const char *sn = obj["sheetName_pink"];
-        strlcpy(sheetName_pink, sn, sizeof(sheetName_pink));
+        strlcpy(sheetName_pink, sn, 25);
     }
 
     if (obj["localTargetURL"].isNull())
     {
-        strlcpy(localTargetURL, "", sizeof(localTargetURL));
+        strlcpy(localTargetURL, "", 25);
     }
     else
     {
         const char *tu = obj["localTargetURL"];
-        strlcpy(localTargetURL, tu, sizeof(localTargetURL));
+        strlcpy(localTargetURL, tu, 25);
     }
 
     if (obj["localTargetPushEvery"].isNull())
@@ -863,12 +863,12 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["brewstatusURL"].isNull())
     {
-        strlcpy(brewstatusURL, "", sizeof(brewstatusURL));
+        strlcpy(brewstatusURL, "", 256);
     }
     else
     {
         const char *bu = obj["brewstatusURL"];
-        strlcpy(brewstatusURL, bu, sizeof(brewstatusURL));
+        strlcpy(brewstatusURL, bu, 256);
     }
 
     if (obj["brewstatusPushEvery"].isNull())
@@ -883,52 +883,52 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["scriptsURL"].isNull())
     {
-        strlcpy(scriptsURL, "", sizeof(scriptsURL));
+        strlcpy(scriptsURL, "", 256);
     }
     else
     {
         const char *su = obj["scriptsURL"];
-        strlcpy(scriptsURL, su, sizeof(scriptsURL));
+        strlcpy(scriptsURL, su, 256);
     }
 
     if (obj["scriptsEmail"].isNull())
     {
-        strlcpy(scriptsEmail, "", sizeof(scriptsEmail));
+        strlcpy(scriptsEmail, "", 256);
     }
     else
     {
         const char *se = obj["scriptsEmail"];
-        strlcpy(scriptsEmail, se, sizeof(scriptsEmail));
+        strlcpy(scriptsEmail, se, 256);
     }
 
     if (obj["brewersFriendKey"].isNull())
     {
-        strlcpy(brewersFriendKey, "", sizeof(brewersFriendKey));
+        strlcpy(brewersFriendKey, "", 25);
     }
     else
     {
         const char *bf = obj["brewersFriendKey"];
-        strlcpy(brewersFriendKey, bf, sizeof(brewersFriendKey));
+        strlcpy(brewersFriendKey, bf, 25);
     }
 
     if (obj["brewfatherKey"].isNull())
     {
-        strlcpy(brewfatherKey, "", sizeof(brewfatherKey));
+        strlcpy(brewfatherKey, "", 25);
     }
     else
     {
         const char *bk = obj["brewfatherKey"];
-        strlcpy(brewfatherKey, bk, sizeof(brewfatherKey));
+        strlcpy(brewfatherKey, bk, 25);
     }
 
     if (obj["mqttBrokerIP"].isNull())
     {
-        strlcpy(mqttBrokerIP, "", sizeof(mqttBrokerIP));
+        strlcpy(mqttBrokerIP, "", 256);
     }
     else
     {
         const char *mi = obj["mqttBrokerIP"];
-        strlcpy(mqttBrokerIP, mi, sizeof(mqttBrokerIP));
+        strlcpy(mqttBrokerIP, mi, 256);
     }
 
     if (obj["mqttBrokerPort"].isNull())
@@ -943,32 +943,32 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["mqttUsername"].isNull())
     {
-        strlcpy(mqttUsername, "", sizeof(mqttUsername));
+        strlcpy(mqttUsername, "", 51);
     }
     else
     {
         const char *mu = obj["mqttUsername"];
-        strlcpy(mqttUsername, mu, sizeof(mqttUsername));
+        strlcpy(mqttUsername, mu, 51);
     }
 
     if (obj["mqttPassword"].isNull())
     {
-        strlcpy(mqttPassword, "", sizeof(mqttPassword));
+        strlcpy(mqttPassword, "", 65);
     }
     else
     {
         const char *mp = obj["mqttPassword"];
-        strlcpy(mqttPassword, mp, sizeof(mqttPassword));
+        strlcpy(mqttPassword, mp, 65);
     }
 
     if (obj["mqttTopic"].isNull())
     {
-        strlcpy(mqttTopic, "tiltbridge", sizeof(mqttTopic));
+        strlcpy(mqttTopic, "tiltbridge", 31);
     }
     else
     {
         const char *mt = obj["mqttTopic"];
-        strlcpy(mqttTopic, mt, sizeof(mqttTopic));
+        strlcpy(mqttTopic, mt, 31);
     }
 
     if (obj["mqttPushEvery"].isNull())

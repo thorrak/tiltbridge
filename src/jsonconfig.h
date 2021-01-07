@@ -17,11 +17,11 @@
 
 struct Config
 {
-    char mdnsID[32];
+    char *mdnsID = (char *)malloc(sizeof(char) *32);
     bool invertTFT;
     bool update_spiffs;
     int8_t TZoffset;
-    char tempUnit[2];
+    char *tempUnit = (char *)malloc(sizeof(char) *2);
     uint8_t smoothFactor;
     bool applyCalibration;
     bool tempCorrect;
@@ -66,28 +66,28 @@ struct Config
     double cal_pink_x2;
     double cal_pink_x3;
 
-    char sheetName_red[25];
-    char sheetName_green[25];
-    char sheetName_black[25];
-    char sheetName_purple[25];
-    char sheetName_orange[25];
-    char sheetName_blue[25];
-    char sheetName_yellow[25];
-    char sheetName_pink[25];
+    char *sheetName_red = (char *)malloc(sizeof(char) *25);
+    char *sheetName_green = (char *)malloc(sizeof(char) *25);
+    char *sheetName_black = (char *)malloc(sizeof(char) *25);
+    char *sheetName_purple= (char *)malloc(sizeof(char) *25);
+    char *sheetName_orange = (char *)malloc(sizeof(char) *25);
+    char *sheetName_blue = (char *)malloc(sizeof(char) *25);
+    char *sheetName_yellow = (char *)malloc(sizeof(char) *25);
+    char *sheetName_pink = (char *)malloc(sizeof(char) *25);
 
-    char localTargetURL[256];
+    char *localTargetURL = (char *)malloc(sizeof(char) * 256);
     uint16_t localTargetPushEvery;
-    char brewstatusURL[256];
+    char *brewstatusURL = (char *)malloc(sizeof(char) * 256);
     uint16_t brewstatusPushEvery;
-    char scriptsURL[256];
-    char scriptsEmail[256];
-    char brewersFriendKey[25];
-    char brewfatherKey[25];
-    char mqttBrokerIP[254];
+    char *scriptsURL = (char *)malloc(sizeof(char) * 256);
+    char *scriptsEmail = (char *)malloc(sizeof(char) * 256);
+    char *brewersFriendKey = (char *)malloc(sizeof(char) *25);
+    char *brewfatherKey = (char *)malloc(sizeof(char) *25);
+    char *mqttBrokerIP = (char *)malloc(sizeof(char) * 256);
     uint16_t mqttBrokerPort;
-    char mqttUsername[51];
-    char mqttPassword[65];
-    char mqttTopic[31];
+    char *mqttUsername = (char *)malloc(sizeof(char) *51);
+    char *mqttPassword = (char *)malloc(sizeof(char) *65);
+    char *mqttTopic = (char *)malloc(sizeof(char) *31);
     uint16_t mqttPushEvery;
 
     void load(JsonObjectConst);
