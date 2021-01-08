@@ -54,6 +54,15 @@ void setup()
     http_server.init();
 
     memCheck.attach(30, printMem);
+    
+    xTaskCreate(
+       lcd.check_screen,    // Function that should be called
+       "LCD Check Screen",   // Name of the task (for debugging)
+       2000,            // Stack size (bytes)
+       NULL,            // Parameter to pass
+       0,               // Task priority
+       NULL             // Task handle
+    );
 }
 
 void loop()
@@ -69,7 +78,7 @@ void loop()
     // handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
-    lcd.check_screen();
+    //lcd.check_screen();
     if (http_server.config_updated)
     {
         saveConfig();
