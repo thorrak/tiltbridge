@@ -71,7 +71,7 @@ public:
     void print_line(const char *left_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line);
 
-    void check_screen();
+    static void check_screen(void* parameter);
     void clear();
 
 private:
