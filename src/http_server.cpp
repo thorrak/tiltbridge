@@ -10,8 +10,6 @@ httpServer http_server;
 
 AsyncWebServer server(80);
 
-static char all_valid[2] = "1";
-
 //void trigger_restart();
 void trigger_restart(AsyncWebServerRequest *request);
 
@@ -90,7 +88,6 @@ void redirectToConfig(AsyncWebServerRequest *request)
 void processConfigError(AsyncWebServerRequest *request)
 {
     Log.error(F("Error in processConfig." CR));
-    all_valid[0] = '0';
     redirectToConfig(request);
 }
 

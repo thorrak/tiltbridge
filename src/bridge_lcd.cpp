@@ -59,6 +59,7 @@ void bridge_lcd::check_screen()
     {
         next_screen_at = display_next() * 1000 + xTaskGetTickCount();
     }
+    vTaskDelay(20);
 }
 
 // display_next returns the number of seconds to "hold" on this screen
