@@ -53,6 +53,24 @@ void disconnect_from_wifi_and_restart()
     ESP.restart();
 }
 
+void mdnsreset()
+{
+    MDNS.end();
+    if (!MDNS.begin(config.mdnsID))
+    {
+        Log.error(F("Error resetting MDNS responder."));
+    }
+    else
+    {
+        Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
+        MDNS.addService("http", "tcp", PORT);
+        MDNS.addService("kegcop", "tcp", PORT);
+#if DOTELNET == true
+        MDNS.addService("telnet", "tcp", TELNETPORT);
+#endif
+    }
+}
+
 void init_wifi()
 {
     AsyncWiFiManager wifiManager;      //Local initialization. Once its business is done, there is no need to keep it around

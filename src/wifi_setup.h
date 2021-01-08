@@ -14,6 +14,7 @@
 #include <WiFiClient.h>
 
 void init_wifi();
+void mdnsreset();
 void initWiFiResetButton();
 void disconnect_from_wifi_and_restart();
 void handle_wifi_reset_presses();
