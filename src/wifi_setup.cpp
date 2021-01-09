@@ -63,10 +63,10 @@ void mdnsreset()
     else
     {
         Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
-        MDNS.addService("http", "tcp", 80);
-        MDNS.addService("tiltbridge", "tcp", 80);
+        MDNS.addService("http", "tcp", WEBPORT);
+        MDNS.addService("tiltbridge", "tcp", WEBPORT);
 #if DOTELNET == true
-        MDNS.addService("telnet", "tcp", 23);
+        MDNS.addService("telnet", "tcp", TELNETPORT);
 #endif
     }
 }
@@ -130,8 +130,8 @@ void init_wifi()
         Log.error(F("Error setting up MDNS responder." CR));
     }
 
-    MDNS.addService("http", "tcp", 80);       // technically we should wait on this, but I'm impatient.
-    MDNS.addService("tiltbridge", "tcp", 80); // for lookups
+    MDNS.addService("http", "tcp", WEBPORT);       // technically we should wait on this, but I'm impatient.
+    MDNS.addService("tiltbridge", "tcp", WEBPORT); // for lookups
 
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
