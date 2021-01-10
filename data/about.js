@@ -5,7 +5,11 @@
 var unloadingState = false;
 var numReq = 3;
 var loaded = 0;
-var heapReloadTimer = 60000;
+// Keep these staggered
+var uptimeReloadTimer = 7001;
+var heapReloadTimer = 11003;
+var resetReloadTimer = 61001;
+var versionReloadTimer = 3600007;
 
 // Attach the event after the page loads
 if (window.addEventListener)
@@ -40,12 +44,10 @@ function populatePage() { // Get page data
     heapToolTip();      // Set up tooltip for debug info
 
     loadThisVersion();  // Populate form with controller settings
-
-    loadUptime();       // Load uptime information
-    loadHeap();         // Load heap information
-    loadResetReason();  // Load last reset reason
-
-    pollComplete();
+    // Slight delay/stagger to be nicer to controller
+    setTimeout(function() { loadUptime(); }, 499);
+    setTimeout(function() { loadHeap(); }, 997);
+    setTimeout(function() { loadResetReason(); }, 1499);
 }
 
 function heapToolTip() {
@@ -83,6 +85,7 @@ function loadThisVersion() { // Get current parameters
         })
         .always(function () {
             // Can post-process here
+            setTimeout(loadThisVersion, versionReloadTimer);
         });
 }
 
@@ -114,6 +117,7 @@ function loadUptime(callback = null) { // Get uptime information
             if (typeof callback == "function") {
                 callback();
             }
+            setTimeout(loadUptime, uptimeReloadTimer);
         });
 }
 
@@ -144,6 +148,7 @@ function loadHeap(callback = null) { // Get heap information
             if (typeof callback == "function") {
                 callback();
             }
+            setTimeout(loadHeap, heapReloadTimer);
         });
 }
 
@@ -173,37 +178,6 @@ function loadResetReason(callback = null) { // Get last reset reason
             if (typeof callback == "function") {
                 callback();
             }
+            setTimeout(loadResetReason, resetReloadTimer);
         });
-}
-
-function pollComplete() {
-    if (loaded == numReq) {
-        finishPage();
-    } else {
-        setTimeout(pollComplete, 300); // try again in 300 milliseconds
-    }
-}
-
-function heapReload() {
-    loadHeap(function callFunction() {
-        setTimeout(heapReload, heapReloadTimer);
-    });
-}
-
-function uptimeReload() {
-    loadUptime(function callFunction() {
-        setTimeout(uptimeReload, heapReloadTimer);
-    });
-}
-
-function reasonReload() {
-    loadResetReason(function callFunction() {
-        setTimeout(reasonReload, heapReloadTimer);
-    });
-}
-
-function finishPage() { // Display page
-    setTimeout(heapReload, heapReloadTimer);
-    setTimeout(uptimeReload, heapReloadTimer);
-    setTimeout(reasonReload, heapReloadTimer);
 }
