@@ -124,14 +124,20 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             {
                 if (strcmp(value, "true") == 0)
                 {
-                    config.invertTFT = true;
-                    http_server.lcd_init_rqd = true;
+                    if (config.invertTFT == false)
+                    {
+                        config.invertTFT = true;
+                        http_server.lcd_init_rqd = true;
+                    }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "false") == 0)
                 {
-                    config.invertTFT = false;
-                    http_server.lcd_init_rqd = true;
+                    if (config.invertTFT == true)
+                    {
+                        config.invertTFT = false;
+                        http_server.lcd_init_rqd = true;
+                    }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else

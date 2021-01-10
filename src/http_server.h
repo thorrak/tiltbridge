@@ -36,6 +36,7 @@ class httpServer
 public:
     void init();
     //void handleClient();
+    bool lcd_init_rqd = true;
     bool restart_requested = false;
     bool wifireset_requested = false;
     bool settings_updated = false;
