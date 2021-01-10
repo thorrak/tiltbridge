@@ -47,10 +47,30 @@ bool isValidmDNSName(const char *mdns_name)
 
 void disconnect_from_wifi_and_restart()
 {
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.persistent(true);
     WiFi.disconnect(true, true);
-    WiFi.begin("0", "0");
-    delay(1000);
+    WiFi.persistent(false);
+    vTaskDelay(2000);
     ESP.restart();
+}
+
+void mdnsreset()
+{
+    MDNS.end();
+    if (!MDNS.begin(config.mdnsID))
+    {
+        Log.error(F("Error resetting MDNS responder."));
+    }
+    else
+    {
+        Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
+        MDNS.addService("http", "tcp", WEBPORT);
+        MDNS.addService("tiltbridge", "tcp", WEBPORT);
+#if DOTELNET == true
+        MDNS.addService("telnet", "tcp", TELNETPORT);
+#endif
+    }
 }
 
 void init_wifi()
@@ -112,8 +132,8 @@ void init_wifi()
         Log.error(F("Error setting up MDNS responder." CR));
     }
 
-    MDNS.addService("http", "tcp", 80);       // technically we should wait on this, but I'm impatient.
-    MDNS.addService("tiltbridge", "tcp", 80); // for lookups
+    MDNS.addService("http", "tcp", WEBPORT);       // technically we should wait on this, but I'm impatient.
+    MDNS.addService("tiltbridge", "tcp", WEBPORT); // for lookups
 
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";

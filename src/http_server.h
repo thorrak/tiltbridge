@@ -29,6 +29,7 @@
 
 #define BREWFATHER_MIN_KEY_LENGTH 5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
+#define BREWSTATUS_MIN_KEY_LENGTH 12
 
 class httpServer
 {
@@ -36,6 +37,7 @@ public:
     void init();
     //void handleClient();
     bool restart_requested = false;
+    bool wifireset_requested = false;
     bool settings_updated = false;
     bool mqtt_init_rqd = false;
     bool lcd_init_rqd = false;

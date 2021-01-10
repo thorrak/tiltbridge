@@ -51,7 +51,7 @@
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link active" href="/">Home <span class="sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/settings/">Settings</a>
@@ -63,7 +63,7 @@
                         <a class="nav-link" href="/help/">Help</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/about/">About <span class="sr-only">(current)</span></a>
+                        <a class="nav-link" href="/about/">About</a>
                     </li>
                 </ul>
             </div>
@@ -72,44 +72,26 @@
 
     <main role="main" class="flex-shrink-0">
 
-        <div class="container" id="aboutapp"><!-- Container -->
+        <div class="container" id="resetwifiapp"><!-- App Container -->
 
-            <div class="card border-dark mb-3"><!-- TiltBridge About Card -->
+            <div class="card border-dark mb-3"><!-- TiltBridge Reset Wifi Card -->
 
-				<h5 class="card-header">
-					About TiltBridge:
-					<span id="thisVersion">(version loading...)</span>
-					[<span class="text-primary" id="thisBranch"></span>]
-					(<span class="text-warning" id="thisBuild"></span>)
-				</h5>
+                <div class="card-header bg-light border-primary">
+                    <h5 class="card-title">Resetting WiFi Settings</h5>
+                </div>
 
                 <div class="card-body">
-
-					<div class="card-body">
-						<p class="card-text">
-							<a href="https://www.tiltbridge.com/">TiltBridge</a> is a project by John Beeler and is
-							licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0
-								license</a>.
-						</p>
-
-						<ul class="list-group">
-							<li class="list-group-item d-flex justify-content-between align-items-center">
-								<strong>Uptime: </strong>
-								<span id="uptime" data-html="true" data-toggle="tooltip">...loading</span>
-							</li>
-							<li class="list-group-item d-flex justify-content-between align-items-center">
-								<strong>Reset Reason: </strong>
-								<span id="resetreason" data-html="true" data-toggle="tooltip">...loading</span>
-							</li>
-							<li class="list-group-item d-flex justify-content-between align-items-center">
-								<strong>Heap Information: </strong>
-								<span id="heap" data-html="true" data-toggle="tooltip">...loading</span>
-							</li>
-						</ul>
-					</div>
-
+                    <p>
+                        Your TiltBridge's WiFi connection settings are being reset which will cause it to forget your network
+                        configuration. After this is complete, it will reboot, and will create the configuration AP. To
+                        reconnect your TiltBridge to your network you will need to connect to the configuration AP and provide
+                        new network settings.
+                    </p>
+                    <p>
+                        You may close this page.
+                    </p>
                 </div>
-            </div> <!-- TiltBridge About Card -->
+            </div> <!-- TiltBridge Reset Wifi Card -->
 
         </div> <!-- Container -->
 
@@ -133,7 +115,7 @@
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
     </script>
 
-    <script src="/about.js"></script>
+    <script src="/wifireset.js" defered></script>
 
 </body>
 

@@ -30,7 +30,7 @@ void execOTA()
 
     // Connect to server
     // client.connect(host, port)
-    if (client.connect("www.tiltbridge.com", 80))
+    if (client.connect("www.tiltbridge.com", WEBPORT))
     {
         // Connection Succeed - fetch the bin
         client.print(String("GET ") + bin + " HTTP/1.1\r\n" +

@@ -74,21 +74,19 @@
 
         <div class="container" id="resetwifiapp"><!-- App Container -->
 
-            <div class="card border-dark mb-3"><!-- TiltBridge Reset Wifi Card -->
+            <div class="card border-dark mb-3"><!-- TiltBridge Restart Controller Card -->
 
                 <div class="card-header bg-light border-primary">
-                    <h5 class="card-title">Resetting WiFi Settings</h5>
+                    <h5 class="card-title">Controller Reset In Progress</h5>
                 </div>
 
                 <div class="card-body">
-                    <p>
-                        Your TiltBridge's WiFi connection settings are being reset which will cause it to forget your network
-                        configuration. After this is complete, it will reboot, and will create the configuration AP. To
-                        reconnect your TiltBridge to your network you will need to connect to the configuration AP and provide
-                        new network settings.
+                    <p class="card-text">
+                        Your TiltBridge's controller is being reset and will return momentarily.
+                        You will be redirected to the home page when that is complete.
                     </p>
                 </div>
-            </div> <!-- TiltBridge Reset Wifi Card -->
+            </div> <!-- TiltBridge Restart Controller Card -->
 
         </div> <!-- Container -->
 
@@ -111,6 +109,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
     </script>
+
+    <script src="/controllerrestart.js" defer></script>
 
 </body>
 

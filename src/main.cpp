@@ -78,26 +78,27 @@ void loop()
     // handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
-    //lcd.check_screen();
-    if (http_server.config_updated)
+
+    lcd.check_screen();
+
+    if (http_server.wifireset_requested)
     {
-        saveConfig();
-        http_server.config_updated = false;
+        http_server.wifireset_requested = false;
+        Log.verbose(F("Resetting WiFi." CR));
+        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
+        vTaskDelay(3000);
+        disconnect_from_wifi_and_restart();
     }
+
     if (http_server.restart_requested)
     {
-        // Restart handling put in main loop to ensure that client has opportunity
-        // to grab the new mDNS name from /settings/json/ before restart for proper redirect.
-        if (restart_time <= xTaskGetTickCount())
-        {
-            tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
-            ESP.restart();                           // Restart the TiltBridge
-        }
+        http_server.restart_requested = false;
+        Log.verbose(F("Resetting controller." CR));
+        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
+        vTaskDelay(3000);
+        ESP.restart();                           // Restart the TiltBridge
     }
-    else
-    {
-        restart_time = xTaskGetTickCount() + 5000;
-    }
+
     if (http_server.mqtt_init_rqd)
     {
         data_sender.init_mqtt();
