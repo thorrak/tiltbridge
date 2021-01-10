@@ -21,6 +21,8 @@
 
 // For the LCD_TFT displays, we're connecting via SPI
 #include <SPI.h>
+#include <TFT_eSPI.h>
+/*
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
 
@@ -30,6 +32,7 @@
 #define TFT_RST 33 //for D32 Pro
 #define TS_CS 12   //for D32 Pro
 #define TFT_BACKLIGHT 32
+*/
 // TODO - Determine if I can actually use 15 tilts/display
 #define TILTS_PER_PAGE 15 // The actual number is one fewer than this - the first row is used for headers
 #define TILT_FONT_SIZE 2
@@ -71,7 +74,8 @@ public:
     void print_line(const char *left_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line);
 
-    static void check_screen(void* parameter);
+    //static void check_screen(void * parameter);
+    void check_screen();
     void clear();
 
 private:
@@ -84,11 +88,10 @@ private:
 #ifdef LCD_SSD1306
     SSD1306 *oled_display;
 #elif defined(LCD_TFT)
-    Adafruit_ILI9341 *tft;
+    TFT_eSPI *tft;
 #elif defined(LCD_TFT_ESPI)
     TFT_eSPI *tft;
 #endif
-
     uint8_t tilt_pages_in_run; // Number of pages in the current loop through the active tilts (# active tilts / 3)
     uint8_t tilt_on_page;      // The page number currently being displayed
 
