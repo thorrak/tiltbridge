@@ -8,8 +8,8 @@
 // Since we can't use double reset detection or the "boot" button, we need to leverage the touchscreen to trigger the
 // WiFi reset on TFT builds
 #ifdef LCD_TFT
-#include <XPT2046_Touchscreen.h>
-XPT2046_Touchscreen ts(TS_CS);
+//#include <XPT2046_Touchscreen.h>
+//XPT2046_Touchscreen ts(TS_CS);
 #endif
 
 bool shouldSaveConfig = false;
@@ -138,7 +138,7 @@ void init_wifi()
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
     strncat(mdns_url, mdns_id, 31);
-    strcat(mdns_url, ".local");
+    strcat(mdns_url, ".local/");
 
     char ip_address_url[25] = "http://";
     char ip[16];
@@ -189,8 +189,8 @@ void handle_wifi_reset_presses()
     uint64_t initial_press_at = 0;
 
 #ifdef LCD_TFT
-    while (ts.touched()) // Block while the screen is pressed until the user releases
-        wifi_reset_pressed_at = xTaskGetTickCount();
+    //while (ts.touched()) // Block while the screen is pressed until the user releases
+    //    wifi_reset_pressed_at = xTaskGetTickCount();
 #endif
 
     if (wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME)
@@ -203,11 +203,11 @@ void handle_wifi_reset_presses()
         {
             delay(1);
 
-#ifdef LCD_TFT
-            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
-#else
+//#ifdef LCD_TFT
+//            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
+//#else
             if (wifi_reset_pressed_at != initial_press_at)
-#endif
+//#endif
             {
                 // The user pushed the button a second time & caused a second interrupt. Process the reset.
                 disconnect_from_wifi_and_restart();

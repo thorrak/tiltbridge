@@ -35,7 +35,7 @@ void setup()
 
     // I kind of want to leave the WiFi info on screen longer here instead of the logo. The logo will display often
     // enough as-is.
-    //    lcd.display_logo();  // Display the Fermentrack logo
+    // lcd.display_logo();  // Display the logo
 
 #ifdef LOG_LOCAL_LEVEL
     esp_log_level_set("*", ESP_LOG_DEBUG);        // Det all components to DEBUG level
@@ -53,21 +53,12 @@ void setup()
     tilt_scanner.wait_until_scan_complete();
     http_server.init();
 
-    memCheck.attach(30, printMem);
-    
-    xTaskCreate(
-       lcd.check_screen,    // Function that should be called
-       "LCD Check Screen",   // Name of the task (for debugging)
-       2000,            // Stack size (bytes)
-       NULL,            // Parameter to pass
-       0,               // Task priority
-       NULL             // Task handle
-    );
+    memCheck.attach(30, printMem);  // Memory debug print
 }
 
 void loop()
 {
-    serialLoop();
+    serialLoop();   // Service telnet and console commands
 
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if (tilt_scanner.scan())
@@ -83,8 +74,8 @@ void loop()
 
     if (http_server.wifireset_requested)
     {
-        http_server.wifireset_requested = false;
         Log.verbose(F("Resetting WiFi." CR));
+        http_server.wifireset_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
         vTaskDelay(3000);
         disconnect_from_wifi_and_restart();
@@ -92,8 +83,8 @@ void loop()
 
     if (http_server.restart_requested)
     {
-        http_server.restart_requested = false;
         Log.verbose(F("Resetting controller." CR));
+        http_server.restart_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
         vTaskDelay(3000);
         ESP.restart();                           // Restart the TiltBridge
@@ -101,12 +92,19 @@ void loop()
 
     if (http_server.mqtt_init_rqd)
     {
-        data_sender.init_mqtt();
+        Log.verbose(F("Re-initializing MQTT." CR));
         http_server.mqtt_init_rqd = false;
+        data_sender.init_mqtt();
     }
+
     if (http_server.lcd_init_rqd)
     {
-        lcd.init();
+        Log.verbose(F("Re-initializing LCD." CR));
         http_server.lcd_init_rqd = false;
+        lcd.stop();
+        vTaskDelay(1000);
+        lcd.init();
     }
+
+    yield();
 }

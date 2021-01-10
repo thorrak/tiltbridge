@@ -43,7 +43,8 @@ void bridge_lcd::display_logo()
 #ifdef LCD_TFT
     //print_line("Logo goes here.", "", 1);
     clear();
-    tft->drawRGBBitmap((320 - 288) / 2, 0, gimp_image.pixel_data, gimp_image.width, gimp_image.height);
+    yield();
+    tft->pushImage((320 - 288) / 2, 0, gimp_image.width, gimp_image.height, gimp_image.pixel_data);
 #endif
 
 #ifdef LCD_TFT_ESPI
@@ -53,14 +54,11 @@ void bridge_lcd::display_logo()
 #endif
 }
 
-void bridge_lcd::check_screen(void * parameter)
+void bridge_lcd::check_screen()
 {
-    while (true){
-        if (lcd.next_screen_at < xTaskGetTickCount())
-            {
-                lcd.next_screen_at = lcd.display_next() * 1000 + xTaskGetTickCount();
-            }
-        vTaskDelay(20);
+    if (next_screen_at < xTaskGetTickCount())
+    {
+        next_screen_at = display_next() * 1000 + xTaskGetTickCount();
     }
 }
 
@@ -117,21 +115,23 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number)
 
     // Clear out the display before we start printing to it
     clear();
+    yield();
 
     // Display IP address on bottom row if using Lolin TFT
     uint8_t header_row = 1;
     uint8_t first_tilt_row_offset = 2;
 #ifdef LCD_TFT
+    tft->setFreeFont(&FreeSans9pt7b);
     // Display IP address or indicate if not connected.
     if (WiFi.status() == WL_CONNECTED)
     {
         char ip[16];
         sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-        print_line("IP Address:", ip, 13);
+        print_line("IP Address:", ip, 11);
     }
     else
     {
-        print_line("No Wifi Connection", "", 13);
+        print_line("No WiFi Connection", "", 10);
     }
     header_row = 1;
     first_tilt_row_offset = header_row + 1;
@@ -252,13 +252,13 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
     sprintf(gravity, "%s", tilt->converted_gravity(false).c_str());
     sprintf(temp, "%s %s", tilt->converted_temp(false).c_str(), tilt->is_celsius() ? "C" : "F");
 
-#ifdef LCD_TFT_ESPI
+#if defined LCD_TFT_ESPI || defined LCD_TFT
     tft->setTextColor(tilt->text_color());
 #endif
 
     print_line(tilt->color_name().c_str(), temp, gravity, line);
 
-#ifdef LCD_TFT_ESPI
+#if defined LCD_TFT_ESPI || defined LCD_TFT
     tft->setTextColor(TFT_WHITE);
 #endif
 }
@@ -322,8 +322,11 @@ void bridge_lcd::init()
 #endif
 
 #ifdef LCD_TFT
-    tft = new Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+    tft = new TFT_eSPI();
     tft->begin();
+    tft->setFreeFont(&FreeSans12pt7b);
+    tft->setSwapBytes(true);
+    tft->initDMA();
 #ifdef LCD_TFT_M5_STACK
     // +4 "mirrors" the text (supposedly)
     tft->setRotation(0);
@@ -331,14 +334,16 @@ void bridge_lcd::init()
     if (config.invertTFT)
     {
         tft->setRotation(1);
+        delay(20);
     }
     else
     {
         tft->setRotation(3);
+        delay(20);
     }
 #endif
-    tft->fillScreen(ILI9341_BLACK);
-    tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+    tft->fillScreen(TFT_BLACK);
+    tft->setTextColor(TFT_WHITE, TFT_BLACK);
 
 #if defined(TFT_BACKLIGHT)
     pinMode(TFT_BACKLIGHT, OUTPUT);
@@ -356,6 +361,28 @@ void bridge_lcd::init()
 #endif
 }
 
+void bridge_lcd::stop()
+{
+#ifdef LCD_SSD1306
+    oled_display->end();
+    delete oled_display;
+#endif
+
+#ifdef LCD_TFT
+    tft->deInitDMA();
+    tft->endWrite();
+    delete tft;
+#endif
+
+#ifdef LCD_TFT_ESPI
+    tft->deInitDMA();
+    tft->endWrite();
+    delete tft;
+#endif
+
+    init();
+}
+
 void bridge_lcd::clear()
 {
 #ifdef LCD_SSD1306
@@ -364,7 +391,7 @@ void bridge_lcd::clear()
 #endif
 
 #ifdef LCD_TFT
-    tft->fillScreen(ILI9341_BLACK);
+    tft->fillScreen(TFT_BLACK);
 #endif
 
 #ifdef LCD_TFT_ESPI
@@ -407,28 +434,14 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
 #endif
 
 #ifdef LCD_TFT
-    int16_t x = 0;
-    int16_t y = TILT_FONT_SIZE * (line - 1) * 9 + 2;
+    int16_t starting_pixel_row = 0;
+    starting_pixel_row = (tft->fontHeight(GFXFF)) * (line - 1) + 2;
 
-    tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-    tft->setTextSize(TILT_FONT_SIZE);
-
-    tft->setCursor(x, y);
-    tft->print(left_text);
-
-    // For now, we're just dropping the middle text at pixel 130. No math.
-    tft->setCursor(130, y);
-    tft->print(middle_text);
-
-    // While the OLED library has functions for printing right-aligned text, Adafruit GFX does not. We'll have to
-    // do this manually.
-    int16_t x1, y1;
-    uint16_t w, h;
-
-    tft->getTextBounds(right_text, x, y, &x1, &y1, &w, &h);
-    tft->setCursor(320 - w, y);
-    tft->print(right_text);
-
+    tft->drawString(left_text, 0, starting_pixel_row, GFXFF);
+    yield();
+    tft->drawString(middle_text, 134, starting_pixel_row, GFXFF);
+    yield();
+    tft->drawString(right_text, 320 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
 #endif
 
 #ifdef LCD_TFT_ESPI
