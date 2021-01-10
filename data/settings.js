@@ -101,7 +101,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 settingsAlert.warning();
                 settingsAlert.error();
                 // Store hostname before er (possibly) change it
-                originalHostnameConfig = config.hostname;
+                originalHostnameConfig = config.mdnsID;
 
                 // TiltBridge Tab
                 $('input[name="mdnsID"]').val(config.mdnsID);
