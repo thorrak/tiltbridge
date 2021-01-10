@@ -279,7 +279,9 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         d_grav = x0 + x1 * d_grav + x2 * d_grav * d_grav + x3 * d_grav * d_grav * d_grav;
         smoothed_d_grav = x0 + x1 * smoothed_d_grav + x2 * smoothed_d_grav * smoothed_d_grav + x3 * smoothed_d_grav * smoothed_d_grav * smoothed_d_grav;
 
-        Log.verbose(F("Calibrated raw gravity = %D" CR), d_grav);
+        char calvalue[7];
+        sprintf(calvalue, "%.4f", d_grav);
+        Log.verbose(F("Calibration corrected gravity = %s" CR), calvalue);
     }
 
     if (config.tempCorrect)
@@ -288,7 +290,9 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         d_grav = d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
         smoothed_d_grav = smoothed_d_grav * ((1.00130346 - 0.000134722124 * d_temp + 0.00000204052596 * d_temp * d_temp - 0.00000000232820948 * d_temp * d_temp * d_temp) / (1.00130346 - 0.000134722124 * ref_temp + 0.00000204052596 * ref_temp * ref_temp - 0.00000000232820948 * ref_temp * ref_temp * ref_temp));
 
-        Log.verbose(F("Temperature corrected gravity = %D" CR), d_grav);
+        char calvalue[6];
+        sprintf(calvalue, "%.4f", d_grav);
+        Log.verbose(F("Temperature corrected gravity = %s" CR), calvalue);
     }
 
     gravity = (int)round(d_grav * grav_scalar);
