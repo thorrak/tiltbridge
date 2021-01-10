@@ -47,9 +47,11 @@ bool isValidmDNSName(const char *mdns_name)
 
 void disconnect_from_wifi_and_restart()
 {
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.persistent(true);
     WiFi.disconnect(true, true);
-    WiFi.begin("0", "0");
-    delay(1000);
+    WiFi.persistent(false);
+    vTaskDelay(2000);
     ESP.restart();
 }
 
