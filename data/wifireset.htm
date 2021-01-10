@@ -51,7 +51,7 @@
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link active" href="/">Home <span class="sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/settings/">Settings</a>
@@ -60,7 +60,7 @@
                         <a class="nav-link" href="/calibration/">Calibration</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/help/">Help <span class="sr-only">(current)</span></a>
+                        <a class="nav-link" href="/help/">Help</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/about/">About</a>
@@ -72,56 +72,26 @@
 
     <main role="main" class="flex-shrink-0">
 
-        <div class="container" id="settingsapp"> <!-- Container -->
+        <div class="container" id="resetwifiapp"><!-- App Container -->
 
-            <div class="card border-dark mb-3"> <!-- TiltBridge Help Card -->
+            <div class="card border-dark mb-3"><!-- TiltBridge Reset Wifi Card -->
 
                 <div class="card-header bg-light border-primary">
-                    <h5 class="card-title">TiltBridge Support</h5>
+                    <h5 class="card-title">Resetting WiFi Settings</h5>
                 </div>
 
                 <div class="card-body">
-
                     <p>
-                        For questions, concerns, and bug reports, please reach out to
-                        <a href="https://www.reddit.com/user/lordfili">lordfili</a> on Reddit,
-                        <a href="https://www.homebrewtalk.com/forum/members/thorrak.221138/">Thorrak</a>
-                        on the HBT forums, or
-                        <a href="https://github.com/thorrak">Thorrak</a> on GitHub.
+                        Your TiltBridge's WiFi connection settings are being reset which will cause it to forget your network
+                        configuration. After this is complete, it will reboot, and will create the configuration AP. To
+                        reconnect your TiltBridge to your network you will need to connect to the configuration AP and provide
+                        new network settings.
                     </p>
                     <p>
-                        TiltBridge documentation and support can be found at the following links:
+                        You may close this page.
                     </p>
-
-                    <ul class="fa-ul">
-                        <li>
-                            <span class="fa-li"><i class="fas fa-home"></i></span>Visit the <a
-                                href="https://www.tiltbridge.com/">Homepage</a>
-                        </li>
-                        <li>
-                            <span class="fa-li"><i class="fas fa-book"></i></span>Read the <a
-                                href="http://docs.tiltbridge.com/">Documentation</a>
-                        </li>
-                        <li>
-                            <span class="fa-li"><i class="fab fa-github"></i></span>Visit project on <a
-                                href="https://github.com/thorrak/tiltbridge/">GitHub</a>
-                        </li>
-                        <li>
-                            <span class="fa-li"><i class="fas fa-bug"></i></span>Report an <a
-                                href="https://github.com/thorrak/tiltbridge/issues">issue or bug</a>
-                        </li>
-                        <li>
-                            <span class="fa-li"><i class="fas fa-hands-helping"></i></span>Get support or chat with
-                            other users on the <a href="http://homebrewtalk.tiltbridge.com/">HomeBrewTalk Thread</a>
-                        </li>
-                        <!-- <li>
-                            <span class="fa-li"><i class="fas fa-chalkboard-teacher"></i></span>Discuss on
-                                <a href="https://github.com/thorrak/tiltbridge/discussions">GitHub Discussions</a>
-                        </li> -->
-                    </ul>
-
                 </div>
-            </div> <!-- TiltBridge Help Card -->
+            </div> <!-- TiltBridge Reset Wifi Card -->
 
         </div> <!-- Container -->
 
@@ -144,6 +114,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
     </script>
+
+    <script src="/wifireset.js" defered></script>
 
 </body>
 

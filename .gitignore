@@ -1,6 +1,7 @@
 .pioenvs
 .piolibdeps
 CMakeListsPrivate.txt
+platformio*.log
 
 ### C++ template
 # Prerequisites
