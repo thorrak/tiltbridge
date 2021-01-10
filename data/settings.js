@@ -110,7 +110,11 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="TZoffset"]').val(config.TZoffset);
                 $('select[name="tempUnit"] option[value=' + config.tempUnit + ']').attr('selected', 'selected');
                 $('input[name="smoothFactor"]').val(config.smoothFactor);
-                $('input[name="invertTFT"]').val(config.invertTFT);
+                if (config.invertTFT) {
+                    $('input[name="invertTFT"]').prop("checked", true);
+                } else {
+                    $('input[name="invertTFT"]').prop("checked", false);
+                }
 
                 // Calibration Tab
 
@@ -299,7 +303,6 @@ function processControllerPost(url, obj) { // Process a post from the TiltBridge
         return;
     } else {
         // Process post
-        jQuery('#overlay').fadeIn();
         originalHostnameConfig = hostnameVal; // Pick up changed host name
         data = {
             mdnsID: hostnameVal,
@@ -309,6 +312,7 @@ function processControllerPost(url, obj) { // Process a post from the TiltBridge
             invertTFT: invertTFTVal,
         }
         if (hostnamechanged && reloadpage) {
+            jQuery('#overlay').fadeIn();
             var protocol = window.location.protocol;
             var path = window.location.pathname;
             var newpage = protocol + "//" + hostnameVal + ".local" + path + hashLoc;
