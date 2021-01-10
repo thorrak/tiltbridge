@@ -53,11 +53,14 @@ void bridge_lcd::display_logo()
 #endif
 }
 
-void bridge_lcd::check_screen()
+void bridge_lcd::check_screen(void * parameter)
 {
-    if (next_screen_at < xTaskGetTickCount())
-    {
-        next_screen_at = display_next() * 1000 + xTaskGetTickCount();
+    while (true){
+        if (lcd.next_screen_at < xTaskGetTickCount())
+            {
+                lcd.next_screen_at = lcd.display_next() * 1000 + xTaskGetTickCount();
+            }
+        vTaskDelay(20);
     }
 }
 
