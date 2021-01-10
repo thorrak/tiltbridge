@@ -101,7 +101,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 settingsAlert.warning();
                 settingsAlert.error();
                 // Store hostname before er (possibly) change it
-                originalHostnameConfig = config.hostname;
+                originalHostnameConfig = config.mdnsID;
 
                 // TiltBridge Tab
                 $('input[name="mdnsID"]').val(config.mdnsID);
@@ -110,7 +110,11 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="TZoffset"]').val(config.TZoffset);
                 $('select[name="tempUnit"] option[value=' + config.tempUnit + ']').attr('selected', 'selected');
                 $('input[name="smoothFactor"]').val(config.smoothFactor);
-                $('input[name="invertTFT"]').val(config.invertTFT);
+                if (config.invertTFT) {
+                    $('input[name="invertTFT"]').prop("checked", true);
+                } else {
+                    $('input[name="invertTFT"]').prop("checked", false);
+                }
 
                 // Calibration Tab
 
