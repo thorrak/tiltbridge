@@ -35,7 +35,7 @@ void setup()
 
     // I kind of want to leave the WiFi info on screen longer here instead of the logo. The logo will display often
     // enough as-is.
-    //    lcd.display_logo();  // Display the Fermentrack logo
+    // lcd.display_logo();  // Display the logo
 
 #ifdef LOG_LOCAL_LEVEL
     esp_log_level_set("*", ESP_LOG_DEBUG);        // Det all components to DEBUG level
@@ -55,20 +55,11 @@ void setup()
 
     memCheck.attach(30, printMem);
     
-    xTaskCreate(
-       lcd.check_screen,    // Function that should be called
-       "LCD Check Screen",   // Name of the task (for debugging)
-       2000,            // Stack size (bytes)
-       NULL,            // Parameter to pass
-       0,               // Task priority
-       NULL             // Task handle
-    );
 }
 
 void loop()
 {
     serialLoop();
-
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if (tilt_scanner.scan())
     {
@@ -104,9 +95,5 @@ void loop()
         data_sender.init_mqtt();
         http_server.mqtt_init_rqd = false;
     }
-    if (http_server.lcd_init_rqd)
-    {
-        lcd.init();
-        http_server.lcd_init_rqd = false;
-    }
+    yield();
 }
