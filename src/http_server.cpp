@@ -74,15 +74,15 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
-                    if (!strcmp(config.mdnsID, value) == 0)
+                    if (strcmp(config.mdnsID, value) != 0)
                     {
                         hostnamechanged = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                    strlcpy(config.mdnsID, value, sizeof(config.mdnsID));
+                    strlcpy(config.mdnsID, value, 32);
                 }
             }
-            if (strcmp(name, "TZoffset") == 0) // Set the timezone offset
+            if (strcmp(name, "tzOffset") == 0) // Set the timezone offset
             {
                 const int val = atof(value);
                 if ((val <= -12) || (val >= 14))
@@ -104,7 +104,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 else
                 {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                    strlcpy(config.tempUnit, value, sizeof(config.tempUnit));
+                    strlcpy(config.tempUnit, value, 2);
                 }
             }
             if (strcmp(name, "smoothFactor") == 0) // Set the smoothing factor
@@ -122,13 +122,13 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             }
             if (strcmp(name, "invertTFT") == 0) // Invert TFT orientation
             {
-                if (strcmp(value, "on") == 0)
+                if (strcmp(value, "true") == 0)
                 {
                     config.invertTFT = true;
                     http_server.lcd_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
-                else if (strcmp(value, "off") == 0)
+                else if (strcmp(value, "false") == 0)
                 {
                     config.invertTFT = false;
                     http_server.lcd_init_rqd = true;
@@ -145,7 +145,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
     { // We reset hostname, process
         hostnamechanged = false;
         tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, config.mdnsID);
-        mdnsreset(); // TODO
+        mdnsreset();
         Log.verbose(F("POSTed new mDNSid, reset mDNS stack." CR));
     }
     if (saveConfig())
@@ -177,12 +177,12 @@ bool processCalibrationSettings(AsyncWebServerRequest *request)
             //
             if (strcmp(name, "applyCalibration") == 0) // Set apply calibration
             {
-                if (strcmp(value, "on") == 1)
+                if (strcmp(value, "true") == 0)
                 {
                     config.applyCalibration = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
-                else if (strcmp(value, "off") == 1)
+                else if (strcmp(value, "false") == 0)
                 {
                     config.applyCalibration = false;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
@@ -194,12 +194,12 @@ bool processCalibrationSettings(AsyncWebServerRequest *request)
             }
             if (strcmp(name, "tempCorrect") == 0) // Set apply temperature correction
             {
-                if (strcmp(value, "on") == 1)
+                if (strcmp(value, "true") == 0)
                 {
                     config.tempCorrect = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
-                else if (strcmp(value, "off") == 1)
+                else if (strcmp(value, "false") == 0)
                 {
                     config.tempCorrect = false;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
@@ -243,12 +243,12 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
                 if ((strlen(value) > 3) && (strlen(value) < 255))
                 {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                    strlcpy(config.localTargetURL, value, sizeof(config.localTargetURL));
+                    strlcpy(config.localTargetURL, value, 256);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                    strlcpy(config.localTargetURL, value, sizeof(config.localTargetURL));
+                    strlcpy(config.localTargetURL, value, 256);
                 }
                 else
                 {
@@ -304,12 +304,12 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                     strlen(value) < 255 &&
                     strncmp(value, "https://script.google.com/", 26) == 0)
                 {
-                    strlcpy(config.scriptsURL, value, sizeof(config.scriptsURL));
+                    strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.localTargetURL, value, sizeof(config.localTargetURL));
+                    strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -321,12 +321,12 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > 7 && strlen(value) < 255)
                 {
-                    strlcpy(config.scriptsEmail, value, sizeof(config.scriptsEmail));
+                    strlcpy(config.scriptsEmail, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.scriptsEmail, value, sizeof(config.scriptsEmail));
+                    strlcpy(config.scriptsEmail, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -338,7 +338,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_red, value, sizeof(config.sheetName_red));
+                    strlcpy(config.sheetName_red, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -350,7 +350,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_green, value, sizeof(config.sheetName_green));
+                    strlcpy(config.sheetName_green, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -362,7 +362,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_black, value, sizeof(config.sheetName_black));
+                    strlcpy(config.sheetName_black, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -374,7 +374,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_purple, value, sizeof(config.sheetName_purple));
+                    strlcpy(config.sheetName_purple, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -386,7 +386,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_orange, value, sizeof(config.sheetName_orange));
+                    strlcpy(config.sheetName_orange, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -398,7 +398,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_yellow, value, sizeof(config.sheetName_yellow));
+                    strlcpy(config.sheetName_yellow, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -410,7 +410,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_blue, value, sizeof(config.sheetName_blue));
+                    strlcpy(config.sheetName_blue, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -422,7 +422,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) < 25)
                 {
-                    strlcpy(config.sheetName_pink, value, sizeof(config.sheetName_pink));
+                    strlcpy(config.sheetName_pink, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else
@@ -464,12 +464,12 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request)
                 if (
                     strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
                 {
-                    strlcpy(config.brewersFriendKey, value, sizeof(config.brewersFriendKey));
+                    strlcpy(config.brewersFriendKey, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.localTargetURL, value, sizeof(config.localTargetURL));
+                    strlcpy(config.brewersFriendKey, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -510,12 +510,12 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
                 {
-                    strlcpy(config.brewfatherKey, value, sizeof(config.brewfatherKey));
+                    strlcpy(config.brewfatherKey, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.brewfatherKey, value, sizeof(config.brewfatherKey));
+                    strlcpy(config.brewfatherKey, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -556,12 +556,12 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > BREWSTATUS_MIN_KEY_LENGTH && strlen(value) < 255 )
                 {
-                    strlcpy(config.brewstatusURL, value, sizeof(config.brewstatusURL));
+                    strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.brewstatusURL, value, sizeof(config.brewstatusURL));
+                    strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -612,17 +612,17 @@ bool processMqttSettings(AsyncWebServerRequest *request)
             // MQTT settings
             //
             // TODO:  This basically accepts anything since it could be DNS or IP
-            if (strcmp(name, "brewfatherKey") == 0) // Set MQTT address
+            if (strcmp(name, "mqttBrokerIP") == 0) // Set MQTT address
             {
                 if (strlen(value) > 8 && strlen(value) < 255)
                 {
-                    strlcpy(config.mqttBrokerIP, value, sizeof(config.mqttBrokerIP));
+                    strlcpy(config.mqttBrokerIP, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.mqttBrokerIP, value, sizeof(config.mqttBrokerIP));
+                    strlcpy(config.mqttBrokerIP, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
@@ -663,13 +663,13 @@ bool processMqttSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > 3 && strlen(value) < 50)
                 {
-                    strlcpy(config.mqttUsername, value, sizeof(config.mqttUsername));
+                    strlcpy(config.mqttUsername, value, 51);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.mqttUsername, value, sizeof(config.mqttUsername));
+                    strlcpy(config.mqttUsername, value, 51);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
@@ -680,15 +680,15 @@ bool processMqttSettings(AsyncWebServerRequest *request)
             }
             if (strcmp(name, "mqttPassword") == 0) // Set MQTT password
             {
-                if (strlen(value) > 64)
+                if (strlen(value) < 64)
                 {
-                    strlcpy(config.mqttPassword, value, sizeof(config.mqttPassword));
+                    strlcpy(config.mqttPassword, value, 65);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.mqttPassword, value, sizeof(config.mqttPassword));
+                    strlcpy(config.mqttPassword, value, 65);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
@@ -701,13 +701,13 @@ bool processMqttSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > 3 && strlen(value) < 30)
                 {
-                    strlcpy(config.mqttTopic, value, sizeof(config.mqttTopic));
+                    strlcpy(config.mqttTopic, value, 31);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.mqttTopic, "tiltbridge", sizeof(config.mqttTopic));
+                    strlcpy(config.mqttTopic, "tiltbridge", 31);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
@@ -861,15 +861,6 @@ void trigger_OTA(AsyncWebServerRequest *request)
 }
 #endif
 
-void trigger_wifi_reset(AsyncWebServerRequest *request)
-{
-    Log.verbose(F("Resetting WiFi." CR));
-    request->send(FILESYSTEM, "/restarting.htm", "text/html");
-    tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete (we don't want any tasks running in the background)
-    // TODO - Come back and refactor this lightly to use similar logic to restart_requested
-    disconnect_from_wifi_and_restart(); // Reset the wifi settings
-}
-
 void http_json(AsyncWebServerRequest *request)
 {
      // TODO: JSON Go rework this
@@ -970,7 +961,7 @@ void reset_reason(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void httpServer::init()
+void setStaticPages()
 {
     // Static page handlers
     server.serveStatic("/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
@@ -979,11 +970,16 @@ void httpServer::init()
     server.serveStatic("/calibration/", FILESYSTEM, "/").setDefaultFile("calibration.htm").setCacheControl("max-age=600");
     server.serveStatic("/help/", FILESYSTEM, "/").setDefaultFile("help.htm").setCacheControl("max-age=600");
     server.serveStatic("/about/", FILESYSTEM, "/").setDefaultFile("about.htm").setCacheControl("max-age=600");
+    server.serveStatic("/controllerrestart/", FILESYSTEM, "/").setDefaultFile("controllerrestart.htm").setCacheControl("max-age=600");
+    server.serveStatic("/wifireset/", FILESYSTEM, "/").setDefaultFile("wifireset.htm").setCacheControl("max-age=600");
     server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
+}
 
+void setPostPages()
+{
     // Settings Page Handlers
-    server.on("/settings/tiltbridge/", HTTP_POST, [](AsyncWebServerRequest *request) {
-        Log.verbose(F("Processing post to /settings/tiltbridge/." CR));
+    server.on("/settings/controller/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/controller/." CR));
         if (processTiltBridgeSettings(request))
         {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1070,19 +1066,21 @@ void httpServer::init()
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
+}
 
-    // TODO: Other pages I need to re-write
-    server.on("/calibration/update/", HTTP_POST, [](AsyncWebServerRequest *request) {
-        processCalibration(request);
-    });
+void setJsonPages()
+{
+    // Tilt JSON
     server.on("/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         http_json(request);
     });
+
+    // Settings JSON
     server.on("/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         settings_json(request);
     });
 
-    // About Page Info Handlers
+    // About Page JSON
     server.on("/thisVersion/", HTTP_GET, [](AsyncWebServerRequest *request) {
         this_version(request);
     });
@@ -1096,16 +1094,45 @@ void httpServer::init()
         reset_reason(request);
     });
 
+}
+
+void setActionPages()
+{
 #ifndef DISABLE_OTA_UPDATES
     server.on("/ota/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, F("text/plain"), F("Ok."));
         trigger_OTA(request);
     });
 #endif
-    server.on("/wifi/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        trigger_wifi_reset(request);
+
+    server.on("/resetwifi/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing /resetwifi/." CR));
+        request->send(200, F("text/plain"), F("Ok."));
+        http_server.wifireset_requested = true;
     });
-    server.on("/restart/", HTTP_GET, [](AsyncWebServerRequest *request) {
+
+    server.on("/oktoreset/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing /oktoreset/." CR));
+        request->send(200, F("text/plain"), F("Ok."));
         http_server.restart_requested = true;
+    });
+
+    server.on("/ping/", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing /ping/." CR));
+        request->send(200, F("text/plain"), F("Ok."));
+    });
+}
+
+void httpServer::init()
+{
+    setStaticPages();
+    setPostPages();
+    setJsonPages();
+    setActionPages();
+
+    // TODO: Other pages I need to re-write
+    server.on("/calibration/update/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        processCalibration(request);
     });
 
 #ifdef FSEDIT
