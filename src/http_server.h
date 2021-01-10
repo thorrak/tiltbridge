@@ -38,7 +38,6 @@ public:
     bool restart_requested = false;
     bool settings_updated = false;
     bool mqtt_init_rqd = false;
-    bool lcd_init_rqd = false;
     bool config_updated = false;
     bool endpoint_updated = false;
 };

@@ -3,9 +3,9 @@
 //
 
 var unloadingState = false;
-var numReq = 3;
+var numReq = 1;
 var loaded = 0;
-var heapReloadTimer = 60000;
+var aboutReloadTimer = 60000;
 
 // Attach the event after the page loads
 if (window.addEventListener)
@@ -39,14 +39,11 @@ function populatePage() { // Get page data
 
     heapToolTip();      // Set up tooltip for debug info
 
-    loadThisVersion();  // Populate form with controller settings
-
-    loadUptime();       // Load uptime information
-    loadHeap();         // Load heap information
-    loadResetReason();  // Load last reset reason
+    loadAboutInfo();    // Load uptime information
 
     pollComplete();
 }
+
 
 function heapToolTip() {
     var heapToolTip = "Heap Information:<br>";
@@ -60,54 +57,53 @@ function heapToolTip() {
     $("#heap").attr("data-original-title", heapToolTip);
 }
 
-function loadThisVersion() { // Get current parameters
-    var thisVersionJson = "/thisVersion/";
-    var thisVersion = $.getJSON(thisVersionJson, function () {
+function loadAboutInfo(callback = null) { // Get uptime information
+    var aboutJson = "/aboutinfo/";
+    var about = $.getJSON(aboutJson, function () {
     })
-        .done(function (thisVersion) {
+        .done(function (about) {
             try {
-                $('#thisVersion').text("v" + thisVersion.version);
-                $('#thisBranch').text(thisVersion.branch);
-                $('#thisBuild').text(thisVersion.build);
+                $('#thisVersion').text("v" + about.version);
+                $('#thisBranch').text(about.branch);
+                $('#thisBuild').text(about.build);
+
+                var days = about.days.toString();
+                var hours = about.hours.toString();
+                var minutes = about.minutes.toString();
+                var seconds = about.seconds.toString();
+
+                var uptime = "Days: " + days + ", Hours: " + hours + ", Minutes: " + minutes + ", Seconds: " + seconds;
+                $('#uptime').text(uptime);
+
+                var free = about.free;
+                var max = about.max;
+                var frag = about.frag;
+                var heapinfo = "Free Heap: " + free + ", Max: " + max + ", Frags: " + frag;
+                $('#heap').text(heapinfo);
+
+                var resetReason = about.reason;
+                var resetDescription = about.description;
+                var resetText = "Reason: " + resetReason + ", Description: " + resetDescription;
+                $('#resetreason').text(resetText);
             }
             catch {
+                $('#uptime').text("(Error parsing uptime.)");
+                $('#resetreason').text("(Error parsing reset reason.)");
+                $('#heap').text("(Error parsing heap.)");
                 $('#thisVersion').html("").html('<span class="text-danger">Error parsing version.</span>');
                 $('#thisBranch').text();
                 $('#thisBuild').text();
             }
         })
         .fail(function () {
+            $('#uptime').text("(Error loading uptime.)");
+            $('#heap').text("(Error loading heap.)");
+            $('#resetreason').text("(Error parsing reset reason.)");
             $('#thisVersion').html("").html('<span class="text-danger">Error loading version.</span>');
             $('#thisBranch').text();
             $('#thisBuild').text();
         })
         .always(function () {
-            // Can post-process here
-        });
-}
-
-function loadUptime(callback = null) { // Get uptime information
-    var uptimeJson = "/uptime/";
-    var uptime = $.getJSON(uptimeJson, function () {
-    })
-        .done(function (uptime) {
-            try {
-                var days = uptime.days.toString();
-                var hours = uptime.hours.toString();
-                var minutes = uptime.minutes.toString();
-                var seconds = uptime.seconds.toString();
-
-                var uptime = "Days: " + days + ", Hours: " + hours + ", Minutes: " + minutes + ", Seconds: " + seconds;
-                $('#uptime').text(uptime);
-            }
-            catch {
-                $('#uptime').text("(Error parsing uptime.)");
-            }
-        })
-        .fail(function () {
-            $('#uptime').text("(Error loading uptime.)");
-        })
-        .always(function () {
             if (loaded < numReq) {
                 loaded++;
             }
@@ -115,66 +111,9 @@ function loadUptime(callback = null) { // Get uptime information
                 callback();
             }
         });
+    
 }
 
-function loadHeap(callback = null) { // Get heap information
-    var heapJson = "/heap/";
-    var heap = $.getJSON(heapJson, function () {
-    })
-        .done(function (heap) {
-            try {
-                var free = heap.free;
-                var max = heap.max;
-                var frag = heap.frag;
-
-                var heapinfo = "Free Heap: " + free + ", Max: " + max + ", Frags: " + frag;
-                $('#heap').text(heapinfo);
-            }
-            catch {
-                $('#heap').text("(Error parsing heap.)");
-            }
-        })
-        .fail(function () {
-            $('#heap').text("(Error loading heap.)");
-        })
-        .always(function () {
-            if (loaded < numReq) {
-                loaded++;
-            }
-            if (typeof callback == "function") {
-                callback();
-            }
-        });
-}
-
-function loadResetReason(callback = null) { // Get last reset reason
-    var resetJson = "/resetreason/";
-    var reset = $.getJSON(resetJson, function () {
-    })
-        .done(function (reset) {
-            try {
-                var resetReason = reset.reason;
-                var resetDescription = reset.description;
-
-                var resetText = "Reason: " + resetReason + ", Description: " + resetDescription;
-                $('#resetreason').text(resetText);
-            }
-            catch {
-                $('#resetreason').text("(Error parsing reset reason.)");
-            }
-        })
-        .fail(function () {
-            $('#resetreason').text("(Error loading reset reason.)");
-        })
-        .always(function () {
-            if (loaded < numReq) {
-                loaded++;
-            }
-            if (typeof callback == "function") {
-                callback();
-            }
-        });
-}
 
 function pollComplete() {
     if (loaded == numReq) {
@@ -184,26 +123,14 @@ function pollComplete() {
     }
 }
 
-function heapReload() {
-    loadHeap(function callFunction() {
-        setTimeout(heapReload, heapReloadTimer);
+
+function aboutReload() {
+    loadAboutInfo(function callFunction() {
+        setTimeout(aboutReload, aboutReloadTimer);
     });
 }
 
-function uptimeReload() {
-    loadUptime(function callFunction() {
-        setTimeout(uptimeReload, heapReloadTimer);
-    });
-}
-
-function reasonReload() {
-    loadResetReason(function callFunction() {
-        setTimeout(reasonReload, heapReloadTimer);
-    });
-}
 
 function finishPage() { // Display page
-    setTimeout(heapReload, heapReloadTimer);
-    setTimeout(uptimeReload, heapReloadTimer);
-    setTimeout(reasonReload, heapReloadTimer);
+    setTimeout(aboutReload, aboutReloadTimer);
 }

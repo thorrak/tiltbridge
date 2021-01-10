@@ -55,20 +55,11 @@ void setup()
 
     memCheck.attach(30, printMem);
     
-    xTaskCreate(
-       lcd.check_screen,    // Function that should be called
-       "LCD Check Screen",   // Name of the task (for debugging)
-       2000,            // Stack size (bytes)
-       NULL,            // Parameter to pass
-       0,               // Task priority
-       NULL             // Task handle
-    );
 }
 
 void loop()
 {
     serialLoop();
-
     // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if (tilt_scanner.scan())
     {
@@ -78,7 +69,7 @@ void loop()
     // handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
-    //lcd.check_screen();
+    lcd.check_screen();
     if (http_server.config_updated)
     {
         saveConfig();
@@ -103,9 +94,5 @@ void loop()
         data_sender.init_mqtt();
         http_server.mqtt_init_rqd = false;
     }
-    if (http_server.lcd_init_rqd)
-    {
-        lcd.init();
-        http_server.lcd_init_rqd = false;
-    }
+    yield();
 }

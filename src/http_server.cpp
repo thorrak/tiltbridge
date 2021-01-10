@@ -136,7 +136,6 @@ void processConfig(AsyncWebServerRequest *request)
 {
     bool restart_tiltbridge = false;
     bool all_settings_valid = true;
-    bool reinit_tft = false;
     bool mqtt_broker_update = false;
 
     // Generic TiltBridge Settings
@@ -192,12 +191,12 @@ void processConfig(AsyncWebServerRequest *request)
         if (request->arg("invertTFT") == "on" && !config.invertTFT)
         {
             config.invertTFT = true;
-            reinit_tft = true;
+            restart_tiltbridge = true;
         }
         else if (request->arg("invertTFT") == "off" && config.invertTFT)
         {
             config.invertTFT = false;
-            reinit_tft = true;
+            restart_tiltbridge = true;
         }
     }
 
@@ -580,11 +579,6 @@ void processConfig(AsyncWebServerRequest *request)
         http_server.mqtt_init_rqd = true;
     }
 
-    if (reinit_tft)
-    {
-        http_server.lcd_init_rqd = true;
-    }
-
     if (restart_tiltbridge)
     {
         trigger_restart(request);
@@ -767,28 +761,17 @@ void settings_json(AsyncWebServerRequest *request)
     request->send(200, "application/json", config_js);
 }
 
-// About.htm page Handlers
+// About.htm page Handler
 //
 
-void this_version(AsyncWebServerRequest *request)
+void aboutinfo(AsyncWebServerRequest *request)
 {
-    Log.verbose(F("Serving version." CR));
-    StaticJsonDocument<96> doc;
+    Log.verbose(F("Serving About Info." CR));
+    StaticJsonDocument<368> doc;
 
     doc["version"] = version();
     doc["branch"] = branch();
     doc["build"] = build();
-
-    char output[96];
-    serializeJson(doc, output);
-
-    request->send(200, "application/json", output);
-}
-
-void uptime(AsyncWebServerRequest *request)
-{
-    Log.verbose(F("Serving uptime." CR));
-    StaticJsonDocument<96> doc;
 
     const int days = uptimeDays();
     const int hours = uptimeHours();
@@ -802,17 +785,6 @@ void uptime(AsyncWebServerRequest *request)
     doc["seconds"] = seconds;
     doc["millis"] = millis;
 
-    char output[96];
-    serializeJson(doc, output);
-
-    request->send(200, "application/json", output);
-}
-
-void heap(AsyncWebServerRequest *request)
-{
-    Log.verbose(F("Serving heap information." CR));
-    StaticJsonDocument<48> doc;
-
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
@@ -821,23 +793,12 @@ void heap(AsyncWebServerRequest *request)
     doc["max"] = max;
     doc["frag"] = frag;
 
-    char output[48];
-    serializeJson(doc, output);
-
-    request->send(200, "application/json", output);
-}
-
-void reset_reason(AsyncWebServerRequest *request)
-{
-    Log.verbose(F("Serving reset reason." CR));
-    StaticJsonDocument<128> doc;
-
     const int reset = (int)esp_reset_reason();
 
     doc["reason"] = resetReason[reset];
     doc["description"] = resetDescription[reset];
 
-    char output[128];
+    char output[368];
     serializeJson(doc, output);
 
     request->send(200, "application/json", output);
@@ -852,6 +813,7 @@ void httpServer::init()
     server.serveStatic("/help/", FILESYSTEM, "/").setDefaultFile("help.htm").setCacheControl("max-age=600");
     server.serveStatic("/about/", FILESYSTEM, "/").setDefaultFile("about.htm").setCacheControl("max-age=600");
     server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
+    server.serveStatic("/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
 
     server.on("/settings/update/", HTTP_POST, [](AsyncWebServerRequest *request) {
         processConfig(request);
@@ -865,18 +827,8 @@ void httpServer::init()
     server.on("/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         settings_json(request);
     });
-    // About Page Info Handlers
-    server.on("/thisVersion/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        this_version(request);
-    });
-    server.on("/uptime/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        uptime(request);
-    });
-    server.on("/heap/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        heap(request);
-    });
-    server.on("/resetreason/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        reset_reason(request);
+    server.on("/aboutinfo/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        aboutinfo(request);
     });
 
 #ifndef DISABLE_OTA_UPDATES
