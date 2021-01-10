@@ -61,6 +61,7 @@ public:
     bridge_lcd();
 
     void init();
+    void stop();
     void display_logo();
 
     void display_wifi_connect_screen(const char *ap_name, const char *ap_pass);

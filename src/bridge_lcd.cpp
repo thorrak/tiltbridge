@@ -44,7 +44,7 @@ void bridge_lcd::display_logo()
     //print_line("Logo goes here.", "", 1);
     clear();
     yield();
-    tft->pushImage((320-288)/2,0,gimp_image.width,gimp_image.height,gimp_image.pixel_data);
+    tft->pushImage((320 - 288) / 2, 0, gimp_image.width, gimp_image.height, gimp_image.pixel_data);
 #endif
 
 #ifdef LCD_TFT_ESPI
@@ -57,9 +57,9 @@ void bridge_lcd::display_logo()
 void bridge_lcd::check_screen()
 {
     if (next_screen_at < xTaskGetTickCount())
-        {
-            next_screen_at = display_next() * 1000 + xTaskGetTickCount();
-        }
+    {
+        next_screen_at = display_next() * 1000 + xTaskGetTickCount();
+    }
 }
 
 // display_next returns the number of seconds to "hold" on this screen
@@ -121,7 +121,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number)
     uint8_t header_row = 1;
     uint8_t first_tilt_row_offset = 2;
 #ifdef LCD_TFT
-        tft->setFreeFont(&FreeSans9pt7b);
+    tft->setFreeFont(&FreeSans9pt7b);
     // Display IP address or indicate if not connected.
     if (WiFi.status() == WL_CONNECTED)
     {
@@ -131,7 +131,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number)
     }
     else
     {
-        print_line("No Wifi Connection", "", 10);
+        print_line("No WiFi Connection", "", 10);
     }
     header_row = 1;
     first_tilt_row_offset = header_row + 1;
@@ -261,8 +261,6 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
 #if defined LCD_TFT_ESPI || defined LCD_TFT
     tft->setTextColor(TFT_WHITE);
 #endif
-
-
 }
 
 #ifdef LCD_SSD1306
@@ -363,6 +361,28 @@ void bridge_lcd::init()
 #endif
 }
 
+void bridge_lcd::stop()
+{
+#ifdef LCD_SSD1306
+    oled_display->end();
+    delete oled_display;
+#endif
+
+#ifdef LCD_TFT
+    tft->deInitDMA();
+    tft->endWrite();
+    delete tft;
+#endif
+
+#ifdef LCD_TFT_ESPI
+    tft->deInitDMA();
+    tft->endWrite();
+    delete tft;
+#endif
+
+    init();
+}
+
 void bridge_lcd::clear()
 {
 #ifdef LCD_SSD1306
@@ -421,7 +441,7 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     yield();
     tft->drawString(middle_text, 134, starting_pixel_row, GFXFF);
     yield();
-    tft->drawString(right_text, 320-tft->textWidth(right_text,GFXFF), starting_pixel_row, GFXFF);
+    tft->drawString(right_text, 320 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
 #endif
 
 #ifdef LCD_TFT_ESPI
