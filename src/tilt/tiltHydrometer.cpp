@@ -1,6 +1,5 @@
 //
 // Created by John Beeler on 4/28/18.
-// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "tiltHydrometer.h"

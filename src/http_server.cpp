@@ -1,6 +1,5 @@
 //
 // Created by John Beeler on 2/17/19.
-// Modified by Tim Pletcher 31-Oct-2020.
 //
 
 #include "resetreasons.h"

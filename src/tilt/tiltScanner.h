@@ -1,6 +1,5 @@
 //
 // Created by John Beeler on 5/12/18.
-// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #ifndef TILTBRIDGE_TILTSCANNER_H

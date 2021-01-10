@@ -1,6 +1,5 @@
 //
 // Created by John Beeler on 2/18/19.
-// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "sendData.h"
