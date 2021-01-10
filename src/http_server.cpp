@@ -1167,5 +1167,5 @@ void httpServer::init()
 
     server.begin();
     Log.notice(F("Async HTTP server started." CR));
-    Log.verbose(F("Open: http://%s.local to view application." CR), WiFi.getHostname());
+    Log.verbose(F("Open: http://%s.local/ to view application." CR), WiFi.getHostname());
 }

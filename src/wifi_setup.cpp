@@ -138,7 +138,7 @@ void init_wifi()
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
     strncat(mdns_url, mdns_id, 31);
-    strcat(mdns_url, ".local");
+    strcat(mdns_url, ".local/");
 
     char ip_address_url[25] = "http://";
     char ip[16];
