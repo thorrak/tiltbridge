@@ -39,10 +39,10 @@
 
 <body class="d-flex flex-column h-100">
 
-	<!-- <div id="overlay">
+	<div id="overlay">
 		<div class="spinner"></div>
 		Loading...
-	</div> -->
+	</div>
 
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -73,10 +73,20 @@
                     </li>
                 </ul>
             </div>
+            <div class="navbar-collapse collapse w-100 order-3 dual-collapse2"> <!-- Context Help -->
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a id="contexthelp" name="contexthelp" class="navbar-brand nav-link active" target="_blank"
+                        href="https://docs.tiltbridge.com/">?</a>
+                    </li>
+                </ul>
+            </div>
         </nav>
 	</header>
 
     <main role="main" class="flex-shrink-0">
+
+        <div id="settingsAlert_placeholder"></div>
 
         <div class="container" id="settingsapp"> <!-- App Container -->
 
@@ -85,7 +95,7 @@
                 <ul class="nav nav-tabs"> <!-- Navigation Tab navigation -->
 
                     <li class="nav-item">
-                        <a class="nav-link plain-link" data-toggle="tab" href="#tiltbridge">TiltBridge Settings</a>
+                        <a class="nav-link plain-link" data-toggle="tab" href="#tiltbridge">General Settings</a>
                     </li>
 
                     <li class="nav-item">
@@ -136,9 +146,13 @@
                         </div>
         
                         <div class="card-body">
-                            <p class="card-text">These settings apply to the TiltBridge as a whole. Updating mDNS will
-                                cause the TiltBridge to restart.</p>
-                            <form action="/settings/tiltbridge/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
+                            <p class="card-text">
+                                These settings apply to the TiltBridge as a whole. If you change the mDNS
+                                ID, the page will refresh and point to the new name.  If it fails to load,
+                                you may need to reset your controller or refer to the LCD screen to determine
+                                what may have gone wrong.
+                            </p>
+                            <form action="/settings/controller/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
                                 - 31 characters.">mDNS ID</label>
@@ -205,7 +219,7 @@
                             <p class="card-text">These settings control whether or not TiltBridge applies <a
                                     href="/calibration/">calibration</a> and temperature corrections to the Tilt reading
                                 before it is uploaded.</p>
-                            <form action="/settings/calibration/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
+                            <form action="/settings/calibration/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="applyCalibration" class="col-sm-4 form-check-label"
                                         data-toggle="tooltip" title="Apply calibration to Tilt data">Enable
@@ -245,12 +259,12 @@
                         </div>
         
                         <div class="card-body">
-                            <p class="card-text">These settings control how TiltBridge talks to
+                            <p class="card-text">These settings control how TiltBridge talks to an endpoint like
                                 <a href="https://www.fermentrack.com/">Fermentrack</a> or <a
                                     href="https://www.brewpiremix.com/">BrewPi Remix</a>.
                                 To disable the push, delete the URL.
                             </p>
-                            <form action="/settings/localtarget/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
+                            <form action="/settings/localtarget/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="localTargetURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Target URL. Delete to disable the push">Target URL</label>
@@ -295,7 +309,7 @@
                                 this feature (as well as a better explanation of these options), please read the
                                 <a href="http://sheets.tiltbridge.com/">TiltBridge documentation here.</a>
                             </p>
-                            <form action="/settings/googlesheets/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
+                            <form action="/settings/googlesheets/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="scriptsURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google
@@ -400,7 +414,7 @@
 
                     </div> <!-- Google Sheets Tab -->
 
-                    <div class="tab-pane fade" id="brewersfriend"> <!-- Brewer's Friend Tab -->x
+                    <div class="tab-pane fade" id="brewersfriend"> <!-- Brewer's Friend Tab -->
 
                         <div class="card-header bg-light border-primary">
                             <h5 class="card-title">Brewer's Friend Settings</h5>
@@ -416,7 +430,7 @@
                                 go
                                 to Profile > Account. Your API key will be a string of letters and numbers (not a URL).
                             </p>
-                            <form action="/settings/brewersfriend/" method="POST" onsubmit="buttonDisable();">
+                            <form action="/settings/brewersfriend/" method="POST">
                                 <div class="form-group row">
                                     <label for="brewersFriendKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Your Brewers Friend API key">Brewers Friend API Key</label>
@@ -449,7 +463,7 @@
                                 to Settings > Custom Stream. Your Stream key will be a string of letters and numbers
                                 (not a URL).
                             </p>
-                            <form action="/settings/brewfather/" method="POST" onsubmit="buttonDisable();">
+                            <form action="/settings/brewfather/" method="POST">
                                 <div class="form-group row">
                                     <label for="brewfatherKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Your Brewfather Stream key">Brewfather Stream key</label>
@@ -478,7 +492,7 @@
                                 delete
                                 the BrewStatus URL.
                             </p>
-                            <form action="/settings/brewstatus/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
+                            <form action="/settings/brewstatus/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="brewstatusURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus
@@ -530,7 +544,7 @@
                                 &nbsp;&nbsp;&nbsp;&nbsp;Payload:
                                 {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
                             </p>
-                            <form action="/settings/mqtt/" method="POST" enctype="multipart/form-data" onsubmit="buttonDisable();">
+                            <form action="/settings/mqtt/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="mqttBrokerIP" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="MQTT Broker Server address. Delete to disable pushing to MQTT">MQTT
@@ -615,11 +629,11 @@
                                 <div class="form-group row">
                                     <div class="col-sm-5"></div>
                                     <div class="col-sm-2">
-                                        <a href="/restart/" class="btn btn-success">Restart</a>
+                                        <a href="/controllerrestart/" class="btn btn-success button-resetcontroller">Restart Controller</a>
                                     </div>
                                 </div>
                             </div>
-        
+         
                         </div>
 
                     </div> <!-- Restart Controller Tab -->
@@ -636,7 +650,7 @@
                                 connection settings by clicking "Reset WiFi".
                             </p>
                             <div class="row col-sm-12 justify-content-center">
-                                <a href="/wifi/" class="btn btn-warning button-resetwifi">Reset WiFi</a>
+                                <a href="/wifireset/" class="btn btn-warning button-resetwifi">Reset WiFi</a>
                             </div>
                         </div>
 
@@ -656,7 +670,7 @@
                                 after, you will need to connect to the AP and reconfigure your device fully.
                             </p>
                             <div class="row col-sm-12 justify-content-center">
-                                <a href="/resetapp/" class="btn btn-danger button-resetwifi">Reset WiFi</a>
+                                <a href="/resetapp/" class="btn btn-danger button-resetfactory">Factory Reset</a>
                             </div>
                         </div>
 
@@ -691,13 +705,13 @@
         crossorigin="anonymous">
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"
         integrity="sha384-c8inZyD0O4L/ErSuX3RVWgqsgtiAUw34TeSWiUwbKaXaI2RQg8SKVe80cipDBf0D"
         crossorigin="anonymous">
-    </script>
+    </script> -->
 
-    <script src="/loading.js"></script>
-	<script src="/settings.js"></script>
+    <script src="/settings.js" defer></script>
+    <script src="/alerts.js" defer></script>
 
 </body>
 
