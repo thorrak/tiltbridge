@@ -1,6 +1,5 @@
 //
 // Created by John Beeler on 6/4/18.
-// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "wifi_setup.h"
