@@ -1,6 +1,5 @@
 //
 // Created by John Beeler on 5/20/18.
-// Modified by Tim Pletcher on 30-Oct-2020.
 //
 
 #include "jsonConfigHandler.h"
