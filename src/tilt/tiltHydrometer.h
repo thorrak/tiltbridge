@@ -40,7 +40,7 @@ class tiltHydrometer
 public:
     explicit tiltHydrometer(uint8_t color);
 
-    bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr);
+    bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
     std::string color_name();
     uint32_t text_color();
     std::string converted_gravity(bool use_raw_gravity);
@@ -58,6 +58,7 @@ public:
     uint16_t gravity_smoothed;
     uint16_t version_code;
     uint32_t last_grav_value_1000;
+    int8_t rssi;
 
     uint8_t weeks_since_last_battery_change;
 
