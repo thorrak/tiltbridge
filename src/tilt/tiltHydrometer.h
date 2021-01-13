@@ -9,6 +9,8 @@
 #include <ArduinoJson.h>
 #include <Arduino.h>
 
+#define TILT_DATA_SIZE 256 // JSON size of a Tilt
+
 // There's definitely a better way of doing this
 #define TILT_COLOR_RED 0
 #define TILT_COLOR_GREEN 1
@@ -18,6 +20,8 @@
 #define TILT_COLOR_BLUE 5
 #define TILT_COLOR_YELLOW 6
 #define TILT_COLOR_PINK 7
+
+#define TILT_COLOR_SIZE 7 // Let's keep track of the longest this string may be (Yellow) +1
 
 #define TILT_COLORS 8
 #define TILT_NONE 255 // Alternative to a tilt color
