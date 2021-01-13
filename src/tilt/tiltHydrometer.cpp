@@ -186,12 +186,16 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         last_grav_value_1000 = smoothed_i_grav_1000;
     }
 
-    Log.verbose(F("DEBUG: %s TX_PWR: %d" CR), color_name().c_str(), i_tx_pwr);
+    if (i_tx_pwr==197)
+        has_sent_197 = true;
+    else {
+        if (has_sent_197)
+            receives_battery = true;
+        if (receives_battery) 
+            weeks_since_last_battery_change = i_tx_pwr;
+    }
 
-    if (i_tx_pwr != 197) // If we received a tx_pwr of 197 this Tilt sends its battery in the tx_pwr field
-        receives_battery = true;
-    if (receives_battery) // Its not 197 but we receive battery - set the battery value to tx_pwr
-        weeks_since_last_battery_change = i_tx_pwr;
+    Log.verbose(F("DEBUG: %s sends battery: %T, TX_PWR: %d" CR), color_name().c_str(), receives_battery, i_tx_pwr);
 
     // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
     d_temp = (double)i_temp / temp_scalar;

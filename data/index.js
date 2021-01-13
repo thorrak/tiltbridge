@@ -63,10 +63,6 @@ var vm = new Vue({
                             cardData['title'] = "Tilt";
                         }
 
-                        // DEBUG:
-                        console.log("Card: ", cardData);
-                        // DEBUG
-
                         self.sensors.push(cardData);
                     });
                 }
