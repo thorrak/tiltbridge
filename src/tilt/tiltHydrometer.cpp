@@ -63,7 +63,7 @@ uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
 
 std::string tiltHydrometer::color_name()
 {
-
+    // If these change, modify TILT_COLOR_SIZE (currrently 7 for "Yellow" + 1)
     switch (m_color)
     {
     case TILT_COLOR_RED:
@@ -138,7 +138,7 @@ std::string tiltHydrometer::gsheets_beer_name()
     }
 }
 
-bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr)
+bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
     double d_temp;
     double d_grav;
@@ -298,6 +298,8 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     gravity_smoothed = (int)round(smoothed_d_grav * grav_scalar);
     temp = i_temp;
 
+    rssi = current_rssi;
+
     m_loaded = true; // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = xTaskGetTickCount();
     return true;
@@ -318,9 +320,8 @@ std::string tiltHydrometer::converted_gravity(bool use_raw_gravity)
 
 void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
-    // TODO: (JSON) Come back and tighten this up
+    StaticJsonDocument<TILT_DATA_SIZE> j;
 
-    StaticJsonDocument<300> j;
     j["color"] = color_name();
     j["temp"] = converted_temp(false);
     j["tempUnit"] = is_celsius() ? "C" : "F";
@@ -330,7 +331,9 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
     j["fwVersion"] = version_code;
-    serializeJson(j, json_string, 300);
+    j["rssi"] = rssi;
+
+    serializeJson(j, json_string, TILT_DATA_SIZE);
 }
 
 std::string tiltHydrometer::converted_temp(bool fahrenheit_only)

@@ -44,11 +44,11 @@ var vm = new Vue({
                 if (self.fullDict != null) {
                     Object.keys(self.fullDict).forEach(function(key) {
                         cardData = self.fullDict[key];
-                        cardData['textClass']='text-' + self.fullDict[key].color.toLowerCase() + '-bg';
-                        cardData['bgClass']='bg-' + self.fullDict[key].color.toLowerCase();
-                        cardData['borderClass']='border-' + self.fullDict[key].color.toLowerCase();
+                        console.log("Card: ", cardData);
+                        cardData['textClass'] ='text-' + self.fullDict[key].color.toLowerCase() + '-bg';
+                        cardData['bgClass'] ='bg-' + self.fullDict[key].color.toLowerCase();
+                        cardData['borderClass'] ='border-' + self.fullDict[key].color.toLowerCase();
                         self.sensors.push(cardData);
-                        //console.log(cardData);
                     });
                 }
             };
