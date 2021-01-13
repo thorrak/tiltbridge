@@ -10,7 +10,7 @@ bridge_lcd lcd;
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
-#include "img/fermentrack_logo.h" // We're only using this style of logo for the OLED variant
+#include "img/oled_logo.h" // We're only using this style of logo for the OLED variant
 #endif
 
 #ifdef LCD_TFT
@@ -35,7 +35,7 @@ void bridge_lcd::display_logo()
 #ifdef LCD_SSD1306
     // XBM files are C source bitmap arrays, and can be created in GIMP (and then read/imported using text editors)
     clear();
-    oled_display->drawXbm((128 - fermentrack_logo_width) / 2, (64 - fermentrack_logo_height) / 2, fermentrack_logo_width, fermentrack_logo_height, fermentrack_logo_bits);
+    oled_display->drawXbm((128 - tiltbridge_logo_width) / 2, (64 - tiltbridge_logo_height) / 2, tiltbridge_logo_width, tiltbridge_logo_height, tiltbridge_logo_bits);
     display();
 #endif
 
@@ -48,7 +48,7 @@ void bridge_lcd::display_logo()
 
 #ifdef LCD_TFT_ESPI
     clear();
-    tft->drawXBitmap((tft->width() - fermentrack_logo_width) / 2, (tft->height() - fermentrack_logo_height) / 2, fermentrack_logo_bits, fermentrack_logo_width, fermentrack_logo_height, TFT_WHITE);
+    tft->drawXBitmap((tft->width() - tiltbridge_logo_width) / 2, (tft->height() - tiltbridge_logo_height) / 2, tiltbridge_logo_bits, tiltbridge_logo_width, tiltbridge_logo_height, TFT_WHITE);
     display();
 #endif
 }
