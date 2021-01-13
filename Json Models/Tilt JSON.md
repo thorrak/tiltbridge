@@ -11,7 +11,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Blue":{
         "color":"Blue",
@@ -22,7 +23,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Green":{
         "color":"Green",
@@ -33,7 +35,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Orange":{
         "color":"Orange",
@@ -44,7 +47,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Red":{
         "color":"Red",
@@ -55,7 +59,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Yellow":{
         "color":"Yellow",
@@ -66,7 +71,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Pink":{
         "color":"Pink",
@@ -77,7 +83,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     },
     "Purple":{
         "color":"Purple",
@@ -88,7 +95,8 @@
         "weeks_on_battery":100,
         "sends_battery":false,
         "high_resolution":false,
-        "fwVersion":1004
+        "fwVersion":1004,
+        "rssi":-75
     }
 }
 ```
@@ -108,6 +116,7 @@ Black["weeks_on_battery"] = 100;
 Black["sends_battery"] = false;
 Black["high_resolution"] = false;
 Black["fwVersion"] = 1004;
+Black["rssi"] = -75;
 
 JsonObject Blue = doc.createNestedObject("Blue");
 Blue["color"] = "Blue";
@@ -119,6 +128,7 @@ Blue["weeks_on_battery"] = 100;
 Blue["sends_battery"] = false;
 Blue["high_resolution"] = false;
 Blue["fwVersion"] = 1004;
+Blue["rssi"] = -75;
 
 JsonObject Green = doc.createNestedObject("Green");
 Green["color"] = "Green";
@@ -130,6 +140,7 @@ Green["weeks_on_battery"] = 100;
 Green["sends_battery"] = false;
 Green["high_resolution"] = false;
 Green["fwVersion"] = 1004;
+Green["rssi"] = -75;
 
 JsonObject Orange = doc.createNestedObject("Orange");
 Orange["color"] = "Orange";
@@ -141,6 +152,7 @@ Orange["weeks_on_battery"] = 100;
 Orange["sends_battery"] = false;
 Orange["high_resolution"] = false;
 Orange["fwVersion"] = 1004;
+Orange["rssi"] = -75;
 
 JsonObject Red = doc.createNestedObject("Red");
 Red["color"] = "Red";
@@ -152,6 +164,7 @@ Red["weeks_on_battery"] = 100;
 Red["sends_battery"] = false;
 Red["high_resolution"] = false;
 Red["fwVersion"] = 1004;
+Red["rssi"] = -75;
 
 JsonObject Yellow = doc.createNestedObject("Yellow");
 Yellow["color"] = "Yellow";
@@ -163,6 +176,7 @@ Yellow["weeks_on_battery"] = 100;
 Yellow["sends_battery"] = false;
 Yellow["high_resolution"] = false;
 Yellow["fwVersion"] = 1004;
+Yellow["rssi"] = -75;
 
 JsonObject Pink = doc.createNestedObject("Pink");
 Pink["color"] = "Pink";
@@ -174,6 +188,7 @@ Pink["weeks_on_battery"] = 100;
 Pink["sends_battery"] = false;
 Pink["high_resolution"] = false;
 Pink["fwVersion"] = 1004;
+Pink["rssi"] = -75;
 
 JsonObject Purple = doc.createNestedObject("Purple");
 Purple["color"] = "Purple";
@@ -185,17 +200,16 @@ Purple["weeks_on_battery"] = 100;
 Purple["sends_battery"] = false;
 Purple["high_resolution"] = false;
 Purple["fwVersion"] = 1004;
+Purple["rssi"] = -75;
 
-serializeJson(doc, Serial);
+serializeJson(doc, output);
 ```
 
 ## Deserialize:
 
 ```
-const char* json = "{\"Black\":{\"color\":\"Black\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Blue\":{\"color\":\"Blue\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Green\":{\"color\":\"Green\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Orange\":{\"color\":\"Orange\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Red\":{\"color\":\"Red\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Yellow\":{\"color\":\"Yellow\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Pink\":{\"color\":\"Pink\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004},\"Purple\":{\"color\":\"Purple\",\"temp\":\"68.0\",\"tempUnit\":\"F\",\"gravity\":\"1.0570\",\"gsheets_name\":\"xxxxxxxxxxxxxxxxxxxxxxxxx\",\"weeks_on_battery\":100,\"sends_battery\":false,\"high_resolution\":false,\"fwVersion\":1004}}";
-
 DynamicJsonDocument doc(2048);
-deserializeJson(doc, json);
+deserializeJson(doc, input);
 
 JsonObject Black = doc["Black"];
 const char* Black_color = Black["color"]; // "Black"
@@ -207,6 +221,7 @@ int Black_weeks_on_battery = Black["weeks_on_battery"]; // 100
 bool Black_sends_battery = Black["sends_battery"]; // false
 bool Black_high_resolution = Black["high_resolution"]; // false
 int Black_fwVersion = Black["fwVersion"]; // 1004
+int Black_rssi = Black["rssi"]; // -75
 
 JsonObject Blue = doc["Blue"];
 const char* Blue_color = Blue["color"]; // "Blue"
@@ -218,6 +233,7 @@ int Blue_weeks_on_battery = Blue["weeks_on_battery"]; // 100
 bool Blue_sends_battery = Blue["sends_battery"]; // false
 bool Blue_high_resolution = Blue["high_resolution"]; // false
 int Blue_fwVersion = Blue["fwVersion"]; // 1004
+int Blue_rssi = Blue["rssi"]; // -75
 
 JsonObject Green = doc["Green"];
 const char* Green_color = Green["color"]; // "Green"
@@ -229,6 +245,7 @@ int Green_weeks_on_battery = Green["weeks_on_battery"]; // 100
 bool Green_sends_battery = Green["sends_battery"]; // false
 bool Green_high_resolution = Green["high_resolution"]; // false
 int Green_fwVersion = Green["fwVersion"]; // 1004
+int Green_rssi = Green["rssi"]; // -75
 
 JsonObject Orange = doc["Orange"];
 const char* Orange_color = Orange["color"]; // "Orange"
@@ -240,6 +257,7 @@ int Orange_weeks_on_battery = Orange["weeks_on_battery"]; // 100
 bool Orange_sends_battery = Orange["sends_battery"]; // false
 bool Orange_high_resolution = Orange["high_resolution"]; // false
 int Orange_fwVersion = Orange["fwVersion"]; // 1004
+int Orange_rssi = Orange["rssi"]; // -75
 
 JsonObject Red = doc["Red"];
 const char* Red_color = Red["color"]; // "Red"
@@ -251,6 +269,7 @@ int Red_weeks_on_battery = Red["weeks_on_battery"]; // 100
 bool Red_sends_battery = Red["sends_battery"]; // false
 bool Red_high_resolution = Red["high_resolution"]; // false
 int Red_fwVersion = Red["fwVersion"]; // 1004
+int Red_rssi = Red["rssi"]; // -75
 
 JsonObject Yellow = doc["Yellow"];
 const char* Yellow_color = Yellow["color"]; // "Yellow"
@@ -262,6 +281,7 @@ int Yellow_weeks_on_battery = Yellow["weeks_on_battery"]; // 100
 bool Yellow_sends_battery = Yellow["sends_battery"]; // false
 bool Yellow_high_resolution = Yellow["high_resolution"]; // false
 int Yellow_fwVersion = Yellow["fwVersion"]; // 1004
+int Yellow_rssi = Yellow["rssi"]; // -75
 
 JsonObject Pink = doc["Pink"];
 const char* Pink_color = Pink["color"]; // "Pink"
@@ -273,6 +293,7 @@ int Pink_weeks_on_battery = Pink["weeks_on_battery"]; // 100
 bool Pink_sends_battery = Pink["sends_battery"]; // false
 bool Pink_high_resolution = Pink["high_resolution"]; // false
 int Pink_fwVersion = Pink["fwVersion"]; // 1004
+int Pink_rssi = Pink["rssi"]; // -75
 
 JsonObject Purple = doc["Purple"];
 const char* Purple_color = Purple["color"]; // "Purple"
@@ -284,4 +305,5 @@ int Purple_weeks_on_battery = Purple["weeks_on_battery"]; // 100
 bool Purple_sends_battery = Purple["sends_battery"]; // false
 bool Purple_high_resolution = Purple["high_resolution"]; // false
 int Purple_fwVersion = Purple["fwVersion"]; // 1004
+int Purple_rssi = Purple["rssi"]; // -75
 ```
