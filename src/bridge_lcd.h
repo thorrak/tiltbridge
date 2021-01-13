@@ -61,6 +61,7 @@ public:
     bridge_lcd();
 
     void init();
+    void reinit();
     void stop();
     void display_logo();
 

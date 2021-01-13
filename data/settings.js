@@ -278,7 +278,7 @@ function processControllerPost(url, obj) { // Process a post from the TiltBridge
         tzOffsetVal = $form.find("input[name='TZoffset']").val(),
         tempUnitVal = $form.find("select[name='tempUnit']").val(),
         smoothFactorVal = $form.find("input[name='smoothFactor']").val(),
-        invertTFTVal = $form.find('input[name="invertTFT"]').is(":checked");
+        invertTFTVal = $form.find('input[name="invertTFT"]').is("checked");
 
     // Hold some data about what we changed
     var reloadpage = false;

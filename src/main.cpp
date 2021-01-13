@@ -96,13 +96,11 @@ void loop()
         data_sender.init_mqtt();
     }
 
-    if (http_server.lcd_init_rqd)
+    if (http_server.lcd_reinit_rqd)
     {
         Log.verbose(F("Re-initializing LCD." CR));
         http_server.lcd_init_rqd = false;
-        lcd.stop();
-        vTaskDelay(1000);
-        lcd.init();
+        lcd.reinit();
     }
 
     yield();
