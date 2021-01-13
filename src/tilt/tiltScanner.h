@@ -32,14 +32,12 @@ public:
     bool scan();
 
     bool wait_until_scan_complete();
-    void set_scan_active_flag(bool value);
     uint8_t load_tilt_from_advert_hex(const std::string &advert_string_hex, const int8_t &current_rssi);
     void tilt_to_json_string(char *json_string, bool use_raw_gravity);
 
     tiltHydrometer *tilt(uint8_t color);
 
 private:
-    bool m_scan_active;
     tiltHydrometer *m_tilt_devices[TILT_COLORS]{};
     MyAdvertisedDeviceCallbacks *callbacks;
 };
