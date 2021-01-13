@@ -1,7 +1,5 @@
 //
 // Created by John Beeler on 5/12/18.
-// Modified by Tim Pletcher on 18-Oct-2020.
-// Modified by Tim Pletcher on 31-Oct-2020.
 //
 
 #include "tiltScanner.h"
@@ -31,11 +29,6 @@ void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDev
     }
 }
 
-static void ble_scan_complete(NimBLEScanResults scanResults)
-{
-    // Todo - Decide if it makes sense to process scan results here rather than on a callback
-    tilt_scanner.set_scan_active_flag(false);
-}
 
 ////////////////////////////
 // tiltScanner Implementation
@@ -44,7 +37,6 @@ static void ble_scan_complete(NimBLEScanResults scanResults)
 tiltScanner::tiltScanner()
 {
     // Initialize by setting "m_scan_active" false
-    m_scan_active = false;
     for (uint8_t i = 0; i < TILT_COLORS; i++)
         m_tilt_devices[i] = new tiltHydrometer(i);
 
@@ -74,34 +66,20 @@ void tiltScanner::deinit()
     // NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
 }
 
-void tiltScanner::set_scan_active_flag(bool value)
-{
-    m_scan_active = value;
-}
-
 bool tiltScanner::scan()
 {
-    // Set a flag when we start asynchronously scanning to prevent multiple scans from being launched
-    if (!m_scan_active)
+    if (!pBLEScan->isScanning())  // Check if scan already in progress
+    //Try to start a new scan
     {
-        pBLEScan->clearResults(); // delete results from BLEScan buffer to release memory
-
-        if (!pBLEScan->start(BLE_SCAN_TIME, ble_scan_complete, true))
+        pBLEScan->clearResults();   
+        if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true))  //This no longer ever returns true...possibly a bug?? 
         {
-            // We failed to start a scan. There is a race condition where ble_scan_complete gets triggered prior to
-            // the semaphores being released - if we happen to catch things just right, we can end up in an inconsistent
-            // state.
-            Log.verbose(F("Scan already in progress - explicitly stopping." CR));
-
-            pBLEScan->stop();
-            delay(100);
-            return false;
+            return true;  //Scan successfully started.
         }
         else
         {
-            // We successfully started a scan
-            m_scan_active = true;
-            return true;
+            Log.verbose(F("Scan failed to start." CR));
+            return false;  //Scan failed to start.
         }
     }
     return false;
@@ -109,10 +87,10 @@ bool tiltScanner::scan()
 
 bool tiltScanner::wait_until_scan_complete()
 {
-    if (!m_scan_active)
+    if (!pBLEScan->isScanning())
         return false; // Return false if there wasn't a scan active when this was called
 
-    while (m_scan_active)
+    while (pBLEScan->isScanning())
         delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
 
     // pBLEScan->stop();
