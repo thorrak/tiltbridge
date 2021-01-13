@@ -203,7 +203,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
     char value[7];
     sprintf(value, "%.4f", d_grav);
-    Log.verbose(F("Tilt gravity = %s" CR), value);
+    Log.verbose(F("%s Tilt gravity = %s" CR), color_name().c_str(), value);
 
     if (config.applyCalibration)
     {
@@ -280,7 +280,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[7];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("Calibration corrected gravity = %s" CR), calvalue);
+        Log.verbose(F("%s Tilt calibration corrected gravity = %s" CR), color_name().c_str(), calvalue);
     }
 
     if (config.tempCorrect)
@@ -291,7 +291,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[6];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("Temperature corrected gravity = %s" CR), calvalue);
+        Log.verbose(F("%s Tilt temperature corrected gravity = %s" CR), color_name().c_str(), calvalue);
     }
 
     gravity = (int)round(d_grav * grav_scalar);
