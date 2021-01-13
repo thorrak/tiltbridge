@@ -17,6 +17,7 @@ tiltHydrometer::tiltHydrometer(uint8_t color)
     weeks_since_last_battery_change = 0; // Not currently implemented - for future use
     tilt_pro = false;
     receives_battery = false;
+    m_has_sent_197 = false;
 
 } // tiltHydrometer
 
@@ -187,9 +188,9 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     }
 
     if (i_tx_pwr==197)
-        has_sent_197 = true;
+        m_has_sent_197 = true;
     else {
-        if (has_sent_197)
+        if (m_has_sent_197)
             receives_battery = true;
         if (receives_battery) 
             weeks_since_last_battery_change = i_tx_pwr;
