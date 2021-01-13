@@ -10,6 +10,7 @@
 #include <Arduino.h>
 
 #define TILT_DATA_SIZE 256 // JSON size of a Tilt
+#define TILT_ALL_DATA_SIZE (TILT_DATA_SIZE * 8) // JSON size of 8 Tilts
 
 // There's definitely a better way of doing this
 #define TILT_COLOR_RED 0

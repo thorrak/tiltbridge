@@ -12,7 +12,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Blue":{
         "color":"Blue",
@@ -24,7 +24,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Green":{
         "color":"Green",
@@ -36,7 +36,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Orange":{
         "color":"Orange",
@@ -48,7 +48,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Red":{
         "color":"Red",
@@ -60,7 +60,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Yellow":{
         "color":"Yellow",
@@ -72,7 +72,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Pink":{
         "color":"Pink",
@@ -84,7 +84,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     },
     "Purple":{
         "color":"Purple",
@@ -96,7 +96,7 @@
         "sends_battery":false,
         "high_resolution":false,
         "fwVersion":1004,
-        "rssi":-75
+        "rssi": -75
     }
 }
 ```

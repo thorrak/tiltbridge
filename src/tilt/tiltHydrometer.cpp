@@ -333,7 +333,7 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["fwVersion"] = version_code;
     j["rssi"] = rssi;
 
-    serializeJson(j, json_string);
+    serializeJson(j, json_string, TILT_DATA_SIZE);
 }
 
 std::string tiltHydrometer::converted_temp(bool fahrenheit_only)
