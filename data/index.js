@@ -44,10 +44,19 @@ var vm = new Vue({
                 if (self.fullDict != null) {
                     Object.keys(self.fullDict).forEach(function(key) {
                         cardData = self.fullDict[key];
-                        console.log("Card: ", cardData);
                         cardData['textClass'] ='text-' + self.fullDict[key].color.toLowerCase() + '-bg';
                         cardData['bgClass'] ='bg-' + self.fullDict[key].color.toLowerCase();
                         cardData['borderClass'] ='border-' + self.fullDict[key].color.toLowerCase();
+
+                        // DEBUG:
+                        console.log("Card: ", cardData);
+                        // DEBUG
+
+                        // TODO:
+                        // Determine if there is a Google Sheet
+                        // Determine if there is a Battery Age
+                        // Determine if we are Tilt or Tilt Pro
+
                         self.sensors.push(cardData);
                     });
                 }
