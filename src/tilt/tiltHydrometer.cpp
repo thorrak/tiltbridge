@@ -138,7 +138,7 @@ std::string tiltHydrometer::gsheets_beer_name()
     }
 }
 
-bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr)
+bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
     double d_temp;
     double d_grav;
@@ -298,6 +298,8 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     gravity_smoothed = (int)round(smoothed_d_grav * grav_scalar);
     temp = i_temp;
 
+    rssi = current_rssi;
+
     m_loaded = true; // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = xTaskGetTickCount();
     return true;
@@ -330,6 +332,7 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
     j["fwVersion"] = version_code;
+    j["rssi"] = rssi;
     serializeJson(j, json_string, 300);
 }
 
