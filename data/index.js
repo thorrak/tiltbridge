@@ -44,18 +44,28 @@ var vm = new Vue({
                 if (self.fullDict != null) {
                     Object.keys(self.fullDict).forEach(function(key) {
                         cardData = self.fullDict[key];
-                        cardData['textClass'] ='text-' + self.fullDict[key].color.toLowerCase() + '-bg';
-                        cardData['bgClass'] ='bg-' + self.fullDict[key].color.toLowerCase();
+                        cardData['textClass'] = 'text-' + self.fullDict[key].color.toLowerCase() + '-bg';
+                        cardData['bgClass'] = 'bg-' + self.fullDict[key].color.toLowerCase();
                         cardData['borderClass'] ='border-' + self.fullDict[key].color.toLowerCase();
+
+                        // Only show if we have a Google Sheet defined
+                        if (cardData['gsheets_name']) {
+                            cardData['gsheets'] = "Google Sheet: " + cardData['gsheets_name'];
+                        }
+                        if (cardData['sends_battery']) {
+                            cardData['battery'] = "Battery Age (weeks): " + cardData['weeks_on_battery'];
+                        }
+
+                        // Switch between Tilt and Tilt Pro title
+                        if (cardData['high_resolution']) {
+                            cardData['title'] = "Tilt Pro";
+                        } else {
+                            cardData['title'] = "Tilt";
+                        }
 
                         // DEBUG:
                         console.log("Card: ", cardData);
                         // DEBUG
-
-                        // TODO:
-                        // Determine if there is a Google Sheet
-                        // Determine if there is a Battery Age
-                        // Determine if we are Tilt or Tilt Pro
 
                         self.sensors.push(cardData);
                     });

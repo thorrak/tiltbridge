@@ -91,7 +91,7 @@
                                 <div class="card-header" v-bind:class="[sensor.textClass, sensor.bgClass, sensor.borderClass]"> <!-- Tilt Line -->
                                     <div class="row">
                                         <div class="col-6 d-flex flex-column text-left">
-                                            <h5 class="card-title">{{sensor.color}} Tilt</h5>
+                                            <h5 class="card-title">{{sensor.color}} {{sensor.title}}</h5>
                                         </div>
                                         <div class="col-6 d-flex flex-column text-right">
                                             <h6 class="card-subtitle">RSSI: {{sensor.rssi}}</h6>
@@ -99,10 +99,10 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-6 d-flex flex-column text-left">
-                                            <h6 class="card-subtitle">Google Sheets: {{sensor.gsheets_name}}</h6>
+                                            <h6 class="card-subtitle">{{sensor.gsheets}}</h6>
                                         </div>
                                         <div class="col-6 d-flex flex-column text-right">
-                                            <h6 class="card-subtitle">Battery Age (weeks): {{sensor.weeks_on_battery}}</h6>
+                                            <h6 class="card-subtitle">{{sensor.battery}}</h6>
                                         </div>
                                     </div>
                                 </div>
