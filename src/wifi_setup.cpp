@@ -50,7 +50,7 @@ void disconnect_from_wifi_and_restart()
     WiFi.persistent(true);
     WiFi.disconnect(true, true);
     WiFi.persistent(false);
-    vTaskDelay(2000);
+    vTaskDelay(1000);
     ESP.restart();
 }
 
