@@ -85,7 +85,6 @@ void loop()
         Log.verbose(F("Resetting to original settings." CR));
         http_server.wifireset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
-        vTaskDelay(3000);
         deleteConfigFile();                         // Dimply delete the config file in SPIFFS
         disconnect_from_wifi_and_restart();         // Clear wifi config and restart
     }

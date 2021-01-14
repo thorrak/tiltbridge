@@ -51,7 +51,7 @@
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link active" href="/">Home <span class="sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/settings/">Settings</a>
@@ -60,7 +60,7 @@
                         <a class="nav-link" href="/calibration/">Calibration</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/help/">Help <span class="sr-only">(current)</span></a>
+                        <a class="nav-link" href="/help/">Help</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/about/">About</a>
@@ -72,18 +72,18 @@
 
     <main role="main" class="flex-shrink-0">
 
-        <div class="container" id="settingsapp"> <!-- Container -->
+        <div class="container" id="factoryresetapp"><!-- App Container -->
 
-            <div class="card border-dark mb-3"> <!-- TiltBridge Help Card -->
+            <div class="card border-dark mb-3"><!-- TiltBridge Factory Reset Card -->
 
                 <div class="card-header bg-light border-primary">
-                    <h5 class="card-title">TiltBridge Factory Reset</h5>
+                    <h5 class="card-title">Factory Reset</h5>
                 </div>
 
                 <div class="card-body">
 
                     <p>
-                        All configuration items and WiFi settings have been erased.  Your TiltBridge
+                        All configuration items and WiFi settings are being erased.  Your TiltBridge
                         will restart in Access Point mode waiting to be configured.
                     </p>
                     <p>
@@ -91,7 +91,7 @@
                     </p>
 
                 </div>
-            </div> <!-- TiltBridge Help Card -->
+            </div> <!-- TiltBridge Factory Reset Card -->
 
         </div> <!-- Container -->
 
@@ -114,6 +114,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
     </script>
+
+    <script src="/factoryreset.js" defered></script>
 
 </body>
 
