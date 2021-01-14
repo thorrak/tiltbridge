@@ -74,7 +74,6 @@ private:
     uint8_t m_color;
     bool m_loaded;           // Has data been loaded from an ad string
     TickType_t m_lastUpdate; // Keep track of when we last updated and stop propagating out stale information
-    bool m_has_sent_197;  // Used to determine if the tilt sends battery life (a 197 tx_pwr followed by a non-197 tx_pwr)
 };
 
 #endif //TILTBRIDGE_TILTHYDROMETER_H
