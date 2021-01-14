@@ -39,6 +39,7 @@ public:
     bool lcd_init_rqd = false;
     bool restart_requested = false;
     bool wifireset_requested = false;
+    bool factoryreset_requested = false;
     bool settings_updated = false;
     bool mqtt_init_rqd = false;
     bool config_updated = false;

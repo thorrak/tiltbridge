@@ -80,11 +80,21 @@ void loop()
         disconnect_from_wifi_and_restart();
     }
 
+    if (http_server.factoryreset_requested)
+    {
+        Log.verbose(F("Resetting to original settings." CR));
+        http_server.wifireset_requested = false;
+        tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
+        vTaskDelay(3000);
+        deleteConfigFile();                         // Dimply delete the config file in SPIFFS
+        disconnect_from_wifi_and_restart();         // Clear wifi config and restart
+    }
+
     if (http_server.restart_requested)
     {
         Log.verbose(F("Resetting controller." CR));
         http_server.restart_requested = false;
-        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
+        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
         vTaskDelay(3000);
         ESP.restart();                           // Restart the TiltBridge
     }

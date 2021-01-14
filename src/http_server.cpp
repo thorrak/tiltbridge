@@ -1116,8 +1116,15 @@ void setActionPages()
         http_server.wifireset_requested = true;
     });
 
+    server.on("/resetapp/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing /resetapp/." CR));
+        request->send(200, F("text/plain"), F("Ok."));
+        http_server.factoryreset_requested = true;
+    });
+
     server.on("/oktoreset/", HTTP_GET, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing /oktoreset/." CR));
+        // TODO: Send a reset page
         request->send(200, F("text/plain"), F("Ok."));
         http_server.restart_requested = true;
     });
