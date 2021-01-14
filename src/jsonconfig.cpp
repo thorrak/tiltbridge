@@ -843,12 +843,12 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["localTargetURL"].isNull())
     {
-        strlcpy(localTargetURL, "", 25);
+        strlcpy(localTargetURL, "", 256);
     }
     else
     {
         const char *tu = obj["localTargetURL"];
-        strlcpy(localTargetURL, tu, 25);
+        strlcpy(localTargetURL, tu, 256);
     }
 
     if (obj["localTargetPushEvery"].isNull())
