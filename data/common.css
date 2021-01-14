@@ -20,15 +20,7 @@ main>.container {
 	display: none;
 }
 
-/* Add dedicated colors so they do not change with Bootswatch */
-
-/*
-TODO:
-	- Review header colors (make them vivid)
-	- Review these:
-		- https://www.w3schools.com/colors/colors_schemes.asp
-		- https://www.sessions.edu/color-calculator/
-*/
+/* Tilt Tile Colors */
 
 /* Black Tilt and Matching Text */
 .bg-black {
@@ -47,7 +39,7 @@ button.bg-black:focus {
 }
 
 .text-black-bg {
-	color: #ffffff !important
+	color: #f2f1ef !important
 }
 
 /* Blue Tilt and Matching Text */
@@ -67,7 +59,7 @@ button.bg-blue:focus {
 }
 
 .text-blue-bg {
-	color: #ff8000 !important
+	color: #e8e8e8 !important
 }
 
 /* Green Tilt and Matching Text */
@@ -87,7 +79,7 @@ button.bg-green:focus {
 }
 
 .text-green-bg {
-	color: #cc0000 !important
+	color: #360036 !important
 }
 
 /* Orange Tilt and Matching Text */
@@ -103,11 +95,11 @@ button.bg-orange:focus {
 }
 
 .border-orange {
-    border-color: #ff6600 !important
+    border-color: #2a002a !important
 }
 
 .text-orange-bg {
-	color: #0066ff !important
+	color:#66FFA3 !important
 }
 
 /* Red Tilt and Matching Text */
@@ -127,7 +119,7 @@ button.bg-red:focus {
 }
 
 .text-red-bg {
-	color: #00ff00 !important
+	color: #05182a !important
 }
 
 /* Yellow Tilt and Matching Text */
@@ -147,7 +139,7 @@ button.bg-yellow:focus {
 }
 
 .text-yellow-bg {
-	color: #ff00ff !important
+	color: #32050e !important
 }
 
 /* Pink Tilt and Matching Text */
@@ -163,11 +155,11 @@ button.bg-pink:focus {
 }
 
 .border-pink {
-    border-color: #ff3399 !important
+    border-color: #CCFF99 !important
 }
 
 .text-pink-bg {
-	color: #99ff33 !important
+	color: #000060 !important
 }
 
 /* Purple Tilt and Matching Text */
@@ -187,5 +179,5 @@ button.bg-purple:focus {
 }
 
 .text-purple-bg {
-	color: #ffcc00 !important
+	color: #05182a !important
 }
