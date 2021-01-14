@@ -150,7 +150,7 @@ bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, con
         Log.verbose(F("[HTTPS] Pre-deinit RAM left %d" CR), esp_get_free_heap_size());
 
         // We're severely memory starved. Deinitialize bluetooth and free the related memory
-        // NOTE - This is not strictly true under NimBLE. Deinit now only waits for a scan to complete before
+        // NOTE - This is not strictly true under NimBLE. Deinit now only waits for a scan to complete
         tilt_scanner.deinit();
         yield();
 
@@ -304,41 +304,166 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     return result;
 }
 
-bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType)
+bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
 {
     // This handles the generic act of sending data to an endpoint
-    HTTPClient http;
-    bool result = false;
+    bool retVal = false;
 
-    if (strlen(dataToSend) > 5)
+    if (strlen(dataToSend) > 5 && strlen(url) > 8)
     {
-        Log.verbose(F("Sending data to: %s" CR), url);
-        Log.verbose(F("Data to send: %s" CR), dataToSend);
+        LCBUrl lcburl;
+        lcburl.setUrl(url);
 
-        // If we're really memory starved, we can wait to send any data until current scans complete
-        // tilt_scanner.wait_until_scan_complete();
-
-        http.begin(url);
-        http.addHeader("Content-Type", contentType); //Specify content-type header
-        if (apiKey)
+        bool validTarget = false;
+        if (lcburl.isMDNS())
         {
-            http.addHeader("X-API-KEY", apiKey); //Specify API key header
+            // Make sure we can resolve the address
+            if (lcburl.getIP() != INADDR_NONE)
+                validTarget = true;
         }
-        int httpResponseCode = http.POST(dataToSend); //Send the actual POST request
-
-        if (httpResponseCode > 0)
+        else if (lcburl.getHost() == lcburl.getIP().toString())
+            // We were passed an IP Address
+            validTarget = true;
+        else
         {
-            result = true;
-            Log.verbose(F("Result: %d, %s." CR), httpResponseCode, http.getString().c_str()); //Print return code
+            // If it's not mDNS all we care about is that it's http
+            if (lcburl.getScheme() == "http")
+                validTarget = true;
+        }
+        
+        if (validTarget)
+        {
+            if (lcburl.isMDNS())
+                // Use the IP address we resolved (necessary for mDNS)
+                Log.notice(F("Connecting to: %s at %s on port %l" CR),
+                            lcburl.getHost().c_str(),
+                            lcburl.getIP().toString().c_str(),
+                            lcburl.getPort());
+            else
+                Log.notice(F("Connecting to: %s on port %l" CR),
+                            lcburl.getHost().c_str(),
+                            lcburl.getPort());
+
+            WiFiClient client;
+            //  1 = SUCCESS
+            //  0 = FAILED
+            // -1 = TIMED_OUT
+            // -2 = INVALID_SERVER
+            // -3 = TRUNCATED
+            // -4 = INVALID_RESPONSE
+            client.setNoDelay(true);
+            client.setTimeout(10000);
+            if (client.connect(lcburl.getIP(), lcburl.getPort()))
+            {
+                Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
+
+                // Open POST connection
+                if (lcburl.getAfterPath().length() > 0)
+                {
+                    Log.verbose(F("POST /%s%s HTTP/1.1" CR),
+                                lcburl.getPath().c_str(),
+                                lcburl.getAfterPath().c_str());
+                }
+                else
+                {
+                    Log.verbose(F("POST /%s HTTP/1.1" CR), lcburl.getPath().c_str());
+                }
+                client.print(F("POST /"));
+                client.print(lcburl.getPath().c_str());
+                if (lcburl.getAfterPath().length() > 0)
+                {
+                    client.print(lcburl.getAfterPath().c_str());
+                }
+                client.println(F(" HTTP/1.1"));
+
+                // Begin headers
+                //
+                // Host
+                Log.verbose(F("Host: %s:%l" CR), lcburl.getHost().c_str(), lcburl.getPort());
+                client.print(F("Host: "));
+                client.print(lcburl.getHost().c_str());
+                client.print(F(":"));
+                client.println(lcburl.getPort());
+                //
+                Log.verbose(F("Connection: close" CR));
+                client.println(F("Connection: close"));
+                // Content
+                Log.verbose(F("Content-Length: %l" CR), strlen(dataToSend));
+                client.print(F("Content-Length: "));
+                client.println(strlen(dataToSend));
+                // Content Type
+                Log.verbose(F("Content-Type: %s" CR), contentType);
+                client.print(F("Content-Type: "));
+                client.println(contentType);
+                // API Key
+                if (strlen(apiKey) > 2)
+                {
+                        Log.verbose(F("X-API-KEY: %s" CR), apiKey);
+                        client.print(F("X-API-KEY: "));
+                        client.println(apiKey);
+                }
+                // Terminate headers with a blank line
+                Log.verbose(F("End headers." CR));
+                client.println();
+                //
+                // End Headers
+
+                // Post JSON
+                client.println(dataToSend);
+                // Check the HTTP status (should be "HTTP/1.1 200 OK")
+                char status[32] = {0};
+                client.readBytesUntil('\r', status, sizeof(status));
+                client.stop();
+                Log.verbose(F("Status: %s" CR), status);
+                if (strcmp(status + 9, "200 OK") == 0)
+                {
+                    if (checkBody == true) // We can do additional checks here
+                    {
+                        // Check body
+                        String response = String(status);
+                        if (response.indexOf(bodyCheck) >= 0)
+                        {
+                            Log.verbose(F("Response body ok." CR));
+                            retVal = true;
+                        }
+                        else
+                        {
+                            Log.error(F("Unexpected body content: %s" CR), response.c_str());
+                            retVal = false;
+                        }
+                    }
+                    else
+                    {
+                        Log.notice(F("Post to %s was successful." CR), lcburl.getHost());
+                        retVal = true;
+                    }
+                }
+                else
+                {
+                    Log.error(F("Unexpected status: %s" CR), status);
+                    retVal = false;
+                }
+            }
+            else
+            {
+                Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)" CR),
+                            lcburl.getHost().c_str(), lcburl.getPort(), client.connected());
+                retVal = false;
+            }
         }
         else
         {
-            Log.error(F("Error on sending POST: %d" CR), httpResponseCode); //Print return code
+            Log.error(F("Invalid target: %s." CR), url);
         }
-        http.end(); //Free resources
+        
     }
-
-    return result;
+    else
+    {
+        Log.notice(F("No URL provided, or no data to send." CR));
+        retVal = false;
+    }
+    
+    return retVal;
 }
 
 bool dataSendHandler::send_to_mqtt()

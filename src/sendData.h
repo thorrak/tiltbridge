@@ -16,9 +16,11 @@
 #include <WiFi.h>
 #include <MQTT.h>
 #include <WiFiMulti.h>
+#include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <Arduino.h>
 #include <HTTPClient.h>
+#include <LCBUrl.h>
 
 #define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60 * 1000) // 15 minute delay between pushes to Brewer's Friend
@@ -69,7 +71,7 @@ private:
     bool send_to_mqtt();
     void connect_mqtt();
 
-    static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType);
+    static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
 };
 
