@@ -17,6 +17,7 @@ tiltHydrometer::tiltHydrometer(uint8_t color)
     weeks_since_last_battery_change = 0; // Not currently implemented - for future use
     tilt_pro = false;
     receives_battery = false;
+    m_has_sent_197 = false;
 
 } // tiltHydrometer
 
@@ -63,7 +64,7 @@ uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
 
 std::string tiltHydrometer::color_name()
 {
-
+    // If these change, modify TILT_COLOR_SIZE (currrently 7 for "Yellow" + 1)
     switch (m_color)
     {
     case TILT_COLOR_RED:
@@ -138,7 +139,7 @@ std::string tiltHydrometer::gsheets_beer_name()
     }
 }
 
-bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr)
+bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
     double d_temp;
     double d_grav;
@@ -186,15 +187,16 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         last_grav_value_1000 = smoothed_i_grav_1000;
     }
 
-    //Serial.print("Raw grav = ");
-    //Serial.println(i_grav * 100);
-    //Serial.print("Smoothed grav = ");
-    //Serial.println(smoothed_i_grav_100);
+    if (i_tx_pwr==197)
+        m_has_sent_197 = true;
+    else {
+        if (m_has_sent_197)
+            receives_battery = true;
+        if (receives_battery) 
+            weeks_since_last_battery_change = i_tx_pwr;
+    }
 
-    if (i_tx_pwr == 197) // If we received a tx_pwr of 197 this Tilt sends its battery in the tx_pwr field
-        receives_battery = true;
-    else if (receives_battery) // Its not 197 but we receive battery - set the battery value to tx_pwr
-        weeks_since_last_battery_change = i_tx_pwr;
+    Log.verbose(F("DEBUG: %s sends battery: %T, TX_PWR: %d" CR), color_name().c_str(), receives_battery, i_tx_pwr);
 
     // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
     d_temp = (double)i_temp / temp_scalar;
@@ -298,6 +300,8 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     gravity_smoothed = (int)round(smoothed_d_grav * grav_scalar);
     temp = i_temp;
 
+    rssi = current_rssi;
+
     m_loaded = true; // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = xTaskGetTickCount();
     return true;
@@ -318,9 +322,8 @@ std::string tiltHydrometer::converted_gravity(bool use_raw_gravity)
 
 void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
-    // TODO: (JSON) Come back and tighten this up
+    StaticJsonDocument<TILT_DATA_SIZE> j;
 
-    StaticJsonDocument<300> j;
     j["color"] = color_name();
     j["temp"] = converted_temp(false);
     j["tempUnit"] = is_celsius() ? "C" : "F";
@@ -330,7 +333,9 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
     j["fwVersion"] = version_code;
-    serializeJson(j, json_string, 300);
+    j["rssi"] = rssi;
+
+    serializeJson(j, json_string, TILT_DATA_SIZE);
 }
 
 std::string tiltHydrometer::converted_temp(bool fahrenheit_only)

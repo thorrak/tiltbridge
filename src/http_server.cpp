@@ -977,6 +977,7 @@ void setStaticPages()
     server.serveStatic("/about/", FILESYSTEM, "/").setDefaultFile("about.htm").setCacheControl("max-age=600");
     server.serveStatic("/controllerrestart/", FILESYSTEM, "/").setDefaultFile("controllerrestart.htm").setCacheControl("max-age=600");
     server.serveStatic("/wifireset/", FILESYSTEM, "/").setDefaultFile("wifireset.htm").setCacheControl("max-age=600");
+    server.serveStatic("/factoryreset/", FILESYSTEM, "/").setDefaultFile("factoryreset.htm").setCacheControl("max-age=600");
     server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
 }
 
@@ -1116,8 +1117,15 @@ void setActionPages()
         http_server.wifireset_requested = true;
     });
 
+    server.on("/resetapp/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing /resetapp/." CR));
+        request->send(200, F("text/plain"), F("Ok."));
+        http_server.factoryreset_requested = true;
+    });
+
     server.on("/oktoreset/", HTTP_GET, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing /oktoreset/." CR));
+        // TODO: Send a reset page
         request->send(200, F("text/plain"), F("Ok."));
         http_server.restart_requested = true;
     });

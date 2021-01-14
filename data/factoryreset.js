@@ -18,13 +18,13 @@ function loadPage() { // Make sure the page is 100% loaded
 }
 
 function doResetSignal() {
-    var jqxhr = $.get( "/resetwifi/")
+    var jqxhr = $.get( "/resetapp/")
         .done(function() {
             //
         })
         .fail(function() {
             // Reset is complete
-            $("#card-title").replaceWith("<h4 class='card-header' class='card-title'>WiFi Reset Failed; Redirect Pending</h4>");
+            $("#card-title").replaceWith("<h4 class='card-header' class='card-title'>Factory Reset Failed; Redirect Pending</h4>");
             $("#card-body").replaceWith("<p class='card-body'>The WiFi reset failed. You will be redirected momentarily.</p>");
             setTimeout(function () { window.location.href = "/"; }, 5000);
         });

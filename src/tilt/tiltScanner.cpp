@@ -24,7 +24,7 @@ void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDev
 #ifdef BLE_PRINT_ALL_DEVICES
             Log.verbose(F("Advertised iBeacon Device: %s " CR), advertisedDevice->toString().c_str());
 #endif
-            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData());
+            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData(),advertisedDevice->getRSSI());
         }
     }
 }
@@ -52,7 +52,7 @@ void tiltScanner::init()
     // Active scan actively queries devices for more info following detection.
     //
     pBLEScan->setActiveScan(false);
-    pBLEScan->setInterval(197); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
+    pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
     pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
 }
 
@@ -99,7 +99,7 @@ bool tiltScanner::wait_until_scan_complete()
     return true;
 }
 
-uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_hex)
+uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_hex, const int8_t &current_rssi)
 {
     uint8_t m_color;
 
@@ -149,12 +149,11 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_
         return TILT_NONE;
     }
 
-    // TODO - Change this when merging tilt pro updates
     uint16_t temp = std::stoul(temp_arr, nullptr, 16);
     uint16_t gravity = std::stoul(grav_arr, nullptr, 16);
     uint8_t tx_pwr = std::stoul(tx_pwr_arr, nullptr, 16);
 
-    m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr);
+    m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr, current_rssi);
 
     return m_color;
 }
@@ -166,18 +165,18 @@ tiltHydrometer *tiltScanner::tilt(uint8_t color)
 
 void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
 {
-    StaticJsonDocument<1600> j;
+    StaticJsonDocument<TILT_ALL_DATA_SIZE> j;
     for (uint8_t i = 0; i < TILT_COLORS; i++)
     {
         if (m_tilt_devices[i]->is_loaded())
         {
-            char color[15];
-            strlcpy(color, m_tilt_devices[i]->color_name().c_str(), 15);
-            char tilt_data[300];
+            char color[TILT_COLOR_SIZE];
+            strlcpy(color, m_tilt_devices[i]->color_name().c_str(), TILT_COLOR_SIZE);
+            char tilt_data[TILT_DATA_SIZE];
             tilt_data[0] = {'\0'};
             m_tilt_devices[i]->to_json_string(tilt_data, use_raw_gravity);
             j[color] = serialized(tilt_data);
         }
     }
-    serializeJson(j, all_tilt_json, 1600);
+    serializeJson(j, all_tilt_json, TILT_ALL_DATA_SIZE);
 }
