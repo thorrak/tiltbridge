@@ -258,7 +258,14 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
     print_line(tilt->color_name().c_str(), temp, gravity, line);
 
 #ifdef LCD_TFT
-    tft->fillRect(tft->textWidth(tilt->color_name().c_str(),GFXFF)+25, (tft->fontHeight(GFXFF)) * (line - 1) + 2, 30, tft->fontHeight(GFXFF)-8,tilt->text_color());
+    if (tilt->text_color()==0xFFFF)
+    {
+        tft->fillRect(tft->textWidth(tilt->color_name().c_str(),GFXFF)+25, (tft->fontHeight(GFXFF)) * (line - 1) + 2, 30, tft->fontHeight(GFXFF) - 8, 0x4228);
+    }
+    else
+    {
+        tft->fillRect(tft->textWidth(tilt->color_name().c_str(),GFXFF)+25, (tft->fontHeight(GFXFF)) * (line - 1) + 2, 30, tft->fontHeight(GFXFF) - 8, tilt->text_color());    
+    }
 #endif
 
 #ifdef LCD_TFT_ESPI
