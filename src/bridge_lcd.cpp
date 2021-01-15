@@ -18,7 +18,7 @@ bridge_lcd lcd;
 #endif
 
 #ifdef LCD_TFT_ESPI
-#include "img/fermentrack_logo.h" // We're only using this style of logo for the OLED variant
+#include "img/oled_logo.h" // We're only using this style of logo for the OLED variant
 #endif
 
 bridge_lcd::bridge_lcd()
