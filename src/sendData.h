@@ -40,7 +40,6 @@
 
 class dataSendHandler
 {
-
 public:
     dataSendHandler();
     void init();

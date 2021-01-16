@@ -612,16 +612,16 @@ bool processMqttSettings(AsyncWebServerRequest *request)
             if (strcmp(name, "mqttBrokerHost") == 0) // Set MQTT address
             {
                 LCBUrl url;
-                if (!url.isValidHostName(value))
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
+                if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
                     strlcpy(config.mqttBrokerHost, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
+                }
+                else if (!url.isValidHostName(value))
+                {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else
                 {
