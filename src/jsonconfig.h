@@ -83,7 +83,7 @@ struct Config
     char *scriptsEmail = (char *)malloc(sizeof(char) * 256);
     char *brewersFriendKey = (char *)malloc(sizeof(char) * 25);
     char *brewfatherKey = (char *)malloc(sizeof(char) * 25);
-    char *mqttBrokerIP = (char *)malloc(sizeof(char) * 256);
+    char *mqttBrokerHost = (char *)malloc(sizeof(char) * 256);
     uint16_t mqttBrokerPort;
     char *mqttUsername = (char *)malloc(sizeof(char) * 51);
     char *mqttPassword = (char *)malloc(sizeof(char) * 65);

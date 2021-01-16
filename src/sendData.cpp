@@ -47,20 +47,21 @@ void dataSendHandler::init()
 
 void dataSendHandler::init_mqtt()
 {
-    if (strlen(config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
+    //if (strlen(config.mqttBrokerHost) > IP_MIN_STRING_LENGTH) // TODO:  Replace this check
+    if (true)
     {
-        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: %d" CR), config.mqttBrokerIP, config.mqttBrokerPort);
+        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: %d" CR), config.mqttBrokerHost, config.mqttBrokerPort);
         mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
 
         if (mqtt_alreadyinit)
         {
             mqttClient.disconnect();
             delay(250);
-            mqttClient.setHost(config.mqttBrokerIP, config.mqttBrokerPort);
+            mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
         }
         else
         {
-            mqttClient.begin(config.mqttBrokerIP, config.mqttBrokerPort, wClient);
+            mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
         }
         mqtt_alreadyinit = true;
     }
@@ -434,7 +435,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                     }
                     else
                     {
-                        Log.notice(F("Post to %s was successful." CR), lcburl.getHost());
+                        Log.notice(F("Post to %s was successful." CR), lcburl.getHost().c_str());
                         retVal = true;
                     }
                 }
@@ -709,7 +710,8 @@ void dataSendHandler::process()
     // Check & send to mqtt broker if necessary
     if (send_to_mqtt_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.mqttBrokerIP) > IP_MIN_STRING_LENGTH)
+        //if (WiFiClass::status() == WL_CONNECTED && strlen(config.mqttBrokerHost) > IP_MIN_STRING_LENGTH) // TODO:  Replace this check
+        if (true)
         { //Check WiFi connection status
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
 

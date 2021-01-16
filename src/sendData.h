@@ -32,7 +32,6 @@
 #define BREWSTATUS_MIN_URL_LENGTH 12
 #define GSCRIPTS_MIN_URL_LENGTH 24
 #define GSCRIPTS_MIN_EMAIL_LENGTH 7
-#define IP_MIN_STRING_LENGTH 7
 
 // This is me being simplifying the reuse of code. The formats for Brewers Friend and Brewfather are basically the same
 // so I'm combining them together in one function
