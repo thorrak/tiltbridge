@@ -11,6 +11,7 @@
 
 #define TILT_DATA_SIZE 256 // JSON size of a Tilt
 #define TILT_ALL_DATA_SIZE (TILT_DATA_SIZE * TILT_COLORS) // JSON size of 8 Tilts
+#define TILT_ALL_DATA_STRING_SIZE 1696
 
 // There's definitely a better way of doing this
 #define TILT_COLOR_RED 0
