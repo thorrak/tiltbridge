@@ -47,18 +47,47 @@ void dataSendHandler::init()
 
 void dataSendHandler::init_mqtt()
 {
-    Log.verbose(F("Initializing Connection to MQTTBroker: %s on port: %d" CR), config.mqttBrokerHost, config.mqttBrokerPort);
+    LCBUrl url;
+
+    if (url.isMDNS(config.mqttBrokerHost))
+    {
+        Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d" CR),
+            config.mqttBrokerHost,
+            url.getIP(config.mqttBrokerHost).toString().c_str(),
+            config.mqttBrokerPort);
+    }
+    else
+    {
+        Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d" CR),
+            config.mqttBrokerHost,
+            config.mqttBrokerPort);
+    }
+
     mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
 
     if (mqtt_alreadyinit)
     {
         mqttClient.disconnect();
         delay(250);
-        mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+        if (url.isMDNS(config.mqttBrokerHost))
+        {
+            mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
+        }
+        else
+        {
+            mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+        }
     }
     else
     {
-        mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+        if (url.isMDNS(config.mqttBrokerHost))
+        {
+            mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, wClient);
+        }
+        else
+        {
+           mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+        }
     }
     mqtt_alreadyinit = true;
 }
@@ -315,10 +344,10 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         if (lcburl.isMDNS(lcburl.getHost().c_str()))
         {
             // Make sure we can resolve the address
-            if (lcburl.getIP() != INADDR_NONE)
+            if (lcburl.getIP(lcburl.getHost().c_str()) != INADDR_NONE)
                 validTarget = true;
         }
-        else if (lcburl.getHost() == lcburl.getIP().toString())
+        else if (lcburl.isValidIP(lcburl.getIP(lcburl.getHost().c_str()).toString().c_str()))
             // We were passed an IP Address
             validTarget = true;
         else
@@ -334,7 +363,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 // Use the IP address we resolved (necessary for mDNS)
                 Log.notice(F("Connecting to: %s at %s on port %l" CR),
                             lcburl.getHost().c_str(),
-                            lcburl.getIP().toString().c_str(),
+                            lcburl.getIP(lcburl.getHost().c_str() ).toString().c_str(),
                             lcburl.getPort());
             else
                 Log.notice(F("Connecting to: %s on port %l" CR),
@@ -350,7 +379,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
             // -4 = INVALID_RESPONSE
             client.setNoDelay(true);
             client.setTimeout(10000);
-            if (client.connect(lcburl.getIP(), lcburl.getPort()))
+            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
             {
                 Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
 
