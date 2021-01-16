@@ -337,10 +337,12 @@ void bridge_lcd::init()
     if (config.invertTFT)
     {
         tft->setRotation(1);
+        delay(20);
     }
     else
     {
         tft->setRotation(3);
+        delay(20);
     }
 #endif
     tft->fillScreen(TFT_BLACK);
@@ -362,18 +364,26 @@ void bridge_lcd::init()
 #endif
 }
 
-void bridge_lcd::reinit()
+void bridge_lcd::stop()
 {
-#ifdef LCD_TFT
-    if (config.invertTFT)
-    {
-        tft->setRotation(1);
-    }
-    else
-    {
-        tft->setRotation(3);
-    }
+#ifdef LCD_SSD1306
+    oled_display->end();
+    delete oled_display;
 #endif
+
+#ifdef LCD_TFT
+    tft->deInitDMA();
+    tft->endWrite();
+    delete tft;
+#endif
+
+#ifdef LCD_TFT_ESPI
+    tft->deInitDMA();
+    tft->endWrite();
+    delete tft;
+#endif
+
+    init();
 }
 
 void bridge_lcd::clear()

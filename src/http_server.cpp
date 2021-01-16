@@ -109,7 +109,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                     if (config.invertTFT == false)
                     {
                         config.invertTFT = true;
-                        http_server.lcd_reinit_rqd = true;
+                        http_server.lcd_init_rqd = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
@@ -118,7 +118,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                     if (config.invertTFT == true)
                     {
                         config.invertTFT = false;
-                        http_server.lcd_reinit_rqd = true;
+                        http_server.lcd_init_rqd = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
