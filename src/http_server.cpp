@@ -27,6 +27,7 @@ void processCalibrationError(AsyncWebServerRequest *request)
 // Settings Page Handlers
 bool processTiltBridgeSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     bool hostnamechanged = false;
     // Loop through all parameters
     int params = request->params();
@@ -48,6 +49,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 if (!url.isValidHostName(value))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
+                    failCount++;
                 }
                 else
                 {
@@ -65,6 +67,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 if ((val <= -12) || (val >= 14))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
+                    failCount++;
                 }
                 else
                 {
@@ -77,6 +80,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 if ((strcmp(value, "F") == 1) && (strcmp(value, "F") == 1))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
+                    failCount++;
                 }
                 else
                 {
@@ -90,6 +94,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 if ((val <= 0) || (val >= 99))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
+                    failCount++;
                 }
                 else
                 {
@@ -120,25 +125,34 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
                 else
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
+                    failCount++;
                 }
             }
         }
     }
-    if (hostnamechanged)
-    { // We reset hostname, process
-        hostnamechanged = false;
-        tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, config.mdnsID);
-        mdnsreset();
-        Log.verbose(F("POSTed new mDNSid, reset mDNS stack." CR));
-    }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid controller configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save controller configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            if (hostnamechanged)
+            { // We reset hostname, process
+                hostnamechanged = false;
+                tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, config.mdnsID);
+                mdnsreset();
+                Log.verbose(F("POSTed new mDNSid, reset mDNS stack." CR));
+            }
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save controller configuration data." CR));
+            return false;
+        }
     }
 }
 
@@ -580,6 +594,7 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
 
 bool processMqttSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -599,6 +614,7 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                 LCBUrl url;
                 if (!url.isValidHostName(value))
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
@@ -619,6 +635,7 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                 const double val = atof(value);
                 if ((val <= 1024) || (val >= 65535))
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else
@@ -633,6 +650,7 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                 const double val = atof(value);
                 if ((val < 30) || (val > 3600))
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else
@@ -658,6 +676,7 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -677,6 +696,7 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -696,19 +716,28 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid MQTT configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save Brewfather configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save MQTT configuration data." CR));
+            return false;
+        }
     }
 }
 
