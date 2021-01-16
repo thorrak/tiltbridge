@@ -273,7 +273,7 @@ void Config::save(JsonObject obj) const
     obj["scriptsEmail"] = scriptsEmail;
     obj["brewersFriendKey"] = brewersFriendKey;
     obj["brewfatherKey"] = brewfatherKey;
-    obj["mqttBrokerIP"] = mqttBrokerIP;
+    obj["mqttBrokerHost"] = mqttBrokerHost;
     obj["mqttBrokerPort"] = mqttBrokerPort;
     obj["mqttUsername"] = mqttUsername;
     obj["mqttPassword"] = mqttPassword;
@@ -843,12 +843,12 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["localTargetURL"].isNull())
     {
-        strlcpy(localTargetURL, "", 25);
+        strlcpy(localTargetURL, "", 256);
     }
     else
     {
         const char *tu = obj["localTargetURL"];
-        strlcpy(localTargetURL, tu, 25);
+        strlcpy(localTargetURL, tu, 256);
     }
 
     if (obj["localTargetPushEvery"].isNull())
@@ -921,14 +921,14 @@ void Config::load(JsonObjectConst obj)
         strlcpy(brewfatherKey, bk, 25);
     }
 
-    if (obj["mqttBrokerIP"].isNull())
+    if (obj["mqttBrokerHost"].isNull())
     {
-        strlcpy(mqttBrokerIP, "", 256);
+        strlcpy(mqttBrokerHost, "", 256);
     }
     else
     {
-        const char *mi = obj["mqttBrokerIP"];
-        strlcpy(mqttBrokerIP, mi, 256);
+        const char *mi = obj["mqttBrokerHost"];
+        strlcpy(mqttBrokerHost, mi, 256);
     }
 
     if (obj["mqttBrokerPort"].isNull())

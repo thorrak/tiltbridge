@@ -37,7 +37,7 @@ void setup()
     // lcd.display_logo();  // Display the logo
 
 #ifdef LOG_LOCAL_LEVEL
-    esp_log_level_set("*", ESP_LOG_DEBUG);        // Det all components to DEBUG level
+    esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to DEBUG level
     esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
     esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
 #endif

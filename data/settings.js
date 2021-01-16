@@ -156,7 +156,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="brewstatusPushEvery"]').val(config.brewstatusPushEvery);
 
                 // MQTT Tab
-                $('input[name="mqttBrokerIP"]').val(config.mqttBrokerIP);
+                $('input[name="mqttBrokerHost"]').val(config.mqttBrokerHost);
                 $('input[name="mqttBrokerPort"]').val(config.mqttBrokerPort);
                 $('input[name="mqttUsername"]').val(config.mqttUsername);
                 $('input[name="mqttPassword"]').val(config.mqttPassword);
@@ -426,7 +426,7 @@ function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
 function processMqttPost(url, obj) { // Handle MQTT posts
     // Get form data
     var $form = $(obj.form),
-        mqttBrokerIPVal = $form.find("input[name='mqttBrokerIP']").val(),
+        mqttBrokerHostVal = $form.find("input[name='mqttBrokerHost']").val(),
         mqttBrokerPortVal = $form.find("input[name='mqttBrokerPort']").val(),
         mqttUsernameVal = $form.find("input[name='mqttUsername']").val(),
         mqttPasswordVal = $form.find("input[name='mqttPassword']").val(),
@@ -435,7 +435,7 @@ function processMqttPost(url, obj) { // Handle MQTT posts
 
     // Process post
     data = {
-        mqttBrokerIP: mqttBrokerIPVal,
+        mqttBrokerHost: mqttBrokerHostVal,
         mqttBrokerPort: mqttBrokerPortVal,
         mqttUsername: mqttUsernameVal,
         mqttPassword: mqttPasswordVal,
