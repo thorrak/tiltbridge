@@ -49,47 +49,49 @@ void dataSendHandler::init_mqtt()
 {
     LCBUrl url;
 
-    if (url.isMDNS(config.mqttBrokerHost))
-    {
-        Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d" CR),
-            config.mqttBrokerHost,
-            url.getIP(config.mqttBrokerHost).toString().c_str(),
-            config.mqttBrokerPort);
-    }
-    else
-    {
-        Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d" CR),
-            config.mqttBrokerHost,
-            config.mqttBrokerPort);
-    }
-
-    mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
-
-    if (mqtt_alreadyinit)
-    {
-        mqttClient.disconnect();
-        delay(250);
-        if (url.isMDNS(config.mqttBrokerHost))
-        {
-            mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
-        }
-        else
-        {
-            mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
-        }
-    }
-    else
+    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
     {
         if (url.isMDNS(config.mqttBrokerHost))
         {
-            mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, wClient);
+            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d" CR),
+                config.mqttBrokerHost,
+                url.getIP(config.mqttBrokerHost).toString().c_str(),
+                config.mqttBrokerPort);
         }
         else
         {
-           mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d" CR),
+                config.mqttBrokerHost,
+                config.mqttBrokerPort);
         }
+
+        if (mqtt_alreadyinit)
+        {
+            mqttClient.disconnect();
+            delay(250);
+            if (url.isMDNS(config.mqttBrokerHost))
+            {
+                mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
+            }
+            else
+            {
+                mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+            }
+        }
+        else
+        {
+            if (url.isMDNS(config.mqttBrokerHost))
+            {
+                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, wClient);
+            }
+            else
+            {
+                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+            }
+        }
+        mqtt_alreadyinit = true;
+        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
     }
-    mqtt_alreadyinit = true;
 }
 
 void dataSendHandler::connect_mqtt()
@@ -735,8 +737,8 @@ void dataSendHandler::process()
     // Check & send to mqtt broker if necessary
     if (send_to_mqtt_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED)
-        { //Check WiFi connection status
+        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
+        {
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
 
             send_to_mqtt();
