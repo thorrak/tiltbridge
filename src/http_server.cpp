@@ -1103,7 +1103,6 @@ void setActionPages()
 
     server.on("/oktoreset/", HTTP_GET, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing /oktoreset/." CR));
-        // TODO: Send a reset page
         request->send(200, F("text/plain"), F("Ok."));
         http_server.restart_requested = true;
     });

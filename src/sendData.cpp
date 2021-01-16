@@ -47,24 +47,20 @@ void dataSendHandler::init()
 
 void dataSendHandler::init_mqtt()
 {
-    //if (strlen(config.mqttBrokerHost) > IP_MIN_STRING_LENGTH) // TODO:  Replace this check
-    if (true)
-    {
-        Log.verbose(F("Initializing Connection to MQTTBroker at IP: %s on port: %d" CR), config.mqttBrokerHost, config.mqttBrokerPort);
-        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
+    Log.verbose(F("Initializing Connection to MQTTBroker: %s on port: %d" CR), config.mqttBrokerHost, config.mqttBrokerPort);
+    mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
 
-        if (mqtt_alreadyinit)
-        {
-            mqttClient.disconnect();
-            delay(250);
-            mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
-        }
-        else
-        {
-            mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
-        }
-        mqtt_alreadyinit = true;
+    if (mqtt_alreadyinit)
+    {
+        mqttClient.disconnect();
+        delay(250);
+        mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
     }
+    else
+    {
+        mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+    }
+    mqtt_alreadyinit = true;
 }
 
 void dataSendHandler::connect_mqtt()
@@ -316,7 +312,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         lcburl.setUrl(url);
 
         bool validTarget = false;
-        if (lcburl.isMDNS())
+        if (lcburl.isMDNS(lcburl.getHost().c_str()))
         {
             // Make sure we can resolve the address
             if (lcburl.getIP() != INADDR_NONE)
@@ -334,7 +330,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         
         if (validTarget)
         {
-            if (lcburl.isMDNS())
+            if (lcburl.isMDNS(lcburl.getHost().c_str()))
                 // Use the IP address we resolved (necessary for mDNS)
                 Log.notice(F("Connecting to: %s at %s on port %l" CR),
                             lcburl.getHost().c_str(),
@@ -710,8 +706,7 @@ void dataSendHandler::process()
     // Check & send to mqtt broker if necessary
     if (send_to_mqtt_at <= xTaskGetTickCount())
     {
-        //if (WiFiClass::status() == WL_CONNECTED && strlen(config.mqttBrokerHost) > IP_MIN_STRING_LENGTH) // TODO:  Replace this check
-        if (true)
+        if (WiFiClass::status() == WL_CONNECTED)
         { //Check WiFi connection status
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
 
