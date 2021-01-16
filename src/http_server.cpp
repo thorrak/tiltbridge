@@ -9,29 +9,6 @@ httpServer http_server;
 
 AsyncWebServer server(WEBPORT);
 
-void isInteger(const char *s, bool &is_int, int32_t &int_value)
-{
-    if ((strlen(s) <= 0) || (!isdigit(s[0])))
-    {
-        is_int = false;
-    }
-    char *p;
-    int_value = strtol(s, &p, 10);
-    is_int = (*p == 0);
-}
-
-bool isValidMdnsName(const char *mdns_name)
-{
-    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-' || mdns_name[strlen(mdns_name) - 1] == '-')
-        return false;
-    for (int i = 0; i < strlen(mdns_name); i++)
-    {
-        if (!isalnum(mdns_name[i]) && mdns_name[i] != '-')
-            return false;
-    }
-    return true;
-}
-
 // This is to simplify the redirects in processCalibration
 void redirectToCalibration(AsyncWebServerRequest *request)
 {
@@ -67,7 +44,8 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             //
             if (strcmp(name, "mdnsID") == 0) // Set hostname
             {
-                if (!isValidMdnsName(value))
+                LCBUrl url;
+                if (!url.isValidHostName(value))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
@@ -616,24 +594,24 @@ bool processMqttSettings(AsyncWebServerRequest *request)
 
             // MQTT settings
             //
-            // TODO:  This basically accepts anything since it could be DNS or IP
-            if (strcmp(name, "mqttBrokerIP") == 0) // Set MQTT address
+            if (strcmp(name, "mqttBrokerHost") == 0) // Set MQTT address
             {
-                if (strlen(value) > 8 && strlen(value) < 255)
+                LCBUrl url;
+                if (!url.isValidHostName(value))
                 {
-                    strlcpy(config.mqttBrokerIP, value, 256);
-                    http_server.mqtt_init_rqd = true;
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.mqttBrokerIP, value, 256);
+                    strlcpy(config.mqttBrokerHost, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
                 {
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
+                    strlcpy(config.mqttBrokerHost, value, 256);
+                    http_server.mqtt_init_rqd = true;
+                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
             if (strcmp(name, "mqttBrokerPort") == 0) // Set port

@@ -14,6 +14,7 @@
 #include "sendData.h"
 #include "jsonconfig.h"
 
+#include <LCBUrl.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
