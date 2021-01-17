@@ -903,22 +903,22 @@ void Config::load(JsonObjectConst obj)
 
     if (obj["brewersFriendKey"].isNull())
     {
-        strlcpy(brewersFriendKey, "", 25);
+        strlcpy(brewersFriendKey, "", 65);
     }
     else
     {
         const char *bf = obj["brewersFriendKey"];
-        strlcpy(brewersFriendKey, bf, 25);
+        strlcpy(brewersFriendKey, bf, 65);
     }
 
     if (obj["brewfatherKey"].isNull())
     {
-        strlcpy(brewfatherKey, "", 25);
+        strlcpy(brewfatherKey, "", 65);
     }
     else
     {
         const char *bk = obj["brewfatherKey"];
-        strlcpy(brewfatherKey, bk, 25);
+        strlcpy(brewfatherKey, bk, 65);
     }
 
     if (obj["mqttBrokerHost"].isNull())

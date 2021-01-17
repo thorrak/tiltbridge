@@ -451,17 +451,13 @@ function processMqttPost(url, obj) { // Handle MQTT posts
 }
 
 function postData(url, data, newpage = false, newdata = false, callback = null) { // POST data; newpage = reload, newdata = pull new data
+    settingsAlert.warning();
     $.ajax({
         url: url,
         type: 'POST',
         data: data,
         success: function (data) {
             settingsAlert.warning();
-        },
-        error: function (data) {
-            settingsAlert.warning("Settings update failed, check your entries.");
-        },
-        complete: function (data) {
             if (newpage) {
                 waitOnReset();
             } else if (newdata) {
@@ -471,6 +467,15 @@ function postData(url, data, newpage = false, newdata = false, callback = null) 
             if (typeof callback == "function") {
                 callback();
             }
+        },
+        error: function (data) {
+            jQuery('#overlay').fadeOut();
+            posted = true;
+            buttonClearDelay();
+            settingsAlert.warning("Settings update failed, check your entries.");
+        },
+        complete: function (data) {
+            //
         }
     });
 }
