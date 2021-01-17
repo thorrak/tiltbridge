@@ -266,7 +266,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 
     bool result = true;
     StaticJsonDocument<500> j;
-    char apiKey[26];
+    char apiKey[65];
     char url[60];
 
     // As this function is being used for both Brewer's Friend and Brewfather, let's determine which we want and set up
@@ -630,13 +630,14 @@ void send_checkin_stat()
 void dataSendHandler::process()
 {
     // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
-    if (http_server.name_reset_requested == true)
+
+    if (http_server.name_reset_requested == true) // Don't send while we are processing a name change
         return;
 
     // Check & send to Local Target if necessary
     if (send_to_localTarget_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) > LOCALTARGET_MIN_URL_LENGTH)
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
         { //Check WiFi connection status
             Log.verbose(F("Calling send to Local Target." CR));
 
@@ -672,7 +673,7 @@ void dataSendHandler::process()
     // Check & send to Google Scripts if necessary
     if (send_to_google_at <= xTaskGetTickCount())
     {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH)
+        if (strlen(config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to Google." CR));
             // tilt_scanner.wait_until_scan_complete();

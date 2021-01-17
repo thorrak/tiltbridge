@@ -81,8 +81,8 @@ struct Config
     uint16_t brewstatusPushEvery;
     char *scriptsURL = (char *)malloc(sizeof(char) * 256);
     char *scriptsEmail = (char *)malloc(sizeof(char) * 256);
-    char *brewersFriendKey = (char *)malloc(sizeof(char) * 25);
-    char *brewfatherKey = (char *)malloc(sizeof(char) * 25);
+    char *brewersFriendKey = (char *)malloc(sizeof(char) * 65);
+    char *brewfatherKey = (char *)malloc(sizeof(char) * 65);
     char *mqttBrokerHost = (char *)malloc(sizeof(char) * 256);
     uint16_t mqttBrokerPort;
     char *mqttUsername = (char *)malloc(sizeof(char) * 51);
