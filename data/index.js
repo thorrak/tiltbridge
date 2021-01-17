@@ -53,7 +53,7 @@ var vm = new Vue({
                             cardData['gsheets'] = "Google Sheet: " + cardData['gsheets_name'];
                         }
                         if (cardData['sends_battery']) {
-                            cardData['battery'] = "Battery Age (weeks): " + cardData['weeks_on_battery'];
+                            cardData['battery'] = "Battery Age: " + cardData['weeks_on_battery'];
                         }
 
                         // Switch between Tilt and Tilt Pro title
