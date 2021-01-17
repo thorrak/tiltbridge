@@ -630,6 +630,8 @@ void send_checkin_stat()
 void dataSendHandler::process()
 {
     // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
+    if (http_server.name_reset_requested == true)
+        return;
 
     // Check & send to Local Target if necessary
     if (send_to_localTarget_at <= xTaskGetTickCount())

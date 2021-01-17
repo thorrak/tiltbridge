@@ -39,7 +39,7 @@ public:
     //void handleClient();
     bool lcd_reinit_rqd = false;
     bool restart_requested = false;
-    bool wifireset_requested = false;
+    bool name_reset_requested = false;
     bool factoryreset_requested = false;
     bool settings_updated = false;
     bool mqtt_init_rqd = false;
