@@ -178,5 +178,5 @@ void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
             j[color] = serialized(tilt_data);
         }
     }
-    serializeJson(j, all_tilt_json, TILT_ALL_DATA_SIZE);
+    serializeJson(j, all_tilt_json, TILT_ALL_DATA_STRING_SIZE);
 }

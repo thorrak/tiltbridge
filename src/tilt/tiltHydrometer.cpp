@@ -196,8 +196,6 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
             weeks_since_last_battery_change = i_tx_pwr;
     }
 
-    Log.verbose(F("DEBUG: %s sends battery: %T, TX_PWR: %d" CR), color_name().c_str(), receives_battery, i_tx_pwr);
-
     // For Tilt Pros we have to divide the temp by 10 and the gravity by 10000
     d_temp = (double)i_temp / temp_scalar;
     d_grav = (double)i_grav / grav_scalar;

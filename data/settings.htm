@@ -154,19 +154,21 @@
                             </p>
                             <form action="/settings/controller/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
-                                    <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
-                                - 31 characters.">mDNS ID</label>
+                                    <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Host name (the xxxx in http://xxxx.local/.) Must be 8- 31 characters.">mDNS ID
+                                    </label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="mdnsID" id="mdnsID"
-                                            placeholder="tiltbridge" :value="settings.mdnsID">
+                                        <input type="text" class="form-control" name="mdnsID" 
+                                            id="mdnsID" placeholder="tiltbridge" minlength="3"
+                                            maxlength="32" :value="settings.mdnsID" required>
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="TZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Time zone offset from GMT (in hours)">Time Zone Offset</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="TZoffset" id="TZoffset"
-                                            placeholder="-5" :value="settings.TZoffset">
+                                        <input type="number" class="form-control" name="TZoffset" id="TZoffset"
+                                            placeholder="-5"  min="-12" max="14" :value="settings.TZoffset" required>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -181,14 +183,16 @@
                                 </div>
                                 <div class="form-group row">
                                     <label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Valid range 0 to 99. Setting affects time constant of
-                                exponentially weighted moving average filter applied to specific gravity reading. In response to a step change, the filtered value should 
-                                reach steady state after ~ 5 time constants. Setting of 0 is equivalent to no averaging (filtering off) while higher values mean more averaging.
-                                Setting of 60 gives time constant of just over 5 seconds while 99 results in ~ 5 minutes.">Specific
-                                        Gravity Averaging</label>
+                                        title="Valid range 0 to 99. Setting affects time constant of exponentially weighted
+                                        moving average filter applied to specific gravity reading. In response to a step
+                                        change, the filtered value should reach steady state after ~ 5 time constants.
+                                        A setting of 0 gives no smoothing (filtering off) while higher values mean more
+                                        smoothing.  A setting of 60 gives time constant of just over 5 seconds while 99
+                                        results in ~ 5 minutes.">
+                                    Specific Gravity Averaging</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="smoothFactor" id="smoothFactor"
-                                            placeholder="60" :value="settings.smoothFactor">
+                                        <input type="number" class="form-control" name="smoothFactor" id="smoothFactor"
+                                        min="0" max="99" placeholder="60" :value="settings.smoothFactor" required>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -201,11 +205,13 @@
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                        onclick="if(!this.form.checkValidity(this)){return (false);}">
+                                    Update</button>
                                 </div>
                             </form>
-        
-                        </div>        
+
+                        </div>
 
                     </div> <!-- TiltBridge Tab -->
 
@@ -245,7 +251,8 @@
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
                                 </div>
                             </form>
                         </div>
@@ -269,7 +276,7 @@
                                     <label for="localTargetURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Target URL. Delete to disable the push">Target URL</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="localTargetURL"
+                                        <input type="url" class="form-control" name="localTargetURL"
                                             id="localTargetURL" placeholder="http://127.0.0.1/tiltbridge/"
                                             :value="settings.localTargetURL">
                                     </div>
@@ -281,14 +288,16 @@
                                         title="How often to push data (Range: 15 - 3600 seconds)">Push Frequency
                                         (s)</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="localTargetPushEvery"
-                                            id="localTargetPushEvery" placeholder="30"
+                                        <input type="number" class="form-control" name="localTargetPushEvery"
+                                            id="localTargetPushEvery" placeholder="30" min="15" max="3600" 
                                             :value="settings.localTargetPushEvery">
                                     </div>
         
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">
+                                    Update</button>
                                 </div>
                             </form>
         
@@ -315,8 +324,9 @@
                                         title="The Google Scripts URL associated with your deployment of the Tilt logging script">Google
                                         Script URL</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="scriptsURL" id="scriptsURL"
-                                            placeholder="https://script.google.com/.../" :value="settings.scriptsURL">
+                                        <input type="url" class="form-control" name="scriptsURL" id="scriptsURL"
+                                            placeholder="https://script.google.com/.../" :value="settings.scriptsURL"
+                                            minlength="3" maxlength="254">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -324,8 +334,9 @@
                                         title="The Google Scripts email address associated with your deployment of the Tilt logging script">Google
                                         Script Email</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="scriptsEmail" id="scriptsEmail"
-                                            placeholder="you@gmail.com" :value="settings.scriptsEmail">
+                                        <input type="email" class="form-control" name="scriptsEmail" id="scriptsEmail"
+                                            placeholder="you@gmail.com" :value="settings.scriptsEmail"
+                                            minlength="8" maxlength="254">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -334,7 +345,8 @@
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="sheetName_red" id="sheetName_red"
-                                            placeholder="BeerName" :value="settings.sheetName_red">
+                                            placeholder="BeerName" :value="settings.sheetName_red"
+                                            minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -342,9 +354,9 @@
                                         title="The name of the spreadsheet to which log points for the green Tilt will be written">Green
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="sheetName_green"
-                                            id="sheetName_green" placeholder="BeerName"
-                                            :value="settings.sheetName_green">
+                                        <input type="text" class="form-control" name="sheetName_green" id="sheetName_green"
+                                        placeholder="BeerName" :value="settings.sheetName_green"
+                                        minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -353,8 +365,8 @@
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="sheetName_black"
-                                            id="sheetName_black" placeholder="BeerName"
-                                            :value="settings.sheetName_black">
+                                            id="sheetName_black" placeholder="BeerName" :value="settings.sheetName_black"
+                                            minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -363,8 +375,8 @@
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="sheetName_purple"
-                                            id="sheetName_purple" placeholder="BeerName"
-                                            :value="settings.sheetName_purple">
+                                            id="sheetName_purple" placeholder="BeerName" :value="settings.sheetName_purple"
+                                            minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -372,9 +384,9 @@
                                         title="The name of the spreadsheet to which log points for the orange Tilt will be written">Orange
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="sheetName_orange"
-                                            id="sheetName_orange" placeholder="BeerName"
-                                            :value="settings.sheetName_orange">
+                                        <input type="text" class="form-control" name="sheetName_orange" id="sheetName_orange"
+                                            placeholder="BeerName" :value="settings.sheetName_orange"
+                                            minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -382,8 +394,9 @@
                                         title="The name of the spreadsheet to which log points for the blue Tilt will be written">Blue
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="sheetName_blue"
-                                            id="sheetName_blue" placeholder="BeerName" :value="settings.sheetName_blue">
+                                        <input type="text" class="form-control" name="sheetName_blue" id="sheetName_blue"
+                                            placeholder="BeerName" :value="settings.sheetName_blue"
+                                            minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -391,9 +404,9 @@
                                         title="The name of the spreadsheet to which log points for the yellow Tilt will be written">Yellow
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="sheetName_yellow"
-                                            id="sheetName_yellow" placeholder="BeerName"
-                                            :value="settings.sheetName_yellow">
+                                        <input type="text" class="form-control" name="sheetName_yellow" id="sheetName_yellow"
+                                            placeholder="BeerName" :value="settings.sheetName_yellow"
+                                            minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -401,12 +414,14 @@
                                         title="The name of the spreadsheet to which log points for the pink Tilt will be written">Pink
                                         Tilt Sheet Name</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="sheetName_pink"
-                                            id="sheetName_pink" placeholder="BeerName" :value="settings.sheetName_pink">
+                                        <input type="text" class="form-control" name="sheetName_pink" id="sheetName_pink"
+                                        placeholder="BeerName" :value="settings.sheetName_pink"
+                                        minlength="1" maxlength="24">
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
                                 </div>
                             </form>
         
@@ -422,22 +437,20 @@
         
                         <div class="card-body">
                             <p class="card-text">
-                                These settings control how TiltBridge talks to <a
-                                    href="http://www.brewersfriend.com/">Brewer's
-                                    Friend.</a> With a premium account, Brewer's Friend supports logging from gravity
-                                sensors such
-                                as the Tilt Hydrometer. To find your API key, log into your Brewer's Friend account and
-                                go
-                                to Profile > Account. Your API key will be a string of letters and numbers (not a URL).
+                                These settings control how TiltBridge talks to <a href="http://www.brewersfriend.com/">
+                                Brewer's Friend.</a> With a premium account, Brewer's Friend supports logging from gravity
+                                sensors such as the Tilt Hydrometer. To find your API key, log into your Brewer's Friend
+                                account and go to Profile > Account. Your API key will be a string of letters and numbers
+                                (not a URL).
                             </p>
                             <form action="/settings/brewersfriend/" method="POST">
                                 <div class="form-group row">
                                     <label for="brewersFriendKey" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Your Brewers Friend API key">Brewers Friend API Key</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="brewersFriendKey"
-                                            id="brewersFriendKey" placeholder="000ad814c6af391dee8f91"
-                                            :value="settings.brewersFriendKey">
+                                        <input type="text" class="form-control" name="brewersFriendKey" id="brewersFriendKey"
+                                        placeholder="000ad814c6af391dee8f91" :value="settings.brewersFriendKey"
+                                        minlength="12" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
@@ -456,12 +469,11 @@
         
                         <div class="card-body">
                             <p class="card-text">
-                                These settings control how TiltBridge talks to <a
-                                    href="http://www.brewfather.net/">Brewfather</a>
-                                With a premium account, Brewfather supports logging from gravity sensors such
-                                as the Tilt Hydrometer. To find your API key, log into your Brewfather account and go
-                                to Settings > Custom Stream. Your Stream key will be a string of letters and numbers
-                                (not a URL).
+                                These settings control how TiltBridge talks to <a href="http://www.brewfather.net/">
+                                Brewfather.</a> With a premium account, Brewfather supports logging from gravity
+                                sensors such as the Tilt Hydrometer. To find your API key, log into your Brewfather
+                                account and go to Settings > Custom Stream. Your Stream key will be a string of
+                                letters and numbers (not a URL).
                             </p>
                             <form action="/settings/brewfather/" method="POST">
                                 <div class="form-group row">
@@ -469,11 +481,13 @@
                                         title="Your Brewfather Stream key">Brewfather Stream key</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="brewfatherKey" id="brewfatherKey"
-                                            placeholder="000ad814c6af391dee8f91" :value="settings.brewfatherKey">
+                                            placeholder="000ad814c6af391dee8f91" :value="settings.brewfatherKey"
+                                            minlength="12" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
                                 </div>
                             </form>
                         </div>
@@ -489,18 +503,17 @@
                         <div class="card-body">
                             <p class="card-text">These settings control how TiltBridge talks to
                                 <a href="https://www.brewstat.us/">BrewStatus</a>. To disable pushing to BrewStatus,
-                                delete
-                                the BrewStatus URL.
+                                delete the BrewStatus URL.
                             </p>
                             <form action="/settings/brewstatus/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
                                     <label for="brewstatusURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">BrewStatus
-                                        URL</label>
+                                        title="Target BrewStatus tiltbridge URL. Delete to disable pushing to BrewStatus">
+                                        BrewStatus URL</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="brewstatusURL" id="brewstatusURL"
-                                            placeholder="https://www.brewstat.us/tilt/xxxxxxxxxx/log"
-                                            :value="settings.brewstatusURL">
+                                        <input type="url" class="form-control" name="brewstatusURL" id="brewstatusURL"
+                                            placeholder="https://www.brewstat.us/tilt/xxxxxxxxxx/log" :value="settings.brewstatusURL"
+                                            minlength="12" maxlength="254">
                                     </div>
                                 </div>
         
@@ -510,13 +523,13 @@
                                         title="How often to push data to BrewStatus (Range: 30 - 3600 seconds)">Push
                                         Frequency (s)</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="brewstatusPushEvery"
-                                            id="brewstatusPushEvery" placeholder="30"
-                                            :value="settings.brewstatusPushEvery">
+                                        <input type="number" class="form-control" name="brewstatusPushEvery"
+                                        min="30" max="3600">
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
                                 </div>
                             </form>
                         </div>
@@ -530,28 +543,32 @@
                         </div>
         
                         <div class="card-body">
-                            <p class="card-text">These settings control how TiltBridge publishes data to an
-                                <a href="https://mqtt.org/">MQTT</a> Broker. To disable pushing to the MQTT broker,
-                                delete
-                                the MQTT Broker IP. <br><br>
-        
+                            <p class="card-text">
+                                These settings control how TiltBridge publishes data to an <a href="https://mqtt.org/">
+                                MQTT</a> Broker. To disable pushing to the MQTT broker, delete the MQTT Broker IP.
+                            </p>
+                            <p class="card-text">
                                 MQTT implementation supports <a href="https://www.home-assistant.io/">Home Assistant</a>
-                                Auto Discovery of temperature and
-                                specific gravity sensors.<br><br>
-        
-                                General message payload is json and is formatted as follows: <br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;Topic: topic/tilt_color<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;Payload:
-                                {"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}<br><br>
+                                Auto Discovery of temperature and specific gravity sensors.
+                            </p>
+                            <p class="card-text">
+                                General message payload is json and is formatted as follows:
+                                <ul>
+                                    <li><strong>Topic:</strong> <pre>topic/tilt_color</pre></li>
+                                    <li><strong>Payload:</strong>
+                                        <pre>{"Color":"color","SG":"#.####","Temp":"##.#","fermunits":"SG","tempunits":"F","timeStamp":##########}</pre>
+                                    </li>
+                                </ul>
                             </p>
                             <form action="/settings/mqtt/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
-                                    <label for="mqttBrokerIP" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                    <label for="mqttBrokerHost" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="MQTT Broker Server address. Delete to disable pushing to MQTT">MQTT
                                         Broker Address</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="mqttBrokerIP" id="mqttBrokerIP"
-                                            placeholder="DNS or IP address" :value="settings.mqttBrokerIP">
+                                        <input type="text" class="form-control" name="mqttBrokerHost" id="mqttBrokerHost"
+                                            placeholder="DNS or IP address" :value="settings.mqttBrokerHost"
+                                            minlength="3" maxlength="254">
                                     </div>
                                 </div>
         
@@ -560,8 +577,9 @@
                                         title="MQTT Broker Server Port Number. Must be > 1024 and < 65535.">MQTT Broker
                                         Port</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="mqttBrokerPort"
-                                            id="mqttBrokerPort" placeholder="1883" :value="settings.mqttBrokerPort">
+                                        <input type="number" class="form-control" name="mqttBrokerPort" id="mqttBrokerPort"
+                                        placeholder="1883" :value="settings.mqttBrokerPort"
+                                        min="1024" max="65535">
                                     </div>
                                 </div>
         
@@ -570,7 +588,8 @@
                                         title="Username if using authentication for MQTT">MQTT Username</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="mqttUsername" id="mqttUsername"
-                                            placeholder="" :value="settings.mqttUsername">
+                                            placeholder="" :value="settings.mqttUsername"
+                                            minlength="4" maxlength="49">
                                     </div>
                                 </div>
         
@@ -579,7 +598,8 @@
                                         title="Password if using authentication for MQTT">MQTT Password</label>
                                     <div class="col-sm-8">
                                         <input type="password" class="form-control" name="mqttPassword"
-                                            id="mqttPassword" placeholder="" :value="settings.mqttPassword">
+                                            id="mqttPassword" placeholder="" :value="settings.mqttPassword"
+                                            minlenth="1" maxlength="64">
                                     </div>
                                 </div>
         
@@ -589,7 +609,8 @@
                                         Topic</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="mqttTopic" id="mqttTopic"
-                                            placeholder="tiltbridge" :value="settings.mqttTopic">
+                                            placeholder="tiltbridge" :value="settings.mqttTopic"
+                                            minlength="4" maxlength="29">
                                     </div>
         
                                 </div>
@@ -599,12 +620,14 @@
                                         title="How often to push data to MQTT (Range: 30 - 3600 seconds)">Push Frequency
                                         (s)</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="mqttPushEvery" id="mqttPushEvery"
-                                            placeholder="30" :value="settings.mqttPushEvery">
+                                        <input type="number" class="form-control" name="mqttPushEvery" id="mqttPushEvery"
+                                            placeholder="30" :value="settings.mqttPushEvery"
+                                            min="30" max="3600">
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
                                 </div>
                             </form>
                         </div>

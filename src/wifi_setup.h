@@ -12,6 +12,8 @@
 #include <AsyncWiFiManager.h>
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
+#include <LCBUrl.h>
+#include "http_server.h" // Make sure this include is after AsyncWiFiManager
 
 void init_wifi();
 void mdnsreset();

@@ -30,20 +30,6 @@ void configModeCallback(AsyncWiFiManager *myWiFiManager)
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
 }
 
-// Not sure if this is sufficient to test for validity
-bool isValidmDNSName(const char *mdns_name)
-{
-    if (strlen(mdns_name) > 31 || strlen(mdns_name) < 8 || mdns_name[0] == '-' || mdns_name[strlen(mdns_name) - 1] == '-')
-        return false;
-    for (int i = 0; i < strlen(mdns_name); i++)
-    {
-        // For now, we're just checking that every character in the string is alphanumeric. May need to add more validation here.
-        if (!isalnum(mdns_name[i]) && mdns_name[i] != '-')
-            return false;
-    }
-    return true;
-}
-
 void disconnect_from_wifi_and_restart()
 {
     WiFi.mode(WIFI_AP_STA);
@@ -56,10 +42,20 @@ void disconnect_from_wifi_and_restart()
 
 void mdnsreset()
 {
+    tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
     MDNS.end();
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(config.mdnsID);
+    WiFi.begin();
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(50);
+        yield();
+    }
     if (!MDNS.begin(config.mdnsID))
     {
-        Log.error(F("Error resetting MDNS responder."));
+        Log.error(F("Error resetting MDNS responder, rebooting."));
+        ESP.restart();
     }
     else
     {
@@ -70,12 +66,17 @@ void mdnsreset()
         MDNS.addService("telnet", "tcp", TELNETPORT);
 #endif
     }
+    http_server.name_reset_requested = false;
 }
 
 void init_wifi()
 {
-    AsyncWiFiManager wifiManager;      //Local initialization. Once its business is done, there is no need to keep it around
+    AsyncWiFiManager wifiManager; //Local initialization. Once its business is done, there is no need to keep it around
+#if ARDUINO_LOG_LEVEL == 6
+    wifiManager.setDebugOutput(true); // Use debug if we are at mad log level
+#else
     wifiManager.setDebugOutput(false); // In case we have a serial connection
+#endif
 
     // The main purpose of this is to set a boolean value which will allow us to know we
     // just saved a new configuration (as opposed to rebooting normally)
@@ -110,8 +111,9 @@ void init_wifi()
     // If we connected, then let's save the mDNS name
     if (shouldSaveConfig)
     {
+        LCBUrl url;
         // If the mDNS name is valid, save it.
-        if (isValidmDNSName(custom_mdns_name.getValue()))
+        if (url.isValidHostName(custom_mdns_name.getValue()))
         {
             strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
             strcpy(mdns_id, config.mdnsID);
@@ -123,7 +125,6 @@ void init_wifi()
             disconnect_from_wifi_and_restart();
         }
 
-        //        app_config.config["password"] = custom_password.getValue();
         saveConfig();
     }
 
@@ -134,6 +135,9 @@ void init_wifi()
 
     MDNS.addService("http", "tcp", WEBPORT);       // technically we should wait on this, but I'm impatient.
     MDNS.addService("tiltbridge", "tcp", WEBPORT); // for lookups
+#if DOTELNET == true
+    MDNS.addService("telnet", "tcp", TELNETPORT);
+#endif
 
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
@@ -147,6 +151,7 @@ void init_wifi()
     strcat(ip_address_url, "/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
+
     // In order to have the system register the mDNS name in DHCP table, it is necessary to flush config
     // and reinitialize Wifi connection. If this is not done, the DHCP hostname is always just registered
     // as espressif.  See: https://github.com/espressif/arduino-esp32/issues/2537
@@ -203,11 +208,11 @@ void handle_wifi_reset_presses()
         {
             delay(1);
 
-//#ifdef LCD_TFT
-//            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
-//#else
+            //#ifdef LCD_TFT
+            //            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
+            //#else
             if (wifi_reset_pressed_at != initial_press_at)
-//#endif
+            //#endif
             {
                 // The user pushed the button a second time & caused a second interrupt. Process the reset.
                 disconnect_from_wifi_and_restart();

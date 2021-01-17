@@ -37,7 +37,7 @@ void setup()
     // lcd.display_logo();  // Display the logo
 
 #ifdef LOG_LOCAL_LEVEL
-    esp_log_level_set("*", ESP_LOG_DEBUG);        // Det all components to DEBUG level
+    esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to debug level
     esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
     esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
 #endif
@@ -71,19 +71,24 @@ void loop()
 
     lcd.check_screen();
 
-    if (http_server.wifireset_requested)
+    if (http_server.wifi_reset_requested)
     {
-        Log.verbose(F("Resetting WiFi." CR));
-        http_server.wifireset_requested = false;
-        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
-        vTaskDelay(3000);
+        Log.verbose(F("Resetting WiFi configuration." CR));
+        http_server.wifi_reset_requested = false;
         disconnect_from_wifi_and_restart();
+    }
+
+    if (http_server.name_reset_requested)
+    {
+        Log.verbose(F("Resetting host name." CR));
+        http_server.name_reset_requested = false;
+        mdnsreset();
     }
 
     if (http_server.factoryreset_requested)
     {
         Log.verbose(F("Resetting to original settings." CR));
-        http_server.wifireset_requested = false;
+        http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
         deleteConfigFile();                         // Dimply delete the config file in SPIFFS
         disconnect_from_wifi_and_restart();         // Clear wifi config and restart
@@ -105,13 +110,11 @@ void loop()
         data_sender.init_mqtt();
     }
 
-    if (http_server.lcd_init_rqd)
+    if (http_server.lcd_reinit_rqd)
     {
         Log.verbose(F("Re-initializing LCD." CR));
-        http_server.lcd_init_rqd = false;
-        lcd.stop();
-        vTaskDelay(1000);
-        lcd.init();
+        http_server.lcd_reinit_rqd = false;
+        lcd.reinit();
     }
 
     yield();

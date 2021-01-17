@@ -14,6 +14,7 @@
 #include "sendData.h"
 #include "jsonconfig.h"
 
+#include <LCBUrl.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -36,14 +37,12 @@ class httpServer
 public:
     void init();
     //void handleClient();
-    bool lcd_init_rqd = false;
+    bool lcd_reinit_rqd = false;
     bool restart_requested = false;
-    bool wifireset_requested = false;
+    bool name_reset_requested = false;
+    bool wifi_reset_requested = false;
     bool factoryreset_requested = false;
-    bool settings_updated = false;
     bool mqtt_init_rqd = false;
-    bool config_updated = false;
-    bool endpoint_updated = false;
 };
 
 extern httpServer http_server;

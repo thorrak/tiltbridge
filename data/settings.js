@@ -5,8 +5,12 @@ var unloadingState = false;
 var loaded = 0; // Hold data load status
 var numReq = 1; // Number of JSON queries required
 var hostname = window.location.hostname;
+var newHostName;
 var originalHostnameConfig;
+var newtarget;
+var pingtarget;
 var hashLoc;
+var didreset = false;
 var posted = false;
 
 // Tab tracking
@@ -42,9 +46,9 @@ $('a[data-toggle="tab"]').on('shown.bs.tab', function (event) { // Actions as ta
 
     // Handle form changes
     // if (previousTab == "Xxxx") {
-        // Do something
+    // Do something
     // } else if (currentTab == "Xxx") {
-        // Do something
+    // Do something
     // }
     var url = $(event.target).attr("href") // URL of activated tab
     var hashLoc = url.substring(url.indexOf('#')); // Get hash
@@ -156,7 +160,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="brewstatusPushEvery"]').val(config.brewstatusPushEvery);
 
                 // MQTT Tab
-                $('input[name="mqttBrokerIP"]').val(config.mqttBrokerIP);
+                $('input[name="mqttBrokerHost"]').val(config.mqttBrokerHost);
                 $('input[name="mqttBrokerPort"]').val(config.mqttBrokerPort);
                 $('input[name="mqttUsername"]').val(config.mqttUsername);
                 $('input[name="mqttPassword"]').val(config.mqttPassword);
@@ -230,14 +234,14 @@ function processPost(obj) { // Disable buttons and call POST handler for form
     url = $form.attr("action");
 
     // Disable buttons, show a spinner
-    $( ".button-update" ).prop('disabled', true);
-    $( ".button-update" ).html('<i class="fa fa-spinner fa-spin"></i> Updating');
-    $( ".button-resetwifi" ).prop('disabled', true);
-    $( ".button-resetwifi" ).html('<i class="fa fa-spinner fa-spin"></i> Updating')
-    $( ".button-resetcontroller" ).prop('disabled', true);
-    $( ".button-resetcontroller" ).html('<i class="fa fa-spinner fa-spin"></i> Updating')
-    $( ".button-resetfactory" ).prop('disabled', true);
-    $( ".button-resetfactory" ).html('<i class="fa fa-spinner fa-spin"></i> Updating')
+    $(".button-update").prop('disabled', true);
+    $(".button-update").html('<i class="fa fa-spinner fa-spin"></i> Updating');
+    $(".button-resetwifi").prop('disabled', true);
+    $(".button-resetwifi").html('<i class="fa fa-spinner fa-spin"></i> Updating')
+    $(".button-resetcontroller").prop('disabled', true);
+    $(".button-resetcontroller").html('<i class="fa fa-spinner fa-spin"></i> Updating')
+    $(".button-resetfactory").prop('disabled', true);
+    $(".button-resetfactory").html('<i class="fa fa-spinner fa-spin"></i> Updating')
 
     switch (hashLoc) { // Switch here for the tab we are processing
         case "#tiltbridge":
@@ -315,8 +319,9 @@ function processControllerPost(url, obj) { // Process a post from the TiltBridge
             jQuery('#overlay').fadeIn();
             var protocol = window.location.protocol;
             var path = window.location.pathname;
-            var newpage = protocol + "//" + hostnameVal + ".local" + path + hashLoc;
-            postData(url, data, newpage);
+            newtarget = protocol + "//" + hostnameVal + ".local" + path + hashLoc;
+            pingtarget = protocol + "//" + hostnameVal + ".local/favicon.ico";
+            postData(url, data, true);
         } else {
             postData(url, data, false, false, function () {
                 jQuery('#overlay').fadeOut();
@@ -356,16 +361,16 @@ function processLocalTargetPost(url, obj) { // Handle Target URL posts
 function processGoogleSheetsPost(url, obj) { // Handle Google Sheets posts
     // Get form data
     var $form = $(obj.form),
-    scriptsURLVal = $form.find("input[name='scriptsURL']").val(),
-    scriptsEmailVal = $form.find("input[name='scriptsEmail']").val(),
-    sheetName_redVal = $form.find("input[name='sheetName_red']").val(),
-    sheetName_greenVal = $form.find("input[name='sheetName_green']").val(),
-    sheetName_blackVal = $form.find("input[name='sheetName_black']").val(),
-    sheetName_purpleVal = $form.find("input[name='sheetName_purple']").val(),
-    sheetName_orangeVal = $form.find("input[name='sheetName_orange']").val(),
-    sheetName_blueVal = $form.find("input[name='sheetName_blue']").val(),
-    sheetName_yellowVal = $form.find("input[name='sheetName_yellow']").val(),
-    sheetName_pinkVal = $form.find("input[name='sheetName_pink']").val();
+        scriptsURLVal = $form.find("input[name='scriptsURL']").val(),
+        scriptsEmailVal = $form.find("input[name='scriptsEmail']").val(),
+        sheetName_redVal = $form.find("input[name='sheetName_red']").val(),
+        sheetName_greenVal = $form.find("input[name='sheetName_green']").val(),
+        sheetName_blackVal = $form.find("input[name='sheetName_black']").val(),
+        sheetName_purpleVal = $form.find("input[name='sheetName_purple']").val(),
+        sheetName_orangeVal = $form.find("input[name='sheetName_orange']").val(),
+        sheetName_blueVal = $form.find("input[name='sheetName_blue']").val(),
+        sheetName_yellowVal = $form.find("input[name='sheetName_yellow']").val(),
+        sheetName_pinkVal = $form.find("input[name='sheetName_pink']").val();
 
     // Process post
     data = {
@@ -384,7 +389,7 @@ function processGoogleSheetsPost(url, obj) { // Handle Google Sheets posts
 }
 
 function processBrewersFriendPost(url, obj) { // Handle Brewer's Friend posts
-    
+
 
     // Get form data
     var $form = $(obj.form),
@@ -400,7 +405,7 @@ function processBrewersFriendPost(url, obj) { // Handle Brewer's Friend posts
 function processBrewfatherPost(url, obj) { // Handle Brewfather posts
     // Get form data
     var $form = $(obj.form),
-    brewfatherKeyVal = $form.find("input[name='brewfatherKey']").val();
+        brewfatherKeyVal = $form.find("input[name='brewfatherKey']").val();
 
     // Process post
     data = {
@@ -426,7 +431,7 @@ function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
 function processMqttPost(url, obj) { // Handle MQTT posts
     // Get form data
     var $form = $(obj.form),
-        mqttBrokerIPVal = $form.find("input[name='mqttBrokerIP']").val(),
+        mqttBrokerHostVal = $form.find("input[name='mqttBrokerHost']").val(),
         mqttBrokerPortVal = $form.find("input[name='mqttBrokerPort']").val(),
         mqttUsernameVal = $form.find("input[name='mqttUsername']").val(),
         mqttPasswordVal = $form.find("input[name='mqttPassword']").val(),
@@ -435,7 +440,7 @@ function processMqttPost(url, obj) { // Handle MQTT posts
 
     // Process post
     data = {
-        mqttBrokerIP: mqttBrokerIPVal,
+        mqttBrokerHost: mqttBrokerHostVal,
         mqttBrokerPort: mqttBrokerPortVal,
         mqttUsername: mqttUsernameVal,
         mqttPassword: mqttPasswordVal,
@@ -446,20 +451,15 @@ function processMqttPost(url, obj) { // Handle MQTT posts
 }
 
 function postData(url, data, newpage = false, newdata = false, callback = null) { // POST data; newpage = reload, newdata = pull new data
-    var loadNew = (newpage.length > 0);
+    settingsAlert.warning();
     $.ajax({
         url: url,
         type: 'POST',
         data: data,
         success: function (data) {
             settingsAlert.warning();
-        },
-        error: function (data) {
-            settingsAlert.warning("Settings update failed, check your entries.");
-        },
-        complete: function (data) {
-            if (loadNew) {
-                window.location.href = newpage;
+            if (newpage) {
+                waitOnReset();
             } else if (newdata) {
                 repopulatePage(true);
             }
@@ -467,20 +467,29 @@ function postData(url, data, newpage = false, newdata = false, callback = null) 
             if (typeof callback == "function") {
                 callback();
             }
+        },
+        error: function (data) {
+            jQuery('#overlay').fadeOut();
+            posted = true;
+            buttonClearDelay();
+            settingsAlert.warning("Settings update failed, check your entries.");
+        },
+        complete: function (data) {
+            //
         }
     });
 }
 
 function buttonClearDelay() { // Poll to see if entire page is loaded
     if (posted) {
-        $( ".button-update" ).prop('disabled', false);
-        $( ".button-update" ).html('Update');
-        $( ".button-resetcontroller" ).prop('disabled', true);
-        $( ".button-resetcontroller" ).html('Restart Controller');
-        $( ".button-resetwifi" ).prop('disabled', true);
-        $( ".button-resetwifi" ).html('Reset Wifi');
-        $( ".button-resetfactory" ).prop('disabled', true);
-        $( ".button-resetfactory" ).html('Factory Reset');
+        $(".button-update").prop('disabled', false);
+        $(".button-update").html('Update');
+        $(".button-resetcontroller").prop('disabled', true);
+        $(".button-resetcontroller").html('Restart Controller');
+        $(".button-resetwifi").prop('disabled', true);
+        $(".button-resetwifi").html('Reset Wifi');
+        $(".button-resetfactory").prop('disabled', true);
+        $(".button-resetfactory").html('Factory Reset');
         posted = false;
     } else {
         setTimeout(buttonClearDelay, 500); // try again in 500 milliseconds
@@ -522,4 +531,30 @@ function updateHelp(hashLoc) {
             break;
     }
     $("#contexthelp").prop("href", url)
+}
+
+function waitOnReset() {
+    // Wait for restart to complete
+    window.setInterval(function () {
+        checkServerStatus(function (semaphore) {
+            didreset = semaphore;
+            if (didreset == true) {
+                // Reset is complete
+                setTimeout(function () {
+                    window.location.href = newtarget;
+                }, 1000);
+            }
+        });
+    }, 1000);
+}
+
+function checkServerStatus(callback) {
+    var img = document.body.appendChild(document.createElement("img"));
+    img.onload = function () {
+        callback(true);
+    };
+    img.onerror = function () {
+        callback({});
+    };
+    img.src = pingtarget;
 }
