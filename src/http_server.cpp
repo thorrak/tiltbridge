@@ -46,7 +46,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             if (strcmp(name, "mdnsID") == 0) // Set hostname
             {
                 LCBUrl url;
-                if (!url.isValidHostName(value))
+                if (!url.isMDNS(value))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
@@ -91,7 +91,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             if (strcmp(name, "smoothFactor") == 0) // Set the smoothing factor
             {
                 const int val = atof(value);
-                if ((val <= 0) || (val >= 99))
+                if ((val < 0) || (val > 99))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;

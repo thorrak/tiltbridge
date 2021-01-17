@@ -154,19 +154,21 @@
                             </p>
                             <form action="/settings/controller/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
-                                    <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip" title="mDNS name (the xxxx in http://xxxx.local/) Must be 8
-                                - 31 characters.">mDNS ID</label>
+                                    <label for="mdnsID" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Host name (the xxxx in http://xxxx.local/.) Must be 8- 31 characters.">mDNS ID
+                                    </label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="mdnsID" id="mdnsID"
-                                            placeholder="tiltbridge" :value="settings.mdnsID">
+                                        <input type="text" class="form-control" name="mdnsID" 
+                                            id="mdnsID" placeholder="tiltbridge" minlength="3"
+                                            maxlength="32" :value="settings.mdnsID" required>
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="TZoffset" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Time zone offset from GMT (in hours)">Time Zone Offset</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="TZoffset" id="TZoffset"
-                                            placeholder="-5" :value="settings.TZoffset">
+                                        <input type="number" class="form-control" name="TZoffset" id="TZoffset"
+                                            placeholder="-5"  min="-12" max="14" :value="settings.TZoffset" required>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -181,14 +183,16 @@
                                 </div>
                                 <div class="form-group row">
                                     <label for="smoothFactor" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Valid range 0 to 99. Setting affects time constant of
-                                exponentially weighted moving average filter applied to specific gravity reading. In response to a step change, the filtered value should 
-                                reach steady state after ~ 5 time constants. Setting of 0 is equivalent to no averaging (filtering off) while higher values mean more averaging.
-                                Setting of 60 gives time constant of just over 5 seconds while 99 results in ~ 5 minutes.">Specific
-                                        Gravity Averaging</label>
+                                        title="Valid range 0 to 99. Setting affects time constant of exponentially weighted
+                                        moving average filter applied to specific gravity reading. In response to a step
+                                        change, the filtered value should reach steady state after ~ 5 time constants.
+                                        A setting of 0 gives no smoothing (filtering off) while higher values mean more
+                                        smoothing.  A setting of 60 gives time constant of just over 5 seconds while 99
+                                        results in ~ 5 minutes.">
+                                    Specific Gravity Averaging</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control" name="smoothFactor" id="smoothFactor"
-                                            placeholder="60" :value="settings.smoothFactor">
+                                        <input type="number" class="form-control" name="smoothFactor" id="smoothFactor"
+                                        min="0" max="99" placeholder="60" :value="settings.smoothFactor" required>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -201,11 +205,13 @@
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
-                                    <button type="submit" class="btn btn-primary button-update">Update</button>
+                                    <button type="submit" class="btn btn-primary button-update"
+                                        onclick="if(!this.form.checkValidity(this)){return (false);}">
+                                    Update</button>
                                 </div>
                             </form>
-        
-                        </div>        
+
+                        </div>
 
                     </div> <!-- TiltBridge Tab -->
 

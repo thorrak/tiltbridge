@@ -457,11 +457,6 @@ function postData(url, data, newpage = false, newdata = false, callback = null) 
         data: data,
         success: function (data) {
             settingsAlert.warning();
-        },
-        error: function (data) {
-            settingsAlert.warning("Settings update failed, check your entries.");
-        },
-        complete: function (data) {
             if (newpage) {
                 waitOnReset();
             } else if (newdata) {
@@ -471,6 +466,15 @@ function postData(url, data, newpage = false, newdata = false, callback = null) 
             if (typeof callback == "function") {
                 callback();
             }
+        },
+        error: function (data) {
+            jQuery('#overlay').fadeOut();
+            posted = true;
+            buttonClearDelay();
+            settingsAlert.warning("Settings update failed, check your entries.");
+        },
+        complete: function (data) {
+            //
         }
     });
 }
@@ -533,11 +537,9 @@ function waitOnReset() {
     window.setInterval(function () {
         checkServerStatus(function (semaphore) {
             didreset = semaphore;
-            console.log("Didreset = ", didreset);
             if (didreset == true) {
                 // Reset is complete
                 setTimeout(function () {
-                    console.log("Now loading " + newtarget);
                     window.location.href = newtarget;
                 }, 1000);
             }
@@ -546,14 +548,11 @@ function waitOnReset() {
 }
 
 function checkServerStatus(callback) {
-    console.log("Waiting for " + pingtarget);
     var img = document.body.appendChild(document.createElement("img"));
     img.onload = function () {
-        console.log("Found: " + pingtarget);
         callback(true);
     };
     img.onerror = function () {
-        console.log("Did not find: " + pingtarget)
         callback({});
     };
     img.src = pingtarget;
