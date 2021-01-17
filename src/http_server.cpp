@@ -877,7 +877,7 @@ void http_json(AsyncWebServerRequest *request)
 {
      // TODO: JSON Go rework this
     Log.verbose(F("Serving Tilt JSON." CR));
-    char tilt_data[1600];
+    char tilt_data[TILT_ALL_DATA_STRING_SIZE];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
     AsyncWebServerResponse *response = request->beginResponse(200, "application/json", tilt_data);
     request->send(response);

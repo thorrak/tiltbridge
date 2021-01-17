@@ -101,6 +101,12 @@
 }
 ```
 
+## Condensed Tilt JSON 
+
+```
+{"Purple":{"color":"Purple","temp":"64.9","tempUnit":"F","gravity":"1.0093","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":10,"sends_battery":true,"high_resolution":true,"fwVersion":0,"rssi":-52},"Orange":{"color":"Orange","temp":"66.0","tempUnit":"F","gravity":"1.0460","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":25,"sends_battery":true,"high_resolution":false,"fwVersion":0,"rssi":-68},"Black":{"color":"Black","temp":"64.9","tempUnit":"F","gravity":"1.0093","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":10,"sends_battery":true,"high_resolution":true,"fwVersion":0,"rssi":-52},"Blue":{"color":"Blue","temp":"66.0","tempUnit":"F","gravity":"1.0460","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":25,"sends_battery":true,"high_resolution":false,"fwVersion":0,"rssi":-68},"Red":{"color":"Red","temp":"64.9","tempUnit":"F","gravity":"1.0093","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":10,"sends_battery":true,"high_resolution":true,"fwVersion":0,"rssi":-52},"Yellow":{"color":"Yellow","temp":"66.0","tempUnit":"F","gravity":"1.0460","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":25,"sends_battery":true,"high_resolution":false,"fwVersion":0,"rssi":-68},"Pink":{"color":"Pink","temp":"64.9","tempUnit":"F","gravity":"1.0093","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":10,"sends_battery":true,"high_resolution":true,"fwVersion":0,"rssi":-52},"Green":{"color":"Green","temp":"66.0","tempUnit":"F","gravity":"1.0460","gsheets_name":"xxxxxxxxxxxxxxxxxxxxxxxxx","weeks_on_battery":25,"sends_battery":true,"high_resolution":false,"fwVersion":0,"rssi":-68}}
+```
+
 ## Serialize:
 
 ```

@@ -110,7 +110,7 @@ bool dataSendHandler::send_to_localTarget()
 {
     // TODO: (JSON) Come back and tighten this up
     bool result = true;
-    DynamicJsonDocument j(1550);
+    DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
     // This should look like this when sent to Fermentrack:
     // {
     //   'mdns_id': 'mDNS ID Goes Here',
@@ -118,7 +118,7 @@ bool dataSendHandler::send_to_localTarget()
     //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
     // }
 
-    char payload[1600];
+    char payload[TILT_ALL_DATA_STRING_SIZE + 128];
 
     j["mdns_id"] = config.mdnsID;
     tilt_scanner.tilt_to_json_string(payload, true);
