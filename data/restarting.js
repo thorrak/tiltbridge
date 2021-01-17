@@ -41,7 +41,6 @@ var newmDNS;
 getmdns('/settings/json/')
     .then(function (result) {
         newmDNS = result.mdnsID;
-        //console.log(newmDNS);
     })
 
 function redirect_now() {

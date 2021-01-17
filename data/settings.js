@@ -533,11 +533,9 @@ function waitOnReset() {
     window.setInterval(function () {
         checkServerStatus(function (semaphore) {
             didreset = semaphore;
-            console.log("Didreset = ", didreset);
             if (didreset == true) {
                 // Reset is complete
                 setTimeout(function () {
-                    console.log("Now loading " + newtarget);
                     window.location.href = newtarget;
                 }, 1000);
             }
@@ -546,14 +544,11 @@ function waitOnReset() {
 }
 
 function checkServerStatus(callback) {
-    console.log("Waiting for " + pingtarget);
     var img = document.body.appendChild(document.createElement("img"));
     img.onload = function () {
-        console.log("Found: " + pingtarget);
         callback(true);
     };
     img.onerror = function () {
-        console.log("Did not find: " + pingtarget)
         callback({});
     };
     img.src = pingtarget;
