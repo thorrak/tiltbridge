@@ -1191,7 +1191,7 @@ void setActionPages()
     server.on("/resetwifi/", HTTP_GET, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing /resetwifi/." CR));
         request->send(200, F("text/plain"), F("Ok."));
-        http_server.name_reset_requested = true;
+        http_server.wifi_reset_requested = true;
     });
 
     server.on("/resetapp/", HTTP_GET, [](AsyncWebServerRequest *request) {
