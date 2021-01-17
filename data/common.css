@@ -16,6 +16,11 @@ main>.container {
     padding-left: 15px;
 }
 
+.empty {
+	min-height: 17px;
+	white-space: nowrap;
+}
+
 [v-cloak] {
 	display: none;
 }
