@@ -142,9 +142,8 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             if (hostnamechanged)
             { // We reset hostname, process
                 hostnamechanged = false;
-                tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, config.mdnsID);
-                mdnsreset();
-                Log.verbose(F("POSTed new mDNSid, reset mDNS stack." CR));
+                http_server.name_reset_requested = true;
+                Log.verbose(F("POSTed new mDNSid, queued network reset." CR));
             }
             return true;
         }
@@ -1121,7 +1120,7 @@ void setActionPages()
     server.on("/resetwifi/", HTTP_GET, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing /resetwifi/." CR));
         request->send(200, F("text/plain"), F("Ok."));
-        http_server.wifireset_requested = true;
+        http_server.name_reset_requested = true;
     });
 
     server.on("/resetapp/", HTTP_GET, [](AsyncWebServerRequest *request) {

@@ -71,19 +71,17 @@ void loop()
 
     lcd.check_screen();
 
-    if (http_server.wifireset_requested)
+    if (http_server.name_reset_requested)
     {
-        Log.verbose(F("Resetting WiFi." CR));
-        http_server.wifireset_requested = false;
-        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
-        vTaskDelay(3000);
-        disconnect_from_wifi_and_restart();
+        Log.verbose(F("Resetting host name." CR));
+        http_server.name_reset_requested = false;
+        mdnsreset();
     }
 
     if (http_server.factoryreset_requested)
     {
         Log.verbose(F("Resetting to original settings." CR));
-        http_server.wifireset_requested = false;
+        http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
         deleteConfigFile();                         // Dimply delete the config file in SPIFFS
         disconnect_from_wifi_and_restart();         // Clear wifi config and restart
