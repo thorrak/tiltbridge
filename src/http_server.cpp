@@ -248,7 +248,8 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
             //
             if (strcmp(name, "localTargetURL") == 0) // Set target URL
             {
-                if ((strlen(value) > 3) && (strlen(value) < 255))
+                String isURL = value;
+                if ((strlen(value) > 3) && (strlen(value) < 255) && isURL.startsWith("http"))
                 {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
@@ -501,12 +502,12 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
                 {
-                    strlcpy(config.brewersFriendKey, value, 25);
+                    strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.brewersFriendKey, value, 25);
+                    strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -557,12 +558,12 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
             {
                 if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
                 {
-                    strlcpy(config.brewfatherKey, value, 25);
+                    strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
                 else if (strcmp(value, "") == 0 || strlen(value) == 0)
                 {
-                    strlcpy(config.brewfatherKey, value, 25);
+                    strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
                 else
@@ -688,7 +689,7 @@ bool processMqttSettings(AsyncWebServerRequest *request)
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                 }
-                else if (!url.isValidHostName(value))
+                else if (!url.isValidHostName(value) || (strlen(value) < 3 || strlen(value) > 254))
                 {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);

@@ -451,6 +451,7 @@ function processMqttPost(url, obj) { // Handle MQTT posts
 }
 
 function postData(url, data, newpage = false, newdata = false, callback = null) { // POST data; newpage = reload, newdata = pull new data
+    settingsAlert.warning();
     $.ajax({
         url: url,
         type: 'POST',
