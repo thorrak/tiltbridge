@@ -71,6 +71,13 @@ void loop()
 
     lcd.check_screen();
 
+    if (http_server.wifi_reset_requested)
+    {
+        Log.verbose(F("Resetting WiFi configuration." CR));
+        http_server.wifi_reset_requested = false;
+        disconnect_from_wifi_and_restart();
+    }
+
     if (http_server.name_reset_requested)
     {
         Log.verbose(F("Resetting host name." CR));

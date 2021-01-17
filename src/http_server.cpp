@@ -157,6 +157,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
 
 bool processCalibrationSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -185,6 +186,7 @@ bool processCalibrationSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -202,24 +204,34 @@ bool processCalibrationSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid Local Target configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save calibration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save Local Target configuration data." CR));
+            return false;
+        }
     }
 }
 
 bool processLocalTargetSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -248,6 +260,7 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -256,6 +269,7 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
                 const double val = atof(value);
                 if ((val < 15) || (val > 3600))
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else
@@ -266,19 +280,28 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid Local Target configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save local target configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save Local Target configuration data." CR));
+            return false;
+        }
     }
 }
 
 bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -310,6 +333,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -327,6 +351,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -339,6 +364,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -351,6 +377,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -363,6 +390,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -375,6 +403,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -387,6 +416,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -399,6 +429,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -411,6 +442,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -423,24 +455,34 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid Google Sheets configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save Google Sheets configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save Google Sheets configuration data." CR));
+            return false;
+        }
     }
 }
 
 bool processBrewersFriendSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -457,8 +499,7 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request)
             //
             if (strcmp(name, "brewersFriendKey") == 0) // Set Brewer's Friend Key
             {
-                if (
-                    strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
+                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
                 {
                     strlcpy(config.brewersFriendKey, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
@@ -470,24 +511,34 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid Brewer's Friend configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save Brewer's Friend configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save Brewer's configuration data." CR));
+            return false;
+        }
     }
 }
 
 bool processBrewfatherSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -516,24 +567,34 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid Brewfather configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save Brewfather configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save Brewfather configuration data." CR));
+            return false;
+        }
     }
 }
 
 bool processBrewstatusSettings(AsyncWebServerRequest *request)
 {
+    int failCount = 0;
     // Loop through all parameters
     int params = request->params();
     for (int i = 0; i < params; i++)
@@ -562,6 +623,7 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
                 }
                 else
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
@@ -570,6 +632,7 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
                 const double val = atof(value);
                 if ((val < 30) || (val > 3600))
                 {
+                    failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
                 else
@@ -580,14 +643,22 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
             }
         }
     }
-    if (saveConfig())
+    if (failCount)
     {
-        return true;
+        Log.error(F("Error: Invalid Brewstatus configuration." CR));
+        return false;
     }
     else
     {
-        Log.error(F("Error: Unable to save Brewstatus configuration data." CR));
-        return false;
+        if (saveConfig())
+        {
+            return true;
+        }
+        else
+        {
+            Log.error(F("Error: Unable to save Brewstatus configuration data." CR));
+            return false;
+        }
     }
 }
 
@@ -1120,7 +1191,7 @@ void setActionPages()
     server.on("/resetwifi/", HTTP_GET, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing /resetwifi/." CR));
         request->send(200, F("text/plain"), F("Ok."));
-        http_server.name_reset_requested = true;
+        http_server.wifi_reset_requested = true;
     });
 
     server.on("/resetapp/", HTTP_GET, [](AsyncWebServerRequest *request) {
