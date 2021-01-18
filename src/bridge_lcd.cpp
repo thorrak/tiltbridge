@@ -18,6 +18,10 @@ bridge_lcd lcd;
 #include "img/tft_logo.h" // Large logo
 #endif
 
+#ifdef LCD_TFT_ESPI
+//#include "Free_Fonts.h"
+#endif
+
 bridge_lcd::bridge_lcd()
 {
     next_screen_at = 0;
@@ -483,7 +487,8 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     starting_pixel_row = (TFT_ESPI_LINE_CLEARANCE + TFT_ESPI_FONT_SIZE) * (line - 1) + TFT_ESPI_LINE_CLEARANCE;
 
     // TFT_eSPI::drawString(const char *string, int32_t poX, int32_t poY, uint8_t font_number)
-    tft->drawString(middle_text, 0, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
-    tft->drawString(right_text, tft->width() / 2, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
+    tft->setFreeFont(FF17);
+    tft->drawString(middle_text, 0, starting_pixel_row, GFXFF);
+    tft->drawString(right_text, tft->width() / 2, starting_pixel_row, GFXFF);
 #endif
 }

@@ -34,7 +34,8 @@
 #define TFT_ESPI_FONT_SIZE 25
 #define TFT_ESPI_LINE_CLEARANCE 4
 #define TFT_ESPI_FONT_HEIGHT 2
-#define TFT_ESPI_FONT_NUMBER 4
+#define FF17 &FreeSans9pt7b
+#define GFXFF 1
 #define TILTS_PER_PAGE 4 // The actual number is one fewer than this - the first row is used for headers
 
 #endif // LCD_SSD1306
