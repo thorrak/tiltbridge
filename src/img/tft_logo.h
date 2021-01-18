@@ -4,8 +4,8 @@
 
 #ifdef LCD_TFT
 
-#ifndef TILTBRIDGE_TILTBRIDGE_LOGO_TFT_H
-#define TILTBRIDGE_TILTBRIDGE_LOGO_TFT_H
+#ifndef _TFT_LOGO_H
+#define _TFT_LOGO_H
 
 /* GIMP RGBA C-Source image dump (TiltBridge Logo.c) */
 
@@ -4340,10 +4340,6 @@ const unsigned short	 pixel_data[288 * 240 * 2 + 1] PROGMEM;
 },
 };
 
+#endif // _TFT_LOGO_H
 
-
-
-
-#endif //TILTBRIDGE_TILTBRIDGE_LOGO_TFT_H
-
-#endif //LCD_TFT
+#endif // LCD_TFT
