@@ -143,7 +143,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             { // We reset hostname, process
                 hostnamechanged = false;
                 http_server.name_reset_requested = true;
-                Log.verbose(F("POSTed new mDNSid, queued network reset." CR));
+                Log.notice(F("POSTed new mDNSid, queued network reset." CR));
             }
             return true;
         }
@@ -1250,6 +1250,5 @@ void httpServer::init()
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
 
     server.begin();
-    Log.notice(F("Async HTTP server started." CR));
-    Log.verbose(F("Open: http://%s.local/ to view application." CR), WiFi.getHostname());
+    Log.notice(F("HTTP server started. Open: http://%s.local/ to view application." CR), WiFi.getHostname());
 }
