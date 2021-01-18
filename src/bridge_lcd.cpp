@@ -40,7 +40,7 @@ void bridge_lcd::display_logo()
         (64 - oled_logo_height) / 2,
         oled_logo_width,
         oled_logo_height,
-        tiltbridge_logo_bits);
+        oled_logo_bits);
     display();
 #endif
 
