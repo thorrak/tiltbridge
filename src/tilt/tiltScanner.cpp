@@ -54,6 +54,8 @@ void tiltScanner::init()
     pBLEScan->setActiveScan(false);
     pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
     pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
+
+    tilt_scanner.scan();
 }
 
 void tiltScanner::deinit()

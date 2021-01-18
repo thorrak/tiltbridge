@@ -6,7 +6,6 @@
 
 dataSendHandler data_sender; // Global data sender
 
-WiFiClient client;
 WiFiClient wClient;
 MQTTClient mqttClient(256);
 
@@ -35,9 +34,9 @@ void dataSendHandler::init()
 void dataSendHandler::setClock()
 {
     Log.notice(F("Entering blocking loop to get NTP time."));
+    configTime(GMT, DST, TIMESERVER);
     time_t nowSecs = time(nullptr);
     time_t startSecs = time(nullptr);
-    configTime(GMT, DST, TIMESERVER);
     int cycle = 0;
     while (nowSecs < EPOCH_1_1_2019)
     {
@@ -224,7 +223,7 @@ bool dataSendHandler::send_to_google()
                 serializeJson(payload, payload_string);
 
                 http.useHTTP10(true); // Have to turn off chunked transfer encoding to parse the stream
-                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS); // DEBUG
+                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
                 http.begin(*secureClient, config.scriptsURL);
                 http.addHeader(F("Content-Type"), F("application/json")); // Specify content-type header
 
@@ -372,6 +371,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
+            WiFiClient client;
             //  1 = SUCCESS
             //  0 = FAILED
             // -1 = TIMED_OUT

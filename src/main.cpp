@@ -32,10 +32,6 @@ void setup()
     init_wifi(); // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
 
-    // I kind of want to leave the WiFi info on screen longer here instead of the logo. The logo will display often
-    // enough as-is.
-    // lcd.display_logo();  // Display the logo
-
 #ifdef LOG_LOCAL_LEVEL
     esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to debug level
     esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
@@ -44,30 +40,30 @@ void setup()
 
     // Initialize the BLE scanner
     tilt_scanner.init();
-    tilt_scanner.scan();
-    data_sender.init();      // Initialize the data sender
-    data_sender.init_mqtt(); //Initialize the mqtt server connection if configured.
-
-    // Once all this is done, we'll wait until the initial scan completes.
+    // Wait until the initial scan completes
     tilt_scanner.wait_until_scan_complete();
-    http_server.init();
 
-    memCheck.attach(30, printMem);  // Memory debug print
+    //data_sender.init();     // Initialize the data sender
+    http_server.init();     // Initialize the web server
+
+    memCheck.attach(30, printMem);  // Memory debug print on timer
 }
 
 void loop()
 {
     serialLoop();   // Service telnet and console commands
 
-    // The scans are done asynchronously, so we'll poke the scanner to see if a new scan needs to be triggered.
     if (tilt_scanner.scan())
     {
+        // The scans are done asynchronously, so we'll poke the scanner to see if
+        // a new scan needs to be triggered.
+
         // If we need to do anything when a new scan is started, trigger it here.
     }
 
     // handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
-    data_sender.process();
+    //data_sender.process();
 
     lcd.check_screen();
 
@@ -116,6 +112,4 @@ void loop()
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
     }
-
-    yield();
 }
