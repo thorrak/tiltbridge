@@ -26,12 +26,6 @@
 #include <HTTPClient.h>
 #include <LCBUrl.h>
 
-#define TIMESERVER "pool.ntp.org", "time.nist.gov"
-#define GMT 0   // Offset from GMT
-#define DST 0   // DST offset
-static const int __attribute__((unused)) EPOCH_1_1_2019 = 1546300800; // 1546300800 =  01/01/2019 @ 12:00am (UTC)
-static uint32_t __attribute__((unused)) lastNTPUpdate = 0;
-
 #define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60 * 1000) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60 * 1000)     // 15 minute delay between pushes to Brewfather
@@ -74,7 +68,6 @@ private:
     uint64_t send_checkin_at;
 #endif
 
-    void setClock();
     bool send_to_localTarget();
     bool send_to_brewstatus();
     bool send_to_google();

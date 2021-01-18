@@ -27,45 +27,7 @@ dataSendHandler::dataSendHandler()
 
 void dataSendHandler::init()
 {
-    Log.verbose(F("DEBUG: Entered dataSendHandler::init()." CR));
-    setClock();
     init_mqtt();
-}
-
-void dataSendHandler::setClock()
-{
-    Log.notice(F("Entering blocking loop to get NTP time."));
-    time_t nowSecs = time(nullptr);
-    time_t startSecs = time(nullptr);
-    configTime(GMT, DST, TIMESERVER);
-    int cycle = 0;
-    while (nowSecs < EPOCH_1_1_2019)
-    {
-        if (nowSecs - startSecs > 9)
-        {
-            if (cycle > 9)
-            {
-                Log.warning(F(CR "Unable to get time hack from %s, rebooting." CR), TIMESERVER);
-                ESP.restart();
-            }
-            if (Log.getLevel())
-                printCR(true);
-            Log.verbose(F("Re-requesting time hack."));
-            configTime(GMT, 0, TIMESERVER);
-            startSecs = time(nullptr);
-            cycle++;
-        }
-        if (Log.getLevel())
-            printDot(true);
-        delay(1000);
-        nowSecs = time(nullptr);
-    }
-    if (Log.getLevel())
-        printCR(true);
-    Log.notice(F("NTP time set." CR));
-    struct tm timeinfo;
-    gmtime_r(&nowSecs, &timeinfo);
-    lastNTPUpdate = millis();
 }
 
 void dataSendHandler::init_mqtt()
@@ -224,7 +186,7 @@ bool dataSendHandler::send_to_google()
                 serializeJson(payload, payload_string);
 
                 http.useHTTP10(true); // Have to turn off chunked transfer encoding to parse the stream
-                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS); // DEBUG
+                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
                 http.begin(*secureClient, config.scriptsURL);
                 http.addHeader(F("Content-Type"), F("application/json")); // Specify content-type header
 
@@ -240,6 +202,7 @@ bool dataSendHandler::send_to_google()
 #else
                     deserializeJson(doc, http.getStream());
 #endif
+                    Serial.println(doc["doclongurl"].as<String>()); // DEBUG: TODO:
                 } // Response code = 200
                 else
                 {
@@ -249,7 +212,7 @@ bool dataSendHandler::send_to_google()
                         httpResponseCode,
                         http.getString().c_str());
                     http.end();
-                    result = false;        
+                    result = false;
                 } // Response code != 200
             } // Check we have a sheet name for the color
         } // Check scanner is loaded for color
@@ -358,7 +321,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
             if (lcburl.getScheme() == "http")
                 validTarget = true;
         }
-        
+
         if (validTarget)
         {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
@@ -482,14 +445,12 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         {
             Log.error(F("Invalid target: %s." CR), url);
         }
-        
     }
     else
     {
         Log.notice(F("No URL provided, or no data to send." CR));
         retVal = false;
     }
-    
     return retVal;
 }
 

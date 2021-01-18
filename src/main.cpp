@@ -25,7 +25,6 @@ void setup()
     loadConfig();
 
     Log.verbose(F("Initializing LCD." CR));
-    // Handle setting the display up
     lcd.init(); // Initialize the display
 
     Log.verbose(F("Initializing WiFi." CR));
@@ -38,12 +37,11 @@ void setup()
     esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
 #endif
 
-    // Initialize the BLE scanner
-    tilt_scanner.init();
-    // Wait until the initial scan completes
-    tilt_scanner.wait_until_scan_complete();
+    Log.verbose(F("Initializing scanner." CR));
+    tilt_scanner.init();                        // Initialize the BLE scanner
+    tilt_scanner.wait_until_scan_complete();    // Wait until the initial scan completes
 
-    //data_sender.init();     // Initialize the data sender
+    data_sender.init();     // Initialize the data sender
     http_server.init();     // Initialize the web server
 
     memCheck.attach(30, printMem);  // Memory debug print on timer
@@ -63,7 +61,7 @@ void loop()
 
     // handle_wifi_reset_presses();
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
-    //data_sender.process();
+    data_sender.process();
 
     lcd.check_screen();
 
