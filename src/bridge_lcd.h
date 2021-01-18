@@ -22,18 +22,7 @@
 // For the LCD_TFT displays, we're connecting via SPI
 #include <SPI.h>
 #include <TFT_eSPI.h>
-/*
-#include <Adafruit_GFX.h>
-#include <Adafruit_ILI9341.h>
 
-// Pin definitions for TFT displays
-#define TFT_CS 14  //for D32 Pro
-#define TFT_DC 27  //for D32 Pro
-#define TFT_RST 33 //for D32 Pro
-#define TS_CS 12   //for D32 Pro
-#define TFT_BACKLIGHT 32
-*/
-// TODO - Determine if I can actually use 15 tilts/display
 #define TILTS_PER_PAGE 15 // The actual number is one fewer than this - the first row is used for headers
 #define TILT_FONT_SIZE 2
 
@@ -45,14 +34,14 @@
 #define TFT_ESPI_FONT_SIZE 25
 #define TFT_ESPI_LINE_CLEARANCE 4
 #define TFT_ESPI_FONT_HEIGHT 2
-#define TFT_ESPI_FONT_NUMBER 4
+#define FF17 &FreeSans9pt7b
+#define GFXFF 1
 #define TILTS_PER_PAGE 4 // The actual number is one fewer than this - the first row is used for headers
 
-#endif
+#endif // LCD_SSD1306
 
 #define SCREEN_TILT 0
-#define SCREEN_FERMENTRACK 1
-
+#define SCREEN_LOGO 1
 #define SCREEN_MAX 2
 
 class bridge_lcd
@@ -92,12 +81,11 @@ private:
     TFT_eSPI *tft;
 #elif defined(LCD_TFT_ESPI)
     TFT_eSPI *tft;
-#endif
+#endif // LCD_SSD1306
+
     uint8_t tilt_pages_in_run; // Number of pages in the current loop through the active tilts (# active tilts / 3)
     uint8_t tilt_on_page;      // The page number currently being displayed
-
     uint8_t on_screen;
-
     uint64_t next_screen_at;
 
 #ifdef LCD_SSD1306
@@ -106,4 +94,4 @@ private:
 };
 
 extern bridge_lcd lcd;
-#endif //TILTBRIDGE_BRIDGE_LCD_H
+#endif // TILTBRIDGE_BRIDGE_LCD_H

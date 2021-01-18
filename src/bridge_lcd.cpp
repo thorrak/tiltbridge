@@ -6,19 +6,20 @@
 #include "jsonconfig.h"
 #include <WiFi.h>
 
-bridge_lcd lcd;
-
 #ifdef LCD_SSD1306
 #include <Wire.h>
-#include "img/oled_logo.h" // We're only using this style of logo for the OLED variant
 #endif
 
-#ifdef LCD_TFT
-#include "img/tiltbridge_logo_tft.h" // The (large) TiltBridge logo
+bridge_lcd lcd;
+
+#if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
+#include "img/oled_logo.h" // Small logo
+#elif defined LCD_TFT
+#include "img/tft_logo.h" // Large logo
 #endif
 
 #ifdef LCD_TFT_ESPI
-#include "img/oled_logo.h" // We're only using this style of logo for the OLED variant
+//#include "Free_Fonts.h"
 #endif
 
 bridge_lcd::bridge_lcd()
@@ -27,28 +28,38 @@ bridge_lcd::bridge_lcd()
     on_screen = 0; // Initialize to 0 (AKA screen_tilt)
     tilt_on_page = 0;
     tilt_pages_in_run = 0;
-
-} // bridge_lcd
+}
 
 void bridge_lcd::display_logo()
 {
-#ifdef LCD_SSD1306
-    // XBM files are C source bitmap arrays, and can be created in GIMP (and then read/imported using text editors)
     clear();
-    oled_display->drawXbm((128 - tiltbridge_logo_width) / 2, (64 - tiltbridge_logo_height) / 2, tiltbridge_logo_width, tiltbridge_logo_height, tiltbridge_logo_bits);
+
+#ifdef LCD_SSD1306
+    oled_display->drawXbm(
+        (128 - oled_logo_width) / 2,
+        (64 - oled_logo_height) / 2,
+        oled_logo_width,
+        oled_logo_height,
+        tiltbridge_logo_bits);
     display();
 #endif
 
 #ifdef LCD_TFT
-    //print_line("Logo goes here.", "", 1);
-    clear();
-    yield();
-    tft->pushImage((320 - 288) / 2, 0, gimp_image.width, gimp_image.height, gimp_image.pixel_data);
+    tft->pushImage(
+        (320 - 288) / 2, 0,
+        gimp_image.width,
+        gimp_image.height,
+        gimp_image.pixel_data);
 #endif
 
 #ifdef LCD_TFT_ESPI
-    clear();
-    tft->drawXBitmap((tft->width() - tiltbridge_logo_width) / 2, (tft->height() - tiltbridge_logo_height) / 2, tiltbridge_logo_bits, tiltbridge_logo_width, tiltbridge_logo_height, TFT_WHITE);
+    tft->drawXBitmap(
+        (tft->width() - oled_logo_width) / 2,
+        (tft->height() - oled_logo_height) / 2,
+        oled_logo_bits,
+        oled_logo_width,
+        oled_logo_height,
+        TFT_WHITE);
     display();
 #endif
 }
@@ -61,9 +72,9 @@ void bridge_lcd::check_screen()
     }
 }
 
-// display_next returns the number of seconds to "hold" on this screen
 uint8_t bridge_lcd::display_next()
 {
+    // Returns the number of seconds to "hold" on this screen
     uint8_t active_tilts = 0;
 
     if (on_screen == SCREEN_TILT)
@@ -94,7 +105,7 @@ uint8_t bridge_lcd::display_next()
 
         return 10; // Display this screen for 10 seconds
     }
-    else if (on_screen == SCREEN_FERMENTRACK)
+    else if (on_screen == SCREEN_LOGO)
     {
         display_logo();
         on_screen++;
@@ -114,14 +125,15 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number)
 
     // Clear out the display before we start printing to it
     clear();
-    yield();
 
     // Display IP address on bottom row if using Lolin TFT
     uint8_t header_row = 1;
     uint8_t first_tilt_row_offset = 2;
+
 #ifdef LCD_TFT
     tft->setFreeFont(&FreeSans9pt7b);
-    // Display IP address or indicate if not connected.
+
+    // Display IP address or indicate if not connected
     if (WiFi.status() == WL_CONNECTED)
     {
         char ip[16];
@@ -160,7 +172,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number)
 
 void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap_pass)
 {
-    // This screen is displayed when the user first plugs in an unconfigured TiltBridge
+    // Displayed when the user first plugs in an unconfigured TiltBridge
     clear();
     print_line("To configure, connect to", "", 1);
     print_line("this AP via WiFi:", "", 2);
@@ -171,13 +183,15 @@ void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap
 
 void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *ip_address_url)
 {
-    // This screen is displayed at startup when the TiltBridge is configured to connect to WiFi
+    // Displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
+
 #ifdef LCD_TFT_ESPI
     print_line("Access TiltBridge at:", "", 1);
 #else
     print_line("Access your TiltBridge at:", "", 1);
 #endif
+
     print_line(mdns_url, "", 2);
     print_line(ip_address_url, "", 3);
     display();
@@ -185,9 +199,10 @@ void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *i
 
 void bridge_lcd::display_wifi_reset_screen()
 {
-    // When the user presses the "boot" switch, this screen appears. If the user presses the boot button a second time
-    // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
-    // configuration AP at startup
+    // When the user presses the "boot" switch, this screen appears. If the
+    // user presses the boot button a second time while this screen is
+    // displayed, WiFi settings are cleared and the TiltBridge will return
+    // to displaying the configuration AP at startup
     clear();
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
@@ -208,9 +223,10 @@ void bridge_lcd::display_wifi_reset_screen()
 
 void bridge_lcd::display_ota_update_screen()
 {
-    // When the user presses the "boot" switch, this screen appears. If the user presses the boot button a second time
-    // while this screen is displayed, WiFi settings are cleared and the TiltBridge will return to displaying the
-    // configuration AP at startup
+    // When the user presses the "boot" switch, this screen appears. If the
+    // user presses the boot button a second time while this screen is
+    // displayed, WiFi settings are cleared and the TiltBridge will return
+    // to displaying the configuration AP at startup
 #ifndef DISABLE_OTA_UPDATES
     clear();
     print_line("The TiltBridge firmware is", "", 1);
@@ -223,8 +239,9 @@ void bridge_lcd::display_ota_update_screen()
 
 void bridge_lcd::display_wifi_disconnected_screen()
 {
-    // If the user's WiFi disconnects for any reason, it can take up to 20 seconds to reconnect. We'll print a message
-    // letting the user know while we attempt to reconnect.
+    // If the user's WiFi disconnects for any reason, it can take up to
+    // 20 seconds to reconnect. We'll print a message letting the user
+    // know while we attempt to reconnect.
     clear();
     print_line("The TiltBridge has lost", "", 1);
     print_line("connection to your WiFi.", "", 2);
@@ -235,8 +252,9 @@ void bridge_lcd::display_wifi_disconnected_screen()
 
 void bridge_lcd::display_wifi_reconnect_failed()
 {
-    // If the user's WiFi disconnects for any reason, it can take up to 20 seconds to reconnect. We'll print a message
-    // letting the user know while we attempt to reconnect.
+    // If the user's WiFi disconnects for any reason, it can take up to
+    // 20 seconds to reconnect. We'll print a message letting the user
+    // know while we attempt to reconnect.
     clear();
     print_line("The TiltBridge has lost", "", 1);
     print_line("connection to your WiFi.", "", 2);
@@ -258,13 +276,27 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
     print_line(tilt->color_name().c_str(), temp, gravity, line);
 
 #ifdef LCD_TFT
-    if (tilt->text_color()==0xFFFF)
+    if (tilt->text_color() == 0xFFFF)
     {
-        tft->fillRect(tft->textWidth(tilt->color_name().c_str(),GFXFF)+25, (tft->fontHeight(GFXFF)) * (line - 1) + 2, 30, tft->fontHeight(GFXFF) - 8, 0x4228);
+        tft->fillRect(
+            tft->textWidth(
+                tilt->color_name().c_str(),
+                GFXFF) + 25,
+                (tft->fontHeight(GFXFF)) * (line - 1) + 2,
+                30,
+                tft->fontHeight(GFXFF) - 8,
+                0x4228);
     }
     else
     {
-        tft->fillRect(tft->textWidth(tilt->color_name().c_str(),GFXFF)+25, (tft->fontHeight(GFXFF)) * (line - 1) + 2, 30, tft->fontHeight(GFXFF) - 8, tilt->text_color());    
+        tft->fillRect(
+            tft->textWidth(
+                tilt->color_name().c_str(),
+                GFXFF) + 25,
+                (tft->fontHeight(GFXFF)) * (line - 1) + 2,
+                30,
+                tft->fontHeight(GFXFF) - 8,
+                tilt->text_color());
     }
 #endif
 
@@ -276,7 +308,8 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
 #ifdef LCD_SSD1306
 bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin)
 {
-    // This allows us to do LCD autodetection (and by extension, support multiple OLED ESP32 boards
+    // This allows us to do LCD autodetection (and by extension, support
+    // multiple OLED ESP32 boards
     byte error;
 
     Wire.begin(sda_pin, scl_pin);
@@ -295,8 +328,8 @@ bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin)
 void bridge_lcd::init()
 {
 #ifdef LCD_SSD1306
-
-    // We're currently supporting three sets of hardware - The ESP32 "OLED" board, TTGO Boards, and the TiltBridge sleeve
+    // We're currently supporting three sets of hardware - The ESP32 "OLED"
+    // board, TTGO Boards, and the TiltBridge sleeve
     if (i2c_device_at_address(0x3c, 5, 4))
     {
         // This is the ESP32 "OLED" board
@@ -304,17 +337,16 @@ void bridge_lcd::init()
     }
     else if (i2c_device_at_address(0x3c, 21, 22))
     {
-        // This is the TiltBridge "sleeve"
-        // Address, SDA, SCK
+        // This is the TiltBridge "sleeve": address, SDA, SCK
         oled_display = new SSD1306(0x3c, 21, 22);
     }
     else
     {
         // For the "TTGO" style OLED shields, you have to power a pin to run the backlight.
         pinMode(16, OUTPUT);
-        digitalWrite(16, LOW); // set GPIO16 low to reset OLED
+        digitalWrite(16, LOW); // Set GPIO16 low to reset OLED
         delay(50);
-        digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
+        digitalWrite(16, HIGH); // While OLED is running, must set GPIO16 in high
         if (i2c_device_at_address(0x3c, 4, 15))
         {
             oled_display = new SSD1306(0x3c, 4, 15);
@@ -337,10 +369,11 @@ void bridge_lcd::init()
     tft->setFreeFont(&FreeSans12pt7b);
     tft->setSwapBytes(true);
     tft->initDMA();
+
 #ifdef LCD_TFT_M5_STACK
     // +4 "mirrors" the text (supposedly)
     tft->setRotation(0);
-#else
+#else // ! LCD_TFT_M5_STACK
     if (config.invertTFT)
     {
         tft->setRotation(1);
@@ -349,16 +382,17 @@ void bridge_lcd::init()
     {
         tft->setRotation(3);
     }
-#endif
+#endif // ! LCD_TFT_M5_STACK
+
     tft->fillScreen(TFT_BLACK);
     tft->setTextColor(TFT_WHITE, TFT_BLACK);
 
-#if defined(TFT_BACKLIGHT)
+#ifdef TFT_BACKLIGHT
     pinMode(TFT_BACKLIGHT, OUTPUT);
     digitalWrite(TFT_BACKLIGHT, HIGH);
-#endif
+#endif // TFT_BACKLIGHT
 
-#endif
+#endif // LCD_TFT
 
 #ifdef LCD_TFT_ESPI
     tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
@@ -366,7 +400,7 @@ void bridge_lcd::init()
     tft->fontHeight(TFT_ESPI_FONT_HEIGHT);
     tft->setRotation(1);
     tft->fillScreen(TFT_BLACK);
-#endif
+#endif // LCD_TFT_ESPI
 }
 
 void bridge_lcd::reinit()
@@ -397,6 +431,8 @@ void bridge_lcd::clear()
 #ifdef LCD_TFT_ESPI
     tft->fillScreen(TFT_BLACK);
 #endif
+
+    yield();
 }
 
 void bridge_lcd::display()
@@ -451,7 +487,8 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     starting_pixel_row = (TFT_ESPI_LINE_CLEARANCE + TFT_ESPI_FONT_SIZE) * (line - 1) + TFT_ESPI_LINE_CLEARANCE;
 
     // TFT_eSPI::drawString(const char *string, int32_t poX, int32_t poY, uint8_t font_number)
-    tft->drawString(middle_text, 0, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
-    tft->drawString(right_text, tft->width() / 2, starting_pixel_row, TFT_ESPI_FONT_NUMBER);
+    tft->setFreeFont(FF17);
+    tft->drawString(middle_text, 0, starting_pixel_row, GFXFF);
+    tft->drawString(right_text, tft->width() / 2, starting_pixel_row, GFXFF);
 #endif
 }
