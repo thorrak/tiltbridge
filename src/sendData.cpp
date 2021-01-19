@@ -96,7 +96,7 @@ bool dataSendHandler::send_to_localTarget()
     // TODO: (JSON) Come back and tighten this up
     bool result = true;
     DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-    char payload[TILT_ALL_DATA_STRING_SIZE + 128];
+    char payload[TILT_ALL_DATA_SIZE + 128];
 
     j["mdns_id"] = config.mdnsID;
     tilt_scanner.tilt_to_json_string(payload, true);

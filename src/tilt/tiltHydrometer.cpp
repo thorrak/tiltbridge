@@ -139,6 +139,31 @@ std::string tiltHydrometer::gsheets_beer_name()
     }
 }
 
+std::string tiltHydrometer::gsheets_link_name()
+{
+    switch (m_color)
+    {
+    case TILT_COLOR_RED:
+        return config.link_red;
+    case TILT_COLOR_GREEN:
+        return config.link_green;
+    case TILT_COLOR_BLACK:
+        return config.link_black;
+    case TILT_COLOR_PURPLE:
+        return config.link_purple;
+    case TILT_COLOR_ORANGE:
+        return config.link_orange;
+    case TILT_COLOR_BLUE:
+        return config.link_blue;
+    case TILT_COLOR_YELLOW:
+        return config.link_yellow;
+    case TILT_COLOR_PINK:
+        return config.link_pink;
+    default:
+        return "";
+    }
+}
+
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
     double d_temp;
@@ -327,6 +352,7 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["tempUnit"] = is_celsius() ? "C" : "F";
     j["gravity"] = converted_gravity(use_raw_gravity);
     j["gsheets_name"] = gsheets_beer_name();
+    j["gsheets_link"] = gsheets_link_name();
     j["weeks_on_battery"] = weeks_since_last_battery_change;
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
