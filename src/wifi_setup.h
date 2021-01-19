@@ -9,7 +9,7 @@
 #include "tiltBridge.h"
 #include "jsonconfig.h"
 #include <Arduino.h>
-#include <AsyncWiFiManager.h>
+#include <WiFiManager.h>
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
 #include <LCBUrl.h>

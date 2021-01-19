@@ -54,16 +54,14 @@ void tiltScanner::init()
     pBLEScan->setActiveScan(false);
     pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
     pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
+
+    tilt_scanner.scan();
 }
 
 void tiltScanner::deinit()
 {
-    // pBLEScan->stop();
     wait_until_scan_complete();
-    // NimBLE fails to reinitialize after a call to deinit() (but thankfully it's light enough weight that we don't
-    // have to call deinit to use https any longer)
-    // https://github.com/h2zero/NimBLE-Arduino/issues/23
-    // NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
+    NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
 }
 
 bool tiltScanner::scan()

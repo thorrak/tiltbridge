@@ -34,6 +34,7 @@ void printTimestamp(Print *_logOutput)
     char c[12];
     sprintf(c, "%10lu ", millis());
     _logOutput->print(c);
+    Serial.flush();
 }
 
 size_t printDot()
@@ -43,7 +44,7 @@ size_t printDot()
 
 size_t printDot(bool safe)
 {
-#ifndef ARDUINO_LOG_LEVEL
+#ifdef ARDUINO_LOG_LEVEL
     return SERIAL.print(F("."));
 #else
     return 0;
@@ -57,7 +58,7 @@ size_t printChar(const char *chr)
 
 size_t printChar(bool safe, const char *chr)
 {
-#ifndef ARDUINO_LOG_LEVEL
+#ifdef ARDUINO_LOG_LEVEL
     return SERIAL.println(chr);
 #else
     return 0;
@@ -71,7 +72,7 @@ size_t printCR()
 
 size_t printCR(bool safe)
 {
-#ifndef ARDUINO_LOG_LEVEL
+#ifdef ARDUINO_LOG_LEVEL
     return SERIAL.println();
 #else
     return 0;

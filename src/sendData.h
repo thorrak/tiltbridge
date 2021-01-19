@@ -8,11 +8,15 @@
 #include "serialhandler.h"
 #include "tiltBridge.h"
 #include "wifi_setup.h"
-#include "SecureWithRedirects.h"
 #include "jsonconfig.h"
 
 #include <ctime>
 #include <ArduinoJson.h>
+
+#if (ARDUINO_LOG_LEVEL == 6)
+#include <StreamUtils.h>
+#endif
+
 #include <WiFi.h>
 #include <MQTT.h>
 #include <WiFiMulti.h>
@@ -22,7 +26,8 @@
 #include <HTTPClient.h>
 #include <LCBUrl.h>
 
-#define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
+#define GSCRIPTS_DELAY (10000)       // DEBUG: TODO:  I cranked this up for testing.
+// #define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60 * 1000) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60 * 1000)     // 15 minute delay between pushes to Brewfather
 
@@ -32,6 +37,8 @@
 #define BREWSTATUS_MIN_URL_LENGTH 12
 #define GSCRIPTS_MIN_URL_LENGTH 24
 #define GSCRIPTS_MIN_EMAIL_LENGTH 7
+
+#define GSHEETS_JSON 512
 
 // This is me being simplifying the reuse of code. The formats for Brewers Friend and Brewfather are basically the same
 // so I'm combining them together in one function
@@ -59,9 +66,6 @@ private:
     // This is for a "heartbeat" checkin to fermentrack.com. Unless you are me (thorrak) don't enable this, please.
     uint64_t send_checkin_at;
 #endif
-
-    void setClock();
-    static bool send_to_url_https(const char *url, const char *apiKey, const char *dataToSend, const char *contentType);
 
     bool send_to_localTarget();
     bool send_to_brewstatus();

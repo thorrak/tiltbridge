@@ -6,6 +6,7 @@
 
 dataSendHandler data_sender; // Global data sender
 
+WiFiClient client;
 WiFiClient wClient;
 MQTTClient mqttClient(256);
 
@@ -24,25 +25,9 @@ dataSendHandler::dataSendHandler()
     mqtt_alreadyinit = false;
 }
 
-void dataSendHandler::setClock()
-{
-    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-
-    time_t nowSecs = time(nullptr);
-    while (nowSecs < 8 * 3600 * 2)
-    {
-        delay(500);
-        yield();
-        nowSecs = time(nullptr);
-    }
-
-    struct tm timeinfo;
-    gmtime_r(&nowSecs, &timeinfo);
-}
-
 void dataSendHandler::init()
 {
-    setClock();
+    init_mqtt();
 }
 
 void dataSendHandler::init_mqtt()
@@ -111,13 +96,6 @@ bool dataSendHandler::send_to_localTarget()
     // TODO: (JSON) Come back and tighten this up
     bool result = true;
     DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-    // This should look like this when sent to Fermentrack:
-    // {
-    //   'mdns_id': 'mDNS ID Goes Here',
-    //   'tilts': {'color': 'Purple', 'temp': 74, 'gravity': 1.043},
-    //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
-    // }
-
     char payload[TILT_ALL_DATA_STRING_SIZE + 128];
 
     j["mdns_id"] = config.mdnsID;
@@ -165,95 +143,87 @@ bool dataSendHandler::send_to_brewstatus()
     return result;
 }
 
-// For sending data to Google Scripts, we have to use secure_client but otherwise we're doing the same thing as before.
-bool dataSendHandler::send_to_url_https(const char *url, const char *apiKey, const char *dataToSend, const char *contentType)
-{
-    // This handles the generic act of sending data to an endpoint
-    bool result = false;
-
-    if (strlen(dataToSend) > 5)
-    {
-        Log.verbose(("[HTTPS] Sending data to: %s." CR), url);
-        Log.verbose(F("Data to send: %s" CR), dataToSend);
-        Log.verbose(F("[HTTPS] Pre-deinit RAM left %d" CR), esp_get_free_heap_size());
-
-        // We're severely memory starved. Deinitialize bluetooth and free the related memory
-        // NOTE - This is not strictly true under NimBLE. Deinit now only waits for a scan to complete
-        tilt_scanner.deinit();
-        yield();
-
-        Log.verbose(F("[HTTPS] Post-deinit RAM left %d" CR), esp_get_free_heap_size());
-        Log.verbose(F("[HTTPS] Calling SWR::send_with_redirects." CR));
-
-        SecureWithRedirects SWR(url, apiKey, dataToSend, contentType);
-        result = SWR.send_with_redirects();
-        SWR.end();
-        yield();
-        Log.verbose(F("[HTTPS] Post-SWR RAM left %d" CR), esp_get_free_heap_size());
-
-        tilt_scanner.init();
-        yield();
-        Log.verbose(F("[HTTPS] Post-Reinit RAM left %d" CR), esp_get_free_heap_size());
-    }
-    return result;
-}
-
 bool dataSendHandler::send_to_google()
 {
-    // TODO: (JSON) Come back and tighten this up
     HTTPClient http;
-    StaticJsonDocument<750> payload;
-
+    WiFiClientSecure secureClient;
+    int httpResponseCode;
+    int numSent = 0;
     bool result = true;
 
-    // There are two configuration options which are mandatory when using the Google Sheets integration
-    if (strlen(config.scriptsURL) <= GSCRIPTS_MIN_URL_LENGTH ||
-        strlen(config.scriptsEmail) < GSCRIPTS_MIN_EMAIL_LENGTH)
-    {
-        // Log.verbose(D("Either scriptsURL or scriptsEmail not populated. Returning." CR));
-        return false;
-    }
-
-    // This should look like this when sent to the proxy that sends to Google (once per Tilt):
-    // {
-    //   'payload': {     // Payload is what gets ultimately sent on to Google Scripts
-    //        'Beer':     'Key Goes Here',
-    //        'Temp':     65,
-    //        'SG':       1.050,  // This is sent as a float
-    //        'Color':    'Blue',
-    //        'Comment':  '',
-    //        'Email':    'xxx@gmail.com',
-    //    },
-    //   'gscripts_url': 'https://script.google.com/.../',  // This is specific to the proxy
-    // }
-    //
-    // For secure GScripts support, we don't send the 'j' json object - just the payload.
-
-    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for (uint8_t i = 0; i < TILT_COLORS; i++)
     {
+        // Loop through each of the tilt colors cached by tilt_scanner
         if (tilt_scanner.tilt(i)->is_loaded())
         {
-            if (tilt_scanner.tilt(i)->gsheets_beer_name().length() <= 0)
+            // If there is a color present
+            if (tilt_scanner.tilt(i)->gsheets_beer_name().length() > 0)
             {
-                continue; // If there is no gsheets beer name, we don't know where to log to. Skip this tilt.
-            }
+                if (numSent == 0)
+                    Log.notice(F("Beginning GSheets check-in." CR));
+                // If there's a sheet name saved
+                StaticJsonDocument<GSHEETS_JSON> payload;
+                payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
+                payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+                payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                payload["Comment"] = "";
+                payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
+                payload["tzOffset"] = config.TZoffset;
 
-            payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
-            payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
-            payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-            payload["Color"] = tilt_scanner.tilt(i)->color_name();
-            payload["Comment"] = "";
-            payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
-            payload["tzOffset"] = config.TZoffset;
+                char payload_string[GSHEETS_JSON];
+                serializeJson(payload, payload_string);
+                payload.clear();
 
-            char payload_string[500];
-            serializeJson(payload, payload_string);
-            // When sending the data to GScripts directly, we're sending the payload - not the wrapped payload
-            if (!send_to_url_https(config.scriptsURL, "", payload_string, "application/json"))
-                result = false; // There was an error with the previous send
-        }
-    }
+                http.useHTTP10(true);                                   // Turn off chunked transfer encoding to parse the stream
+                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
+                http.setConnectTimeout(3000);                           // Set 3 second timeout
+                secureClient.setInsecure();                             // Ignore SHA fingerprint
+
+                if (! http.begin(secureClient, config.scriptsURL))      // Connect secure
+                {
+                    Log.error(F("Unable to create secure connection to %s." CR), config.scriptsURL);
+                    result = false;
+                } // Failed to open a connection
+                else
+                {
+                    Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
+                    Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_scanner.tilt(i)->color_name().c_str(), payload_string);
+
+                    http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
+                    httpResponseCode = http.POST(payload_string);               // Send the payload
+                    if (httpResponseCode == 200)
+                    {
+                        // POST success
+                        StaticJsonDocument<GSHEETS_JSON> retval;
+#if (ARDUINO_LOG_LEVEL == 6)
+                        Log.verbose(F("JSON Response:" CR));
+                        ReadLoggingStream loggingStream(http.getStream(), Serial);
+                        deserializeJson(retval, loggingStream);
+                        Serial.println();
+#else
+                        deserializeJson(retval, http.getStream());
+#endif
+                        Log.verbose(F("DEBUG: The link is: %s" CR), retval["doclongurl"].as<String>().c_str());  // TODO: Save this
+                        retval.clear();
+                        numSent++;
+                    } // Response code = 200
+                    else
+                    {
+                        // Post generated an error
+                        Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
+                            tilt_scanner.tilt(i)->color_name().c_str(),
+                            httpResponseCode,
+                            http.errorToString(httpResponseCode).c_str(),
+                            http.getString().c_str());
+                        result = false;
+                    } // Response code != 200
+                } // Good connection
+                http.end();
+            } // Check we have a sheet name for the color
+        } // Check scanner is loaded for color
+    } // Loop through colors
+    Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
     return result;
 }
 
@@ -298,16 +268,6 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
         Log.error(F("Invalid value of which_bf passed to send_to_bf_and_bf." CR));
         return false;
     }
-
-    // The data should look like this when sent to Brewfather or Brewers Friend (once per Tilt):
-    // {
-    //   'name':            'Red',  // The color of the Tilt
-    //   'temp':            65,
-    //   'temp_unit':       'F',    // Always in Fahrenheit
-    //   'gravity':         1.050,  // This is sent as a float
-    //   'gravity_unit':    'G',    // We send specific gravity, not plato
-    //   'device_source':   'TiltBridge',
-    // }
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for (uint8_t i = 0; i < TILT_COLORS; i++)
@@ -358,7 +318,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
             if (lcburl.getScheme() == "http")
                 validTarget = true;
         }
-        
+
         if (validTarget)
         {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
@@ -371,14 +331,6 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 Log.notice(F("Connecting to: %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
-
-            WiFiClient client;
-            //  1 = SUCCESS
-            //  0 = FAILED
-            // -1 = TIMED_OUT
-            // -2 = INVALID_SERVER
-            // -3 = TRUNCATED
-            // -4 = INVALID_RESPONSE
             client.setNoDelay(true);
             client.setTimeout(10000);
             if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
@@ -483,14 +435,12 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         {
             Log.error(F("Invalid target: %s." CR), url);
         }
-        
     }
     else
     {
         Log.notice(F("No URL provided, or no data to send." CR));
         retVal = false;
     }
-    
     return retVal;
 }
 
@@ -629,7 +579,7 @@ void send_checkin_stat()
 
 void dataSendHandler::process()
 {
-    // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
+    // Processes each tick & dispatches HTTP clients to push data out as necessary
 
     if (http_server.name_reset_requested == true) // Don't send while we are processing a name change
         return;
@@ -673,16 +623,19 @@ void dataSendHandler::process()
     // Check & send to Google Scripts if necessary
     if (send_to_google_at <= xTaskGetTickCount())
     {
-        if (strlen(config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH)
+        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH &&
+        strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
         {
-            Log.verbose(F("Calling send to Google." CR));
-            // tilt_scanner.wait_until_scan_complete();
+            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
+            tilt_scanner.deinit();
+            yield();
             send_to_google();
+            tilt_scanner.init();
             send_to_google_at = xTaskGetTickCount() + GSCRIPTS_DELAY;
         }
         else
         {
-            // If the user adds the setting, we want this to kick in within 10 seconds
+            // If the user newly adds the setting, this allows it to trigger within 10 seconds
             send_to_google_at = xTaskGetTickCount() + 10000;
         }
         yield();
