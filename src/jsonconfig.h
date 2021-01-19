@@ -75,6 +75,15 @@ struct Config
     char *sheetName_yellow = (char *)malloc(sizeof(char) * 25);
     char *sheetName_pink = (char *)malloc(sizeof(char) * 25);
 
+	char *link_red = (char *)malloc(sizeof(char) * 255);
+	char *link_green = (char *)malloc(sizeof(char) * 255);
+	char *link_black = (char *)malloc(sizeof(char) * 255);
+	char *link_purple = (char *)malloc(sizeof(char) * 255);
+	char *link_orange = (char *)malloc(sizeof(char) * 255);
+	char *link_blue = (char *)malloc(sizeof(char) * 255);
+	char *link_yellow = (char *)malloc(sizeof(char) * 255);
+	char *link_pink = (char *)malloc(sizeof(char) * 255);
+
     char *localTargetURL = (char *)malloc(sizeof(char) * 256);
     uint16_t localTargetPushEvery;
     char *brewstatusURL = (char *)malloc(sizeof(char) * 256);
@@ -108,5 +117,7 @@ bool mergeJsonObject(JsonVariantConst);
 bool mergeJsonString(String);
 
 extern Config config;
+extern const size_t capacitySerial;
+extern const size_t capacityDeserial;
 
 #endif // _JSONCONFIG_H

@@ -958,7 +958,7 @@ void http_json(AsyncWebServerRequest *request)
 void settings_json(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving settings JSON." CR));
-    DynamicJsonDocument doc(3072);
+    DynamicJsonDocument doc(capacitySerial);
     JsonObject root = doc.to<JsonObject>();
     config.save(root);
 

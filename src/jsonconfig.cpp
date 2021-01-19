@@ -6,8 +6,8 @@
 
 Config config;
 const char *filename = JSON_CONFIG_FILE;
-extern const size_t capacitySerial = 3072;
-extern const size_t capacityDeserial = 4096;
+const size_t capacitySerial = 6144;
+const size_t capacityDeserial = 8192;
 
 bool deleteConfigFile()
 {
@@ -265,6 +265,15 @@ void Config::save(JsonObject obj) const
     obj["sheetName_yellow"] = sheetName_yellow;
     obj["sheetName_pink"] = sheetName_pink;
 
+    obj["link_red"] = link_red;
+    obj["link_green"] = link_green;
+    obj["link_black"] = link_black;
+    obj["link_purple"] = link_purple;
+    obj["link_orange"] = link_orange;
+    obj["link_blue"] = link_blue;
+    obj["link_yellow"] = link_yellow;
+    obj["link_pink"] = link_pink;
+
     obj["localTargetURL"] = localTargetURL;
     obj["localTargetPushEvery"] = localTargetPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
@@ -360,6 +369,8 @@ void Config::load(JsonObjectConst obj)
 	{
 		tempCorrect = obj["tempCorrect"];
 	}
+
+    // Calibration points
 
     if (obj["cal_red_degree"].isNull())
     {
@@ -761,6 +772,8 @@ void Config::load(JsonObjectConst obj)
         cal_pink_x3 = rc;
     }
 
+    // GSheet Names
+
     if (obj["sheetName_red"].isNull())
     {
         strlcpy(sheetName_red, "", 25);
@@ -840,6 +853,90 @@ void Config::load(JsonObjectConst obj)
         const char *sn = obj["sheetName_pink"];
         strlcpy(sheetName_pink, sn, 25);
     }
+
+    // GSheet Links
+
+    if (obj["link_red"].isNull())
+    {
+        strlcpy(link_red, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_red"];
+        strlcpy(link_red, sn, 255);
+    }
+
+    if (obj["link_green"].isNull())
+    {
+        strlcpy(link_green, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_green"];
+        strlcpy(link_green, sn, 255);
+    }
+
+    if (obj["link_black"].isNull())
+    {
+        strlcpy(link_black, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_black"];
+        strlcpy(link_black, sn, 255);
+    }
+
+    if (obj["link_purple"].isNull())
+    {
+        strlcpy(link_purple, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_purple"];
+        strlcpy(link_purple, sn, 255);
+    }
+
+    if (obj["link_orange"].isNull())
+    {
+        strlcpy(link_orange, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_orange"];
+        strlcpy(link_orange, sn, 255);
+    }
+
+    if (obj["link_blue"].isNull())
+    {
+        strlcpy(link_blue, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_blue"];
+        strlcpy(link_blue, sn, 255);
+    }
+
+    if (obj["link_yellow"].isNull())
+    {
+        strlcpy(link_yellow, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_yellow"];
+        strlcpy(link_yellow, sn, 255);
+    }
+
+    if (obj["link_pink"].isNull())
+    {
+        strlcpy(link_pink, "", 255);
+    }
+    else
+    {
+        const char *sn = obj["link_pink"];
+        strlcpy(link_pink, sn, 255);
+    }
+
+    // Target URLs
 
     if (obj["localTargetURL"].isNull())
     {
