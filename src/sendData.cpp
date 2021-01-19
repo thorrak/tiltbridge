@@ -153,6 +153,7 @@ bool dataSendHandler::send_to_brewstatus()
 bool dataSendHandler::send_to_google()
 {
     HTTPClient http;
+    WiFiClientSecure secureClient;
     StaticJsonDocument<GSHEETS_JSON> payload;
     int httpResponseCode;
     bool result = true;
@@ -186,30 +187,45 @@ bool dataSendHandler::send_to_google()
                 serializeJson(payload, payload_string);
 
                 http.useHTTP10(true); // Have to turn off chunked transfer encoding to parse the stream
-                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-                http.begin(*secureClient, config.scriptsURL);
+                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS); // Follow the 301
+                secureClient.setInsecure(); // Ignore SHA fingerprint
+
+                if (! http.begin(secureClient, config.scriptsURL))
+                    Log.error(F("Unable to create secure connection to %s." CR), config.scriptsURL);
+                else
+                    Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
+
+                Log.verbose(F("Sending the following payload to Google Sheets (%s):" CR), tilt_scanner.tilt(i)->color_name().c_str());
                 http.addHeader(F("Content-Type"), F("application/json")); // Specify content-type header
+
+                serializeJsonPretty(payload, Serial);
+                Serial.println();
+
+                Log.verbose(F("DEBUG: Here is the serialized output:" CR "%s" CR), payload_string);
 
                 httpResponseCode = http.POST(payload_string);
                 if (httpResponseCode == 200)
                 {
                     // POST success
-                    DynamicJsonDocument doc(2048);
+                    StaticJsonDocument<GSHEETS_JSON> retval;
 #if (ARDUINO_LOG_LEVEL == 6)
                     Log.verbose(F("DEBUG: JSON Response:" CR));
                     ReadLoggingStream loggingStream(http.getStream(), Serial);
-                    deserializeJson(doc, loggingStream);
+                    deserializeJson(retval, loggingStream);
+                    Serial.println();
 #else
-                    deserializeJson(doc, http.getStream());
+                    deserializeJson(retval, http.getStream());
 #endif
-                    Serial.println(doc["doclongurl"].as<String>()); // DEBUG: TODO:
+                    Log.verbose(F("DEBUG: The link is: %s" CR), retval["doclongurl"].as<String>().c_str());
+                    http.end();
                 } // Response code = 200
                 else
                 {
                     // Post generated an error
-                    Log.error(F("Google send to %s Tilt failed (%d). Response:\n%s" CR),
-                        tilt_scanner.tilt(i)->color_name(),
+                    Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
+                        tilt_scanner.tilt(i)->color_name().c_str(),
                         httpResponseCode,
+                        http.errorToString(httpResponseCode).c_str(),
                         http.getString().c_str());
                     http.end();
                     result = false;
@@ -261,16 +277,6 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
         Log.error(F("Invalid value of which_bf passed to send_to_bf_and_bf." CR));
         return false;
     }
-
-    // The data should look like this when sent to Brewfather or Brewers Friend (once per Tilt):
-    // {
-    //   'name':            'Red',  // The color of the Tilt
-    //   'temp':            65,
-    //   'temp_unit':       'F',    // Always in Fahrenheit
-    //   'gravity':         1.050,  // This is sent as a float
-    //   'gravity_unit':    'G',    // We send specific gravity, not plato
-    //   'device_source':   'TiltBridge',
-    // }
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
     for (uint8_t i = 0; i < TILT_COLORS; i++)
@@ -334,13 +340,6 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 Log.notice(F("Connecting to: %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
-
-            //  1 = SUCCESS
-            //  0 = FAILED
-            // -1 = TIMED_OUT
-            // -2 = INVALID_SERVER
-            // -3 = TRUNCATED
-            // -4 = INVALID_RESPONSE
             client.setNoDelay(true);
             client.setTimeout(10000);
             if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
