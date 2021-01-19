@@ -96,13 +96,6 @@ bool dataSendHandler::send_to_localTarget()
     // TODO: (JSON) Come back and tighten this up
     bool result = true;
     DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-    // This should look like this when sent to Fermentrack:
-    // {
-    //   'mdns_id': 'mDNS ID Goes Here',
-    //   'tilts': {'color': 'Purple', 'temp': 74, 'gravity': 1.043},
-    //            {'color': 'Orange', 'temp': 66, 'gravity': 1.001}
-    // }
-
     char payload[TILT_ALL_DATA_STRING_SIZE + 128];
 
     j["mdns_id"] = config.mdnsID;
@@ -154,17 +147,9 @@ bool dataSendHandler::send_to_google()
 {
     HTTPClient http;
     WiFiClientSecure secureClient;
-    StaticJsonDocument<GSHEETS_JSON> payload;
     int httpResponseCode;
+    int numSent = 0;
     bool result = true;
-
-    if (strlen(config.scriptsURL) <= GSCRIPTS_MIN_URL_LENGTH ||
-        strlen(config.scriptsEmail) < GSCRIPTS_MIN_EMAIL_LENGTH)
-    {
-        // There are two configuration options which are mandatory when using the Google Sheets integration
-        Log.verbose(F("Either scriptsURL or scriptsEmail not populated." CR));
-        return false;
-    }
 
     for (uint8_t i = 0; i < TILT_COLORS; i++)
     {
@@ -174,7 +159,10 @@ bool dataSendHandler::send_to_google()
             // If there is a color present
             if (tilt_scanner.tilt(i)->gsheets_beer_name().length() > 0)
             {
+                if (numSent == 0)
+                    Log.notice(F("Beginning GSheets check-in." CR));
                 // If there's a sheet name saved
+                StaticJsonDocument<GSHEETS_JSON> payload;
                 payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
                 payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
                 payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
@@ -185,54 +173,57 @@ bool dataSendHandler::send_to_google()
 
                 char payload_string[GSHEETS_JSON];
                 serializeJson(payload, payload_string);
+                payload.clear();
 
-                http.useHTTP10(true); // Have to turn off chunked transfer encoding to parse the stream
-                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS); // Follow the 301
-                secureClient.setInsecure(); // Ignore SHA fingerprint
+                http.useHTTP10(true);                                   // Turn off chunked transfer encoding to parse the stream
+                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
+                http.setConnectTimeout(3000);                           // Set 3 second timeout
+                secureClient.setInsecure();                             // Ignore SHA fingerprint
 
-                if (! http.begin(secureClient, config.scriptsURL))
+                if (! http.begin(secureClient, config.scriptsURL))      // Connect secure
+                {
                     Log.error(F("Unable to create secure connection to %s." CR), config.scriptsURL);
-                else
-                    Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
-
-                Log.verbose(F("Sending the following payload to Google Sheets (%s):" CR), tilt_scanner.tilt(i)->color_name().c_str());
-                http.addHeader(F("Content-Type"), F("application/json")); // Specify content-type header
-
-                serializeJsonPretty(payload, Serial);
-                Serial.println();
-
-                Log.verbose(F("DEBUG: Here is the serialized output:" CR "%s" CR), payload_string);
-
-                httpResponseCode = http.POST(payload_string);
-                if (httpResponseCode == 200)
-                {
-                    // POST success
-                    StaticJsonDocument<GSHEETS_JSON> retval;
-#if (ARDUINO_LOG_LEVEL == 6)
-                    Log.verbose(F("DEBUG: JSON Response:" CR));
-                    ReadLoggingStream loggingStream(http.getStream(), Serial);
-                    deserializeJson(retval, loggingStream);
-                    Serial.println();
-#else
-                    deserializeJson(retval, http.getStream());
-#endif
-                    Log.verbose(F("DEBUG: The link is: %s" CR), retval["doclongurl"].as<String>().c_str());
-                    http.end();
-                } // Response code = 200
-                else
-                {
-                    // Post generated an error
-                    Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
-                        tilt_scanner.tilt(i)->color_name().c_str(),
-                        httpResponseCode,
-                        http.errorToString(httpResponseCode).c_str(),
-                        http.getString().c_str());
-                    http.end();
                     result = false;
-                } // Response code != 200
+                } // Failed to open a connection
+                else
+                {
+                    Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
+                    Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_scanner.tilt(i)->color_name().c_str(), payload_string);
+
+                    http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
+                    httpResponseCode = http.POST(payload_string);               // Send the payload
+                    if (httpResponseCode == 200)
+                    {
+                        // POST success
+                        StaticJsonDocument<GSHEETS_JSON> retval;
+#if (ARDUINO_LOG_LEVEL == 6)
+                        Log.verbose(F("JSON Response:" CR));
+                        ReadLoggingStream loggingStream(http.getStream(), Serial);
+                        deserializeJson(retval, loggingStream);
+                        Serial.println();
+#else
+                        deserializeJson(retval, http.getStream());
+#endif
+                        Log.verbose(F("DEBUG: The link is: %s" CR), retval["doclongurl"].as<String>().c_str());  // TODO: Save this
+                        retval.clear();
+                        numSent++;
+                    } // Response code = 200
+                    else
+                    {
+                        // Post generated an error
+                        Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
+                            tilt_scanner.tilt(i)->color_name().c_str(),
+                            httpResponseCode,
+                            http.errorToString(httpResponseCode).c_str(),
+                            http.getString().c_str());
+                        result = false;
+                    } // Response code != 200
+                } // Good connection
+                http.end();
             } // Check we have a sheet name for the color
         } // Check scanner is loaded for color
     } // Loop through colors
+    Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
     return result;
 }
 
@@ -588,7 +579,7 @@ void send_checkin_stat()
 
 void dataSendHandler::process()
 {
-    // dataSendHandler::process() processes each tick & dispatches HTTP clients to push data out as necessary
+    // Processes each tick & dispatches HTTP clients to push data out as necessary
 
     if (http_server.name_reset_requested == true) // Don't send while we are processing a name change
         return;
@@ -632,16 +623,19 @@ void dataSendHandler::process()
     // Check & send to Google Scripts if necessary
     if (send_to_google_at <= xTaskGetTickCount())
     {
-        if (strlen(config.scriptsURL) > GSCRIPTS_MIN_URL_LENGTH)
+        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH &&
+        strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
         {
-            Log.verbose(F("Calling send to Google." CR));
-            // tilt_scanner.wait_until_scan_complete();
+            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
+            tilt_scanner.deinit();
+            yield();
             send_to_google();
+            tilt_scanner.init();
             send_to_google_at = xTaskGetTickCount() + GSCRIPTS_DELAY;
         }
         else
         {
-            // If the user adds the setting, we want this to kick in within 10 seconds
+            // If the user newly adds the setting, this allows it to trigger within 10 seconds
             send_to_google_at = xTaskGetTickCount() + 10000;
         }
         yield();
