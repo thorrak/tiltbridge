@@ -34,6 +34,7 @@ void printTimestamp(Print *_logOutput)
     char c[12];
     sprintf(c, "%10lu ", millis());
     _logOutput->print(c);
+    Serial.flush();
 }
 
 size_t printDot()
