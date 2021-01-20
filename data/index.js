@@ -11,11 +11,11 @@ else window.onload = startLoad;
 
 function startLoad() { // Make sure the page is 100% loaded
     if (document.readyState === 'ready' || document.readyState === 'complete') {
-        // loadMe();
+        // populateConfig();
     } else {
         document.onreadystatechange = function () {
             if (document.readyState == "complete") {
-                // loadMe();
+                // populateConfig();
             }
         }
     }
@@ -50,7 +50,7 @@ var vm = new Vue({
 
                         // Only show if we have a Google Sheet defined
                         if (cardData['gsheets_name']) {
-                            cardData['gsheets'] = "Google Sheet: " + cardData['gsheets_name'];
+                            cardData['gsheets_title'] = "Google Sheet: "
                         }
                         if (cardData['sends_battery']) {
                             cardData['battery'] = "Battery Age: " + cardData['weeks_on_battery'];
