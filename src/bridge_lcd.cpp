@@ -398,14 +398,21 @@ void bridge_lcd::init()
     tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
     tft->init();
     tft->fontHeight(TFT_ESPI_FONT_HEIGHT);
-    tft->setRotation(1);
+    if (config.invertTFT)
+    {
+        tft->setRotation(3);
+    }
+    else
+    {
+        tft->setRotation(1);
+    }
     tft->fillScreen(TFT_BLACK);
 #endif // LCD_TFT_ESPI
 }
 
 void bridge_lcd::reinit()
 {
-#ifdef LCD_TFT
+#if defined (LCD_TFT) || defined (LCD_TFT_ESPI)
     if (config.invertTFT)
     {
         tft->setRotation(1);
