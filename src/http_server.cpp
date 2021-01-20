@@ -46,7 +46,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
             if (strcmp(name, "mdnsID") == 0) // Set hostname
             {
                 LCBUrl url;
-                if (!url.isMDNS(value))
+                if (!url.isValidLabel(value))
                 {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
