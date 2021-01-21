@@ -6,7 +6,7 @@
 
 #ifndef DISABLE_OTA_UPDATES
 
-WiFiClient client;
+WiFiClient uClient;
 
 // Utility to extract header value from headers
 String getHeaderValue(String header, String headerName)
@@ -29,35 +29,35 @@ void execOTA()
 #endif
 
     // Connect to server
-    // client.connect(host, port)
-    if (client.connect("www.tiltbridge.com", WEBPORT))
+    // uClient.connect(host, port)
+    if (uClient.connect("www.tiltbridge.com", WEBPORT))
     {
         // Connection Succeed - fetch the bin
-        client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
+        uClient.print(String("GET ") + bin + " HTTP/1.1\r\n" +
                      "Host: www.tiltbridge.com\r\n" +
                      "Cache-Control: no-cache\r\n" +
                      "Connection: close\r\n\r\n");
 
         unsigned long timeout = millis();
-        while (client.available() == 0)
+        while (uClient.available() == 0)
         {
             if (millis() - timeout > 5000)
             {
-                client.stop();
+                uClient.stop();
                 return;
             }
         }
         // Once the response is available, check it
 
-        while (client.available())
+        while (uClient.available())
         {
-            String line = client.readStringUntil('\n'); // read line till /n
+            String line = uClient.readStringUntil('\n'); // read line till /n
             line.trim();                                // remove space, to check if the line is end of headers
 
             // if the the line is empty,
             // this is end of headers
             // break the while and feed the
-            // remaining `client` to the
+            // remaining `uClient` to the
             // Update.writeStream();
             if (!line.length())
             {
@@ -107,7 +107,7 @@ void execOTA()
         // If yes, begin
         if (canBegin)
         {
-            __attribute__((unused)) size_t written = Update.writeStream(client);
+            __attribute__((unused)) size_t written = Update.writeStream(uClient);
 
             //            if (written == contentLength) {
             //                //Succeeded
@@ -136,13 +136,13 @@ void execOTA()
         else
         {
             // not enough space to begin OTA - check the partition table
-            client.flush();
+            uClient.flush();
         }
     }
     else
     {
         //        Serial.println("There was no content in the response");
-        client.flush();
+        uClient.flush();
     }
 }
 
