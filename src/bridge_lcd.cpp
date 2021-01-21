@@ -400,11 +400,11 @@ void bridge_lcd::init()
     tft->fontHeight(TFT_ESPI_FONT_HEIGHT);
     if (config.invertTFT)
     {
-        tft->setRotation(3);
+        tft->setRotation(1);
     }
     else
     {
-        tft->setRotation(1);
+        tft->setRotation(3);
     }
     tft->fillScreen(TFT_BLACK);
 #endif // LCD_TFT_ESPI
