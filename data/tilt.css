@@ -1,8 +1,8 @@
 /* Tilts: Black, Blue, Green, Orange, Red, Yellow, Pink, Purple */
 
 .empty {
-	min-height: 17px;
-	white-space: nowrap;
+  min-height: 17px;
+  white-space: nowrap;
 }
 
 /* Black Tilt and Matching Text */
