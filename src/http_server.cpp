@@ -948,7 +948,7 @@ void http_json(AsyncWebServerRequest *request)
 {
      // TODO: JSON Go rework this
     Log.verbose(F("Serving Tilt JSON." CR));
-    char tilt_data[TILT_ALL_DATA_STRING_SIZE];
+    char tilt_data[TILT_ALL_DATA_SIZE];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
     AsyncWebServerResponse *response = request->beginResponse(200, "application/json", tilt_data);
     request->send(response);
@@ -958,7 +958,7 @@ void http_json(AsyncWebServerRequest *request)
 void settings_json(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving settings JSON." CR));
-    DynamicJsonDocument doc(3072);
+    DynamicJsonDocument doc(capacitySerial);
     JsonObject root = doc.to<JsonObject>();
     config.save(root);
 

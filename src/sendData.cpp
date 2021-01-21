@@ -96,7 +96,7 @@ bool dataSendHandler::send_to_localTarget()
     // TODO: (JSON) Come back and tighten this up
     bool result = true;
     DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-    char payload[TILT_ALL_DATA_STRING_SIZE + 128];
+    char payload[TILT_ALL_DATA_SIZE + 128];
 
     j["mdns_id"] = config.mdnsID;
     tilt_scanner.tilt_to_json_string(payload, true);
@@ -204,7 +204,54 @@ bool dataSendHandler::send_to_google()
 #else
                         deserializeJson(retval, http.getStream());
 #endif
-                        Log.verbose(F("DEBUG: The link is: %s" CR), retval["doclongurl"].as<String>().c_str());  // TODO: Save this
+                        switch(i)
+                        {
+                            case(0):
+                            {
+                                strlcpy(config.link_red, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(1):
+                            {
+                                strlcpy(config.link_green, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(2):
+                            {
+                                strlcpy(config.link_black, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(3):
+                            {
+                                strlcpy(config.link_purple, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(4):
+                            {
+                                strlcpy(config.link_orange, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(5):
+                            {
+                                strlcpy(config.link_blue, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(6):
+                            {
+                                strlcpy(config.link_yellow, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            case(7):
+                            {
+                                strlcpy(config.link_pink, retval["doclongurl"].as<String>().c_str(), 255);
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+                        saveConfig();
                         retval.clear();
                         numSent++;
                     } // Response code = 200

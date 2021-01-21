@@ -11,11 +11,11 @@ else window.onload = startLoad;
 
 function startLoad() { // Make sure the page is 100% loaded
     if (document.readyState === 'ready' || document.readyState === 'complete') {
-        // loadMe();
+        // populateConfig();
     } else {
         document.onreadystatechange = function () {
             if (document.readyState == "complete") {
-                // loadMe();
+                // populateConfig();
             }
         }
     }
@@ -44,19 +44,21 @@ var vm = new Vue({
                 if (self.fullDict != null) {
                     Object.keys(self.fullDict).forEach(function(key) {
                         cardData = self.fullDict[key];
-                        cardData['textClass'] = 'text-' + self.fullDict[key].color.toLowerCase() + '-bg';
-                        cardData['bgClass'] = 'bg-' + self.fullDict[key].color.toLowerCase();
-                        cardData['borderClass'] ='border-' + self.fullDict[key].color.toLowerCase();
 
-                        // Only show if we have a Google Sheet defined
+                        // Style
+                        cardData['bgClass'] = 'bg-' + self.fullDict[key].color.toLowerCase();
+
+                        // Only show GSheet data if we have a Google Sheet defined
                         if (cardData['gsheets_name']) {
-                            cardData['gsheets'] = "Google Sheet: " + cardData['gsheets_name'];
+                            cardData['gsheets_title'] = "Google Sheet: "
                         }
+
+                        // Only show Battery data if present
                         if (cardData['sends_battery']) {
                             cardData['battery'] = "Battery Age: " + cardData['weeks_on_battery'];
                         }
 
-                        // Switch between Tilt and Tilt Pro title
+                        // Switch between Tilt and Tilt Pro title as appropriate
                         if (cardData['high_resolution']) {
                             cardData['title'] = "Tilt Pro";
                         } else {

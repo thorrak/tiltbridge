@@ -26,8 +26,7 @@
 #include <HTTPClient.h>
 #include <LCBUrl.h>
 
-#define GSCRIPTS_DELAY (10000)       // DEBUG: TODO:  I cranked this up for testing.
-// #define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
+#define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60 * 1000) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60 * 1000)     // 15 minute delay between pushes to Brewfather
 

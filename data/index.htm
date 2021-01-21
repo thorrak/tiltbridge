@@ -32,7 +32,9 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
         integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
-    <link rel="stylesheet" href="/common.css">
+        <link rel="stylesheet" href="/common.css">
+
+        <link rel="stylesheet" href="/tilt.css">
 
 </head>
 
@@ -86,20 +88,20 @@
 
                         <div class="col-12 col-sm-6" v-for="sensor in sensors"><!-- Start vue Sensor loop div -->
 
-                            <div class="card mb-3"> <!-- Card -->
+                            <div class="card mb-3 tilt"> <!-- Card -->
 
-                                <div class="card-header" v-bind:class="[sensor.textClass, sensor.bgClass, sensor.borderClass]"> <!-- Tilt Line -->
+                                <div class="card-header" v-bind:class="[sensor.bgClass]"> <!-- Tilt Line -->
                                     <div class="row">
-                                        <div class="col-6 d-flex flex-column text-left">
+                                        <div class="col-6 d-flex flex-column text-left inline">
                                             <h5 class="card-title empty">{{sensor.color}} {{sensor.title}}</h5>
                                         </div>
-                                        <div class="col-6 d-flex flex-column text-right">
-                                            <h6 class="card-subtitle empty">RSSI: {{sensor.rssi}}</h6>
+                                        <div class="col-6 d-flex flex-column text-right inline">
+                                            <h6 class="card-title empty">RSSI: {{sensor.rssi}}</h6>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-6 d-flex flex-column text-left">
-                                            <h6 class="card-subtitle empty">{{sensor.gsheets}}</h6>
+                                            <h6 class="card-subtitle empty">{{sensor.gsheets_title}}<a :href="sensor.gsheets_link" target="_blank">{{sensor.gsheets_name}}</a></h6>
                                         </div>
                                         <div class="col-6 d-flex flex-column text-right">
                                             <h6 class="card-subtitle empty">{{sensor.battery}}</h6>
