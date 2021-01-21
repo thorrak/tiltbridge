@@ -32,7 +32,9 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
         integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
-    <link rel="stylesheet" href="/common.css">
+        <link rel="stylesheet" href="/common.css">
+
+        <link rel="stylesheet" href="/tilt.css">
 
 </head>
 
@@ -86,9 +88,9 @@
 
                         <div class="col-12 col-sm-6" v-for="sensor in sensors"><!-- Start vue Sensor loop div -->
 
-                            <div class="card mb-3"> <!-- Card -->
+                            <div class="card mb-3 tilt"> <!-- Card -->
 
-                                <div class="card-header" v-bind:class="[sensor.textClass, sensor.bgClass, sensor.borderClass]"> <!-- Tilt Line -->
+                                <div class="card-header" v-bind:class="[sensor.bgClass]"> <!-- Tilt Line -->
                                     <div class="row">
                                         <div class="col-6 d-flex flex-column text-left">
                                             <h5 class="card-title empty">{{sensor.color}} {{sensor.title}}</h5>

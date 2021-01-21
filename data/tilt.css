@@ -1,0 +1,98 @@
+/* Tilts: Black, Blue, Green, Orange, Red, Yellow, Pink, Purple */
+
+/* Black Tilt and Matching Text */
+
+.tilt>.bg-black {
+    background-color: black;
+    color: white;
+  }
+  .bg-black a:link {color: white;text-decoration:none;}
+  .bg-black a:visited {color: white;text-decoration:none;}
+  .bg-black a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Black Tilt and Matching Text */
+  
+  /* Blue Tilt and Matching Text */
+  
+  .tilt>.bg-blue {
+    background-color: blue;
+    color: white;
+  }
+  .bg-blue a:link {color: white;text-decoration:none;}
+  .bg-blue a:visited {color: white;text-decoration:none;}
+  .bg-blue a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Blue Tilt and Matching Text */
+  
+  /* Green Tilt and Matching Text */
+  
+  .tilt>.bg-green {
+    background-color: limegreen;
+    color: white;
+  }
+  .bg-green a:link {color: white;text-decoration:none;}
+  .bg-green a:visited {color: white;text-decoration:none;}
+  .bg-green a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Green Tilt and Matching Text */
+  
+  /* Orange Tilt and Matching Text */
+  
+  .tilt>.bg-orange {
+    background-color: darkorange;
+    color: white;
+  }
+  .bg-orange a:link {color: white;text-decoration:none;}
+  .bg-orange a:visited {color: white;text-decoration:none;}
+  .bg-orange a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Orange Tilt and Matching Text */
+  
+  /* Red Tilt and Matching Text */
+  
+  .tilt>.bg-red {
+    background-color: red;
+    color: white;
+  }
+  .bg-red a:link {color: white;text-decoration:none;}
+  .bg-red a:visited {color: white;text-decoration:none;}
+  .bg-red a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Red Tilt and Matching Text */
+  
+  /* Yellow Tilt and Matching Text */
+  
+  .tilt>.bg-yellow {
+    background-color: yellow;
+    color: black;
+  }
+  .bg-yellow a:link {color: black;text-decoration:none;}
+  .bg-yellow a:visited {color: black;text-decoration:none;}
+  .bg-yellow a:hover {color: black;text-decoration:none;font-weight: bold;}
+  
+  /* Yellow Tilt and Matching Text */
+  
+  /* Pink Tilt and Matching Text */
+  
+  .tilt>.bg-pink {
+    background-color: hotpink;
+    color: white;
+  }
+  .bg-pink a:link {color: white;text-decoration:none;}
+  .bg-pink a:visited {color: white;text-decoration:none;}
+  .bg-pink a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Pink Tilt and Matching Text */
+  
+  /* Purple Tilt and Matching Text */
+  
+  .tilt>.bg-purple {
+    background-color: purple;
+    color: white;
+  }
+  .bg-purple a:link {color: white;text-decoration:none;}
+  .bg-purple a:visited {color: white;text-decoration:none;}
+  .bg-purple a:hover {color: white;text-decoration:none;font-weight: bold;}
+  
+  /* Purple Tilt and Matching Text */
+  
