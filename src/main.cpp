@@ -31,6 +31,8 @@ void setup()
     init_wifi(); // Initialize WiFi (including configuration AP if necessary)
     initWiFiResetButton();
 
+    initBoardResetButton();
+
 #ifdef LOG_LOCAL_LEVEL
     esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to debug level
     esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
@@ -51,6 +53,12 @@ void loop()
 {
     serialLoop();   // Service telnet and console commands
 
+    if (board_reset_pressed_at > 0)
+    {
+        Log.notice(F("Reset button pressed, restarting." CR));
+        ESP.restart();
+    }
+
     if (tilt_scanner.scan())
     {
         // The scans are done asynchronously, so we'll poke the scanner to see if
@@ -59,7 +67,8 @@ void loop()
         // If we need to do anything when a new scan is started, trigger it here.
     }
 
-    // handle_wifi_reset_presses();
+    handle_wifi_reset_presses();
+
     reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
     data_sender.process();
 

@@ -4,15 +4,16 @@
 
 #include "wifi_setup.h"
 
-// Since we can't use double reset detection or the "boot" button, we need to leverage the touchscreen to trigger the
-// WiFi reset on TFT builds
+// Since we can't use double reset detection or the "boot" button, we need
+// to leverage the touchscreen to trigger the WiFi reset on TFT builds
 #ifdef LCD_TFT
-//#include <XPT2046_Touchscreen.h>
-//XPT2046_Touchscreen ts(TS_CS);
+// #include <XPT2046_Touchscreen.h>
+// XPT2046_Touchscreen ts(TS_CS);
 #endif
 
 bool shouldSaveConfig = false;
 uint64_t wifi_reset_pressed_at = 0;
+uint64_t board_reset_pressed_at = 0;
 
 void saveParamsCallback()
 {
@@ -136,10 +137,22 @@ void IRAM_ATTR wifi_reset_pressed()
     wifi_reset_pressed_at = xTaskGetTickCount();
 }
 
+void IRAM_ATTR board_reset_pressed()
+{
+    // When the reset button is pressed, just log the time & get back to work
+    board_reset_pressed_at = xTaskGetTickCount();
+}
+
 void initWiFiResetButton()
 {
     pinMode(WIFI_RESET_BUTTON_GPIO, INPUT_PULLUP);
     attachInterrupt(WIFI_RESET_BUTTON_GPIO, wifi_reset_pressed, RISING);
+}
+
+void initBoardResetButton()
+{
+    pinMode(BOARD_RESET_BUTTON_GPIO, INPUT_PULLUP);
+    attachInterrupt(BOARD_RESET_BUTTON_GPIO, board_reset_pressed, RISING);
 }
 
 //void disableWiFiResetButton() {
@@ -147,8 +160,14 @@ void initWiFiResetButton()
 //}
 
 #else
+
 // If we have LCD_TFT set, we need to build the functions as noop
 void initWiFiResetButton()
+{
+    // This is noop for LCD_TFT as we're using the touchscreen instead
+}
+
+void initBoardResetButton()
 {
     // This is noop for LCD_TFT as we're using the touchscreen instead
 }
@@ -160,8 +179,8 @@ void handle_wifi_reset_presses()
     uint64_t initial_press_at = 0;
 
 #ifdef LCD_TFT
-    //while (ts.touched()) // Block while the screen is pressed until the user releases
-    //    wifi_reset_pressed_at = xTaskGetTickCount();
+    // while (ts->touched()) // Block while the screen is pressed until the user releases
+    //     wifi_reset_pressed_at = xTaskGetTickCount();
 #endif
 
     if (wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME)
@@ -174,11 +193,11 @@ void handle_wifi_reset_presses()
         {
             delay(1);
 
-            //#ifdef LCD_TFT
-            //            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
-            //#else
+#ifdef LCD_TFT
+            // if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
+#else
             if (wifi_reset_pressed_at != initial_press_at)
-            //#endif
+#endif
             {
                 // The user pushed the button a second time & caused a second interrupt. Process the reset.
                 disconnect_from_wifi_and_restart();
@@ -188,12 +207,12 @@ void handle_wifi_reset_presses()
         // Explicitly clear the screen
         lcd.clear();
 
-        //        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
-        //
-        //        if(wifi_reset_pressed_at != initial_press_at) {
-        //            // The user pushed the button a second time & caused a second interrupt. Process the reset.
-        //            disconnect_from_wifi_and_restart();
-        //        }
+        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+
+        if(wifi_reset_pressed_at != initial_press_at) {
+            // The user pushed the button a second time & caused a second interrupt. Process the reset.
+            disconnect_from_wifi_and_restart();
+        }
     }
 }
 
