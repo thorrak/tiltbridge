@@ -7,8 +7,8 @@
 // Since we can't use double reset detection or the "boot" button, we need
 // to leverage the touchscreen to trigger the WiFi reset on TFT builds
 #ifdef LCD_TFT
-// #include <XPT2046_Touchscreen.h>
-// XPT2046_Touchscreen ts(TS_CS);
+#include <XPT2046_Touchscreen.h>
+// XPT2046_Touchscreen ts(TFT_CS);
 #endif
 
 bool shouldSaveConfig = false;
@@ -40,9 +40,23 @@ void disconnect_from_wifi_and_restart()
 
 void mdnsreset()
 {
-    tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
+    tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
     http_server.name_reset_requested = false;
-    ESP.restart();  // TODO:  This no longer works as designed
+    MDNS.end();
+    if (!MDNS.begin(config.mdnsID))
+    {
+        Log.error(F("Error resetting MDNS responder."));
+        ESP.restart();
+    }
+    else
+    {
+        Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
+        MDNS.addService("http", "tcp", WEBPORT);
+        MDNS.addService("kegcop", "tcp", WEBPORT);
+#if DOTELNET == true
+        MDNS.addService("telnet", "tcp", TELNETPORT);
+#endif
+    }
 }
 
 void init_wifi()
@@ -179,8 +193,13 @@ void handle_wifi_reset_presses()
     uint64_t initial_press_at = 0;
 
 #ifdef LCD_TFT
-    // while (ts->touched()) // Block while the screen is pressed until the user releases
-    //     wifi_reset_pressed_at = xTaskGetTickCount();
+    while (ts.touched()) // Block while the screen is pressed until the user releases
+    {
+        TS_Point p = ts.getPoint();
+        Log.verbose(F("DEBUG: Pressure: %l, x: %l y: %l" CR), p.z, p.x, p.y);
+        wifi_reset_pressed_at = xTaskGetTickCount();
+    }
+
 #endif
 
     if (wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME)
@@ -194,7 +213,7 @@ void handle_wifi_reset_presses()
             delay(1);
 
 #ifdef LCD_TFT
-            // if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
+            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
 #else
             if (wifi_reset_pressed_at != initial_press_at)
 #endif
@@ -207,12 +226,12 @@ void handle_wifi_reset_presses()
         // Explicitly clear the screen
         lcd.clear();
 
-        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
-
-        if(wifi_reset_pressed_at != initial_press_at) {
-            // The user pushed the button a second time & caused a second interrupt. Process the reset.
-            disconnect_from_wifi_and_restart();
-        }
+        //        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
+        //
+        //        if(wifi_reset_pressed_at != initial_press_at) {
+        //            // The user pushed the button a second time & caused a second interrupt. Process the reset.
+        //            disconnect_from_wifi_and_restart();
+        //        }
     }
 }
 
