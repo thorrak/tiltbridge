@@ -8,7 +8,7 @@
 // to leverage the touchscreen to trigger the WiFi reset on TFT builds
 #ifdef LCD_TFT
 #include <XPT2046_Touchscreen.h>
-// XPT2046_Touchscreen ts(TFT_CS);
+XPT2046_Touchscreen ts(TFT_CS);
 #endif
 
 bool shouldSaveConfig = false;
@@ -199,7 +199,6 @@ void handle_wifi_reset_presses()
         Log.verbose(F("DEBUG: Pressure: %l, x: %l y: %l" CR), p.z, p.x, p.y);
         wifi_reset_pressed_at = xTaskGetTickCount();
     }
-
 #endif
 
     if (wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME)

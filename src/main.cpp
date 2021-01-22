@@ -67,10 +67,9 @@ void loop()
         // If we need to do anything when a new scan is started, trigger it here.
     }
 
-    handle_wifi_reset_presses();
-
-    reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
-    data_sender.process();
+    handle_wifi_reset_presses();    // Check for WiFi reset calls
+    reconnectIfDisconnected();      // If we disconnected from the WiFi, attempt to reconnect
+    data_sender.process();          // Handle dispatching data as needed
 
     lcd.check_screen();
 
