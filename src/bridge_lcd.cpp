@@ -276,27 +276,30 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
     print_line(tilt->color_name().c_str(), temp, gravity, line);
 
 #ifdef LCD_TFT
+    uint16_t fHeight = tft->fontHeight(GFXFF);
     if (tilt->text_color() == 0xFFFF)
-    {
-        tft->fillRect(
-            tft->textWidth(
-                tilt->color_name().c_str(),
-                GFXFF) + 25,
-                (tft->fontHeight(GFXFF)) * (line - 1) + 2,
-                30,
-                tft->fontHeight(GFXFF) - 8,
-                0x4228);
+    { // White outline, black square
+        tft->fillRect( // White square
+            0,
+            fHeight * (line - 1) + 2,
+            15,
+            fHeight - 8,
+            TFT_WHITE);
+        tft->fillRect( // Black square
+            1,
+            fHeight * (line - 1) + 3,
+            13,
+            fHeight - 10,
+            TFT_BLACK);
     }
     else
-    {
+    { // All else
         tft->fillRect(
-            tft->textWidth(
-                tilt->color_name().c_str(),
-                GFXFF) + 25,
-                (tft->fontHeight(GFXFF)) * (line - 1) + 2,
-                30,
-                tft->fontHeight(GFXFF) - 8,
-                tilt->text_color());
+            0,
+            fHeight * (line - 1) + 2,
+            15,
+            fHeight - 8,
+            tilt->text_color());
     }
 #endif
 
@@ -431,11 +434,7 @@ void bridge_lcd::clear()
     oled_display->setFont(SSD1306_FONT);
 #endif
 
-#ifdef LCD_TFT
-    tft->fillScreen(TFT_BLACK);
-#endif
-
-#ifdef LCD_TFT_ESPI
+#if defined (LCD_TFT) || defined (LCD_TFT_ESPI)
     tft->fillScreen(TFT_BLACK);
 #endif
 
@@ -480,11 +479,11 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     int16_t starting_pixel_row = 0;
     starting_pixel_row = (tft->fontHeight(GFXFF)) * (line - 1) + 2;
 
-    tft->drawString(left_text, 0, starting_pixel_row, GFXFF);
+    tft->drawString(left_text, 25, starting_pixel_row, GFXFF);
     yield();
     tft->drawString(middle_text, 134, starting_pixel_row, GFXFF);
     yield();
-    tft->drawString(right_text, 320 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+    tft->drawString(right_text, 300 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
 #endif
 
 #ifdef LCD_TFT_ESPI
