@@ -279,24 +279,20 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
     if (tilt->text_color() == 0xFFFF)
     {
         tft->fillRect(
-            tft->textWidth(
-                tilt->color_name().c_str(),
-                GFXFF) + 25,
-                (tft->fontHeight(GFXFF)) * (line - 1) + 2,
-                30,
-                tft->fontHeight(GFXFF) - 8,
-                0x4228);
+            0,
+            (tft->fontHeight(GFXFF)) * (line - 1) + 2,
+            15,
+            tft->fontHeight(GFXFF) - 8,
+            TFT_WHITE);
     }
     else
     {
         tft->fillRect(
-            tft->textWidth(
-                tilt->color_name().c_str(),
-                GFXFF) + 25,
-                (tft->fontHeight(GFXFF)) * (line - 1) + 2,
-                30,
-                tft->fontHeight(GFXFF) - 8,
-                tilt->text_color());
+            0,
+            (tft->fontHeight(GFXFF)) * (line - 1) + 2,
+            15,
+            tft->fontHeight(GFXFF) - 8,
+            tilt->text_color());
     }
 #endif
 
@@ -480,11 +476,11 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     int16_t starting_pixel_row = 0;
     starting_pixel_row = (tft->fontHeight(GFXFF)) * (line - 1) + 2;
 
-    tft->drawString(left_text, 0, starting_pixel_row, GFXFF);
+    tft->drawString(left_text, 25, starting_pixel_row, GFXFF);
     yield();
     tft->drawString(middle_text, 134, starting_pixel_row, GFXFF);
     yield();
-    tft->drawString(right_text, 320 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+    tft->drawString(right_text, 300 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
 #endif
 
 #ifdef LCD_TFT_ESPI
