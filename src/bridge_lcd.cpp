@@ -276,22 +276,29 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line)
     print_line(tilt->color_name().c_str(), temp, gravity, line);
 
 #ifdef LCD_TFT
+    uint16_t fHeight = tft->fontHeight(GFXFF);
     if (tilt->text_color() == 0xFFFF)
-    {
-        tft->fillRect(
+    { // White outline, black square
+        tft->fillRect( // White square
             0,
-            (tft->fontHeight(GFXFF)) * (line - 1) + 2,
+            fHeight * (line - 1) + 2,
             15,
-            tft->fontHeight(GFXFF) - 8,
+            fHeight - 8,
             TFT_WHITE);
+        tft->fillRect( // Black square
+            1,
+            fHeight * (line - 1) + 3,
+            13,
+            fHeight - 10,
+            TFT_BLACK);
     }
     else
-    {
+    { // All else
         tft->fillRect(
             0,
-            (tft->fontHeight(GFXFF)) * (line - 1) + 2,
+            fHeight * (line - 1) + 2,
             15,
-            tft->fontHeight(GFXFF) - 8,
+            fHeight - 8,
             tilt->text_color());
     }
 #endif
@@ -427,11 +434,7 @@ void bridge_lcd::clear()
     oled_display->setFont(SSD1306_FONT);
 #endif
 
-#ifdef LCD_TFT
-    tft->fillScreen(TFT_BLACK);
-#endif
-
-#ifdef LCD_TFT_ESPI
+#if defined (LCD_TFT) || defined (LCD_TFT_ESPI)
     tft->fillScreen(TFT_BLACK);
 #endif
 
