@@ -545,3 +545,8 @@ void bridge_lcd::display()
     oled_display->display();
 #endif
 }
+
+void screenFlip()
+{
+    lcd.check_screen();
+}

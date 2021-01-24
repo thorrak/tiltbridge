@@ -92,6 +92,8 @@ private:
     bool touchLatch = false;    // Ensure we only trigger a touch once
 };
 
+void screenFlip();
+
 extern bridge_lcd lcd;
 extern bool setWiFiPushed;
 

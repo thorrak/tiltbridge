@@ -75,6 +75,8 @@ private:
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
 };
 
+void dataDispatch();
+
 extern dataSendHandler data_sender;
 
 #endif //TILTBRIDGE_SENDDATA_H
