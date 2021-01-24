@@ -52,6 +52,7 @@ void setup()
 void loop()
 {
     serialLoop();   // Service telnet and console commands
+    lcd.check_touch();
 
     if (board_reset_pressed_at > 0)
     {
