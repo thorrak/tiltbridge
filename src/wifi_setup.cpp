@@ -4,15 +4,7 @@
 
 #include "wifi_setup.h"
 
-// Since we can't use double reset detection or the "boot" button, we need to leverage the touchscreen to trigger the
-// WiFi reset on TFT builds
-#ifdef LCD_TFT
-//#include <XPT2046_Touchscreen.h>
-//XPT2046_Touchscreen ts(TS_CS);
-#endif
-
 bool shouldSaveConfig = false;
-uint64_t wifi_reset_pressed_at = 0;
 
 void saveParamsCallback()
 {
@@ -27,7 +19,7 @@ void apCallback(WiFiManager *myWiFiManager)
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
 }
 
-void disconnect_from_wifi_and_restart()
+void disconnectWiFi()
 {
     WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(true);
@@ -37,14 +29,28 @@ void disconnect_from_wifi_and_restart()
     ESP.restart();
 }
 
-void mdnsreset()
+void mdnsReset()
 {
-    tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
+    tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
     http_server.name_reset_requested = false;
-    ESP.restart();  // TODO:  This no longer works as designed
+    MDNS.end();
+    if (!MDNS.begin(config.mdnsID))
+    {
+        Log.error(F("Error resetting MDNS responder."));
+        ESP.restart();
+    }
+    else
+    {
+        Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
+        MDNS.addService("http", "tcp", WEBPORT);
+        MDNS.addService("kegcop", "tcp", WEBPORT);
+#if DOTELNET == true
+        MDNS.addService("telnet", "tcp", TELNETPORT);
+#endif
+    }
 }
 
-void init_wifi()
+void initWiFi()
 {
     WiFiManager wm;
 #if ARDUINO_LOG_LEVEL == 6
@@ -96,7 +102,7 @@ void init_wifi()
             // If the mDNS name is invalid, reset the WiFi configuration and restart
             // the ESP8266
             // TODO - add an LCD error message here maybe
-            disconnect_from_wifi_and_restart();
+            disconnectWiFi();
         }
         saveConfig();
     }
@@ -127,77 +133,7 @@ void init_wifi()
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
 }
 
-#ifndef LCD_TFT
-// Use the "boot" button present on most of the OLED boards to reset the WiFi configuration allowing for easy
-// transportation between networks
-void IRAM_ATTR wifi_reset_pressed()
-{
-    // When the reset button is pressed, just log the time & get back to work
-    wifi_reset_pressed_at = xTaskGetTickCount();
-}
-
-void initWiFiResetButton()
-{
-    pinMode(WIFI_RESET_BUTTON_GPIO, INPUT_PULLUP);
-    attachInterrupt(WIFI_RESET_BUTTON_GPIO, wifi_reset_pressed, RISING);
-}
-
-//void disableWiFiResetButton() {
-//    detachInterrupt(WIFI_RESET_BUTTON_GPIO);
-//}
-
-#else
-// If we have LCD_TFT set, we need to build the functions as noop
-void initWiFiResetButton()
-{
-    // This is noop for LCD_TFT as we're using the touchscreen instead
-}
-
-#endif
-
-void handle_wifi_reset_presses()
-{
-    uint64_t initial_press_at = 0;
-
-#ifdef LCD_TFT
-    //while (ts.touched()) // Block while the screen is pressed until the user releases
-    //    wifi_reset_pressed_at = xTaskGetTickCount();
-#endif
-
-    if (wifi_reset_pressed_at > (xTaskGetTickCount() - WIFI_RESET_DOUBLE_PRESS_TIME) && wifi_reset_pressed_at > WIFI_RESET_DOUBLE_PRESS_TIME)
-    {
-        initial_press_at = wifi_reset_pressed_at; // Cache when the button was first pressed
-        lcd.display_wifi_reset_screen();
-        delay(100); // Give the user a moment to release the screen (doubles as debounce)
-
-        for (TickType_t x = xTaskGetTickCount() + WIFI_RESET_DOUBLE_PRESS_TIME; xTaskGetTickCount() <= x;)
-        {
-            delay(1);
-
-            //#ifdef LCD_TFT
-            //            if (ts.touched() || wifi_reset_pressed_at != initial_press_at)
-            //#else
-            if (wifi_reset_pressed_at != initial_press_at)
-            //#endif
-            {
-                // The user pushed the button a second time & caused a second interrupt. Process the reset.
-                disconnect_from_wifi_and_restart();
-            }
-        }
-
-        // Explicitly clear the screen
-        lcd.clear();
-
-        //        delay(WIFI_RESET_DOUBLE_PRESS_TIME); // Block while we let the user press a second time
-        //
-        //        if(wifi_reset_pressed_at != initial_press_at) {
-        //            // The user pushed the button a second time & caused a second interrupt. Process the reset.
-        //            disconnect_from_wifi_and_restart();
-        //        }
-    }
-}
-
-void reconnectIfDisconnected()
+void reconnectWiFi()
 {
     if (WiFiClass::status() != WL_CONNECTED)
     {

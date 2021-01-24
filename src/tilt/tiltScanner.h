@@ -5,7 +5,6 @@
 #ifndef TILTBRIDGE_TILTSCANNER_H
 #define TILTBRIDGE_TILTSCANNER_H
 
-#include "tiltBridge.h"
 #include "tiltHydrometer.h"
 #include "serialhandler.h"
 #include "tiltHydrometer.h"
@@ -41,6 +40,8 @@ private:
     tiltHydrometer *m_tilt_devices[TILT_COLORS]{};
     MyAdvertisedDeviceCallbacks *callbacks;
 };
+
+void pingScanner();
 
 extern tiltScanner tilt_scanner;
 

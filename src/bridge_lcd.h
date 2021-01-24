@@ -25,6 +25,7 @@
 
 #define TILTS_PER_PAGE 15 // The actual number is one fewer than this - the first row is used for headers
 #define TILT_FONT_SIZE 2
+#define MIN_PRESSURE 2000
 
 #elif defined(LCD_TFT_ESPI)
 
@@ -51,7 +52,8 @@ public:
 
     void init();
     void reinit();
-    void display_logo();
+    void display_logo(bool fromReset = false);
+    void checkTouch();
 
     void display_wifi_connect_screen(const char *ap_name, const char *ap_pass);
     void display_wifi_success_screen(const char *mdns_url, const char *ip_address_url);
@@ -64,7 +66,6 @@ public:
     void print_line(const char *left_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line);
 
-    //static void check_screen(void * parameter);
     void check_screen();
     void clear();
 
@@ -72,7 +73,7 @@ private:
     uint8_t display_next();
     void display_tilt_screen(uint8_t screen_number);
     void print_tilt_to_line(tiltHydrometer *tilt, uint8_t line);
-
+    bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
     void display();
 
 #ifdef LCD_SSD1306
@@ -83,15 +84,17 @@ private:
     TFT_eSPI *tft;
 #endif // LCD_SSD1306
 
-    uint8_t tilt_pages_in_run; // Number of pages in the current loop through the active tilts (# active tilts / 3)
-    uint8_t tilt_on_page;      // The page number currently being displayed
+    uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
+    uint8_t tilt_on_page;       // The page number currently being displayed
     uint8_t on_screen;
     uint64_t next_screen_at;
 
-#ifdef LCD_SSD1306
-    bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
-#endif
+    bool touchLatch = false;    // Ensure we only trigger a touch once
 };
 
+void screenFlip();
+
 extern bridge_lcd lcd;
+extern bool setWiFiPushed;
+
 #endif // TILTBRIDGE_BRIDGE_LCD_H

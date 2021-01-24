@@ -178,3 +178,14 @@ void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
     }
     serializeJson(j, all_tilt_json, TILT_ALL_DATA_SIZE);
 }
+
+void pingScanner()
+{
+    if (tilt_scanner.scan())
+    {
+        // The scans are done asynchronously, so we'll poke the scanner to see if
+        // a new scan needs to be triggered.
+
+        // If we need to do anything when a new scan is started, trigger it here.
+    }
+}

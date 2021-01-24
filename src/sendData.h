@@ -6,7 +6,6 @@
 #define TILTBRIDGE_SENDDATA_H
 
 #include "serialhandler.h"
-#include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "jsonconfig.h"
 
@@ -75,6 +74,8 @@ private:
     static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
 };
+
+void dataDispatch();
 
 extern dataSendHandler data_sender;
 

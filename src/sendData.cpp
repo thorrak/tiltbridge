@@ -755,3 +755,8 @@ void dataSendHandler::process()
         yield();
     }
 }
+
+void dataDispatch()
+{
+    data_sender.process();
+}

@@ -4,8 +4,12 @@
 
 #include "main.h"
 
+#if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
-uint64_t restart_time = 0;
+#endif
+Ticker dataSend;
+Ticker wifiCheck;
+Ticker tiltScan;
 
 void printMem()
 {
@@ -19,17 +23,14 @@ void setup()
 {
     serial();
 
-    FILESYSTEM.begin();
-
     Log.verbose(F("Loading config." CR));
     loadConfig();
 
     Log.verbose(F("Initializing LCD." CR));
-    lcd.init(); // Initialize the display
+    lcd.init();
 
     Log.verbose(F("Initializing WiFi." CR));
-    init_wifi(); // Initialize WiFi (including configuration AP if necessary)
-    initWiFiResetButton();
+    initWiFi();
 
 #ifdef LOG_LOCAL_LEVEL
     esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to debug level
@@ -43,40 +44,49 @@ void setup()
 
     data_sender.init();     // Initialize the data sender
     http_server.init();     // Initialize the web server
+    initButtons();          // Initialize buttons
 
-    memCheck.attach(30, printMem);  // Memory debug print on timer
+    // Start independent timers
+#if (ARDUINO_LOG_LEVEL >= 5)
+    memCheck.attach(30, printMem);              // Memory debug print on timer
+#endif
+    dataSend.attach(1, dataDispatch);           // Send data
+    wifiCheck.attach(1, reconnectWiFi);         // Check on WiFi
+    tiltScan.attach(1, pingScanner);            // Nudge the Tilt scanner
 }
 
 void loop()
 {
-    serialLoop();   // Service telnet and console commands
+    // These processes take precedence
+    serialLoop();       // Service telnet and console commands
+    checkButtons();     // Check for reset calls
 
-    if (tilt_scanner.scan())
+    // Check semaphores
+
+    if (doBoardReset || http_server.restart_requested)
     {
-        // The scans are done asynchronously, so we'll poke the scanner to see if
-        // a new scan needs to be triggered.
-
-        // If we need to do anything when a new scan is started, trigger it here.
+        Log.verbose(F("Resetting controller." CR));
+        http_server.restart_requested = false;
+        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
+        vTaskDelay(1000);
+        ESP.restart();                           // Restart the TiltBridge
     }
 
-    // handle_wifi_reset_presses();
-    reconnectIfDisconnected(); // If we disconnected from the WiFi, attempt to reconnect
-    data_sender.process();
-
-    lcd.check_screen();
-
-    if (http_server.wifi_reset_requested)
+    if (doWiFiReset || http_server.wifi_reset_requested)
     {
         Log.verbose(F("Resetting WiFi configuration." CR));
-        http_server.wifi_reset_requested = false;
-        disconnect_from_wifi_and_restart();
+        http_server.wifi_reset_requested = false; 
+        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
+        vTaskDelay(1000);
+        doWiFiReset = false;
+        disconnectWiFi();
     }
 
     if (http_server.name_reset_requested)
     {
         Log.verbose(F("Resetting host name." CR));
         http_server.name_reset_requested = false;
-        mdnsreset();
+        mdnsReset();
     }
 
     if (http_server.factoryreset_requested)
@@ -84,17 +94,8 @@ void loop()
         Log.verbose(F("Resetting to original settings." CR));
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
-        deleteConfigFile();                         // Dimply delete the config file in SPIFFS
-        disconnect_from_wifi_and_restart();         // Clear wifi config and restart
-    }
-
-    if (http_server.restart_requested)
-    {
-        Log.verbose(F("Resetting controller." CR));
-        http_server.restart_requested = false;
-        tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        vTaskDelay(3000);
-        ESP.restart();                           // Restart the TiltBridge
+        deleteConfigFile();                         // Delete the config file in SPIFFS
+        disconnectWiFi();                           // Clear wifi config and restart
     }
 
     if (http_server.mqtt_init_rqd)
@@ -110,4 +111,6 @@ void loop()
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
     }
+
+    screenFlip(); // This must be in the loop
 }

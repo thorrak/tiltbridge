@@ -20,6 +20,7 @@ bool deleteConfigFile()
 
 bool loadConfig()
 {
+    FILESYSTEM.begin();
     // Manage loading the configuration
     if (!loadFile())
     {
