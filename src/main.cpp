@@ -54,7 +54,7 @@ void loop()
     serialLoop();   // Service telnet and console commands
     lcd.check_touch();
 
-    if (board_reset_pressed_at > 0)
+    if (boardResetTime > 0)
     {
         Log.notice(F("Reset button pressed, restarting." CR));
         ESP.restart();

@@ -19,6 +19,6 @@ void printMem();
 void setup();
 void loop();
 
-extern uint64_t board_reset_pressed_at;
+extern uint64_t boardResetTime;
 
 #endif

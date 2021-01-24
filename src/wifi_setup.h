@@ -32,6 +32,6 @@ void disconnect_from_wifi_and_restart();
 void handle_wifi_reset_presses();
 void reconnectIfDisconnected();
 
-extern uint64_t board_reset_pressed_at;
+extern unsigned long boardResetTime;
 
 #endif //TILTBRIDGE_WIFI_SETUP_H
