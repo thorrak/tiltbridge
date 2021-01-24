@@ -22,6 +22,8 @@ bridge_lcd lcd;
 //#include "Free_Fonts.h" // TODO:  Determine if we still need this.
 #endif
 
+bool onResetScreen = false;
+
 bridge_lcd::bridge_lcd()
 {
     next_screen_at = 0;
@@ -133,9 +135,17 @@ void bridge_lcd::reinit()
 #endif
 }
 
-void bridge_lcd::display_logo()
+void bridge_lcd::display_logo(bool fromReset)
 {
     clear();
+
+    if (fromReset)
+    {
+        // Need this if we got here from reset timeout
+        on_screen = SCREEN_TILT;
+        onResetScreen = false;
+        next_screen_at = xTaskGetTickCount() + 2000;
+    }
 
 #ifdef LCD_SSD1306
     oled_display->drawXbm(
@@ -167,14 +177,14 @@ void bridge_lcd::display_logo()
 #endif
 }
 
-void bridge_lcd::check_touch()
+void bridge_lcd::checkTouch()
 {
 #ifdef TOUCH_CS
 
     uint16_t x = 0, y = 0; // Touch coordinates (not used here)
     bool touched = tft->getTouch(&x, &y, MIN_PRESSURE);
 
-    if (touched && ! touchLatch && ! wifiResetTime)
+    if (touched && ! touchLatch && ! setWiFiPushed)
     {
         // New touch, not currently waiting to process a touch elsewhere
         touchLatch = true;
@@ -187,7 +197,7 @@ void bridge_lcd::check_touch()
     {
         // Clear touchlatch, trigger a tap
         touchLatch = false;
-        wifiResetTime = millis();
+        setWiFiPushed = true;
     }
     else
     {
@@ -232,6 +242,7 @@ void bridge_lcd::display_wifi_reset_screen()
     // displayed, WiFi settings are cleared and the TiltBridge will return
     // to displaying the configuration AP at startup
     clear();
+    onResetScreen = true;
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
     print_line("Press the button again to", "", 1);
@@ -318,7 +329,7 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
 
 void bridge_lcd::check_screen()
 {
-    if (next_screen_at < xTaskGetTickCount())
+    if (! onResetScreen && next_screen_at < xTaskGetTickCount())
     {
         next_screen_at = display_next() * 1000 + xTaskGetTickCount();
     }
