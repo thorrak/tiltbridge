@@ -7,7 +7,6 @@
 
 #include "uptime.h"
 #include "version.h"
-#include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "tilt/tiltScanner.h"
 #include "OTAUpdate.h"

@@ -6,7 +6,6 @@
 #define TILTBRIDGE_SENDDATA_H
 
 #include "serialhandler.h"
-#include "tiltBridge.h"
 #include "wifi_setup.h"
 #include "jsonconfig.h"
 

@@ -5,7 +5,6 @@
 #ifndef TILTBRIDGE_TILTSCANNER_H
 #define TILTBRIDGE_TILTSCANNER_H
 
-#include "tiltBridge.h"
 #include "tiltHydrometer.h"
 #include "serialhandler.h"
 #include "tiltHydrometer.h"

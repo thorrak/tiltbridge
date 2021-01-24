@@ -14,8 +14,8 @@
 #endif
 #define WIFI_RESET_DOUBLE_PRESS_TIME 3000 // How long (in ms) the user has to press the wifi reset button a second time
 
+#include "bridge_lcd.h"
 #include "serialhandler.h"
-#include "tiltBridge.h"
 #include "jsonconfig.h"
 #include <Arduino.h>
 #include <WiFiManager.h>

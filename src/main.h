@@ -3,7 +3,8 @@
 
 #include "http_server.h"
 #include "sendData.h"
-#include "tiltBridge.h"
+#include "tilt/tiltScanner.h"
+#include "bridge_lcd.h"
 #include "wifi_setup.h"
 #include "serialhandler.h"
 #include "jsonconfig.h"
