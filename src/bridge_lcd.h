@@ -52,8 +52,8 @@ public:
 
     void init();
     void reinit();
-    void display_logo();
-    void check_touch();
+    void display_logo(bool fromReset = false);
+    void checkTouch();
 
     void display_wifi_connect_screen(const char *ap_name, const char *ap_pass);
     void display_wifi_success_screen(const char *mdns_url, const char *ip_address_url);
@@ -93,6 +93,6 @@ private:
 };
 
 extern bridge_lcd lcd;
-extern unsigned long wifiResetTime;
+extern bool setWiFiPushed;
 
 #endif // TILTBRIDGE_BRIDGE_LCD_H

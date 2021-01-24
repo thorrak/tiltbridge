@@ -1,6 +1,7 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+#include "watchButtons.h"
 #include "http_server.h"
 #include "sendData.h"
 #include "tilt/tiltScanner.h"
@@ -19,6 +20,7 @@ void printMem();
 void setup();
 void loop();
 
-extern uint64_t boardResetTime;
+extern bool doWiFiReset;
+extern bool doBoardReset;
 
 #endif
