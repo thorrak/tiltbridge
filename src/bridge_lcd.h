@@ -87,7 +87,7 @@ private:
     uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
     uint8_t tilt_on_page;       // The page number currently being displayed
     uint8_t on_screen;
-    uint64_t next_screen_at;
+    unsigned long next_screen_at;
 
     bool touchLatch = false;    // Ensure we only trigger a touch once
 };

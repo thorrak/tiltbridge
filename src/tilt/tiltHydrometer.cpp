@@ -326,7 +326,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     rssi = current_rssi;
 
     m_loaded = true; // Setting loaded true now that we have gravity/temp values
-    m_lastUpdate = xTaskGetTickCount();
+    m_lastUpdate = millis();
     return true;
 }
 
@@ -386,7 +386,7 @@ bool tiltHydrometer::is_loaded()
     // Expire loading after 5 minutes
     if (m_loaded)
     {
-        if ((xTaskGetTickCount() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION)
+        if ((millis() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION)
         {
             m_loaded = false;
         }
