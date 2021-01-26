@@ -10,24 +10,27 @@ WiFiClient client;
 WiFiClient wClient;
 MQTTClient mqttClient(256);
 
-dataSendHandler::dataSendHandler()
-{
-    send_to_localTarget_at = 20 * 1000;    // Trigger first send to Fermentrack 20 seconds out
-    send_to_brewstatus_at = 40 * 1000;     // Trigger first send to BrewStatus 40 seconds out
-    send_to_brewfather_at = 50 * 1000;     // Trigger first send to Brewfather 50 seconds out
-    send_to_brewers_friend_at = 55 * 1000; // Trigger first send to Brewer's Friend 55 seconds out
-    send_to_mqtt_at = 60 * 1000;           // Trigger first send to MQTT 60 seconds out
-    send_to_google_at = 70 * 1000;         // Trigger first send to Google Sheets 70 seconds out
-#ifdef ENABLE_TEST_CHECKINS
-    send_checkin_at = 35 * 1000; // If we have send_checkins enabled (this is a testing thing!) send at 35 seconds
-#endif
+// POST Timers
+Ticker gSheetsTicker;
+Ticker mqttTicker;
+Ticker brewStatusTicker;
+Ticker brewfatherTicker;
+Ticker brewersFriendTicker;
+Ticker localTargetTicker;
 
-    mqtt_alreadyinit = false;
-}
+dataSendHandler::dataSendHandler() {}
 
 void dataSendHandler::init()
 {
     init_mqtt();
+
+    // Set up timers
+    localTargetTicker.once(20, sendToLocalTarget);      // Schedule first send to Local Target
+    brewStatusTicker.once(30, sendToBrewstatus);        // Schedule first send to Brew Status
+    brewfatherTicker.once(40, sendToBrewfather);        // Schedule first send to Brewfather
+    brewersFriendTicker.once(50, sendToBrewersFriend);  // Schedule first send to Brewer's Friend
+    mqttTicker.once(60, sendToMQTT);                    // Schedule first send to MQTT
+    gSheetsTicker.once(70, sendToGoogle);               // Schedule first send to Google Sheets
 }
 
 void dataSendHandler::init_mqtt()
@@ -91,10 +94,20 @@ void dataSendHandler::connect_mqtt()
     }
 }
 
+void sendToLocalTarget()
+{
+    if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
+    {
+        Log.verbose(F("Calling send to Local Target." CR));
+        data_sender.send_to_localTarget();
+    }
+    localTargetTicker.once(config.localTargetPushEvery, sendToLocalTarget);   // Set up subsequent send to localTarget        
+}
+
 bool dataSendHandler::send_to_localTarget()
 {
-    // TODO: (JSON) Come back and tighten this up
     bool result = true;
+
     DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
     char payload[TILT_ALL_DATA_SIZE + 128];
 
@@ -108,6 +121,16 @@ bool dataSendHandler::send_to_localTarget()
         result = false; // There was an error with the previous send
 
     return result;
+}
+
+void sendToBrewstatus()
+{
+    if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
+    {
+        Log.verbose(F("Calling send to Brew Status." CR));
+        data_sender.send_to_brewstatus();        
+    }
+    brewStatusTicker.once(config.brewstatusPushEvery, sendToBrewstatus);   // Set up subsequent send to Brew Status
 }
 
 bool dataSendHandler::send_to_brewstatus()
@@ -141,6 +164,16 @@ bool dataSendHandler::send_to_brewstatus()
     }
 
     return result;
+}
+
+void sendToGoogle()
+{
+    if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
+    {
+        Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
+        data_sender.send_to_google();        
+    }
+    gSheetsTicker.once(GSCRIPTS_DELAY, sendToGoogle);   // Set up subsequent send to Google Sheets
 }
 
 bool dataSendHandler::send_to_google()
@@ -272,6 +305,26 @@ bool dataSendHandler::send_to_google()
     } // Loop through colors
     Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
     return result;
+}
+
+void sendToBrewfather()
+{
+    if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
+    {
+        Log.verbose(F("Calling send to Brewfather." CR));
+        data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);        
+    }
+    brewfatherTicker.once(BREWFATHER_DELAY, sendToBrewfather);   // Set up subsequent send to Brewfather
+}
+
+void sendToBrewersFriend()
+{
+    if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
+    {
+        Log.verbose(F("Calling send to Brewer's Friend." CR));
+        data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);        
+    }
+    brewersFriendTicker.once(BREWERS_FRIEND_DELAY, sendToBrewersFriend);   // Set up subsequent send to Brewer's Friend
 }
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
@@ -491,6 +544,16 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
     return retVal;
 }
 
+void sendToMQTT()
+{
+    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
+    {
+        Log.verbose(F("Publishing available results to MQTT Broker." CR));
+        data_sender.send_to_mqtt();        
+    }
+    mqttTicker.once(config.mqttPushEvery, sendToMQTT);   // Set up subsequent send to MQTT
+}
+
 bool dataSendHandler::send_to_mqtt()
 {
     // TODO: (JSON) Come back and tighten this up
@@ -587,176 +650,4 @@ bool dataSendHandler::send_to_mqtt()
         }
     }
     return result;
-}
-
-#ifdef ENABLE_TEST_CHECKINS
-u_long checkin_no = 0;
-
-void send_checkin_stat()
-{
-    HTTPClient http;
-
-    String Data = "checkin_no=";
-    Data += String(checkin_no);
-    //    Data += "\r\n\r\n";
-
-    //    Serial.print("Data to send: ");
-    //    Serial.println(Data);
-
-    http.begin("http://www.fermentrack.com/checkin/");  //Specify destination for HTTP request
-    http.addHeader("Content-Type", "application/json"); //Specify content-type header
-    int httpResponseCode = http.POST(Data);             //Send the actual POST request
-
-    if (httpResponseCode > 0)
-    {
-        //        String response = http.getString();                       //Get the response to the request
-        //        Serial.println(httpResponseCode);   //Print return code
-        //        Serial.println(response);           //Print request answer
-    }
-    else
-    {
-        //        Serial.print("Error on sending POST: ");
-        //        Serial.println(httpResponseCode);
-    }
-    http.end(); //Free resources
-
-    checkin_no = checkin_no + 1;
-}
-#endif
-
-void dataSendHandler::process()
-{
-    // Processes each tick & dispatches HTTP clients to push data out as necessary
-
-    if (http_server.name_reset_requested == true) // Don't send while we are processing a name change
-        return;
-
-    // Check & send to Local Target if necessary
-    if (send_to_localTarget_at <= xTaskGetTickCount())
-    {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
-        { //Check WiFi connection status
-            Log.verbose(F("Calling send to Local Target." CR));
-
-            send_to_localTarget();
-            send_to_localTarget_at = xTaskGetTickCount() + (config.localTargetPushEvery * 1000);
-        }
-        else
-        {
-            // If the user adds the setting, we want this to kick in within 10 seconds
-            send_to_localTarget_at = xTaskGetTickCount() + 10000;
-        }
-        yield();
-    }
-
-    // Check & send to Brewstatus if necessary
-    if (send_to_brewstatus_at <= xTaskGetTickCount())
-    {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
-        { //Check WiFi connection status
-            Log.verbose(F("Calling send to Brewstatus." CR));
-
-            send_to_brewstatus();
-            send_to_brewstatus_at = xTaskGetTickCount() + (config.brewstatusPushEvery * 1000);
-        }
-        else
-        {
-            // If the user adds the setting, we want this to kick in within 10 seconds
-            send_to_brewstatus_at = xTaskGetTickCount() + 10000;
-        }
-        yield();
-    }
-
-    // Check & send to Google Scripts if necessary
-    if (send_to_google_at <= xTaskGetTickCount())
-    {
-        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH &&
-        strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
-        {
-            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
-            tilt_scanner.deinit();
-            yield();
-            send_to_google();
-            tilt_scanner.init();
-            send_to_google_at = xTaskGetTickCount() + GSCRIPTS_DELAY;
-        }
-        else
-        {
-            // If the user newly adds the setting, this allows it to trigger within 10 seconds
-            send_to_google_at = xTaskGetTickCount() + 10000;
-        }
-        yield();
-    }
-
-    // Check & send to Brewers Friend if necessary
-    if (send_to_brewers_friend_at <= xTaskGetTickCount())
-    {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
-        {
-            Log.verbose(F("Calling send to Brewers Friend." CR));
-
-            send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
-            send_to_brewers_friend_at = xTaskGetTickCount() + BREWERS_FRIEND_DELAY;
-        }
-        else
-        {
-            // If the user adds the setting, we want this to kick in within 10 seconds
-            send_to_brewers_friend_at = xTaskGetTickCount() + 10000;
-        }
-        yield();
-    }
-
-#ifdef ENABLE_TEST_CHECKINS
-    if (send_checkin_at <= xTaskGetTickCount())
-    {
-        if (WiFiClass::status() == WL_CONNECTED)
-        { //Check WiFi connection status
-            Log.verbose(F("Calling check-in to fermentrack.com." CR));
-            // tilt_scanner.wait_until_scan_complete();
-            send_checkin_stat();
-        }
-        send_checkin_at = xTaskGetTickCount() + (60 * 5 * 1000);
-        yield();
-    }
-#endif
-
-    if (send_to_brewfather_at <= xTaskGetTickCount())
-    {
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
-        {
-            Log.verbose(F("Calling send to Brewfather." CR));
-
-            send_to_bf_and_bf(BF_MEANS_BREWFATHER);
-            send_to_brewfather_at = xTaskGetTickCount() + BREWFATHER_DELAY;
-        }
-        else
-        {
-            // If the user adds the setting, we want this to kick in within 10 seconds
-            send_to_brewfather_at = xTaskGetTickCount() + 10000;
-        }
-        yield();
-    }
-
-    // Check & send to mqtt broker if necessary
-    if (send_to_mqtt_at <= xTaskGetTickCount())
-    {
-        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-        {
-            Log.verbose(F("Publishing available results to MQTT Broker." CR));
-
-            send_to_mqtt();
-            send_to_mqtt_at = xTaskGetTickCount() + (config.mqttPushEvery * 1000);
-        }
-        else
-        {
-            // If the user adds the setting, we want this to kick in within 10 seconds
-            send_to_mqtt_at = xTaskGetTickCount() + 10000;
-        }
-        yield();
-    }
-}
-
-void dataDispatch()
-{
-    data_sender.process();
 }
