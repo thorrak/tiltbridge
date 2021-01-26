@@ -7,8 +7,6 @@
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
 #endif
-Ticker wifiCheck;
-Ticker tiltScan;
 
 void printMem()
 {
@@ -49,8 +47,6 @@ void setup()
 #if (ARDUINO_LOG_LEVEL >= 5)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
-    wifiCheck.attach(1, reconnectWiFi);         // Check on WiFi
-    tiltScan.attach(1, pingScanner);            // Nudge the Tilt scanner
 }
 
 void loop()
