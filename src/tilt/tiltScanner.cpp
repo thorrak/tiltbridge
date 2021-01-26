@@ -7,6 +7,7 @@
 // Create the scanner
 BLEScan *pBLEScan;
 tiltScanner tilt_scanner;
+Ticker tiltScan;
 
 ////////////////////////////
 // BLE Scanner Callbacks/Code
@@ -56,6 +57,7 @@ void tiltScanner::init()
     pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
 
     tilt_scanner.scan();
+    tiltScan.attach(1, pingScanner);  // Nudge the Tilt scanner on timer
 }
 
 void tiltScanner::deinit()

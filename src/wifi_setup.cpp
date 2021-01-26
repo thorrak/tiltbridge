@@ -4,6 +4,8 @@
 
 #include "wifi_setup.h"
 
+Ticker wifiCheck;
+
 bool shouldSaveConfig = false;
 
 void saveParamsCallback()
@@ -131,6 +133,7 @@ void initWiFi()
     strcat(ip_address_url, "/");
 
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
+    wifiCheck.attach(1, reconnectWiFi); // Check on WiFi
 }
 
 void reconnectWiFi()
