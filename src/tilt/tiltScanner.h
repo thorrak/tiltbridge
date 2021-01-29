@@ -10,7 +10,6 @@
 #include "tiltHydrometer.h"
 
 #include <Ticker.h>
-#include <NimBLEAdvertisedDevice.h>
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>
 #include <NimBLEUtils.h>

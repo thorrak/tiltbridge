@@ -4,6 +4,9 @@
 
 #include "main.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "esp_log.h"
+
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
 #endif
@@ -30,9 +33,36 @@ void setup()
     initWiFi();
 
 #ifdef LOG_LOCAL_LEVEL
-    esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to debug level
-    esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
-    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
+
+#undef CONFIG_NIMBLE_DEBUG
+#undef CONFIG_BT_NIMBLE_DEBUG
+#define MBEDTLS_ERROR_C
+    esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
+    esp_log_level_set("NimBLE", ESP_LOG_WARN);
+    esp_log_level_set("NIMBLE_NVS", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAddress", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertisedDevice", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertising", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertisingReport", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEBeacon", ESP_LOG_WARN);
+    esp_log_level_set("NimBLECharacteristic", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEClient", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEDescriptor", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEDevice", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEEddystoneTLM", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEEddystoneURL", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteCharacteristic", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteDescriptor", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteService", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEScan", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEServer", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEService", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEUtils", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEUUID", ESP_LOG_WARN);
+    
+    // esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
+    // esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
 #endif
 
     Log.verbose(F("Initializing scanner." CR));
