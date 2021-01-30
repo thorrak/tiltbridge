@@ -47,6 +47,7 @@ bool dataSendHandler::send_to_localTarget()
     {
         // Local Target
         send_localTarget = false;
+
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to Local Target." CR));
@@ -55,7 +56,9 @@ bool dataSendHandler::send_to_localTarget()
             char payload[TILT_ALL_DATA_SIZE + 128];
 
             j["mdns_id"] = config.mdnsID;
+            Log.verbose(F("DEBUG: Leaving." CR));
             tilt_scanner.tilt_to_json_string(payload, true);
+            Log.verbose(F("DEBUG: Returning." CR));
             j["tilts"] = serialized(payload);
 
             serializeJson(j, payload);
@@ -99,18 +102,16 @@ bool send_to_bf_and_bf()
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 {
-    // TODO: (JSON) Come back and tighten this up
-
-    // This function combines the data formatting for both "BF"s - Brewers Friend & Brewfather
-    // Once the data is formatted, it is dispatched to send_to_url to be sent out.
+    // This function combines the data formatting for both "BF"s - Brewers
+    // Friend & Brewfather. Once the data is formatted, it is dispatched
+    // to send_to_url to be sent out.
 
     bool result = true;
-    StaticJsonDocument<500> j;
-    char apiKey[65];
-    char url[60];
+    StaticJsonDocument<BF_SIZE> j;
+    char url[128];
 
-    // As this function is being used for both Brewer's Friend and Brewfather, let's determine which we want and set up
-    // the URL/API key accordingly.
+    // As this function is being used for both Brewer's Friend and Brewfather,
+    // let's determine which we want and set up the URL/API key accordingly.
     if (which_bf == BF_MEANS_BREWFATHER)
     {
         if (strlen(config.brewfatherKey) <= BREWFATHER_MIN_KEY_LENGTH)
@@ -118,7 +119,6 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             Log.verbose(F("Brewfather key not populated. Returning." CR));
             return false;
         }
-        strcpy(apiKey, config.brewfatherKey);
         strcpy(url, "http://log.brewfather.net/stream?id=");
         strcat(url, config.brewfatherKey);
     }
@@ -129,7 +129,6 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             Log.verbose(F("Brewer's Friend key not populated. Returning." CR));
             return false;
         }
-        strcpy(apiKey, config.brewersFriendKey);
         strcpy(url, "http://log.brewersfriend.com/stream/");
         strcat(url, config.brewersFriendKey);
     }
@@ -139,7 +138,8 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
         return false;
     }
 
-    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+    // Loop through each of the tilt colors cached by tilt_scanner, sending
+    // data for each of the active tilts
     for (uint8_t i = 0; i < TILT_COLORS; i++)
     {
         if (tilt_scanner.tilt(i)->is_loaded())
@@ -152,10 +152,10 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             j["gravity_unit"] = "G";
             j["device_source"] = "TiltBridge";
 
-            char payload_string[500];
+            char payload_string[BF_SIZE];
             serializeJson(j, payload_string);
 
-            if (!send_to_url(url, apiKey, payload_string, "application/json"))
+            if (!send_to_url(url, "", payload_string, "application/json"))
                 result = false; // There was an error with the previous send
         }
     }
@@ -454,8 +454,9 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 Log.notice(F("Connecting to: %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
-            urlClient.setNoDelay(true);
+
             urlClient.setTimeout(10000);
+
             if (urlClient.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
             {
                 Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());

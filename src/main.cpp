@@ -80,7 +80,7 @@ void loop()
     checkButtons();     // Check for reset calls
 
     // data_sender.send_to_localTarget();
-    // send_to_bf_and_bf();    // TODO: Need to test this well
+    send_to_bf_and_bf();
     // data_sender.send_to_brewstatus();
     data_sender.send_to_google();
     // data_sender.send_to_mqtt();
