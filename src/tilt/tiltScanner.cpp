@@ -50,6 +50,7 @@ void tiltScanner::init()
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan(); // Create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
+    pBLEScan->setMaxResults(0);
     // Active scan actively queries devices for more info following detection.
     //
     pBLEScan->setActiveScan(false);
@@ -64,6 +65,7 @@ void tiltScanner::deinit()
 {
     wait_until_scan_complete();
     NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
+    delay(100);
 }
 
 bool tiltScanner::scan()
@@ -92,9 +94,6 @@ bool tiltScanner::wait_until_scan_complete()
 
     while (pBLEScan->isScanning())
         delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
-
-    // pBLEScan->stop();
-    pBLEScan->clearResults(); // delete results fromBLEScan buffer to release memory
 
     return true;
 }
