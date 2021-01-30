@@ -43,8 +43,6 @@ private:
     bool shouldRun;
 };
 
-void pingScanner();
-
 extern tiltScanner tilt_scanner;
 
 #endif //TILTBRIDGE_TILTSCANNER_H
