@@ -37,9 +37,7 @@ void dataSendHandler::init()
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
-    // DEBUG:
-    // gSheetsTicker.once(70, [](){send_gSheets = true;});               // Schedule first send to Google Sheets
-    gSheetsTicker.once(5, [](){send_gSheets = true;});               // Schedule first send to Google Sheets
+    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
 }
 
@@ -47,189 +45,58 @@ bool dataSendHandler::send_to_localTarget()
 {
     bool result = true;
 
-    DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-    char payload[TILT_ALL_DATA_SIZE + 128];
-
-    j["mdns_id"] = config.mdnsID;
-    tilt_scanner.tilt_to_json_string(payload, true);
-    j["tilts"] = serialized(payload);
-
-    serializeJson(j, payload);
-
-    if (!send_to_url(config.localTargetURL, "", payload, "application/json"))
-        result = false; // There was an error with the previous send
-
-    return result;
-}
-
-bool dataSendHandler::send_to_brewstatus()
-{
-    bool result = true;
-    const int payload_size = 512;
-    char payload[payload_size];
-
-    // The payload should look like this when sent to Brewstatus:
-    // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Comment')
-    // BrewStatus ignores Beer, so we just set this to Undefined.
-    // BrewStatus will record Comment if it set, but just leave it blank.
-    // The Timepoint is Google Sheets time, which is fractional days since 12/30/1899
-    // Using https://www.timeanddate.com/date/durationresult.html?m1=12&d1=30&y1=1899&m2=1&d2=1&y2=1970 gives
-    // us 25,569 days from the start of Google Sheets time to the start of the Unix epoch.
-    // BrewStatus wants local time, so we allow the user to specify a time offset.
-
-    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
-    for (uint8_t i = 0; i < TILT_COLORS; i++)
+    if (send_localTarget)
     {
-        if (tilt_scanner.tilt(i)->is_loaded())
+        // Local Target
+        send_localTarget = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
         {
-            snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
-                     tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
-                     tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
-                     tilt_scanner.tilt(i)->color_name().c_str(),
-                     ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-            if (!send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
+            Log.verbose(F("Calling send to Local Target." CR));
+
+            DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
+            char payload[TILT_ALL_DATA_SIZE + 128];
+
+            j["mdns_id"] = config.mdnsID;
+            tilt_scanner.tilt_to_json_string(payload, true);
+            j["tilts"] = serialized(payload);
+
+            serializeJson(j, payload);
+
+            if (!send_to_url(config.localTargetURL, "", payload, "application/json"))
                 result = false; // There was an error with the previous send
         }
+        localTargetTicker.once(20, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
     }
-
     return result;
 }
 
-bool dataSendHandler::send_to_google()
+bool send_to_bf_and_bf()
 {
-    HTTPClient http;
-    WiFiClientSecure secureClient;
-    http.setReuse(true);
-    int httpResponseCode;
-    int numSent = 0;
-    bool result = true;
-
-    tilt_scanner.deinit();
-
-    for (uint8_t i = 0; i < TILT_COLORS; i++)
+    bool retval = false;
+    if (send_brewersFriend)
     {
-        // Loop through each of the tilt colors cached by tilt_scanner
-        if (tilt_scanner.tilt(i)->is_loaded())
+        // Brewer's Friend
+        send_brewersFriend = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
-            // If there is a color present
-            if (tilt_scanner.tilt(i)->gsheets_beer_name().length() > 0)
-            {
-                if (numSent == 0)
-                    Log.notice(F("Beginning GSheets check-in." CR));
-                // If there's a sheet name saved
-                StaticJsonDocument<GSHEETS_JSON> payload;
-                payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
-                payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
-                payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-                payload["Color"] = tilt_scanner.tilt(i)->color_name();
-                payload["Comment"] = "";
-                payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
-                payload["tzOffset"] = config.TZoffset;
+            Log.verbose(F("Calling send to Brewer's Friend." CR));
+            retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
+        }
+        brewersFriendTicker.once(50, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+    }
 
-                char payload_string[GSHEETS_JSON];
-                serializeJson(payload, payload_string);
-                payload.clear();
-
-                http.useHTTP10(true);                                   // Turn off chunked transfer encoding to parse the stream
-                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
-                http.setConnectTimeout(3000);                           // Set 3 second timeout
-                secureClient.setInsecure();                             // Ignore SHA fingerprint
-
-                if (! http.begin(secureClient, config.scriptsURL))      // Connect secure
-                {
-                    Log.error(F("Unable to create secure connection to %s." CR), config.scriptsURL);
-                    result = false;
-                } // Failed to open a connection
-                else
-                {
-                    Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
-                    Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_scanner.tilt(i)->color_name().c_str(), payload_string);
-
-                    http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
-                    httpResponseCode = http.POST(payload_string);               // Send the payload
-
-                    if (httpResponseCode == 200)
-                    {
-                        // POST success
-                        StaticJsonDocument<GSHEETS_JSON> retval;
-#if (ARDUINO_LOG_LEVEL == 6)
-                        Log.verbose(F("JSON Response:" CR));
-                        ReadLoggingStream loggingStream(http.getStream(), Serial);
-                        deserializeJson(retval, loggingStream);
-                        Serial.println();
-#else
-                        deserializeJson(retval, http.getStream());
-#endif
-                        switch(i)
-                        {
-                            case(0):
-                            {
-                                strlcpy(config.link_red, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(1):
-                            {
-                                strlcpy(config.link_green, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(2):
-                            {
-                                strlcpy(config.link_black, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(3):
-                            {
-                                strlcpy(config.link_purple, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(4):
-                            {
-                                strlcpy(config.link_orange, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(5):
-                            {
-                                strlcpy(config.link_blue, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(6):
-                            {
-                                strlcpy(config.link_yellow, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            case(7):
-                            {
-                                strlcpy(config.link_pink, retval["doclongurl"].as<String>().c_str(), 255);
-                                break;
-                            }
-                            default:
-                            {
-                                break;
-                            }
-                        }
-                        saveConfig();
-                        retval.clear();
-                        numSent++;
-                    } // Response code = 200
-                    else
-                    {
-                        // Post generated an error
-                        Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
-                            tilt_scanner.tilt(i)->color_name().c_str(),
-                            httpResponseCode,
-                            http.errorToString(httpResponseCode).c_str(),
-                            http.getString().c_str());
-                        result = false;
-                    } // Response code != 200
-                } // Good connection
-                http.end();
-            } // Check we have a sheet name for the color
-        } // Check scanner is loaded for color
-    } // Loop through colors
-    Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
-
-    tilt_scanner.init();
-    return result;
+    if (send_brewfather)
+    {
+        // Brewfather
+        send_brewfather = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
+        {
+            Log.verbose(F("Calling send to Brewfather." CR));
+            retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
+        }
+        brewfatherTicker.once(40, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+    }
+    return retval;
 }
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
@@ -293,6 +160,200 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             if (!send_to_url(url, apiKey, payload_string, "application/json"))
                 result = false; // There was an error with the previous send
         }
+    }
+    return result;
+}
+
+bool dataSendHandler::send_to_brewstatus()
+{
+    bool result = true;
+    const int payload_size = 512;
+    char payload[payload_size];
+
+    if (send_brewStatus)
+    {
+        // Brew Status
+        send_brewStatus = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
+        {
+            Log.verbose(F("Calling send to Brew Status." CR));
+
+            // The payload should look like this when sent to Brewstatus:
+            // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Comment')
+            // BrewStatus ignores Beer, so we just set this to Undefined.
+            // BrewStatus will record Comment if it set, but just leave it blank.
+            // The Timepoint is Google Sheets time, which is fractional days since 12/30/1899
+            // Using https://www.timeanddate.com/date/durationresult.html?m1=12&d1=30&y1=1899&m2=1&d2=1&y2=1970 gives
+            // us 25,569 days from the start of Google Sheets time to the start of the Unix epoch.
+            // BrewStatus wants local time, so we allow the user to specify a time offset.
+
+            // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            {
+                if (tilt_scanner.tilt(i)->is_loaded())
+                {
+                    snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
+                            tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
+                            tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
+                            tilt_scanner.tilt(i)->color_name().c_str(),
+                            ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
+                    if (!send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
+                        result = false; // There was an error with the previous send
+                }
+            }
+        }
+        brewStatusTicker.once(30, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+    }
+    return result;
+}
+
+bool dataSendHandler::send_to_google()
+{
+    bool result = true;
+
+    if (send_gSheets)
+    {
+        // Google Sheets
+        send_gSheets = false;
+
+        tilt_scanner.deinit();
+
+        HTTPClient http;
+        WiFiClientSecure secureClient;
+        int httpResponseCode;
+        int numSent = 0;
+
+        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
+        {
+            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
+
+            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            {
+                // Loop through each of the tilt colors cached by tilt_scanner
+                if (tilt_scanner.tilt(i)->is_loaded())
+                {
+                    // If there is a color present
+                    if (tilt_scanner.tilt(i)->gsheets_beer_name().length() > 0)
+                    {
+                        if (numSent == 0)
+                            Log.notice(F("Beginning GSheets check-in." CR));
+                        // If there's a sheet name saved
+                        StaticJsonDocument<GSHEETS_JSON> payload;
+                        payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
+                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                        payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+                        payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                        payload["Comment"] = "";
+                        payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
+                        payload["tzOffset"] = config.TZoffset;
+
+                        char payload_string[GSHEETS_JSON];
+                        serializeJson(payload, payload_string);
+                        payload.clear();
+
+                        http.useHTTP10(true);                                   // Turn off chunked transfer encoding to parse the stream
+                        http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
+                        http.setConnectTimeout(3000);                           // Set 3 second timeout
+                        secureClient.setInsecure();                             // Ignore SHA fingerprint
+
+                        if (! http.begin(secureClient, config.scriptsURL))      // Connect secure
+                        {
+                            Log.error(F("Unable to create secure connection to %s." CR), config.scriptsURL);
+                            result = false;
+                        } // Failed to open a connection
+                        else
+                        {
+                            Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
+                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_scanner.tilt(i)->color_name().c_str(), payload_string);
+
+                            http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
+                            httpResponseCode = http.POST(payload_string);               // Send the payload
+
+                            if (httpResponseCode == 200)
+                            {
+                                // POST success
+                                StaticJsonDocument<GSHEETS_JSON> retval;
+#if (ARDUINO_LOG_LEVEL == 6)
+                                Log.verbose(F("JSON Response:" CR));
+                                ReadLoggingStream loggingStream(http.getStream(), Serial);
+                                deserializeJson(retval, loggingStream);
+                                Serial.println();
+#else
+                                deserializeJson(retval, http.getStream());
+#endif
+                                switch(i)
+                                {
+                                    case(0):
+                                    {
+                                        strlcpy(config.link_red, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(1):
+                                    {
+                                        strlcpy(config.link_green, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(2):
+                                    {
+                                        strlcpy(config.link_black, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(3):
+                                    {
+                                        strlcpy(config.link_purple, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(4):
+                                    {
+                                        strlcpy(config.link_orange, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(5):
+                                    {
+                                        strlcpy(config.link_blue, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(6):
+                                    {
+                                        strlcpy(config.link_yellow, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    case(7):
+                                    {
+                                        strlcpy(config.link_pink, retval["doclongurl"].as<String>().c_str(), 255);
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        break;
+                                    }
+                                }
+                                saveConfig();
+                                retval.clear();
+                                numSent++;
+                            } // Response code = 200
+                            else
+                            {
+                                // Post generated an error
+                                Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
+                                    tilt_scanner.tilt(i)->color_name().c_str(),
+                                    httpResponseCode,
+                                    http.errorToString(httpResponseCode).c_str(),
+                                    http.getString().c_str());
+                                result = false;
+                            } // Response code != 200
+                        } // Good connection
+                        http.end();
+                        yield();
+                    } // Check we have a sheet name for the color
+                } // Check scanner is loaded for color
+            } // Loop through colors
+            Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
+
+        }
+        gSheetsTicker.once(70, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+
+        tilt_scanner.init();
     }
     return result;
 }
@@ -517,164 +578,6 @@ bool dataSendHandler::send_to_mqtt()
     StaticJsonDocument<1500> payload;
     mqttClient.loop();
 
-    // Function sends three payloads with the first two designed to support autodiscovery and configuration
-    // on Home Assistant.
-    // General payload formatted as json when sent to mqTT:
-    //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
-    //
-    // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
-    for (uint8_t i = 0; i < TILT_COLORS; i++)
-    {
-        if (tilt_scanner.tilt(i)->is_loaded())
-        {
-            char tilt_topic[50] = {'\0'};
-            snprintf(tilt_topic, 50, "%s/tilt_%s",
-                     config.mqttTopic,
-                     tilt_scanner.tilt(i)->color_name().c_str());
-
-            for (uint8_t j = 0; j < 3; j++)
-            {
-                char m_topic[90] = {'\0'};
-                char tilt_name[35] = {'\0'};
-                char unit[10] = {'\0'};
-                bool retain = false;
-                switch (j)
-                {
-                case 0: //Home Assistant Config Topic for Temperature
-                    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sT/config",
-                            config.mqttTopic,
-                            tilt_scanner.tilt(i)->color_name().c_str());
-                    payload["dev_cla"] = "temperature";
-                    strcat(unit, "\u00b0");
-                    strcat(unit, config.tempUnit);
-                    payload["unit_of_meas"] = unit;
-                    payload["ic"] = "mdi:thermometer";
-                    payload["stat_t"] = tilt_topic;
-                    strcat(tilt_name, "Tilt Temperature - ");
-                    strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
-                    payload["name"] = tilt_name;
-                    payload["val_tpl"] = "{{value_json.Temp}}";
-                    retain = true;
-                    break;
-                case 1: //Home Assistant Config Topic for Sp Gravity
-                    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/config",
-                            config.mqttTopic,
-                            tilt_scanner.tilt(i)->color_name().c_str());
-                    //payload["dev_cla"] = "None";
-                    payload["unit_of_meas"] = "SG";
-                    //payload["ic"] = "";
-                    payload["stat_t"] = tilt_topic;
-                    strcat(tilt_name, "Tilt Specific Gravity - ");
-                    strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
-                    payload["name"] = tilt_name;
-                    payload["val_tpl"] = "{{value_json.SG}}";
-                    retain = true;
-                    break;
-                case 2: //General payload with sensor data
-                    strcat(m_topic, tilt_topic);
-                    char current_grav[8] = {'\0'};
-                    char current_temp[5] = {'\0'};
-                    strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
-                    strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
-                    payload["Color"] = tilt_scanner.tilt(i)->color_name();
-                    payload["timeStamp"] = (int)std::time(0);
-                    payload["fermunits"] = "SG";
-                    payload["SG"] = current_grav;
-                    payload["Temp"] = current_temp;
-                    payload["tempunits"] = config.tempUnit;
-                    retain = false;
-                    break;
-                }
-                char payload_string[300] = {'\0'};
-                serializeJson(payload, payload_string);
-
-                Log.verbose(F("Topic: %s" CR), m_topic);
-                Log.verbose(F("Message: %s" CR), payload_string);
-
-                if (!mqttClient.connected() && j == 0)
-                {
-                    Log.verbose(F("MQTT disconnected. Attempting to reconnect to MQTT Broker" CR));
-                    connect_mqtt();
-                }
-
-                result = mqttClient.publish(m_topic, payload_string, retain, 0);
-                delay(10);
-
-                Log.verbose(F("Publish success: %T" CR), result);
-                payload.clear();
-            }
-        }
-    }
-    return result;
-}
-
-void sendDataLoop()
-{
-    // We use this in the loop to check for Ticker-driven semaphores
-    // because we cannot do radio work in a callback
-
-    if (send_localTarget)
-    {
-        // Local Target
-        send_localTarget = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
-        {
-            Log.verbose(F("Calling send to Local Target." CR));
-            data_sender.send_to_localTarget();
-        }
-        localTargetTicker.once(20, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
-    }
-
-    if (send_brewersFriend)
-    {
-        // Brewer's Friend
-        send_brewersFriend = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
-        {
-            Log.verbose(F("Calling send to Brewer's Friend." CR));
-            data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
-        }
-        brewersFriendTicker.once(50, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
-    }
-
-    if (send_brewfather)
-    {
-        // Brewfather
-        send_brewfather = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
-        {
-            Log.verbose(F("Calling send to Brewfather." CR));
-            data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
-        }
-        brewfatherTicker.once(40, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
-    }
-
-    if (send_brewStatus)
-    {
-        // Brew Status
-        send_brewStatus = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
-        {
-            Log.verbose(F("Calling send to Brew Status." CR));
-            data_sender.send_to_brewstatus();
-        }
-        brewStatusTicker.once(30, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
-    }
-
-    if (send_gSheets)
-    {
-        // Google Sheets
-        send_gSheets = false;
-        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
-        {
-            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
-            data_sender.send_to_google();
-        }
-        // DEBUG:
-        // gSheetsTicker.once(70, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
-        gSheetsTicker.once(5, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
-    }
-
     if (send_mqtt)
     {
         // MQTT
@@ -682,8 +585,96 @@ void sendDataLoop()
         if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
         {
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
-            data_sender.send_to_mqtt();
+            // Function sends three payloads with the first two designed to support autodiscovery and configuration
+            // on Home Assistant.
+            // General payload formatted as json when sent to mqTT:
+            //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
+            //
+            // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            {
+                if (tilt_scanner.tilt(i)->is_loaded())
+                {
+                    char tilt_topic[50] = {'\0'};
+                    snprintf(tilt_topic, 50, "%s/tilt_%s",
+                            config.mqttTopic,
+                            tilt_scanner.tilt(i)->color_name().c_str());
+
+                    for (uint8_t j = 0; j < 3; j++)
+                    {
+                        char m_topic[90] = {'\0'};
+                        char tilt_name[35] = {'\0'};
+                        char unit[10] = {'\0'};
+                        bool retain = false;
+                        switch (j)
+                        {
+                        case 0: //Home Assistant Config Topic for Temperature
+                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sT/config",
+                                    config.mqttTopic,
+                                    tilt_scanner.tilt(i)->color_name().c_str());
+                            payload["dev_cla"] = "temperature";
+                            strcat(unit, "\u00b0");
+                            strcat(unit, config.tempUnit);
+                            payload["unit_of_meas"] = unit;
+                            payload["ic"] = "mdi:thermometer";
+                            payload["stat_t"] = tilt_topic;
+                            strcat(tilt_name, "Tilt Temperature - ");
+                            strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
+                            payload["name"] = tilt_name;
+                            payload["val_tpl"] = "{{value_json.Temp}}";
+                            retain = true;
+                            break;
+                        case 1: //Home Assistant Config Topic for Sp Gravity
+                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/config",
+                                    config.mqttTopic,
+                                    tilt_scanner.tilt(i)->color_name().c_str());
+                            //payload["dev_cla"] = "None";
+                            payload["unit_of_meas"] = "SG";
+                            //payload["ic"] = "";
+                            payload["stat_t"] = tilt_topic;
+                            strcat(tilt_name, "Tilt Specific Gravity - ");
+                            strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
+                            payload["name"] = tilt_name;
+                            payload["val_tpl"] = "{{value_json.SG}}";
+                            retain = true;
+                            break;
+                        case 2: //General payload with sensor data
+                            strcat(m_topic, tilt_topic);
+                            char current_grav[8] = {'\0'};
+                            char current_temp[5] = {'\0'};
+                            strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
+                            strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
+                            payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                            payload["timeStamp"] = (int)std::time(0);
+                            payload["fermunits"] = "SG";
+                            payload["SG"] = current_grav;
+                            payload["Temp"] = current_temp;
+                            payload["tempunits"] = config.tempUnit;
+                            retain = false;
+                            break;
+                        }
+                        char payload_string[300] = {'\0'};
+                        serializeJson(payload, payload_string);
+
+                        Log.verbose(F("Topic: %s" CR), m_topic);
+                        Log.verbose(F("Message: %s" CR), payload_string);
+
+                        if (!mqttClient.connected() && j == 0)
+                        {
+                            Log.verbose(F("MQTT disconnected. Attempting to reconnect to MQTT Broker" CR));
+                            connect_mqtt();
+                        }
+
+                        result = mqttClient.publish(m_topic, payload_string, retain, 0);
+                        delay(10);
+
+                        Log.verbose(F("Publish success: %T" CR), result);
+                        payload.clear();
+                    }
+                }
+            }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
     }
+    return result;
 }

@@ -78,7 +78,12 @@ void loop()
     // These processes take precedence
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
-    sendDataLoop();     // Handle data dispatch
+
+    // data_sender.send_to_localTarget();
+    // send_to_bf_and_bf();    // TODO: Need to test this well
+    // data_sender.send_to_brewstatus();
+    data_sender.send_to_google();
+    // data_sender.send_to_mqtt();
 
     if (tilt_scanner.scan())
     {
