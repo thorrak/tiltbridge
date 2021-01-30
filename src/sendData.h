@@ -8,6 +8,7 @@
 #include "serialhandler.h"
 #include "wifi_setup.h"
 #include "jsonconfig.h"
+#include "tilt/tiltScanner.h"
 
 #include <ctime>
 #include <ArduinoJson.h>
@@ -33,6 +34,7 @@
 
 #define BREWFATHER_MIN_KEY_LENGTH 5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
+#define BF_SIZE 192
 #define LOCALTARGET_MIN_URL_LENGTH 9
 #define BREWSTATUS_MIN_URL_LENGTH 12
 #define GSCRIPTS_MIN_URL_LENGTH 24
