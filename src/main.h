@@ -11,6 +11,7 @@
 #include "jsonconfig.h"
 #include <Arduino.h>
 #include <Ticker.h>
+#include <esp_log.h>
 
 #ifdef LOG_LOCAL_LEVEL
 #include <esp_log.h>

@@ -20,7 +20,7 @@ void serial()
     SERIAL.setWelcomeMsg(buffer);
 #endif
     SERIAL.begin(BAUD);
-    Serial.setDebugOutput(true);
+    SERIAL.setDebugOutput(true);
     SERIAL.println();
     SERIAL.flush();
     Log.begin(ARDUINO_LOG_LEVEL, &SERIAL, true);

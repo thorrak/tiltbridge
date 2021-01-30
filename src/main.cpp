@@ -4,9 +4,6 @@
 
 #include "main.h"
 
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
-#include "esp_log.h"
-
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
 #endif
@@ -35,9 +32,6 @@ void setup()
 #ifdef LOG_LOCAL_LEVEL
     esp_log_level_set("*", ESP_LOG_VERBOSE);
 
-#undef CONFIG_NIMBLE_DEBUG
-#undef CONFIG_BT_NIMBLE_DEBUG
-#define MBEDTLS_ERROR_C
     esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
     esp_log_level_set("NimBLE", ESP_LOG_WARN);
     esp_log_level_set("NIMBLE_NVS", ESP_LOG_WARN);
@@ -61,8 +55,8 @@ void setup()
     esp_log_level_set("NimBLEUtils", ESP_LOG_WARN);
     esp_log_level_set("NimBLEUUID", ESP_LOG_WARN);
     
-    // esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
-    // esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
+    esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
+    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
 #endif
 
     Log.verbose(F("Initializing scanner." CR));
