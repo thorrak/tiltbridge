@@ -200,7 +200,7 @@ bool dataSendHandler::send_to_brewstatus()
                 }
             }
         }
-        brewStatusTicker.once(30, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
     }
     return result;
 }
@@ -457,7 +457,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
 
             urlClient.setTimeout(10000);
 
-            if (urlClient.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
+            if (urlClient.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
             {
                 Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
 
