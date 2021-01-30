@@ -31,7 +31,10 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    // DEBUG:
+    // localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    // DEBUG^
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
@@ -52,21 +55,23 @@ bool dataSendHandler::send_to_localTarget()
         {
             Log.verbose(F("Calling send to Local Target." CR));
 
-            DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-            char payload[TILT_ALL_DATA_SIZE + 128];
+            DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
 
-            j["mdns_id"] = config.mdnsID;
-            Log.verbose(F("DEBUG: Leaving." CR));
-            tilt_scanner.tilt_to_json_string(payload, true);
-            Log.verbose(F("DEBUG: Returning." CR));
-            j["tilts"] = serialized(payload);
+            char tilt_data[TILT_ALL_DATA_SIZE];
+            return true;
+            tilt_scanner.tilt_to_json_string(tilt_data, false);
 
-            serializeJson(j, payload);
+            Log.verbose(F("DEBUG: Local Target Payload: %s"), tilt_data);
 
-            if (!send_to_url(config.localTargetURL, "", payload, "application/json"))
-                result = false; // There was an error with the previous send
+            // doc["mdns_id"] = config.mdnsID;
+            // doc["tilts"] = serialized(tilt_data);
+
+            // serializeJson(doc, payload);
+
+            // if (!send_to_url(config.localTargetURL, "", payload, "application/json"))
+            //     result = false; // There was an error with the previous send
         }
-        localTargetTicker.once(20, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
+        localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
     }
     return result;
 }
@@ -83,7 +88,7 @@ bool send_to_bf_and_bf()
             Log.verbose(F("Calling send to Brewer's Friend." CR));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
         }
-        brewersFriendTicker.once(50, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+        brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
     }
 
     if (send_brewfather)
@@ -95,7 +100,7 @@ bool send_to_bf_and_bf()
             Log.verbose(F("Calling send to Brewfather." CR));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
         }
-        brewfatherTicker.once(40, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
     }
     return retval;
 }
@@ -347,7 +352,7 @@ bool dataSendHandler::send_to_google()
             Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
 
         }
-        gSheetsTicker.once(70, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+        gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         tilt_scanner.init();
     }
