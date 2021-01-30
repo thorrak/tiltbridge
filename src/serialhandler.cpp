@@ -20,10 +20,9 @@ void serial()
     SERIAL.setWelcomeMsg(buffer);
 #endif
     SERIAL.begin(BAUD);
-    Serial.setDebugOutput(false);
+    SERIAL.setDebugOutput(true);
     SERIAL.println();
     SERIAL.flush();
-    SERIAL.setDebugOutput(true);
     Log.begin(ARDUINO_LOG_LEVEL, &SERIAL, true);
     Log.setPrefix(printTimestamp);
     Log.notice(F("Serial logging started at %l." CR), BAUD);

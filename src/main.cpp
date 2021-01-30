@@ -7,16 +7,13 @@
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
 #endif
-Ticker dataSend;
-Ticker wifiCheck;
-Ticker tiltScan;
 
 void printMem()
 {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d%" CR), free, max, frag);
+    Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d" CR), free, max, frag);
 }
 
 void setup()
@@ -33,9 +30,33 @@ void setup()
     initWiFi();
 
 #ifdef LOG_LOCAL_LEVEL
-    esp_log_level_set("*", ESP_LOG_DEBUG);        // Set all components to debug level
+    esp_log_level_set("*", ESP_LOG_WARN);
+
+    esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
+    esp_log_level_set("NimBLE", ESP_LOG_WARN);
+    esp_log_level_set("NIMBLE_NVS", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAddress", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertisedDevice", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertising", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertisingReport", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEBeacon", ESP_LOG_WARN);
+    esp_log_level_set("NimBLECharacteristic", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEClient", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEDescriptor", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEDevice", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEEddystoneTLM", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEEddystoneURL", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteCharacteristic", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteDescriptor", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteService", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEScan", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEServer", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEService", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEUtils", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEUUID", ESP_LOG_WARN);
+    
     esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
-    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
+    esp_log_level_set("dhcpc", ESP_LOG_WARN);
 #endif
 
     Log.verbose(F("Initializing scanner." CR));
@@ -50,9 +71,6 @@ void setup()
 #if (ARDUINO_LOG_LEVEL >= 5)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
-    dataSend.attach(1, dataDispatch);           // Send data
-    wifiCheck.attach(1, reconnectWiFi);         // Check on WiFi
-    tiltScan.attach(1, pingScanner);            // Nudge the Tilt scanner
 }
 
 void loop()
@@ -60,6 +78,20 @@ void loop()
     // These processes take precedence
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
+
+    // data_sender.send_to_localTarget();
+    // send_to_bf_and_bf();    // TODO: Need to test this well
+    // data_sender.send_to_brewstatus();
+    data_sender.send_to_google();
+    // data_sender.send_to_mqtt();
+
+    if (tilt_scanner.scan())
+    {
+        // The scans are done asynchronously, so we'll poke the scanner to see if
+        // a new scan needs to be triggered.
+
+        // If we need to do anything when a new scan is started, trigger it here.
+    }
 
     // Check semaphores
 

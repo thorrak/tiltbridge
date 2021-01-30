@@ -8,7 +8,8 @@
 #include "tiltHydrometer.h"
 #include "serialhandler.h"
 #include "tiltHydrometer.h"
-#include <NimBLEAdvertisedDevice.h>
+
+#include <Ticker.h>
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>
 #include <NimBLEUtils.h>
@@ -39,9 +40,8 @@ public:
 private:
     tiltHydrometer *m_tilt_devices[TILT_COLORS]{};
     MyAdvertisedDeviceCallbacks *callbacks;
+    bool shouldRun;
 };
-
-void pingScanner();
 
 extern tiltScanner tilt_scanner;
 

@@ -24,11 +24,10 @@ void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDev
 #ifdef BLE_PRINT_ALL_DEVICES
             Log.verbose(F("Advertised iBeacon Device: %s " CR), advertisedDevice->toString().c_str());
 #endif
-            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData(),advertisedDevice->getRSSI());
+            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData(), advertisedDevice->getRSSI());
         }
     }
 }
-
 
 ////////////////////////////
 // tiltScanner Implementation
@@ -46,11 +45,12 @@ tiltScanner::tiltScanner()
 
 void tiltScanner::init()
 {
+    shouldRun = true;
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan(); // Create new scan
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
+    pBLEScan->setMaxResults(0);
     // Active scan actively queries devices for more info following detection.
-    //
     pBLEScan->setActiveScan(false);
     pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
     pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
@@ -61,26 +61,29 @@ void tiltScanner::init()
 void tiltScanner::deinit()
 {
     wait_until_scan_complete();
-    NimBLEDevice::deinit();  // Deinitialize the scanner & release memory
+    NimBLEDevice::deinit(); // Deinitialize the scanner & release memory
 }
 
 bool tiltScanner::scan()
 {
-    if (!pBLEScan->isScanning())  // Check if scan already in progress
-    //Try to start a new scan
+    bool retval = false;
+    if (shouldRun)
     {
-        pBLEScan->clearResults();   
-        if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true))  //This no longer ever returns true...possibly a bug?? 
+        if (!pBLEScan->isScanning()) // Check if scan already in progress
+        //Try to start a new scan
         {
-            return true;  //Scan successfully started.
-        }
-        else
-        {
-            Log.verbose(F("Scan failed to start." CR));
-            return false;  //Scan failed to start.
+            pBLEScan->clearResults();
+            if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true)) //This no longer ever returns true...possibly a bug??
+            {
+                retval = true; //Scan successfully started.
+            }
+            else
+            {
+                Log.verbose(F("Scan failed to start." CR));
+            }
         }
     }
-    return false;
+    return retval;
 }
 
 bool tiltScanner::wait_until_scan_complete()
@@ -90,9 +93,6 @@ bool tiltScanner::wait_until_scan_complete()
 
     while (pBLEScan->isScanning())
         delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
-
-    // pBLEScan->stop();
-    pBLEScan->clearResults(); // delete results fromBLEScan buffer to release memory
 
     return true;
 }
@@ -177,15 +177,4 @@ void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
         }
     }
     serializeJson(j, all_tilt_json, TILT_ALL_DATA_SIZE);
-}
-
-void pingScanner()
-{
-    if (tilt_scanner.scan())
-    {
-        // The scans are done asynchronously, so we'll poke the scanner to see if
-        // a new scan needs to be triggered.
-
-        // If we need to do anything when a new scan is started, trigger it here.
-    }
 }

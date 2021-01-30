@@ -144,7 +144,7 @@ void bridge_lcd::display_logo(bool fromReset)
         // Need this if we got here from reset timeout
         on_screen = SCREEN_TILT;
         onResetScreen = false;
-        next_screen_at = xTaskGetTickCount() + 2000;
+        next_screen_at = millis() + 2000;
     }
 
 #ifdef LCD_SSD1306
@@ -329,9 +329,9 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
 
 void bridge_lcd::check_screen()
 {
-    if (! onResetScreen && next_screen_at < xTaskGetTickCount())
+    if (! onResetScreen && next_screen_at < millis())
     {
-        next_screen_at = display_next() * 1000 + xTaskGetTickCount();
+        next_screen_at = display_next() * 1000 + millis();
     }
 }
 

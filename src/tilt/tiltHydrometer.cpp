@@ -226,9 +226,11 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     d_grav = (double)i_grav / grav_scalar;
     smoothed_d_grav = (double)smoothed_i_grav_1000 / grav_scalar / 1000;
 
+#if PRINT_GRAV_UPDATES == 1
     char value[7];
     sprintf(value, "%.4f", d_grav);
     Log.verbose(F("%s Tilt gravity = %s" CR), color_name().c_str(), value);
+#endif
 
     if (config.applyCalibration)
     {
@@ -326,7 +328,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     rssi = current_rssi;
 
     m_loaded = true; // Setting loaded true now that we have gravity/temp values
-    m_lastUpdate = xTaskGetTickCount();
+    m_lastUpdate = millis();
     return true;
 }
 
@@ -386,7 +388,7 @@ bool tiltHydrometer::is_loaded()
     // Expire loading after 5 minutes
     if (m_loaded)
     {
-        if ((xTaskGetTickCount() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION)
+        if ((millis() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION)
         {
             m_loaded = false;
         }
