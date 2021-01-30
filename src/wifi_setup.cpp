@@ -85,8 +85,8 @@ void initWiFi()
     else
     {
         // We finished with portal (We were configured)
-        // WiFi.softAPdisconnect(true);
-        // WiFi.mode(WIFI_STA);
+        WiFi.softAPdisconnect(true);
+        WiFi.mode(WIFI_STA);
     }
 
     if (shouldSaveConfig)
