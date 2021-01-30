@@ -51,7 +51,6 @@ void tiltScanner::init()
     pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
     pBLEScan->setMaxResults(0);
     // Active scan actively queries devices for more info following detection.
-    //
     pBLEScan->setActiveScan(false);
     pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
     pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.

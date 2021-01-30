@@ -6,8 +6,6 @@
 
 dataSendHandler data_sender; // Global data sender
 
-WiFiClient client;
-WiFiClient wClient;
 MQTTClient mqttClient(256);
 
 // POST Timers
@@ -218,8 +216,6 @@ bool dataSendHandler::send_to_google()
 
         tilt_scanner.deinit();
 
-        HTTPClient http;
-        WiFiClientSecure secureClient;
         int httpResponseCode;
         int numSent = 0;
 
@@ -395,11 +391,11 @@ void dataSendHandler::init_mqtt()
         {
             if (url.isMDNS(config.mqttBrokerHost))
             {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, wClient);
+                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mClient);
             }
             else
             {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mClient);
             }
         }
         mqtt_alreadyinit = true;
@@ -458,9 +454,9 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 Log.notice(F("Connecting to: %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
-            client.setNoDelay(true);
-            client.setTimeout(10000);
-            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
+            urlClient.setNoDelay(true);
+            urlClient.setTimeout(10000);
+            if (urlClient.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
             {
                 Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
 
@@ -475,52 +471,52 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 {
                     Log.verbose(F("POST /%s HTTP/1.1" CR), lcburl.getPath().c_str());
                 }
-                client.print(F("POST /"));
-                client.print(lcburl.getPath().c_str());
+                urlClient.print(F("POST /"));
+                urlClient.print(lcburl.getPath().c_str());
                 if (lcburl.getAfterPath().length() > 0)
                 {
-                    client.print(lcburl.getAfterPath().c_str());
+                    urlClient.print(lcburl.getAfterPath().c_str());
                 }
-                client.println(F(" HTTP/1.1"));
+                urlClient.println(F(" HTTP/1.1"));
 
                 // Begin headers
                 //
                 // Host
                 Log.verbose(F("Host: %s:%l" CR), lcburl.getHost().c_str(), lcburl.getPort());
-                client.print(F("Host: "));
-                client.print(lcburl.getHost().c_str());
-                client.print(F(":"));
-                client.println(lcburl.getPort());
+                urlClient.print(F("Host: "));
+                urlClient.print(lcburl.getHost().c_str());
+                urlClient.print(F(":"));
+                urlClient.println(lcburl.getPort());
                 //
                 Log.verbose(F("Connection: close" CR));
-                client.println(F("Connection: close"));
+                urlClient.println(F("Connection: close"));
                 // Content
                 Log.verbose(F("Content-Length: %l" CR), strlen(dataToSend));
-                client.print(F("Content-Length: "));
-                client.println(strlen(dataToSend));
+                urlClient.print(F("Content-Length: "));
+                urlClient.println(strlen(dataToSend));
                 // Content Type
                 Log.verbose(F("Content-Type: %s" CR), contentType);
-                client.print(F("Content-Type: "));
-                client.println(contentType);
+                urlClient.print(F("Content-Type: "));
+                urlClient.println(contentType);
                 // API Key
                 if (strlen(apiKey) > 2)
                 {
                         Log.verbose(F("X-API-KEY: %s" CR), apiKey);
-                        client.print(F("X-API-KEY: "));
-                        client.println(apiKey);
+                        urlClient.print(F("X-API-KEY: "));
+                        urlClient.println(apiKey);
                 }
                 // Terminate headers with a blank line
                 Log.verbose(F("End headers." CR));
-                client.println();
+                urlClient.println();
                 //
                 // End Headers
 
                 // Post JSON
-                client.println(dataToSend);
+                urlClient.println(dataToSend);
                 // Check the HTTP status (should be "HTTP/1.1 200 OK")
                 char status[32] = {0};
-                client.readBytesUntil('\r', status, sizeof(status));
-                client.stop();
+                urlClient.readBytesUntil('\r', status, sizeof(status));
+                urlClient.stop();
                 Log.verbose(F("Status: %s" CR), status);
                 if (strcmp(status + 9, "200 OK") == 0)
                 {
@@ -554,7 +550,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
             else
             {
                 Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)" CR),
-                            lcburl.getHost().c_str(), lcburl.getPort(), client.connected());
+                            lcburl.getHost().c_str(), lcburl.getPort(), urlClient.connected());
                 retVal = false;
             }
         }

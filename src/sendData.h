@@ -62,7 +62,11 @@ public:
 
 private:
     void connect_mqtt();
-    static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
+    bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
+    HTTPClient http;
+    WiFiClient urlClient;
+    WiFiClient mClient;
+    WiFiClientSecure secureClient;
 };
 
 bool send_to_bf_and_bf();
