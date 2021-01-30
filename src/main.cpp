@@ -30,7 +30,7 @@ void setup()
     initWiFi();
 
 #ifdef LOG_LOCAL_LEVEL
-    esp_log_level_set("*", ESP_LOG_VERBOSE);
+    esp_log_level_set("*", ESP_LOG_WARN);
 
     esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
     esp_log_level_set("NimBLE", ESP_LOG_WARN);
@@ -55,8 +55,8 @@ void setup()
     esp_log_level_set("NimBLEUtils", ESP_LOG_WARN);
     esp_log_level_set("NimBLEUUID", ESP_LOG_WARN);
     
-    esp_log_level_set("wifi", ESP_LOG_VERBOSE);      // Enable WARN logs from WiFi stack
-    esp_log_level_set("dhcpc", ESP_LOG_VERBOSE);     // Enable WARN logs from DHCP client
+    esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
+    esp_log_level_set("dhcpc", ESP_LOG_WARN);
 #endif
 
     Log.verbose(F("Initializing scanner." CR));
