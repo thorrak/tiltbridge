@@ -25,6 +25,7 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <LCBUrl.h>
+#include <ArduinoLog.h>
 
 #define GSCRIPTS_DELAY (10 * 60 * 1000)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60 * 1000) // 15 minute delay between pushes to Brewer's Friend
@@ -64,13 +65,7 @@ private:
     static bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
 };
 
-void sendToLocalTarget();
-void sendToBrewstatus();
-void sendToBrewfather();
-void sendToBrewersFriend();
-void sendToMQTT();
-void sendToGoogle();
-void send_checkin_stat();
+void sendDataLoop();
 
 extern dataSendHandler data_sender;
 

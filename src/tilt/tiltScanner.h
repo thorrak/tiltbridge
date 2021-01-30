@@ -40,6 +40,7 @@ public:
 private:
     tiltHydrometer *m_tilt_devices[TILT_COLORS]{};
     MyAdvertisedDeviceCallbacks *callbacks;
+    bool shouldRun;
 };
 
 void pingScanner();
