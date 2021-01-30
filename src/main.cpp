@@ -55,8 +55,8 @@ void setup()
     esp_log_level_set("NimBLEUtils", ESP_LOG_WARN);
     esp_log_level_set("NimBLEUUID", ESP_LOG_WARN);
     
-    esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
-    esp_log_level_set("dhcpc", ESP_LOG_WARN);     // Enable WARN logs from DHCP client
+    esp_log_level_set("wifi", ESP_LOG_VERBOSE);      // Enable WARN logs from WiFi stack
+    esp_log_level_set("dhcpc", ESP_LOG_VERBOSE);     // Enable WARN logs from DHCP client
 #endif
 
     Log.verbose(F("Initializing scanner." CR));
@@ -78,6 +78,15 @@ void loop()
     // These processes take precedence
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
+    sendDataLoop();     // Handle data dispatch
+
+    if (tilt_scanner.scan())
+    {
+        // The scans are done asynchronously, so we'll poke the scanner to see if
+        // a new scan needs to be triggered.
+
+        // If we need to do anything when a new scan is started, trigger it here.
+    }
 
     // Check semaphores
 

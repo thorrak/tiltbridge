@@ -11,12 +11,20 @@ WiFiClient wClient;
 MQTTClient mqttClient(256);
 
 // POST Timers
+Ticker localTargetTicker;
+Ticker brewersFriendTicker;
+Ticker brewfatherTicker;
+Ticker brewStatusTicker;
 Ticker gSheetsTicker;
 Ticker mqttTicker;
-Ticker brewStatusTicker;
-Ticker brewfatherTicker;
-Ticker brewersFriendTicker;
-Ticker localTargetTicker;
+
+// POST Semaphores
+bool send_localTarget = false;
+bool send_brewersFriend = false;
+bool send_brewfather = false;
+bool send_brewStatus = false;
+bool send_gSheets = false;
+bool send_mqtt = false;
 
 dataSendHandler::dataSendHandler() {}
 
@@ -25,83 +33,14 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    localTargetTicker.once(20, sendToLocalTarget);      // Schedule first send to Local Target
-    brewStatusTicker.once(30, sendToBrewstatus);        // Schedule first send to Brew Status
-    brewfatherTicker.once(40, sendToBrewfather);        // Schedule first send to Brewfather
-    brewersFriendTicker.once(50, sendToBrewersFriend);  // Schedule first send to Brewer's Friend
-    mqttTicker.once(60, sendToMQTT);                    // Schedule first send to MQTT
-    gSheetsTicker.once(70, sendToGoogle);               // Schedule first send to Google Sheets
-}
-
-void dataSendHandler::init_mqtt()
-{
-    LCBUrl url;
-
-    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-    {
-        if (url.isMDNS(config.mqttBrokerHost))
-        {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d" CR),
-                config.mqttBrokerHost,
-                url.getIP(config.mqttBrokerHost).toString().c_str(),
-                config.mqttBrokerPort);
-        }
-        else
-        {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d" CR),
-                config.mqttBrokerHost,
-                config.mqttBrokerPort);
-        }
-
-        if (mqtt_alreadyinit)
-        {
-            mqttClient.disconnect();
-            delay(250);
-            if (url.isMDNS(config.mqttBrokerHost))
-            {
-                mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
-            }
-            else
-            {
-                mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
-            }
-        }
-        else
-        {
-            if (url.isMDNS(config.mqttBrokerHost))
-            {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, wClient);
-            }
-            else
-            {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
-            }
-        }
-        mqtt_alreadyinit = true;
-        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
-    }
-}
-
-void dataSendHandler::connect_mqtt()
-{
-    if (strlen(config.mqttUsername) > 1)
-    {
-        mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
-    }
-    else
-    {
-        mqttClient.connect(config.mdnsID);
-    }
-}
-
-void sendToLocalTarget()
-{
-    if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
-    {
-        Log.verbose(F("Calling send to Local Target." CR));
-        data_sender.send_to_localTarget();
-    }
-    localTargetTicker.once(config.localTargetPushEvery, sendToLocalTarget);   // Set up subsequent send to localTarget        
+    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
+    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
+    brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
+    // DEBUG:
+    // gSheetsTicker.once(70, [](){send_gSheets = true;});               // Schedule first send to Google Sheets
+    gSheetsTicker.once(5, [](){send_gSheets = true;});               // Schedule first send to Google Sheets
+    mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
 }
 
 bool dataSendHandler::send_to_localTarget()
@@ -121,16 +60,6 @@ bool dataSendHandler::send_to_localTarget()
         result = false; // There was an error with the previous send
 
     return result;
-}
-
-void sendToBrewstatus()
-{
-    if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
-    {
-        Log.verbose(F("Calling send to Brew Status." CR));
-        data_sender.send_to_brewstatus();        
-    }
-    brewStatusTicker.once(config.brewstatusPushEvery, sendToBrewstatus);   // Set up subsequent send to Brew Status
 }
 
 bool dataSendHandler::send_to_brewstatus()
@@ -166,23 +95,16 @@ bool dataSendHandler::send_to_brewstatus()
     return result;
 }
 
-void sendToGoogle()
-{
-    if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
-    {
-        Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
-        data_sender.send_to_google();        
-    }
-    gSheetsTicker.once(GSCRIPTS_DELAY, sendToGoogle);   // Set up subsequent send to Google Sheets
-}
-
 bool dataSendHandler::send_to_google()
 {
     HTTPClient http;
     WiFiClientSecure secureClient;
+    http.setReuse(true);
     int httpResponseCode;
     int numSent = 0;
     bool result = true;
+
+    tilt_scanner.deinit();
 
     for (uint8_t i = 0; i < TILT_COLORS; i++)
     {
@@ -225,6 +147,7 @@ bool dataSendHandler::send_to_google()
 
                     http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
                     httpResponseCode = http.POST(payload_string);               // Send the payload
+
                     if (httpResponseCode == 200)
                     {
                         // POST success
@@ -304,27 +227,9 @@ bool dataSendHandler::send_to_google()
         } // Check scanner is loaded for color
     } // Loop through colors
     Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
+
+    tilt_scanner.init();
     return result;
-}
-
-void sendToBrewfather()
-{
-    if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
-    {
-        Log.verbose(F("Calling send to Brewfather." CR));
-        data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);        
-    }
-    brewfatherTicker.once(BREWFATHER_DELAY, sendToBrewfather);   // Set up subsequent send to Brewfather
-}
-
-void sendToBrewersFriend()
-{
-    if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
-    {
-        Log.verbose(F("Calling send to Brewer's Friend." CR));
-        data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);        
-    }
-    brewersFriendTicker.once(BREWERS_FRIEND_DELAY, sendToBrewersFriend);   // Set up subsequent send to Brewer's Friend
 }
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
@@ -390,6 +295,67 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
         }
     }
     return result;
+}
+
+void dataSendHandler::init_mqtt()
+{
+    LCBUrl url;
+
+    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
+    {
+        if (url.isMDNS(config.mqttBrokerHost))
+        {
+            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d" CR),
+                config.mqttBrokerHost,
+                url.getIP(config.mqttBrokerHost).toString().c_str(),
+                config.mqttBrokerPort);
+        }
+        else
+        {
+            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d" CR),
+                config.mqttBrokerHost,
+                config.mqttBrokerPort);
+        }
+
+        if (mqtt_alreadyinit)
+        {
+            mqttClient.disconnect();
+            delay(250);
+            if (url.isMDNS(config.mqttBrokerHost))
+            {
+                mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
+            }
+            else
+            {
+                mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+            }
+        }
+        else
+        {
+            if (url.isMDNS(config.mqttBrokerHost))
+            {
+                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, wClient);
+            }
+            else
+            {
+                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, wClient);
+            }
+        }
+        mqtt_alreadyinit = true;
+        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
+    }
+}
+
+void dataSendHandler::connect_mqtt()
+{
+    if (strlen(config.mqttUsername) > 1)
+    {
+        mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
+    }
+    else
+    {
+        mqttClient.connect(config.mdnsID);
+    }
 }
 
 bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
@@ -544,16 +510,6 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
     return retVal;
 }
 
-void sendToMQTT()
-{
-    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-    {
-        Log.verbose(F("Publishing available results to MQTT Broker." CR));
-        data_sender.send_to_mqtt();        
-    }
-    mqttTicker.once(config.mqttPushEvery, sendToMQTT);   // Set up subsequent send to MQTT
-}
-
 bool dataSendHandler::send_to_mqtt()
 {
     // TODO: (JSON) Come back and tighten this up
@@ -650,4 +606,84 @@ bool dataSendHandler::send_to_mqtt()
         }
     }
     return result;
+}
+
+void sendDataLoop()
+{
+    // We use this in the loop to check for Ticker-driven semaphores
+    // because we cannot do radio work in a callback
+
+    if (send_localTarget)
+    {
+        // Local Target
+        send_localTarget = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
+        {
+            Log.verbose(F("Calling send to Local Target." CR));
+            data_sender.send_to_localTarget();
+        }
+        localTargetTicker.once(20, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
+    }
+
+    if (send_brewersFriend)
+    {
+        // Brewer's Friend
+        send_brewersFriend = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
+        {
+            Log.verbose(F("Calling send to Brewer's Friend." CR));
+            data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
+        }
+        brewersFriendTicker.once(50, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+    }
+
+    if (send_brewfather)
+    {
+        // Brewfather
+        send_brewfather = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
+        {
+            Log.verbose(F("Calling send to Brewfather." CR));
+            data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
+        }
+        brewfatherTicker.once(40, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+    }
+
+    if (send_brewStatus)
+    {
+        // Brew Status
+        send_brewStatus = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
+        {
+            Log.verbose(F("Calling send to Brew Status." CR));
+            data_sender.send_to_brewstatus();
+        }
+        brewStatusTicker.once(30, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+    }
+
+    if (send_gSheets)
+    {
+        // Google Sheets
+        send_gSheets = false;
+        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
+        {
+            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
+            data_sender.send_to_google();
+        }
+        // DEBUG:
+        // gSheetsTicker.once(70, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+        gSheetsTicker.once(5, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+    }
+
+    if (send_mqtt)
+    {
+        // MQTT
+        send_mqtt = false;
+        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
+        {
+            Log.verbose(F("Publishing available results to MQTT Broker." CR));
+            data_sender.send_to_mqtt();
+        }
+        mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+    }
 }
