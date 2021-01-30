@@ -226,9 +226,11 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     d_grav = (double)i_grav / grav_scalar;
     smoothed_d_grav = (double)smoothed_i_grav_1000 / grav_scalar / 1000;
 
+#if PRINT_GRAV_UPDATES == 1
     char value[7];
     sprintf(value, "%.4f", d_grav);
     Log.verbose(F("%s Tilt gravity = %s" CR), color_name().c_str(), value);
+#endif
 
     if (config.applyCalibration)
     {
