@@ -946,7 +946,6 @@ void trigger_OTA(AsyncWebServerRequest *request)
 
 void http_json(AsyncWebServerRequest *request)
 {
-     // TODO: JSON Go rework this
     Log.verbose(F("Serving Tilt JSON." CR));
     char tilt_data[TILT_ALL_DATA_SIZE];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
@@ -954,7 +953,6 @@ void http_json(AsyncWebServerRequest *request)
     request->send(response);
 }
 
-// settings_json is intended to be used to build the "Change Settings" page
 void settings_json(AsyncWebServerRequest *request)
 {
     Log.verbose(F("Serving settings JSON." CR));
