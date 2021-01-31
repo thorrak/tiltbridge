@@ -1,6 +1,7 @@
-//
-// Created by John Beeler on 4/26/18.
-//
+// TiltBridge is a Tilt-Hydrometer-to-WiFi Bridge
+// Please note - This source code (along with other files) are provided under license.
+// More details (including license details) can be found in the files accompanying this source code.
+
 
 #include "main.h"
 
@@ -100,7 +101,7 @@ void loop()
         Log.verbose(F("Resetting controller." CR));
         http_server.restart_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        vTaskDelay(1000);
+        delay(1000);
         ESP.restart();                           // Restart the TiltBridge
     }
 
@@ -109,7 +110,7 @@ void loop()
         Log.verbose(F("Resetting WiFi configuration." CR));
         http_server.wifi_reset_requested = false; 
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        vTaskDelay(1000);
+        delay(1000);
         doWiFiReset = false;
         disconnectWiFi();
     }
