@@ -31,7 +31,10 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    // DEBUG:
+    // localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    // DEBUG^
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
@@ -47,26 +50,26 @@ bool dataSendHandler::send_to_localTarget()
     {
         // Local Target
         send_localTarget = false;
+        tilt_scanner.deinit();
 
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to Local Target." CR));
+            DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
+            char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
-            DynamicJsonDocument j(TILT_ALL_DATA_SIZE + 128);
-            char payload[TILT_ALL_DATA_SIZE + 128];
+            tilt_scanner.tilt_to_json_string(tilt_data, true);
 
-            j["mdns_id"] = config.mdnsID;
-            Log.verbose(F("DEBUG: Leaving." CR));
-            tilt_scanner.tilt_to_json_string(payload, true);
-            Log.verbose(F("DEBUG: Returning." CR));
-            j["tilts"] = serialized(payload);
+            doc["mdns_id"] = config.mdnsID;
+            doc["tilts"] = serialized(tilt_data);
 
-            serializeJson(j, payload);
+            serializeJson(doc, tilt_data);
 
-            if (!send_to_url(config.localTargetURL, "", payload, "application/json"))
+            if (!send_to_url(config.localTargetURL, "", tilt_data, "application/json"))
                 result = false; // There was an error with the previous send
         }
-        localTargetTicker.once(20, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
+        localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
+        tilt_scanner.init();
     }
     return result;
 }
@@ -83,7 +86,7 @@ bool send_to_bf_and_bf()
             Log.verbose(F("Calling send to Brewer's Friend." CR));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
         }
-        brewersFriendTicker.once(50, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+        brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
     }
 
     if (send_brewfather)
@@ -95,7 +98,7 @@ bool send_to_bf_and_bf()
             Log.verbose(F("Calling send to Brewfather." CR));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
         }
-        brewfatherTicker.once(40, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
     }
     return retval;
 }
@@ -347,7 +350,7 @@ bool dataSendHandler::send_to_google()
             Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
 
         }
-        gSheetsTicker.once(70, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+        gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         tilt_scanner.init();
     }
@@ -391,11 +394,11 @@ void dataSendHandler::init_mqtt()
         {
             if (url.isMDNS(config.mqttBrokerHost))
             {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mClient);
+                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, client);
             }
             else
             {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mClient);
+                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, client);
             }
         }
         mqtt_alreadyinit = true;
@@ -455,9 +458,9 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
-            urlClient.setTimeout(10000);
+            client.setTimeout(10000);
 
-            if (urlClient.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
+            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
             {
                 Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
 
@@ -472,52 +475,52 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 {
                     Log.verbose(F("POST /%s HTTP/1.1" CR), lcburl.getPath().c_str());
                 }
-                urlClient.print(F("POST /"));
-                urlClient.print(lcburl.getPath().c_str());
+                client.print(F("POST /"));
+                client.print(lcburl.getPath().c_str());
                 if (lcburl.getAfterPath().length() > 0)
                 {
-                    urlClient.print(lcburl.getAfterPath().c_str());
+                    client.print(lcburl.getAfterPath().c_str());
                 }
-                urlClient.println(F(" HTTP/1.1"));
+                client.println(F(" HTTP/1.1"));
 
                 // Begin headers
                 //
                 // Host
                 Log.verbose(F("Host: %s:%l" CR), lcburl.getHost().c_str(), lcburl.getPort());
-                urlClient.print(F("Host: "));
-                urlClient.print(lcburl.getHost().c_str());
-                urlClient.print(F(":"));
-                urlClient.println(lcburl.getPort());
+                client.print(F("Host: "));
+                client.print(lcburl.getHost().c_str());
+                client.print(F(":"));
+                client.println(lcburl.getPort());
                 //
                 Log.verbose(F("Connection: close" CR));
-                urlClient.println(F("Connection: close"));
+                client.println(F("Connection: close"));
                 // Content
                 Log.verbose(F("Content-Length: %l" CR), strlen(dataToSend));
-                urlClient.print(F("Content-Length: "));
-                urlClient.println(strlen(dataToSend));
+                client.print(F("Content-Length: "));
+                client.println(strlen(dataToSend));
                 // Content Type
                 Log.verbose(F("Content-Type: %s" CR), contentType);
-                urlClient.print(F("Content-Type: "));
-                urlClient.println(contentType);
+                client.print(F("Content-Type: "));
+                client.println(contentType);
                 // API Key
                 if (strlen(apiKey) > 2)
                 {
                         Log.verbose(F("X-API-KEY: %s" CR), apiKey);
-                        urlClient.print(F("X-API-KEY: "));
-                        urlClient.println(apiKey);
+                        client.print(F("X-API-KEY: "));
+                        client.println(apiKey);
                 }
                 // Terminate headers with a blank line
                 Log.verbose(F("End headers." CR));
-                urlClient.println();
+                client.println();
                 //
                 // End Headers
 
                 // Post JSON
-                urlClient.println(dataToSend);
+                client.println(dataToSend);
                 // Check the HTTP status (should be "HTTP/1.1 200 OK")
                 char status[32] = {0};
-                urlClient.readBytesUntil('\r', status, sizeof(status));
-                urlClient.stop();
+                client.readBytesUntil('\r', status, sizeof(status));
+                client.stop();
                 Log.verbose(F("Status: %s" CR), status);
                 if (strcmp(status + 9, "200 OK") == 0)
                 {
@@ -551,7 +554,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
             else
             {
                 Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)" CR),
-                            lcburl.getHost().c_str(), lcburl.getPort(), urlClient.connected());
+                            lcburl.getHost().c_str(), lcburl.getPort(), client.connected());
                 retVal = false;
             }
         }
@@ -582,12 +585,13 @@ bool dataSendHandler::send_to_mqtt()
         if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
         {
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
-            // Function sends three payloads with the first two designed to support autodiscovery and configuration
-            // on Home Assistant.
+            // Function sends three payloads with the first two designed to
+            // support autodiscovery and configuration on Home Assistant.
             // General payload formatted as json when sent to mqTT:
             //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
             //
-            // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+            // Loop through each of the tilt colors cached by tilt_scanner,
+            // sending data for each of the active tilts
             for (uint8_t i = 0; i < TILT_COLORS; i++)
             {
                 if (tilt_scanner.tilt(i)->is_loaded())

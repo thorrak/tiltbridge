@@ -77,6 +77,8 @@ void initWiFi()
     WiFiManagerParameter custom_mdns_name("mdns", "Device (mDNS) Name", mdns_id, 20);
     wm.addParameter(&custom_mdns_name);
 
+    wm.setHostname(config.mdnsID);
+
     if (!wm.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS))
     {
         Log.warning(F("Failed to connect and/or hit timeout. Restarting" CR));
@@ -98,6 +100,9 @@ void initWiFi()
         {
             strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
             strcpy(mdns_id, config.mdnsID);
+
+            // TODO:
+            // Probably have to re-connect via WiFiManager and wm.setHostname(config.mdnsID);
         }
         else
         {
@@ -108,7 +113,6 @@ void initWiFi()
         }
         saveConfig();
     }
-    WiFi.setHostname(config.mdnsID);
 
     if (!MDNS.begin(config.mdnsID))
     {
