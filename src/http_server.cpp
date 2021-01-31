@@ -2,6 +2,16 @@
 #include "http_server.h"
 
 httpServer http_server;
+Ticker sendNowTicker;
+
+
+extern bool send_brewersFriend;
+extern bool send_brewfather;
+extern bool send_localTarget;
+extern bool send_brewStatus;
+extern bool send_gSheets;
+extern bool send_mqtt;
+
 
 AsyncWebServer server(WEBPORT);
 
@@ -195,6 +205,8 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request) {
                 if ((strlen(value) > 3) && (strlen(value) < 255) && isURL.startsWith("http")) {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
+                    // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
+                    sendNowTicker.once(5, [](){send_localTarget = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
@@ -248,6 +260,8 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
                 if (strlen(value) > 3 && strlen(value) < 255 && strncmp(value, "https://script.google.com/", 26) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
+                    // Trigger a send in 5 seconds using the updated GSheets URL
+                    sendNowTicker.once(5, [](){send_gSheets = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
@@ -330,6 +344,8 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request) {
                 if (BREWERS_FRIEND_MIN_KEY_LENGTH < strlen(value) && strlen(value) < 255) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
+                    // Trigger a send to Brewers Friend in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_brewersFriend = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
@@ -373,6 +389,8 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
                 if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 ) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
+                    // Trigger a send to Brewfather in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_brewfather = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
@@ -415,6 +433,8 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request) {
                 if (strlen(value) > BREWSTATUS_MIN_KEY_LENGTH && strlen(value) < 255) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
+                    // Trigger a send to Brewstatus in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_brewStatus = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
@@ -555,6 +575,8 @@ bool processMqttSettings(AsyncWebServerRequest *request) {
         return false;
     } else {
         if (saveConfig()) {
+            // Trigger a send via MQTT in 5 seconds using the updated data
+            sendNowTicker.once(5, [](){send_mqtt = true;});
             return true;
         } else {
             Log.error(F("Error: Unable to save MQTT configuration data." CR));
