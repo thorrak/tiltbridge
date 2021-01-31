@@ -1,7 +1,3 @@
-//
-// Created by Lee Bussy on 1/4/21
-//
-
 #include "jsonconfig.h"
 
 Config config;

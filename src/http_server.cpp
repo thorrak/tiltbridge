@@ -1,7 +1,3 @@
-//
-// Created by John Beeler on 2/17/19.
-//
-
 #include "resetreasons.h"
 #include "http_server.h"
 
@@ -10,32 +6,27 @@ httpServer http_server;
 AsyncWebServer server(WEBPORT);
 
 // This is to simplify the redirects in processCalibration
-void redirectToCalibration(AsyncWebServerRequest *request)
-{
+void redirectToCalibration(AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse(301);
     response->addHeader("Location", "/calibration/");
     response->addHeader("Cache-Control", "no-cache");
     request->send(response);
 }
 
-void processCalibrationError(AsyncWebServerRequest *request)
-{
+void processCalibrationError(AsyncWebServerRequest *request) {
     Log.error(F("Error in processCalibration." CR));
     redirectToCalibration(request);
 }
 
 // Settings Page Handlers
-bool processTiltBridgeSettings(AsyncWebServerRequest *request)
-{
+bool processTiltBridgeSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     bool hostnamechanged = false;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -43,128 +34,99 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
 
             // Controller settings
             //
-            if (strcmp(name, "mdnsID") == 0) // Set hostname
-            {
+            if (strcmp(name, "mdnsID") == 0) {
+                // Set hostname
                 LCBUrl url;
-                if (!url.isValidLabel(value))
-                {
+                if (!url.isValidLabel(value)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
-                    if (strcmp(config.mdnsID, value) != 0)
-                    {
+                } else {
+                    if (strcmp(config.mdnsID, value) != 0) {
                         hostnamechanged = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.mdnsID, value, 32);
                 }
             }
-            if (strcmp(name, "tzOffset") == 0) // Set the timezone offset
-            {
+            if (strcmp(name, "tzOffset") == 0) {
+                // Set the timezone offset
                 const int val = atof(value);
-                if ((val <= -12) || (val >= 14))
-                {
+                if ((val <= -12) || (val >= 14)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.TZoffset = val;
                 }
             }
-            if (strcmp(name, "tempUnit") == 0) // Set temp unit
-            {
-                if ((strcmp(value, "F") == 1) && (strcmp(value, "F") == 1))
-                {
+            if (strcmp(name, "tempUnit") == 0) {
+                // Set temp unit
+                if ((strcmp(value, "F") == 1) && (strcmp(value, "F") == 1)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.tempUnit, value, 2);
                 }
             }
-            if (strcmp(name, "smoothFactor") == 0) // Set the smoothing factor
-            {
+            if (strcmp(name, "smoothFactor") == 0) {
+                // Set the smoothing factor
                 const int val = atof(value);
-                if ((val < 0) || (val > 99))
-                {
+                if ((val < 0) || (val > 99)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.smoothFactor = val;
                 }
             }
-            if (strcmp(name, "invertTFT") == 0) // Invert TFT orientation
-            {
-                if (strcmp(value, "true") == 0)
-                {
-                    if (config.invertTFT == false)
-                    {
+            if (strcmp(name, "invertTFT") == 0) {
+                // Invert TFT orientation
+                if (strcmp(value, "true") == 0) {
+                    if (!config.invertTFT) {
                         config.invertTFT = true;
                         http_server.lcd_reinit_rqd = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "false") == 0)
-                {
-                    if (config.invertTFT == true)
-                    {
+                } else if (strcmp(value, "false") == 0) {
+                    if (config.invertTFT) {
                         config.invertTFT = false;
                         http_server.lcd_reinit_rqd = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid controller configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
-            if (hostnamechanged)
-            { // We reset hostname, process
+    } else {
+        if (saveConfig()) {
+            if (hostnamechanged) {
+                // We reset hostname, process
                 hostnamechanged = false;
                 http_server.name_reset_requested = true;
                 Log.notice(F("POSTed new mDNSid, queued network reset." CR));
             }
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save controller configuration data." CR));
             return false;
         }
     }
 }
 
-bool processCalibrationSettings(AsyncWebServerRequest *request)
-{
+bool processCalibrationSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -172,73 +134,54 @@ bool processCalibrationSettings(AsyncWebServerRequest *request)
 
             // Calibration settings
             //
-            if (strcmp(name, "applyCalibration") == 0) // Set apply calibration
-            {
-                if (strcmp(value, "true") == 0)
-                {
+            if (strcmp(name, "applyCalibration") == 0) {
+                // Set apply calibration
+                if (strcmp(value, "true") == 0) {
                     config.applyCalibration = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "false") == 0)
-                {
+                } else if (strcmp(value, "false") == 0) {
                     config.applyCalibration = false;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "tempCorrect") == 0) // Set apply temperature correction
-            {
-                if (strcmp(value, "true") == 0)
-                {
+            if (strcmp(name, "tempCorrect") == 0) {
+                // Set apply temperature correction
+                if (strcmp(value, "true") == 0) {
                     config.tempCorrect = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "false") == 0)
-                {
+                } else if (strcmp(value, "false") == 0) {
                     config.tempCorrect = false;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Local Target configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Local Target configuration data." CR));
             return false;
         }
     }
 }
 
-bool processLocalTargetSettings(AsyncWebServerRequest *request)
-{
+bool processLocalTargetSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -246,70 +189,53 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
 
             // Local target settings
             //
-            if (strcmp(name, "localTargetURL") == 0) // Set target URL
-            {
+            if (strcmp(name, "localTargetURL") == 0) {
+                // Set target URL
                 String isURL = value;
-                if ((strlen(value) > 3) && (strlen(value) < 255) && isURL.startsWith("http"))
-                {
+                if ((strlen(value) > 3) && (strlen(value) < 255) && isURL.startsWith("http")) {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "localTargetPushEvery") == 0) // Set the push frequency in seconds
-            {
+            if (strcmp(name, "localTargetPushEvery") == 0) {
+                // Set the push frequency in seconds
                 const double val = atof(value);
-                if ((val < 15) || (val > 3600))
-                {
+                if ((val < 15) || (val > 3600)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.localTargetPushEvery = val;
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Local Target configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Local Target configuration data." CR));
             return false;
         }
     }
 }
 
-bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
-{
+bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -317,67 +243,48 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
 
             // Google Sheets settings
             //
-            if (strcmp(name, "scriptsURL") == 0) // Set Google Sheets URL
-            {
-                if (
-                    strlen(value) > 3 &&
-                    strlen(value) < 255 &&
-                    strncmp(value, "https://script.google.com/", 26) == 0)
-                {
+            if (strcmp(name, "scriptsURL") == 0) {
+                // Set Google Sheets URL
+                if (strlen(value) > 3 && strlen(value) < 255 && strncmp(value, "https://script.google.com/", 26) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "scriptsEmail") == 0) // Set Google Sheets Email
-            {
-                if (strlen(value) > 7 && strlen(value) < 255)
-                {
+            if (strcmp(name, "scriptsEmail") == 0) {
+                // Set Google Sheets Email
+                if (strlen(value) > 7 && strlen(value) < 255) {
                     strlcpy(config.scriptsEmail, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.scriptsEmail, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "sheetName_red") == 0) // Set Red Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
+            if (strcmp(name, "sheetName_red") == 0) {
+                // Set Red Sheet Name
+                if (strlen(value) < 25) {
                     strlcpy(config.sheetName_red, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "sheetName_green") == 0) // Set Green Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
+            if (strcmp(name, "sheetName_green") == 0) {
+                // Set Green Sheet Name
+                if (strlen(value) < 25) {
                     strlcpy(config.sheetName_green, value, 25);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
