@@ -1,7 +1,3 @@
-//
-// Created by Lee Bussy on 12/31/20
-//
-
 #ifndef _RESETREASONS_H
 #define _RESETREASONS_H
 

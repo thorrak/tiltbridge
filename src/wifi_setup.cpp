@@ -1,28 +1,21 @@
-//
-// Created by John Beeler on 6/4/18.
-//
-
 #include "wifi_setup.h"
 
 Ticker wifiCheck;
 
 bool shouldSaveConfig = false;
 
-void saveParamsCallback()
-{
+void saveParamsCallback() {
     // Callback notifying us of the need to save config
     shouldSaveConfig = true;
 }
 
-void apCallback(WiFiManager *myWiFiManager)
-{
+void apCallback(WiFiManager *myWiFiManager) {
     // Callback to display the WiFi LCD notification
     Log.verbose(F("Entered config mode: SSID: %s, IP: %s" CR), myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
 }
 
-void disconnectWiFi()
-{
+void disconnectWiFi() {
     WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(true);
     WiFi.disconnect(true, true);
@@ -31,18 +24,14 @@ void disconnectWiFi()
     ESP.restart();
 }
 
-void mdnsReset()
-{
+void mdnsReset() {
     tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
     http_server.name_reset_requested = false;
     MDNS.end();
-    if (!MDNS.begin(config.mdnsID))
-    {
+    if (!MDNS.begin(config.mdnsID)) {
         Log.error(F("Error resetting MDNS responder."));
         ESP.restart();
-    }
-    else
-    {
+    } else {
         Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
         MDNS.addService("http", "tcp", WEBPORT);
         MDNS.addService("kegcop", "tcp", WEBPORT);
@@ -52,8 +41,7 @@ void mdnsReset()
     }
 }
 
-void initWiFi()
-{
+void initWiFi() {
     WiFiManager wm;
 #if ARDUINO_LOG_LEVEL == 6
     wm.setDebugOutput(true); // Use debug if we are at max log level
@@ -79,33 +67,25 @@ void initWiFi()
 
     wm.setHostname(config.mdnsID);
 
-    if (!wm.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS))
-    {
+    if (!wm.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
         Log.warning(F("Failed to connect and/or hit timeout. Restarting" CR));
         ESP.restart();
-    }
-    else
-    {
+    } else {
         // We finished with portal (We were configured)
         WiFi.softAPdisconnect(true);
         WiFi.mode(WIFI_STA);
     }
 
-    if (shouldSaveConfig)
-    {
+    if (shouldSaveConfig) {
         // If we connected, then let's save the mDNS name
         LCBUrl url;
         // If the mDNS name is valid, save it.
-        if (url.isValidHostName(custom_mdns_name.getValue()))
-        {
+        if (url.isValidHostName(custom_mdns_name.getValue())) {
             strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
             strcpy(mdns_id, config.mdnsID);
 
-            // TODO:
-            // Probably have to re-connect via WiFiManager and wm.setHostname(config.mdnsID);
-        }
-        else
-        {
+            // TODO - Probably have to re-connect via WiFiManager and wm.setHostname(config.mdnsID);
+        } else {
             // If the mDNS name is invalid, reset the WiFi configuration and restart
             // the ESP8266
             // TODO - add an LCD error message here maybe
@@ -114,8 +94,7 @@ void initWiFi()
         saveConfig();
     }
 
-    if (!MDNS.begin(config.mdnsID))
-    {
+    if (!MDNS.begin(config.mdnsID)) {
         Log.error(F("Error setting up MDNS responder." CR));
     }
 
@@ -140,10 +119,8 @@ void initWiFi()
     wifiCheck.attach(1, reconnectWiFi); // Check on WiFi
 }
 
-void reconnectWiFi()
-{
-    if (WiFiClass::status() != WL_CONNECTED)
-    {
+void reconnectWiFi() {
+    if (WiFiClass::status() != WL_CONNECTED) {
         // WiFi is down - Reconnect
         lcd.display_wifi_disconnected_screen();
         WiFi.begin();
@@ -151,20 +128,16 @@ void reconnectWiFi()
         delay(1000); // Ensuring the "disconnected" screen appears for at least one second
 
         int WLcount = 0;
-        while (WiFiClass::status() != WL_CONNECTED && WLcount < 190)
-        {
+        while (WiFiClass::status() != WL_CONNECTED && WLcount < 190) {
             delay(100);
             printDot(true);
             ++WLcount;
         }
 
-        if (WiFiClass::status() != WL_CONNECTED)
-        {
+        if (WiFiClass::status() != WL_CONNECTED) {
             // We failed to reconnect.
             lcd.display_wifi_reconnect_failed();
-        }
-        else
-        {
+        } else {
             // We reconnected successfully
             lcd.display_logo();
         }

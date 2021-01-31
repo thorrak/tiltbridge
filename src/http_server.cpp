@@ -396,16 +396,13 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
     }
 }
 
-bool processBrewstatusSettings(AsyncWebServerRequest *request)
-{
+bool processBrewstatusSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -413,69 +410,52 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
 
             // Brewstatus settings
             //
-            if (strcmp(name, "brewstatusURL") == 0) // Set Brewstatus Key
-            {
-                if (strlen(value) > BREWSTATUS_MIN_KEY_LENGTH && strlen(value) < 255 )
-                {
+            if (strcmp(name, "brewstatusURL") == 0) {
+                // Set Brewstatus Key
+                if (strlen(value) > BREWSTATUS_MIN_KEY_LENGTH && strlen(value) < 255) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "brewstatusPushEvery") == 0) // Set the push frequency in seconds
-            {
+            if (strcmp(name, "brewstatusPushEvery") == 0) {
+                // Set the push frequency in seconds
                 const double val = atof(value);
-                if ((val < 30) || (val > 3600))
-                {
+                if ((val < 30) || (val > 3600)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.brewstatusPushEvery = val;
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Brewstatus configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Brewstatus configuration data." CR));
             return false;
         }
     }
 }
 
-bool processMqttSettings(AsyncWebServerRequest *request)
-{
+bool processMqttSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -483,187 +463,144 @@ bool processMqttSettings(AsyncWebServerRequest *request)
 
             // MQTT settings
             //
-            if (strcmp(name, "mqttBrokerHost") == 0) // Set MQTT address
-            {
+            if (strcmp(name, "mqttBrokerHost") == 0) {
+                // Set MQTT address
                 LCBUrl url;
-                if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttBrokerHost, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else if (!url.isValidHostName(value) || (strlen(value) < 3 || strlen(value) > 254))
-                {
+                } else if (!url.isValidHostName(value) || (strlen(value) < 3 || strlen(value) > 254)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     strlcpy(config.mqttBrokerHost, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttBrokerPort") == 0) // Set port
-            {
+            if (strcmp(name, "mqttBrokerPort") == 0) {
+                // Set port
                 const double val = atof(value);
-                if ((val <= 1024) || (val >= 65535))
-                {
+                if ((val <= 1024) || (val >= 65535)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     config.mqttBrokerPort = val;
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttPushEvery") == 0) // Set frequency in seconds
-            {
+            if (strcmp(name, "mqttPushEvery") == 0) {
+                // Set frequency in seconds
                 const double val = atof(value);
-                if ((val < 30) || (val > 3600))
-                {
+                if ((val < 30) || (val > 3600)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     config.mqttPushEvery = val;
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttUsername") == 0) // Set MQTT User name
-            {
-                if (strlen(value) > 3 && strlen(value) < 50)
-                {
+            if (strcmp(name, "mqttUsername") == 0) {
+                // Set MQTT User name
+                if (strlen(value) > 3 && strlen(value) < 50) {
                     strlcpy(config.mqttUsername, value, 51);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttUsername, value, 51);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttPassword") == 0) // Set MQTT password
-            {
-                if (strlen(value) < 64)
-                {
+            if (strcmp(name, "mqttPassword") == 0) {
+                // Set MQTT password
+                if (strlen(value) < 64) {
                     strlcpy(config.mqttPassword, value, 65);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttPassword, value, 65);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttTopic") == 0) // Set MQTT Topic
-            {
-                if (strlen(value) > 3 && strlen(value) < 30)
-                {
+            if (strcmp(name, "mqttTopic") == 0) {
+                // Set MQTT Topic
+                if (strlen(value) > 3 && strlen(value) < 30) {
                     strlcpy(config.mqttTopic, value, 31);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttTopic, "tiltbridge", 31);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid MQTT configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save MQTT configuration data." CR));
             return false;
         }
     }
 }
 
-constexpr unsigned int str2int(const char *str, int h = 0)
-{
+constexpr unsigned int str2int(const char *str, int h = 0) {
     return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
 // we don't need to do much input checking on the calibration data as we are
 // looking at numbers generated by the javascript and not a human
-void processCalibration(AsyncWebServerRequest *request)
-{
+void processCalibration(AsyncWebServerRequest *request) {
     int tilt_name = 0;
     int degree;
     double x0, x1, x2, x3;
 
-    if (request->hasArg("clearTiltColor"))
-    {
+    if (request->hasArg("clearTiltColor")) {
         tilt_name = str2int(request->arg("clearTiltColor").c_str());
         degree = 1;
         x1 = 1.0;
         x0 = x2 = x3 = 0.0;
     }
 
-    if (request->hasArg("updateTiltColor"))
-    {
+    if (request->hasArg("updateTiltColor")) {
         tilt_name = str2int(request->arg("updateTiltColor").c_str());
-        if (request->hasArg("linear"))
-        {
+        if (request->hasArg("linear")) {
             degree = 1;
             x0 = strtod(request->arg("linearFitx0").c_str(), nullptr);
             x1 = strtod(request->arg("linearFitx1").c_str(), nullptr);
             x2 = x3 = 0.0;
-        }
-        else if (request->hasArg("quadratic"))
-        {
+        } else if (request->hasArg("quadratic")) {
             degree = 2;
             x0 = strtod(request->arg("quadraticFitx0").c_str(), nullptr);
             x1 = strtod(request->arg("quadraticFitx1").c_str(), nullptr);
             x2 = strtod(request->arg("quadraticFitx2").c_str(), nullptr);
             x3 = 0.0;
-        }
-        else if (request->hasArg("cubic"))
-        {
+        } else if (request->hasArg("cubic")) {
             degree = 2;
             x0 = strtod(request->arg("cubicFitx0").c_str(), nullptr);
             x1 = strtod(request->arg("cubicFitx1").c_str(), nullptr);
             x2 = strtod(request->arg("cubicFitx2").c_str(), nullptr);
             x3 = strtod(request->arg("cubicFitx3").c_str(), nullptr);
-        }
-        else
-        {
+        } else {
             processCalibrationError(request);
         }
     }
@@ -736,8 +673,7 @@ void processCalibration(AsyncWebServerRequest *request)
 //-----------------------------------------------------------------------------------------
 
 #ifndef DISABLE_OTA_UPDATES
-void trigger_OTA(AsyncWebServerRequest *request)
-{
+void trigger_OTA(AsyncWebServerRequest *request) {
     server.serveStatic("/updating.htm", FILESYSTEM, "/").setDefaultFile("updating.htm");
     config.update_spiffs = true;
     lcd.display_ota_update_screen();         // Trigger this here while everything else is waiting.
@@ -747,8 +683,7 @@ void trigger_OTA(AsyncWebServerRequest *request)
 }
 #endif
 
-void http_json(AsyncWebServerRequest *request)
-{
+void http_json(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving Tilt JSON." CR));
     char tilt_data[TILT_ALL_DATA_SIZE];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
@@ -756,8 +691,7 @@ void http_json(AsyncWebServerRequest *request)
     request->send(response);
 }
 
-void settings_json(AsyncWebServerRequest *request)
-{
+void settings_json(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving settings JSON." CR));
     DynamicJsonDocument doc(capacitySerial);
     JsonObject root = doc.to<JsonObject>();
@@ -772,8 +706,7 @@ void settings_json(AsyncWebServerRequest *request)
 // About.htm page Handlers
 //
 
-void this_version(AsyncWebServerRequest *request)
-{
+void this_version(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving version." CR));
     StaticJsonDocument<96> doc;
 
@@ -787,8 +720,7 @@ void this_version(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void uptime(AsyncWebServerRequest *request)
-{
+void uptime(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving uptime." CR));
     StaticJsonDocument<96> doc;
 
@@ -810,8 +742,7 @@ void uptime(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void heap(AsyncWebServerRequest *request)
-{
+void heap(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving heap information." CR));
     StaticJsonDocument<48> doc;
 
@@ -829,8 +760,7 @@ void heap(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void reset_reason(AsyncWebServerRequest *request)
-{
+void reset_reason(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving reset reason." CR));
     StaticJsonDocument<128> doc;
 
@@ -845,8 +775,7 @@ void reset_reason(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void setStaticPages()
-{
+void setStaticPages() {
     // Static page handlers
     server.serveStatic("/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
     server.serveStatic("/index/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
@@ -860,101 +789,75 @@ void setStaticPages()
     server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
 }
 
-void setPostPages()
-{
+void setPostPages() {
     // Settings Page Handlers
     server.on("/settings/controller/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/controller/." CR));
-        if (processTiltBridgeSettings(request))
-        {
+        if (processTiltBridgeSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/calibration/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/calibration/." CR));
-        if (processCalibrationSettings(request))
-        {
+        if (processCalibrationSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/localtarget/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/localtarget/." CR));
-        if (processLocalTargetSettings(request))
-        {
+        if (processLocalTargetSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/googlesheets/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/googlesheets/." CR));
-        if (processGoogleSheetsSettings(request))
-        {
+        if (processGoogleSheetsSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/brewersfriend/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewersfriend/." CR));
-        if (processBrewersFriendSettings(request))
-        {
+        if (processBrewersFriendSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/brewfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewfather/." CR));
-        if (processBrewfatherSettings(request))
-        {
+        if (processBrewfatherSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/brewstatus/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewstatus/." CR));
-        if (processBrewstatusSettings(request))
-        {
+        if (processBrewstatusSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/mqtt/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/mqtt/." CR));
-        if (processMqttSettings(request))
-        {
+        if (processMqttSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
 }
 
-void setJsonPages()
-{
+void setJsonPages() {
     // Tilt JSON
     server.on("/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         http_json(request);
@@ -978,11 +881,9 @@ void setJsonPages()
     server.on("/resetreason/", HTTP_GET, [](AsyncWebServerRequest *request) {
         reset_reason(request);
     });
-
 }
 
-void setActionPages()
-{
+void setActionPages() {
 #ifndef DISABLE_OTA_UPDATES
     server.on("/ota/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, F("text/plain"), F("Ok."));
@@ -1014,8 +915,7 @@ void setActionPages()
     });
 }
 
-void httpServer::init()
-{
+void httpServer::init() {
     setStaticPages();
     setPostPages();
     setJsonPages();
@@ -1027,6 +927,7 @@ void httpServer::init()
     });
 
 #ifdef FSEDIT
+#warning "Filesystem editor is enabled! Disable before release."
     // Setup Filesystem editor
     server.addHandler(new SPIFFSEditor(FILESYSTEM, "admin", "p@ssword"));
 
@@ -1037,12 +938,9 @@ void httpServer::init()
 
     // File not found handler
     server.onNotFound([](AsyncWebServerRequest *request) {
-        if (request->method() == HTTP_OPTIONS)
-        {
+        if (request->method() == HTTP_OPTIONS) {
             request->send(200);
-        }
-        else
-        {
+        } else {
             Log.verbose(F("Serving 404 for request to %s." CR), request->url().c_str());
             request->redirect("/404/");
         }

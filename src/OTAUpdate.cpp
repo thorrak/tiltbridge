@@ -1,7 +1,3 @@
-//
-// Created by John Beeler on 3/19/19.
-//
-
 #include "OTAUpdate.h"
 
 #ifndef DISABLE_OTA_UPDATES
