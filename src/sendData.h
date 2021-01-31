@@ -9,6 +9,7 @@
 #include "wifi_setup.h"
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
+#include "main.h"   // DEBUG
 
 #include <ctime>
 #include <ArduinoJson.h>
@@ -66,8 +67,7 @@ private:
     void connect_mqtt();
     bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
     HTTPClient http;
-    WiFiClient urlClient;
-    WiFiClient mClient;
+    WiFiClient client;
     WiFiClientSecure secureClient;
 };
 

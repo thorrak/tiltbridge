@@ -79,7 +79,7 @@ void loop()
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
 
-    // data_sender.send_to_localTarget();
+    data_sender.send_to_localTarget();
     send_to_bf_and_bf();
     data_sender.send_to_brewstatus();
     data_sender.send_to_google();

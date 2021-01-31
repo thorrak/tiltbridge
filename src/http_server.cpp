@@ -1218,7 +1218,7 @@ void httpServer::init()
     setJsonPages();
     setActionPages();
 
-    // TODO: Other pages I need to re-write
+    // Process a calibration update
     server.on("/calibration/update/", HTTP_POST, [](AsyncWebServerRequest *request) {
         processCalibration(request);
     });
