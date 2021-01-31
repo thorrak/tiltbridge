@@ -458,8 +458,6 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
-            client.setTimeout(10000);
-
             if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
             {
                 Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
