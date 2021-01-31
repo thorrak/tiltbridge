@@ -72,39 +72,6 @@
 
         <div class="container" id="templateapp"><!-- App Container -->
 
-            <div class="card border-dark mb-3"><!-- TiltBridge Clear Calibration Card -->
-
-                <div class="card-header bg-light border-primary">
-                    <h5 class="card-title">Clear Calibration</h5>
-                </div>
-
-                <div class="card-body">
-                    <p class="card-text">Select the tilt color to delete the current calibration. The current
-                        calibration should be deleted before re-calibrating the Tilt.</p>
-                    <form action="/calibration/update/" method="POST" onsubmit="buttonDisable();">
-                        <div class="form-group row">
-                            <label for="clearTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip"
-                                title="Select the color of the tilt to clear">Tilt Color</label>
-                            <div class="col-sm-8">
-                                <select class="form-control" name="clearTiltColor" id="clearTiltColor">
-                                    <option value="red">Red</option>
-                                    <option value="green">Green</option>
-                                    <option value="black">Black</option>
-                                    <option value="purple">Purple</option>
-                                    <option value="orange">Orange</option>
-                                    <option value="blue">Blue</option>
-                                    <option value="yellow">Yellow</option>
-                                    <option value="pink">Pink</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-2">
-                                <button type="submit" class="btn btn-primary button-clearsettings">Clear</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div> <!-- TiltBridge Clear Calibration Card -->
-
             <div class="card border-dark mb-3"><!-- TiltBridge Calibration Card -->
 
                 <div class="card-header bg-light border-primary">
@@ -112,7 +79,14 @@
                 </div>
 
                 <div class="card-body">
-                    <p class="card-text">First, select the tilt color that is being calibrated. Then enter
+                    <p class="card-text">
+                        Although Tilts are generally pretty accurate by default, it can sometimes be helpful to apply
+                        a calibration function to the raw gravity readings the Tilt sends across. By entering
+                        the measured gravity of a liquid relative to the Tilt-reported gravity, TiltBridge can compute
+                        a calibration function that can then automatically be applied to the Tilt's readings.
+                    </p>
+
+                    <p class="card-text">To generate a calibration function, first select the tilt color that is being calibrated. Then enter
                         calibration points using the form below. The more points you enter, the more accurate the
                         calibration will be. You need to enter at least two points to generate a linear fit. If you
                         enter more calibration points, a quadratic and then a cubic fit will be estimated. Once you
@@ -377,6 +351,39 @@
                     </table>
                 </div>
             </div> <!-- TiltBridge Calibration Data Card -->
+
+            <div class="card border-dark mb-3"><!-- TiltBridge Clear Calibration Card -->
+
+                <div class="card-header bg-light border-primary">
+                    <h5 class="card-title">Clear Calibration</h5>
+                </div>
+
+                <div class="card-body">
+                    <p class="card-text">Select the tilt color to delete the current calibration. The current
+                        calibration should be deleted before re-calibrating the Tilt.</p>
+                    <form action="/calibration/update/" method="POST" onsubmit="buttonDisable();">
+                        <div class="form-group row">
+                            <label for="clearTiltColor" class="col-sm-2 col-form-label" data-toggle="tooltip"
+                                   title="Select the color of the tilt to clear">Tilt Color</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" name="clearTiltColor" id="clearTiltColor">
+                                    <option value="red">Red</option>
+                                    <option value="green">Green</option>
+                                    <option value="black">Black</option>
+                                    <option value="purple">Purple</option>
+                                    <option value="orange">Orange</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="yellow">Yellow</option>
+                                    <option value="pink">Pink</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-primary button-clearsettings">Clear</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div> <!-- TiltBridge Clear Calibration Card -->
 
         </div> <!-- Container -->
 
