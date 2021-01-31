@@ -2,6 +2,24 @@ Changelog
 #########
 
 
+v1.0.0 - XXX XX, 2021 - UI Overhaul, Scanner Overhaul, and loads more
+---------------------------
+
+This is a significant release, and is the result of a large number of changes over the past few weeks. To note - this
+update touched virtually every line of code in some fashion. I cannot express enough gratitude towards the primary
+authors of this update - @lbussy and @pletch.
+
+- Refactored large chunks of code for performance
+- Considerable web UI improvements
+- Converted from synchronous to asynchronous HTTP server
+- Converted to use ticker-based callbacks/timers for data sending
+- Removed nlohmann JSON library in favor of ArduinoJson
+- Updated to latest BLE library (thanks @h2zero!)
+- Switched TFT libraries, and combined eSPI and full-size TFT code
+- Updated TiltBridge logo on OLED screens
+
+
+
 v0.2.3 - Dec 28, 2020 - Performance Tweaks & Home Assistant Support
 -------------------------------------------------------------------
 
