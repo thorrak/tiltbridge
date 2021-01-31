@@ -6,10 +6,10 @@ const size_t capacitySerial = 6144;
 const size_t capacityDeserial = 8192;
 
 bool deleteConfigFile() {
-    if (!SPIFFS.begin()) {
+    if (!FILESYSTEM.begin()) {
         return false;
     }
-    return SPIFFS.remove(filename);
+    return FILESYSTEM.remove(filename);
 }
 
 bool loadConfig() {
@@ -24,12 +24,12 @@ bool loadConfig() {
 }
 
 bool loadFile() {
-    if (!SPIFFS.begin()) {
+    if (!FILESYSTEM.begin()) {
         return false;
     }
-    // Loads the configuration from a file on SPIFFS
-    File file = SPIFFS.open(filename, "r");
-    if (!SPIFFS.exists(filename) || !file) {
+    // Loads the configuration from a file on FILESYSTEM
+    File file = FILESYSTEM.open(filename, "r");
+    if (!FILESYSTEM.exists(filename) || !file) {
         // File does not exist or unable to read file
     } else {
         // Existing configuration present
@@ -49,8 +49,8 @@ bool saveConfig() {
 }
 
 bool saveFile() {
-    // Saves the configuration to a file on SPIFFS
-    File file = SPIFFS.open(filename, "w");
+    // Saves the configuration to a file on FILESYSTEM
+    File file = FILESYSTEM.open(filename, "w");
     if (!file) {
         file.close();
         return false;
@@ -97,7 +97,7 @@ bool serializeConfig(Print &dst) {
 
 bool printFile() {
     // Prints the content of a file to the Serial
-    File file = SPIFFS.open(filename, "r");
+    File file = FILESYSTEM.open(filename, "r");
     if (!file)
         return false;
 
