@@ -12,6 +12,7 @@ relay their gravity readings to the cloud. At the moment, TiltBridge supports si
 * Google Sheets
 * `Brewfather`_
 * `BrewStatus`_
+* Home Assistant/MQTT
 
 
 Setting up TiltBridge for Fermentrack
@@ -44,7 +45,8 @@ settings page.
 #. Identify the IP address of your Fermentrack installation
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
-#. In the ``Local Target Settings`` field enter http://<fermentrack_ip_address>/tiltbridge/ and click ``Update``
+#. Choose the ``Target Settings`` tab and then select ``Fermentrack/BrewPi-Remix Settings``
+#. In the ``Target URL`` field enter http://<fermentrack_ip_address>/tiltbridge/ and click ``Update``
 
 Fermentrack and TiltBridge are now configured to properly communicate. You can now set up Tilts connected using
 TiltBridge in Fermentrack.
@@ -77,7 +79,8 @@ Adding the TiltBridge to BrewPi Remix
 #. Identify the IP address of your BrewPi Remix installation
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
-#. In the ``Local Target Settings`` field enter http://<brewpi_remix__ip_address>//brewpi-api.php and click ``Update``
+#. Choose the ``Target Settings`` tab and then select ``Fermentrack/BrewPi-Remix Settings``
+#. In the ``Fermentrack/BrewPi-Remix Settings`` field enter http://<brewpi_remix__ip_address>//brewpi-api.php and click ``Update``
 
 BrewPi Remix and TiltBridge are now configured to communicate appropriately. You can now log Tilts through TiltBridge in BrewPi Remix.
 
@@ -117,11 +120,14 @@ To configure TiltBridge to use Brewer's Friend, you will need to obtain your Bre
 TiltBridge.
 
 #. Go to `Brewers Friend`_ and log in to your account
-#. Click the ``Profile`` button in the upper right, and click ``Account``
+#. Click the ``Profile`` button in the upper right, and click ``Integrations``
 #. Copy the API key (not one of the URLs) to your clipboard
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
+#. Choose the ``Target Settings`` tab and then select ``Brewers Friend``
 #. In the ``Brewers Friend API Key`` field paste the API key you copied earlier and click ``Update``
+
+.. note:: The first data "push" will be attempted within 10 seconds of the key first being entered, but due to rate limits it may take up to 15 minutes for data to first appear in Brewer's Friend.
 
 
 Testing Brewers Friend
@@ -131,8 +137,7 @@ Once the Brewer's Friend API key is provided, the TiltBridge will begin transmit
 Following the first data transmission, you can easily check in Brewer's Friend to see if the data was received.
 
 #. Go to `Brewers Friend`_ and log in to your account
-#. Click the ``Profile`` button in the upper right, and click ``Account``
-#. Click the ``Device Settings`` button on the right
+#. Click the ``Profile`` button in the upper right, and click ``Devices``
 #. In the ``Device Settings`` pane click ``Show All`` (to the right of ``All Brew Sessions``)
 #. All Tilt devices should appear in the list as ``Stream`` devices and will be identified by their color
 
@@ -184,9 +189,12 @@ settings on the TiltBridge itself so that it knows where to send the data.
 
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
-#. In the ``Google Script URL`` field paste the Google Script URL you made note of during the preparation step above and click ``Update``
-#. After the URL is updated, enter your Gmail (or Google Apps) email address in the ``Google Script Email`` field and click ``Update``
-#. Additionally, ensure the correct time zone offset is entered, and click ``Update`` if needed.
+#. Choose the ``Target Settings`` tab and then select ``Google Sheets``
+#. In the ``Google Script URL`` field paste the Google Script URL you made note of during the preparation step above
+#. Enter your Gmail (or Google Apps) email address in the ``Google Script Email`` field
+#. Click ``Update``
+#. Click the ``General Settings`` tab
+#. Ensure the correct time zone offset is entered, and click ``Update`` if needed.
 
 Your TiltBridge should now be configured to send data to Google Sheets. To begin logging a Tilt you will need to enter a
 sheet name for the data to be logged to.
@@ -201,6 +209,7 @@ Sheets it will be created. If the sheet does exist, new data points will be appe
 
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
+#. Choose the ``Target Settings`` tab and then select ``Google Sheets``
 #. Type a name for the Google Sheet to which you want to log data points in the appropriate ``Tilt Sheet Name`` field and click ``Update``
 
 Once this is complete, your Tilt will begin logging data points to the sheet name you specified. If the sheet does not
@@ -227,7 +236,10 @@ TiltBridge will need your Brewfather stream ID in order to post to your Brewfath
 #. Copy just the string of letters/numbers that appears after the start of the URL (http://log.brewfather.net/stream?id=) to your clipboard
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
 #. Click the ``Settings`` link at the top of the dashboard
+#. Choose the ``Target Settings`` tab and then select ``Brewfather``
 #. In the ``Brewfather Stream key`` field paste the string you copied earlier and click ``Update``
+
+.. note:: The first data "push" will be attempted within 10 seconds of the key first being entered, but due to rate limits it may take up to 15 minutes for data to first appear in Brewfather.
 
 
 Testing Brewfather
@@ -250,6 +262,19 @@ Setting up TiltBridge for Brewstatus
 TiltBridge is designed to allow for data to be pushed to `Brewstatus`_. This functionality was helpfully added by
 contributors to the project on `GitHub`_ and has not yet been documented.
 
+.. note:: If you use `Brewstatus`_ and would like to help write this documentation, please reach out!
+
 .. todo:: Document Brewstatus configuration
+
+
+Setting up TiltBridge for Home Assistant/MQTT
+---------------------------------------------
+
+TiltBridge is designed to allow for data to be pushed to Home Assistant via MQTT. This functionality was helpfully added by
+contributors to the project on `GitHub`_ and has not yet been documented.
+
+.. note:: If you use Home Assistant (or use MQTT without Home Assistant, or both!) and would like to help write this documentation, please reach out!
+
+.. todo:: Document MQTT configuration
 
 

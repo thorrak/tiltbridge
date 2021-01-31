@@ -13,7 +13,7 @@ The TiltBridge firmware can downloaded from `GitHub`_ and flashed to your contro
 `Fermentrack`_, or your favorite ESP32 flashing software. The easiest method to flash the firmware is using `BrewFlasher`_ -
 a desktop firmware flashing application maintained by the author of TiltBridge.
 
-.. note:: Be sure to flash the right version of the firmware. For new builds using the LOLIN D32 Pro you will want the "TFT" firmware.
+.. note:: Be sure to flash the right version of the firmware. For new builds using the LOLIN D32 Pro you will want the "TFT" firmware. For builds without a screen you will want to use the "OLED" firmware.
 
 
 
