@@ -269,135 +269,55 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "sheetName_red") == 0) {
-                // Set Red Sheet Name
+            if(strstr(name, "sheetName_") != NULL) {
+                // Set sheet name
                 if (strlen(value) < 25) {
-                    strlcpy(config.sheetName_red, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
+                    // Basically, we're switching on color here and writing to the appropriate config variable
+                    if(strstr(name, "_red") != NULL) strlcpy(config.sheetName_red, value, 25);
+                    else if(strstr(name, "_green") != NULL) strlcpy(config.sheetName_green, value, 25);
+                    else if(strstr(name, "_black") != NULL) strlcpy(config.sheetName_black, value, 25);
+                    else if(strstr(name, "_purple") != NULL) strlcpy(config.sheetName_purple, value, 25);
+                    else if(strstr(name, "_orange") != NULL) strlcpy(config.sheetName_orange, value, 25);
+                    else if(strstr(name, "_yellow") != NULL) strlcpy(config.sheetName_yellow, value, 25);
+                    else if(strstr(name, "_blue") != NULL) strlcpy(config.sheetName_blue, value, 25);
+                    else if(strstr(name, "_pink") != NULL) strlcpy(config.sheetName_pink, value, 25);
+                    else {
+                        failCount++;
+                        Log.warning(F("Settings update error, invalid color [%s]:(%s) not valid." CR), name, value);
+                    }
+
+                    // Technically this will appear after a successful application of a color above. This could be
+                    // skipped by doing different logical routing/using bools, but that seems more trouble than its
+                    // worth
+                    Log.notice(F("Settings updated if color valid [%s]:(%s) applied." CR), name, value);
                 } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "sheetName_green") == 0) {
-                // Set Green Sheet Name
-                if (strlen(value) < 25) {
-                    strlcpy(config.sheetName_green, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                } else {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_black") == 0) // Set Black Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_black, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_purple") == 0) // Set Purple Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_purple, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_orange") == 0) // Set Orange Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_orange, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_yellow") == 0) // Set Yellow Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_yellow, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_blue") == 0) // Set Blue Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_blue, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_pink") == 0) // Set Pink Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_pink, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
+
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Google Sheets configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Google Sheets configuration data." CR));
             return false;
         }
     }
 }
 
-bool processBrewersFriendSettings(AsyncWebServerRequest *request)
-{
+bool processBrewersFriendSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -405,39 +325,28 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request)
 
             // Brewer's Friend settings
             //
-            if (strcmp(name, "brewersFriendKey") == 0) // Set Brewer's Friend Key
-            {
-                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
-                {
+            if (strcmp(name, "brewersFriendKey") == 0) {
+                // Set Brewer's Friend Key
+                if (BREWERS_FRIEND_MIN_KEY_LENGTH < strlen(value) && strlen(value) < 255) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Brewer's Friend configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Brewer's configuration data." CR));
             return false;
         }
@@ -449,11 +358,9 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -461,39 +368,28 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
 
             // Brewfather settings
             //
-            if (strcmp(name, "brewfatherKey") == 0) // Set Brewfather Key
-            {
-                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
-                {
+            if (strcmp(name, "brewfatherKey") == 0) {
+                // Set Brewfather Key
+                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 ) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Brewfather configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Brewfather configuration data." CR));
             return false;
         }
