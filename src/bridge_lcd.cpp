@@ -99,6 +99,7 @@ void bridge_lcd::init() {
 
 void bridge_lcd::reinit() {
 #if defined (LCD_TFT) || defined (LCD_TFT_ESPI)
+    clear();
     if (config.invertTFT) {
         tft->setRotation(1);
     } else {
