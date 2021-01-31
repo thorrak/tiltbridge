@@ -86,7 +86,7 @@
 
                     <div class="row"> <!-- Row -->
 
-                        <div class="col-12 col-sm-6" v-for="sensor in sensors"><!-- Start vue Sensor loop div -->
+                        <div class="col-12 col-lg-6" v-for="sensor in sensors"><!-- Start vue Sensor loop div -->
 
                             <div class="card mb-3 tilt"> <!-- Card -->
 
@@ -100,10 +100,10 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-6 d-flex flex-column text-left">
-                                            <h6 class="card-subtitle empty">{{sensor.gsheets_title}}<a :href="sensor.gsheets_link" target="_blank">{{sensor.gsheets_name}}</a></h6>
+                                        <div class="col-7 d-flex flex-column text-left pr-0">
+                                            <h6 class="card-subtitle empty"><a :href="sensor.gsheets_link" target="_blank">{{sensor.gsheets_name}}</a></h6>
                                         </div>
-                                        <div class="col-6 d-flex flex-column text-right">
+                                        <div class="col-5 d-flex flex-column text-right pl-0">
                                             <h6 class="card-subtitle empty">{{sensor.battery}}</h6>
                                         </div>
                                     </div>

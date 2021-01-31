@@ -48,11 +48,6 @@ var vm = new Vue({
                         // Style
                         cardData['bgClass'] = 'bg-' + self.fullDict[key].color.toLowerCase();
 
-                        // Only show GSheet data if we have a Google Sheet defined
-                        if (cardData['gsheets_name']) {
-                            cardData['gsheets_title'] = "Google Sheet: "
-                        }
-
                         // Only show Battery data if present
                         if (cardData['sends_battery']) {
                             cardData['battery'] = "Battery Age: " + cardData['weeks_on_battery'];

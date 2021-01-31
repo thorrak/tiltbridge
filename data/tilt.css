@@ -3,6 +3,8 @@
 .empty {
   min-height: 17px;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 
