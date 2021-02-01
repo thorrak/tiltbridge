@@ -1,41 +1,42 @@
-//
-// Created by John Beeler on 2/17/19.
-//
-
 #include "resetreasons.h"
 #include "http_server.h"
 
 httpServer http_server;
+Ticker sendNowTicker;
+
+
+extern bool send_brewersFriend;
+extern bool send_brewfather;
+extern bool send_localTarget;
+extern bool send_brewStatus;
+extern bool send_gSheets;
+extern bool send_mqtt;
+
 
 AsyncWebServer server(WEBPORT);
 
 // This is to simplify the redirects in processCalibration
-void redirectToCalibration(AsyncWebServerRequest *request)
-{
+void redirectToCalibration(AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse(301);
     response->addHeader("Location", "/calibration/");
     response->addHeader("Cache-Control", "no-cache");
     request->send(response);
 }
 
-void processCalibrationError(AsyncWebServerRequest *request)
-{
+void processCalibrationError(AsyncWebServerRequest *request) {
     Log.error(F("Error in processCalibration." CR));
     redirectToCalibration(request);
 }
 
 // Settings Page Handlers
-bool processTiltBridgeSettings(AsyncWebServerRequest *request)
-{
+bool processTiltBridgeSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     bool hostnamechanged = false;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -43,128 +44,99 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request)
 
             // Controller settings
             //
-            if (strcmp(name, "mdnsID") == 0) // Set hostname
-            {
+            if (strcmp(name, "mdnsID") == 0) {
+                // Set hostname
                 LCBUrl url;
-                if (!url.isValidLabel(value))
-                {
+                if (!url.isValidLabel(value)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
-                    if (strcmp(config.mdnsID, value) != 0)
-                    {
+                } else {
+                    if (strcmp(config.mdnsID, value) != 0) {
                         hostnamechanged = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.mdnsID, value, 32);
                 }
             }
-            if (strcmp(name, "tzOffset") == 0) // Set the timezone offset
-            {
+            if (strcmp(name, "tzOffset") == 0) {
+                // Set the timezone offset
                 const int val = atof(value);
-                if ((val <= -12) || (val >= 14))
-                {
+                if ((val <= -12) || (val >= 14)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.TZoffset = val;
                 }
             }
-            if (strcmp(name, "tempUnit") == 0) // Set temp unit
-            {
-                if ((strcmp(value, "F") == 1) && (strcmp(value, "F") == 1))
-                {
+            if (strcmp(name, "tempUnit") == 0) {
+                // Set temp unit
+                if ((strcmp(value, "F") == 1) && (strcmp(value, "F") == 1)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.tempUnit, value, 2);
                 }
             }
-            if (strcmp(name, "smoothFactor") == 0) // Set the smoothing factor
-            {
+            if (strcmp(name, "smoothFactor") == 0) {
+                // Set the smoothing factor
                 const int val = atof(value);
-                if ((val < 0) || (val > 99))
-                {
+                if ((val < 0) || (val > 99)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.smoothFactor = val;
                 }
             }
-            if (strcmp(name, "invertTFT") == 0) // Invert TFT orientation
-            {
-                if (strcmp(value, "true") == 0)
-                {
-                    if (config.invertTFT == false)
-                    {
+            if (strcmp(name, "invertTFT") == 0) {
+                // Invert TFT orientation
+                if (strcmp(value, "true") == 0) {
+                    if (!config.invertTFT) {
                         config.invertTFT = true;
                         http_server.lcd_reinit_rqd = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "false") == 0)
-                {
-                    if (config.invertTFT == true)
-                    {
+                } else if (strcmp(value, "false") == 0) {
+                    if (config.invertTFT) {
                         config.invertTFT = false;
                         http_server.lcd_reinit_rqd = true;
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                     failCount++;
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid controller configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
-            if (hostnamechanged)
-            { // We reset hostname, process
+    } else {
+        if (saveConfig()) {
+            if (hostnamechanged) {
+                // We reset hostname, process
                 hostnamechanged = false;
                 http_server.name_reset_requested = true;
                 Log.notice(F("POSTed new mDNSid, queued network reset." CR));
             }
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save controller configuration data." CR));
             return false;
         }
     }
 }
 
-bool processCalibrationSettings(AsyncWebServerRequest *request)
-{
+bool processCalibrationSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -172,73 +144,54 @@ bool processCalibrationSettings(AsyncWebServerRequest *request)
 
             // Calibration settings
             //
-            if (strcmp(name, "applyCalibration") == 0) // Set apply calibration
-            {
-                if (strcmp(value, "true") == 0)
-                {
+            if (strcmp(name, "applyCalibration") == 0) {
+                // Set apply calibration
+                if (strcmp(value, "true") == 0) {
                     config.applyCalibration = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "false") == 0)
-                {
+                } else if (strcmp(value, "false") == 0) {
                     config.applyCalibration = false;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "tempCorrect") == 0) // Set apply temperature correction
-            {
-                if (strcmp(value, "true") == 0)
-                {
+            if (strcmp(name, "tempCorrect") == 0) {
+                // Set apply temperature correction
+                if (strcmp(value, "true") == 0) {
                     config.tempCorrect = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "false") == 0)
-                {
+                } else if (strcmp(value, "false") == 0) {
                     config.tempCorrect = false;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Local Target configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Local Target configuration data." CR));
             return false;
         }
     }
 }
 
-bool processLocalTargetSettings(AsyncWebServerRequest *request)
-{
+bool processLocalTargetSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -246,70 +199,55 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request)
 
             // Local target settings
             //
-            if (strcmp(name, "localTargetURL") == 0) // Set target URL
-            {
+            if (strcmp(name, "localTargetURL") == 0) {
+                // Set target URL
                 String isURL = value;
-                if ((strlen(value) > 3) && (strlen(value) < 255) && isURL.startsWith("http"))
-                {
+                if ((strlen(value) > 3) && (strlen(value) < 255) && isURL.startsWith("http")) {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                    // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
+                    sendNowTicker.once(5, [](){send_localTarget = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
                     strlcpy(config.localTargetURL, value, 256);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "localTargetPushEvery") == 0) // Set the push frequency in seconds
-            {
+            if (strcmp(name, "localTargetPushEvery") == 0) {
+                // Set the push frequency in seconds
                 const double val = atof(value);
-                if ((val < 15) || (val > 3600))
-                {
+                if ((val < 15) || (val > 3600)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.localTargetPushEvery = val;
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Local Target configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Local Target configuration data." CR));
             return false;
         }
     }
 }
 
-bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
-{
+bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -317,180 +255,83 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request)
 
             // Google Sheets settings
             //
-            if (strcmp(name, "scriptsURL") == 0) // Set Google Sheets URL
-            {
-                if (
-                    strlen(value) > 3 &&
-                    strlen(value) < 255 &&
-                    strncmp(value, "https://script.google.com/", 26) == 0)
-                {
+            if (strcmp(name, "scriptsURL") == 0) {
+                // Set Google Sheets URL
+                if (strlen(value) > 3 && strlen(value) < 255 && strncmp(value, "https://script.google.com/", 26) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                    // Trigger a send in 5 seconds using the updated GSheets URL
+                    sendNowTicker.once(5, [](){send_gSheets = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "scriptsEmail") == 0) // Set Google Sheets Email
-            {
-                if (strlen(value) > 7 && strlen(value) < 255)
-                {
+            if (strcmp(name, "scriptsEmail") == 0) {
+                // Set Google Sheets Email
+                if (strlen(value) > 7 && strlen(value) < 255) {
                     strlcpy(config.scriptsEmail, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.scriptsEmail, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "sheetName_red") == 0) // Set Red Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_red, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
+            if(strstr(name, "sheetName_") != NULL) {
+                // Set sheet name
+                if (strlen(value) < 25) {
+                    // Basically, we're switching on color here and writing to the appropriate config variable
+                    if(strstr(name, "_red") != NULL) strlcpy(config.sheetName_red, value, 25);
+                    else if(strstr(name, "_green") != NULL) strlcpy(config.sheetName_green, value, 25);
+                    else if(strstr(name, "_black") != NULL) strlcpy(config.sheetName_black, value, 25);
+                    else if(strstr(name, "_purple") != NULL) strlcpy(config.sheetName_purple, value, 25);
+                    else if(strstr(name, "_orange") != NULL) strlcpy(config.sheetName_orange, value, 25);
+                    else if(strstr(name, "_yellow") != NULL) strlcpy(config.sheetName_yellow, value, 25);
+                    else if(strstr(name, "_blue") != NULL) strlcpy(config.sheetName_blue, value, 25);
+                    else if(strstr(name, "_pink") != NULL) strlcpy(config.sheetName_pink, value, 25);
+                    else {
+                        failCount++;
+                        Log.warning(F("Settings update error, invalid color [%s]:(%s) not valid." CR), name, value);
+                    }
+
+                    // Technically this will appear after a successful application of a color above. This could be
+                    // skipped by doing different logical routing/using bools, but that seems more trouble than its
+                    // worth
+                    Log.notice(F("Settings updated if color valid [%s]:(%s) applied." CR), name, value);
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "sheetName_green") == 0) // Set Green Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_green, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_black") == 0) // Set Black Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_black, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_purple") == 0) // Set Purple Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_purple, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_orange") == 0) // Set Orange Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_orange, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_yellow") == 0) // Set Yellow Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_yellow, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_blue") == 0) // Set Blue Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_blue, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
-            if (strcmp(name, "sheetName_pink") == 0) // Set Pink Sheet Name
-            {
-                if (strlen(value) < 25)
-                {
-                    strlcpy(config.sheetName_pink, value, 25);
-                    Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else
-                {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-            }
+
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Google Sheets configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Google Sheets configuration data." CR));
             return false;
         }
     }
 }
 
-bool processBrewersFriendSettings(AsyncWebServerRequest *request)
-{
+bool processBrewersFriendSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -498,39 +339,30 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request)
 
             // Brewer's Friend settings
             //
-            if (strcmp(name, "brewersFriendKey") == 0) // Set Brewer's Friend Key
-            {
-                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
-                {
+            if (strcmp(name, "brewersFriendKey") == 0) {
+                // Set Brewer's Friend Key
+                if (BREWERS_FRIEND_MIN_KEY_LENGTH < strlen(value) && strlen(value) < 255) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                    // Trigger a send to Brewers Friend in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_brewersFriend = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Brewer's Friend configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Brewer's configuration data." CR));
             return false;
         }
@@ -542,11 +374,9 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -554,55 +384,43 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
 
             // Brewfather settings
             //
-            if (strcmp(name, "brewfatherKey") == 0) // Set Brewfather Key
-            {
-                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 )
-                {
+            if (strcmp(name, "brewfatherKey") == 0) {
+                // Set Brewfather Key
+                if (strlen(value) > BREWERS_FRIEND_MIN_KEY_LENGTH && strlen(value) < 255 ) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                    // Trigger a send to Brewfather in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_brewfather = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Brewfather configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Brewfather configuration data." CR));
             return false;
         }
     }
 }
 
-bool processBrewstatusSettings(AsyncWebServerRequest *request)
-{
+bool processBrewstatusSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -610,69 +428,54 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request)
 
             // Brewstatus settings
             //
-            if (strcmp(name, "brewstatusURL") == 0) // Set Brewstatus Key
-            {
-                if (strlen(value) > BREWSTATUS_MIN_KEY_LENGTH && strlen(value) < 255 )
-                {
+            if (strcmp(name, "brewstatusURL") == 0) {
+                // Set Brewstatus Key
+                if (strlen(value) > BREWSTATUS_MIN_KEY_LENGTH && strlen(value) < 255) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                    // Trigger a send to Brewstatus in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_brewStatus = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "brewstatusPushEvery") == 0) // Set the push frequency in seconds
-            {
+            if (strcmp(name, "brewstatusPushEvery") == 0) {
+                // Set the push frequency in seconds
                 const double val = atof(value);
-                if ((val < 30) || (val > 3600))
-                {
+                if ((val < 30) || (val > 3600)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                     config.brewstatusPushEvery = val;
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid Brewstatus configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save Brewstatus configuration data." CR));
             return false;
         }
     }
 }
 
-bool processMqttSettings(AsyncWebServerRequest *request)
-{
+bool processMqttSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
     int params = request->params();
-    for (int i = 0; i < params; i++)
-    {
+    for (int i = 0; i < params; i++) {
         AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost())
-        {
+        if (p->isPost()) {
             // Process any p->name().c_str() / p->value().c_str() pairs
             const char *name = p->name().c_str();
             const char *value = p->value().c_str();
@@ -680,187 +483,146 @@ bool processMqttSettings(AsyncWebServerRequest *request)
 
             // MQTT settings
             //
-            if (strcmp(name, "mqttBrokerHost") == 0) // Set MQTT address
-            {
+            if (strcmp(name, "mqttBrokerHost") == 0) {
+                // Set MQTT address
                 LCBUrl url;
-                if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttBrokerHost, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else if (!url.isValidHostName(value) || (strlen(value) < 3 || strlen(value) > 254))
-                {
+                } else if (!url.isValidHostName(value) || (strlen(value) < 3 || strlen(value) > 254)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     strlcpy(config.mqttBrokerHost, value, 256);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttBrokerPort") == 0) // Set port
-            {
+            if (strcmp(name, "mqttBrokerPort") == 0) {
+                // Set port
                 const double val = atof(value);
-                if ((val <= 1024) || (val >= 65535))
-                {
+                if ((val <= 1024) || (val >= 65535)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     config.mqttBrokerPort = val;
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttPushEvery") == 0) // Set frequency in seconds
-            {
+            if (strcmp(name, "mqttPushEvery") == 0) {
+                // Set frequency in seconds
                 const double val = atof(value);
-                if ((val < 30) || (val > 3600))
-                {
+                if ((val < 30) || (val > 3600)) {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
-                }
-                else
-                {
+                } else {
                     config.mqttPushEvery = val;
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttUsername") == 0) // Set MQTT User name
-            {
-                if (strlen(value) > 3 && strlen(value) < 50)
-                {
+            if (strcmp(name, "mqttUsername") == 0) {
+                // Set MQTT User name
+                if (strlen(value) > 3 && strlen(value) < 50) {
                     strlcpy(config.mqttUsername, value, 51);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttUsername, value, 51);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttPassword") == 0) // Set MQTT password
-            {
-                if (strlen(value) < 64)
-                {
+            if (strcmp(name, "mqttPassword") == 0) {
+                // Set MQTT password
+                if (strlen(value) < 64) {
                     strlcpy(config.mqttPassword, value, 65);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttPassword, value, 65);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
-            if (strcmp(name, "mqttTopic") == 0) // Set MQTT Topic
-            {
-                if (strlen(value) > 3 && strlen(value) < 30)
-                {
+            if (strcmp(name, "mqttTopic") == 0) {
+                // Set MQTT Topic
+                if (strlen(value) > 3 && strlen(value) < 30) {
                     strlcpy(config.mqttTopic, value, 31);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) applied." CR), name, value);
-                }
-                else if (strcmp(value, "") == 0 || strlen(value) == 0)
-                {
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.mqttTopic, "tiltbridge", 31);
                     http_server.mqtt_init_rqd = true;
                     Log.notice(F("Settings update, [%s]:(%s) cleared." CR), name, value);
-                }
-                else
-                {
+                } else {
                     failCount++;
                     Log.warning(F("Settings update error, [%s]:(%s) not valid." CR), name, value);
                 }
             }
         }
     }
-    if (failCount)
-    {
+    if (failCount) {
         Log.error(F("Error: Invalid MQTT configuration." CR));
         return false;
-    }
-    else
-    {
-        if (saveConfig())
-        {
+    } else {
+        if (saveConfig()) {
+            // Trigger a send via MQTT in 5 seconds using the updated data
+            sendNowTicker.once(5, [](){send_mqtt = true;});
             return true;
-        }
-        else
-        {
+        } else {
             Log.error(F("Error: Unable to save MQTT configuration data." CR));
             return false;
         }
     }
 }
 
-constexpr unsigned int str2int(const char *str, int h = 0)
-{
+constexpr unsigned int str2int(const char *str, int h = 0) {
     return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
 // we don't need to do much input checking on the calibration data as we are
 // looking at numbers generated by the javascript and not a human
-void processCalibration(AsyncWebServerRequest *request)
-{
+void processCalibration(AsyncWebServerRequest *request) {
     int tilt_name = 0;
     int degree;
     double x0, x1, x2, x3;
 
-    if (request->hasArg("clearTiltColor"))
-    {
+    if (request->hasArg("clearTiltColor")) {
         tilt_name = str2int(request->arg("clearTiltColor").c_str());
         degree = 1;
         x1 = 1.0;
         x0 = x2 = x3 = 0.0;
     }
 
-    if (request->hasArg("updateTiltColor"))
-    {
+    if (request->hasArg("updateTiltColor")) {
         tilt_name = str2int(request->arg("updateTiltColor").c_str());
-        if (request->hasArg("linear"))
-        {
+        if (request->hasArg("linear")) {
             degree = 1;
             x0 = strtod(request->arg("linearFitx0").c_str(), nullptr);
             x1 = strtod(request->arg("linearFitx1").c_str(), nullptr);
             x2 = x3 = 0.0;
-        }
-        else if (request->hasArg("quadratic"))
-        {
+        } else if (request->hasArg("quadratic")) {
             degree = 2;
             x0 = strtod(request->arg("quadraticFitx0").c_str(), nullptr);
             x1 = strtod(request->arg("quadraticFitx1").c_str(), nullptr);
             x2 = strtod(request->arg("quadraticFitx2").c_str(), nullptr);
             x3 = 0.0;
-        }
-        else if (request->hasArg("cubic"))
-        {
+        } else if (request->hasArg("cubic")) {
             degree = 2;
             x0 = strtod(request->arg("cubicFitx0").c_str(), nullptr);
             x1 = strtod(request->arg("cubicFitx1").c_str(), nullptr);
             x2 = strtod(request->arg("cubicFitx2").c_str(), nullptr);
             x3 = strtod(request->arg("cubicFitx3").c_str(), nullptr);
-        }
-        else
-        {
+        } else {
             processCalibrationError(request);
         }
     }
@@ -933,8 +695,7 @@ void processCalibration(AsyncWebServerRequest *request)
 //-----------------------------------------------------------------------------------------
 
 #ifndef DISABLE_OTA_UPDATES
-void trigger_OTA(AsyncWebServerRequest *request)
-{
+void trigger_OTA(AsyncWebServerRequest *request) {
     server.serveStatic("/updating.htm", FILESYSTEM, "/").setDefaultFile("updating.htm");
     config.update_spiffs = true;
     lcd.display_ota_update_screen();         // Trigger this here while everything else is waiting.
@@ -944,8 +705,7 @@ void trigger_OTA(AsyncWebServerRequest *request)
 }
 #endif
 
-void http_json(AsyncWebServerRequest *request)
-{
+void http_json(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving Tilt JSON." CR));
     char tilt_data[TILT_ALL_DATA_SIZE];
     tilt_scanner.tilt_to_json_string(tilt_data, false);
@@ -953,8 +713,7 @@ void http_json(AsyncWebServerRequest *request)
     request->send(response);
 }
 
-void settings_json(AsyncWebServerRequest *request)
-{
+void settings_json(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving settings JSON." CR));
     DynamicJsonDocument doc(capacitySerial);
     JsonObject root = doc.to<JsonObject>();
@@ -969,8 +728,7 @@ void settings_json(AsyncWebServerRequest *request)
 // About.htm page Handlers
 //
 
-void this_version(AsyncWebServerRequest *request)
-{
+void this_version(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving version." CR));
     StaticJsonDocument<96> doc;
 
@@ -984,8 +742,7 @@ void this_version(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void uptime(AsyncWebServerRequest *request)
-{
+void uptime(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving uptime." CR));
     StaticJsonDocument<96> doc;
 
@@ -1007,8 +764,7 @@ void uptime(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void heap(AsyncWebServerRequest *request)
-{
+void heap(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving heap information." CR));
     StaticJsonDocument<48> doc;
 
@@ -1026,8 +782,7 @@ void heap(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void reset_reason(AsyncWebServerRequest *request)
-{
+void reset_reason(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving reset reason." CR));
     StaticJsonDocument<128> doc;
 
@@ -1042,8 +797,7 @@ void reset_reason(AsyncWebServerRequest *request)
     request->send(200, "application/json", output);
 }
 
-void setStaticPages()
-{
+void setStaticPages() {
     // Static page handlers
     server.serveStatic("/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
     server.serveStatic("/index/", FILESYSTEM, "/").setDefaultFile("index.htm").setCacheControl("max-age=600");
@@ -1057,101 +811,75 @@ void setStaticPages()
     server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
 }
 
-void setPostPages()
-{
+void setPostPages() {
     // Settings Page Handlers
     server.on("/settings/controller/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/controller/." CR));
-        if (processTiltBridgeSettings(request))
-        {
+        if (processTiltBridgeSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/calibration/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/calibration/." CR));
-        if (processCalibrationSettings(request))
-        {
+        if (processCalibrationSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/localtarget/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/localtarget/." CR));
-        if (processLocalTargetSettings(request))
-        {
+        if (processLocalTargetSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/googlesheets/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/googlesheets/." CR));
-        if (processGoogleSheetsSettings(request))
-        {
+        if (processGoogleSheetsSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/brewersfriend/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewersfriend/." CR));
-        if (processBrewersFriendSettings(request))
-        {
+        if (processBrewersFriendSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/brewfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewfather/." CR));
-        if (processBrewfatherSettings(request))
-        {
+        if (processBrewfatherSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/brewstatus/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewstatus/." CR));
-        if (processBrewstatusSettings(request))
-        {
+        if (processBrewstatusSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
     server.on("/settings/mqtt/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/mqtt/." CR));
-        if (processMqttSettings(request))
-        {
+        if (processMqttSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
-        }
-        else
-        {
+        } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
 }
 
-void setJsonPages()
-{
+void setJsonPages() {
     // Tilt JSON
     server.on("/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         http_json(request);
@@ -1175,11 +903,9 @@ void setJsonPages()
     server.on("/resetreason/", HTTP_GET, [](AsyncWebServerRequest *request) {
         reset_reason(request);
     });
-
 }
 
-void setActionPages()
-{
+void setActionPages() {
 #ifndef DISABLE_OTA_UPDATES
     server.on("/ota/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, F("text/plain"), F("Ok."));
@@ -1211,8 +937,7 @@ void setActionPages()
     });
 }
 
-void httpServer::init()
-{
+void httpServer::init() {
     setStaticPages();
     setPostPages();
     setJsonPages();
@@ -1224,6 +949,7 @@ void httpServer::init()
     });
 
 #ifdef FSEDIT
+#warning "Filesystem editor is enabled! Disable before release."
     // Setup Filesystem editor
     server.addHandler(new SPIFFSEditor(FILESYSTEM, "admin", "p@ssword"));
 
@@ -1234,12 +960,9 @@ void httpServer::init()
 
     // File not found handler
     server.onNotFound([](AsyncWebServerRequest *request) {
-        if (request->method() == HTTP_OPTIONS)
-        {
+        if (request->method() == HTTP_OPTIONS) {
             request->send(200);
-        }
-        else
-        {
+        } else {
             Log.verbose(F("Serving 404 for request to %s." CR), request->url().c_str());
             request->redirect("/404/");
         }

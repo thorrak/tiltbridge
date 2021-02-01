@@ -1,7 +1,3 @@
-//
-// Created by John Beeler on 5/12/18.
-//
-
 #ifndef TILTBRIDGE_BRIDGE_LCD_H
 #define TILTBRIDGE_BRIDGE_LCD_H
 
@@ -12,10 +8,10 @@
 #ifdef LCD_SSD1306
 
 #include <SSD1306.h>
-#define SSD1306_FONT_HEIGHT 10
-#define SSD_LINE_CLEARANCE 2
-#define SSD1306_FONT ArialMT_Plain_10
-#define TILTS_PER_PAGE 5 // The actual number is one fewer than this - the first row is used for headers
+#define SSD1306_FONT_HEIGHT     10
+#define SSD_LINE_CLEARANCE      2
+#define SSD1306_FONT            ArialMT_Plain_10
+#define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
 
 #elif defined(LCD_TFT)
 
@@ -23,30 +19,29 @@
 #include <SPI.h>
 #include <TFT_eSPI.h>
 
-#define TILTS_PER_PAGE 15 // The actual number is one fewer than this - the first row is used for headers
-#define TILT_FONT_SIZE 2
-#define MIN_PRESSURE 2000
+#define TILTS_PER_PAGE          15 // The actual number is one fewer than this - the first row is used for headers
+#define TILT_FONT_SIZE          2
+#define MIN_PRESSURE            2000
 
 #elif defined(LCD_TFT_ESPI)
 
 #include <TFT_eSPI.h>
 #include <SPI.h>
 
-#define TFT_ESPI_FONT_SIZE 20
+#define TFT_ESPI_FONT_SIZE      20
 #define TFT_ESPI_LINE_CLEARANCE 4
-#define TFT_ESPI_FONT_HEIGHT 2
-#define FF17 &FreeSans9pt7b
-#define GFXFF 1
-#define TILTS_PER_PAGE 5 // The actual number is one fewer than this - the first row is used for headers
+#define TFT_ESPI_FONT_HEIGHT    2
+#define FF17                    &FreeSans9pt7b
+#define GFXFF                   1
+#define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
 
 #endif // LCD_SSD1306
 
-#define SCREEN_TILT 0
-#define SCREEN_LOGO 1
-#define SCREEN_MAX 2
+#define SCREEN_TILT             0
+#define SCREEN_LOGO             1
+#define SCREEN_MAX              2
 
-class bridge_lcd
-{
+class bridge_lcd {
 public:
     bridge_lcd();
 

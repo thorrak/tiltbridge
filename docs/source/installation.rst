@@ -3,7 +3,8 @@
 Installing the Firmware on an ESP32
 ===================================
 
-Installing TiltBridge on an ESP32 can be accomplished using either `BrewFlasher`_, `Fermentrack`_, or the Espressif esptool.py script.
+Installing TiltBridge on an ESP32 can be accomplished using either `BrewFlasher`_, `Fermentrack`_, or the Espressif
+esptool.py script.
 
 
 Installation using BrewFlasher

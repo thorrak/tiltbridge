@@ -1,7 +1,3 @@
-//
-// Created by Lee Bussy on 1/4/21
-//
-
 #ifndef _JSONCONFIG_H
 #define _JSONCONFIG_H
 
@@ -15,8 +11,7 @@
 
 #define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
 
-struct Config
-{
+struct Config {
     char *mdnsID = (char *)malloc(sizeof(char) * 32);
     bool invertTFT;
     bool update_spiffs;

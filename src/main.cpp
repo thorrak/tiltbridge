@@ -1,6 +1,7 @@
-//
-// Created by John Beeler on 4/26/18.
-//
+// TiltBridge is a Tilt-Hydrometer-to-WiFi Bridge
+// Please note - This source code (along with other files) are provided under license.
+// More details (including license details) can be found in the files accompanying this source code.
+
 
 #include "main.h"
 
@@ -8,16 +9,14 @@
 Ticker memCheck;
 #endif
 
-void printMem()
-{
+void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
     Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d" CR), free, max, frag);
 }
 
-void setup()
-{
+void setup() {
     serial();
 
     Log.verbose(F("Loading config." CR));
@@ -73,8 +72,7 @@ void setup()
 #endif
 }
 
-void loop()
-{
+void loop() {
     // These processes take precedence
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
@@ -85,8 +83,7 @@ void loop()
     data_sender.send_to_google();
     data_sender.send_to_mqtt();
 
-    if (tilt_scanner.scan())
-    {
+    if (tilt_scanner.scan()) {
         // The scans are done asynchronously, so we'll poke the scanner to see if
         // a new scan needs to be triggered.
 
@@ -95,34 +92,30 @@ void loop()
 
     // Check semaphores
 
-    if (doBoardReset || http_server.restart_requested)
-    {
+    if (doBoardReset || http_server.restart_requested) {
         Log.verbose(F("Resetting controller." CR));
         http_server.restart_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        vTaskDelay(1000);
+        delay(1000);
         ESP.restart();                           // Restart the TiltBridge
     }
 
-    if (doWiFiReset || http_server.wifi_reset_requested)
-    {
+    if (doWiFiReset || http_server.wifi_reset_requested) {
         Log.verbose(F("Resetting WiFi configuration." CR));
         http_server.wifi_reset_requested = false; 
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        vTaskDelay(1000);
+        delay(1000);
         doWiFiReset = false;
         disconnectWiFi();
     }
 
-    if (http_server.name_reset_requested)
-    {
+    if (http_server.name_reset_requested) {
         Log.verbose(F("Resetting host name." CR));
         http_server.name_reset_requested = false;
         mdnsReset();
     }
 
-    if (http_server.factoryreset_requested)
-    {
+    if (http_server.factoryreset_requested) {
         Log.verbose(F("Resetting to original settings." CR));
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
@@ -130,15 +123,13 @@ void loop()
         disconnectWiFi();                           // Clear wifi config and restart
     }
 
-    if (http_server.mqtt_init_rqd)
-    {
+    if (http_server.mqtt_init_rqd) {
         Log.verbose(F("Re-initializing MQTT." CR));
         http_server.mqtt_init_rqd = false;
         data_sender.init_mqtt();
     }
 
-    if (http_server.lcd_reinit_rqd)
-    {
+    if (http_server.lcd_reinit_rqd) {
         Log.verbose(F("Re-initializing LCD." CR));
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
