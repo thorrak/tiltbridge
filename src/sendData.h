@@ -68,6 +68,7 @@ private:
     bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
     HTTPClient http;
     WiFiClient client;
+    WiFiClient mqClient;
     WiFiClientSecure secureClient;
 };
 

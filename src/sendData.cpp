@@ -235,7 +235,7 @@ bool dataSendHandler::send_to_brewstatus()
                     }
                     else
                     {
-                        bool result = false;
+                        result = false;
                         Log.verbose(F("Error sending to Brew Status." CR));
                     }
                 }
@@ -435,11 +435,11 @@ void dataSendHandler::init_mqtt()
         {
             if (url.isMDNS(config.mqttBrokerHost))
             {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, client);
+                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
             }
             else
             {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, client);
+                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
             }
         }
         mqtt_alreadyinit = true;
@@ -490,18 +490,18 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
                 // Use the IP address we resolved (necessary for mDNS)
-                Log.notice(F("Connecting to: %s at %s on port %l" CR),
+                Log.verbose(F("Connecting to: %s at %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getIP(lcburl.getHost().c_str() ).toString().c_str(),
                             lcburl.getPort());
             else
-                Log.notice(F("Connecting to: %s on port %l" CR),
+                Log.verbose(F("Connecting to: %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
             if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
             {
-                Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
+                Log.verbose(F("Connected to: %s." CR), lcburl.getHost().c_str());
 
                 // Open POST connection
                 if (lcburl.getAfterPath().length() > 0)
@@ -580,7 +580,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                     }
                     else
                     {
-                        Log.notice(F("Post to %s was successful." CR), lcburl.getHost().c_str());
+                        Log.verbose(F("Post to %s was successful." CR), lcburl.getHost().c_str());
                         retVal = true;
                     }
                 }
@@ -709,21 +709,21 @@ bool dataSendHandler::send_to_mqtt()
                         result = mqttClient.publish(m_topic, payload_string, retain, 0);
                         delay(10);
 
-                        if (result)
-                        {
-                            Log.notice(F("Completed publish to MQTT Broker." CR));
-                        }
-                        else
-                        {
-                            result = false; // There was an error with the previous send
-                            Log.verbose(F("Error publishing to MQTT Broker." CR));
-                        }
                         payload.clear();
                     }
                 }
             }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+        if (result)
+        {
+            Log.notice(F("Completed publish to MQTT Broker." CR));
+        }
+        else
+        {
+            result = false; // There was an error with the previous send
+            Log.verbose(F("Error publishing to MQTT Broker." CR));
+        }
     }
     send_lock = false;
     return result;
