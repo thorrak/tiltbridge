@@ -23,6 +23,7 @@ bool send_brewfather = false;
 bool send_brewStatus = false;
 bool send_gSheets = false;
 bool send_mqtt = false;
+bool send_lock = false;
 
 dataSendHandler::dataSendHandler() {}
 
@@ -46,10 +47,11 @@ bool dataSendHandler::send_to_localTarget()
 {
     bool result = true;
 
-    if (send_localTarget)
+    if (send_localTarget && ! send_lock)
     {
         // Local Target
         send_localTarget = false;
+        send_lock = true;
         tilt_scanner.deinit();
 
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
@@ -65,41 +67,69 @@ bool dataSendHandler::send_to_localTarget()
 
             serializeJson(doc, tilt_data);
 
-            if (!send_to_url(config.localTargetURL, "", tilt_data, "application/json"))
+            if (send_to_url(config.localTargetURL, "", tilt_data, "application/json"))
+            {
+                Log.notice(F("Completed send to Local Target." CR));
+            }
+            else
+            {
                 result = false; // There was an error with the previous send
+                Log.verbose(F("Error sending to Local Target." CR));
+            }
         }
         localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
         tilt_scanner.init();
     }
+    send_lock = false;
     return result;
 }
 
 bool send_to_bf_and_bf()
 {
     bool retval = false;
-    if (send_brewersFriend)
+    if (send_brewersFriend && ! send_lock)
     {
+        send_lock = true;
         // Brewer's Friend
         send_brewersFriend = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Calling send to Brewer's Friend." CR));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
+            if (retval)
+            {
+                Log.notice(F("Completed send to Brewer's Friend." CR));
+            }
+            else
+            {
+                Log.verbose(F("Error sending to Brewer's Friend." CR));
+            }
         }
         brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+        send_lock = false;
     }
 
-    if (send_brewfather)
+    if (send_brewfather && ! send_lock)
     {
+        send_lock = true;
         // Brewfather
         send_brewfather = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Calling send to Brewfather." CR));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
+            if (retval)
+            {
+                Log.notice(F("Completed send to Brewer's Friend." CR));
+            }
+            else
+            {
+                Log.verbose(F("Error sending to Brewer's Friend." CR));
+            }
         }
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
     }
+    send_lock = false;
     return retval;
 }
 
@@ -171,10 +201,11 @@ bool dataSendHandler::send_to_brewstatus()
     const int payload_size = 512;
     char payload[payload_size];
 
-    if (send_brewStatus)
+    if (send_brewStatus && ! send_lock)
     {
         // Brew Status
         send_brewStatus = false;
+        send_lock = true;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to Brew Status." CR));
@@ -198,13 +229,21 @@ bool dataSendHandler::send_to_brewstatus()
                             tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
                             tilt_scanner.tilt(i)->color_name().c_str(),
                             ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-                    if (!send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
-                        result = false; // There was an error with the previous send
+                    if (send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
+                    {
+                        Log.notice(F("Completed send to Brew Status." CR));
+                    }
+                    else
+                    {
+                        result = false;
+                        Log.verbose(F("Error sending to Brew Status." CR));
+                    }
                 }
             }
         }
         brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
     }
+    send_lock = false;
     return result;
 }
 
@@ -212,10 +251,11 @@ bool dataSendHandler::send_to_google()
 {
     bool result = true;
 
-    if (send_gSheets)
+    if (send_gSheets && ! send_lock)
     {
         // Google Sheets
         send_gSheets = false;
+        send_lock = true;
 
         tilt_scanner.deinit();
 
@@ -354,6 +394,7 @@ bool dataSendHandler::send_to_google()
 
         tilt_scanner.init();
     }
+    send_lock = false;
     return result;
 }
 
@@ -394,11 +435,11 @@ void dataSendHandler::init_mqtt()
         {
             if (url.isMDNS(config.mqttBrokerHost))
             {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, client);
+                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
             }
             else
             {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, client);
+                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
             }
         }
         mqtt_alreadyinit = true;
@@ -449,18 +490,18 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
                 // Use the IP address we resolved (necessary for mDNS)
-                Log.notice(F("Connecting to: %s at %s on port %l" CR),
+                Log.verbose(F("Connecting to: %s at %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getIP(lcburl.getHost().c_str() ).toString().c_str(),
                             lcburl.getPort());
             else
-                Log.notice(F("Connecting to: %s on port %l" CR),
+                Log.verbose(F("Connecting to: %s on port %l" CR),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
             if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
             {
-                Log.notice(F("Connected to: %s." CR), lcburl.getHost().c_str());
+                Log.verbose(F("Connected to: %s." CR), lcburl.getHost().c_str());
 
                 // Open POST connection
                 if (lcburl.getAfterPath().length() > 0)
@@ -539,7 +580,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                     }
                     else
                     {
-                        Log.notice(F("Post to %s was successful." CR), lcburl.getHost().c_str());
+                        Log.verbose(F("Post to %s was successful." CR), lcburl.getHost().c_str());
                         retVal = true;
                     }
                 }
@@ -576,10 +617,11 @@ bool dataSendHandler::send_to_mqtt()
     StaticJsonDocument<1500> payload;
     mqttClient.loop();
 
-    if (send_mqtt)
+    if (send_mqtt && ! send_lock)
     {
         // MQTT
         send_mqtt = false;
+        send_lock = true;
         if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
         {
             Log.verbose(F("Publishing available results to MQTT Broker." CR));
@@ -660,20 +702,29 @@ bool dataSendHandler::send_to_mqtt()
 
                         if (!mqttClient.connected() && j == 0)
                         {
-                            Log.verbose(F("MQTT disconnected. Attempting to reconnect to MQTT Broker" CR));
+                            Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker" CR));
                             connect_mqtt();
                         }
 
                         result = mqttClient.publish(m_topic, payload_string, retain, 0);
                         delay(10);
 
-                        Log.verbose(F("Publish success: %T" CR), result);
                         payload.clear();
                     }
                 }
             }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+        if (result)
+        {
+            Log.notice(F("Completed publish to MQTT Broker." CR));
+        }
+        else
+        {
+            result = false; // There was an error with the previous send
+            Log.verbose(F("Error publishing to MQTT Broker." CR));
+        }
     }
+    send_lock = false;
     return result;
 }
