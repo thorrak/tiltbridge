@@ -2,6 +2,29 @@ Changelog
 #########
 
 
+v1.0.0 - Feb 11, 2021 - UI Overhaul, Scanner Overhaul, and loads more
+---------------------------------------------------------------------
+
+This is a significant release, and is the result of a large number of changes over the past few weeks. Of note - this
+update touched virtually every line of code in some fashion (300+ commits!). I cannot express enough gratitude towards
+the primary authors of this update - @lbussy and @pletch.
+
+- Considerable user interface improvements
+- Added "Weeks on Battery", Tilt Pro detection, and signal strength to dashboard
+- Refactored large chunks of code for performance
+- Converted from synchronous to asynchronous HTTP server
+- Converted to use ticker-based timers for data sending
+- Removed nlohmann JSON library in favor of ArduinoJson
+- Updated to latest BLE library (thanks @h2zero!)
+- Switched TFT libraries, and combined eSPI and full-size TFT code
+- Updated TiltBridge logo on OLED screens
+- Partially automated update of version information
+- Added uptime/last crash statistics to "About" page
+- Added "Factory Reset" option which removes WiFi configuration and push target settings
+- Changed: Multiple endpoints for settings updates
+
+
+
 v0.2.3 - Dec 28, 2020 - Performance Tweaks & Home Assistant Support
 -------------------------------------------------------------------
 

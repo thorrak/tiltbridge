@@ -1,24 +1,18 @@
-//
-// Created by John Beeler on 3/19/19.
-//
-
 #include "OTAUpdate.h"
 
 #ifndef DISABLE_OTA_UPDATES
 
-#include <WiFi.h>
-#include <Update.h>
-
-WiFiClient client;
-
+WiFiClient uClient;
 
 // Utility to extract header value from headers
-String getHeaderValue(String header, String headerName) {
+String getHeaderValue(String header, String headerName)
+{
     return header.substring(strlen(headerName.c_str()));
 }
 
 // OTA Logic
-void execOTA() {
+void execOTA()
+{
     int contentLength = 0;
     bool isValidContentType = false;
 #ifdef LCD_TFT
@@ -31,31 +25,31 @@ void execOTA() {
 #endif
 
     // Connect to server
-    // client.connect(host, port)
-    if (client.connect("www.tiltbridge.com", 80)) {
+    // uClient.connect(host, port)
+    if (uClient.connect("www.tiltbridge.com", WEBPORT)) {
         // Connection Succeed - fetch the bin
-        client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
+        uClient.print(String("GET ") + bin + " HTTP/1.1\r\n" +
                      "Host: www.tiltbridge.com\r\n" +
                      "Cache-Control: no-cache\r\n" +
                      "Connection: close\r\n\r\n");
 
         unsigned long timeout = millis();
-        while (client.available() == 0) {
+        while (uClient.available() == 0) {
             if (millis() - timeout > 5000) {
-                client.stop();
+                uClient.stop();
                 return;
             }
         }
         // Once the response is available, check it
 
-        while (client.available()) {
-            String line = client.readStringUntil('\n');            // read line till /n
-            line.trim();            // remove space, to check if the line is end of headers
+        while (uClient.available()) {
+            String line = uClient.readStringUntil('\n'); // read line till /n
+            line.trim();                                // remove space, to check if the line is end of headers
 
             // if the the line is empty,
             // this is end of headers
             // break the while and feed the
-            // remaining `client` to the
+            // remaining `uClient` to the
             // Update.writeStream();
             if (!line.length()) {
                 //headers ended
@@ -65,7 +59,8 @@ void execOTA() {
             // Check if the HTTP Response is 200
             // else break and Exit Update
             if (line.startsWith("HTTP/1.1")) {
-                if (line.indexOf("200") < 0) {
+                if (line.indexOf("200") < 0)
+                {
                     break;
                 }
             }
@@ -78,7 +73,7 @@ void execOTA() {
 
             // Next, the content type
             if (line.startsWith("Content-Type: ")) {
-//                String contentType = getHeaderValue(line, "Content-Type: ");
+                //                String contentType = getHeaderValue(line, "Content-Type: ");
                 if (getHeaderValue(line, "Content-Type: ") == "application/octet-stream") {
                     isValidContentType = true;
                 }
@@ -95,13 +90,13 @@ void execOTA() {
 
         // If yes, begin
         if (canBegin) {
-            size_t written = Update.writeStream(client);
+            __attribute__((unused)) size_t written = Update.writeStream(uClient);
 
-//            if (written == contentLength) {
-//                //Succeeded
-//            } else {
-//                // Failed
-//            }
+            //            if (written == contentLength) {
+            //                //Succeeded
+            //            } else {
+            //                // Failed
+            //            }
 
             if (Update.end()) {
                 // OTA update finished
@@ -116,11 +111,11 @@ void execOTA() {
             }
         } else {
             // not enough space to begin OTA - check the partition table
-            client.flush();
+            uClient.flush();
         }
     } else {
-//        Serial.println("There was no content in the response");
-        client.flush();
+        //        Serial.println("There was no content in the response");
+        uClient.flush();
     }
 }
 

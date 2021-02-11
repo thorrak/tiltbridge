@@ -1,0 +1,21 @@
+.row-padded {
+    padding: 0.75rem 1.25rem;
+}
+
+main>.container {
+    /* top | right | bottom | left */
+    padding: 40px 15px;
+}   
+
+.footer {
+    /* currently using bg-light from Bootswatch */
+}
+
+.footer>.container {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+[v-cloak] {
+	display: none;
+}

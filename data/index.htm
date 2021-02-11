@@ -1,129 +1,170 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <meta name="description" content="TiltBridge is designed to allow your Tilt Hydrometer to connect directly to WiFi.">
+    <meta name="author" content="John Beeler">
+
     <title>TiltBridge</title>
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta name="apple-mobile-web-app-title" content="TiltBridge">
+    <meta name="application-name" content="TiltBridge">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+    <meta name="theme-color" content="#ffffff">
 
-    <!-- Custom styles for this template -->
-    <style>
-        body {padding-top: 5rem; padding-bottom: 5rem;}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/sandstone/bootstrap.min.css"
+        integrity="sha384-zEpdAL7W11eTKeoBJK1g79kgl9qjP7g84KfK3AZsuonx38n8ad+f5ZgXtoSDxPOh" crossorigin="anonymous">
 
-        @media (min-width: 576px) {
-            .sm-padded {
-                padding: 0.75rem 1.25rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+        <link rel="stylesheet" href="/common.css">
+
+        <link rel="stylesheet" href="/tilt.css">
+
 </head>
 
-<body>
+<body class="d-flex flex-column h-100">
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="/">TiltBridge</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/settings/">Settings</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/calibration/">Calibration</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/about/">About</a>
-            </li>
-        </ul>
+            <a class="navbar-brand" href="/">
+                <img src="/logo.png" width:34px;height:25px;>TiltBridge
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings/">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/calibration/">Calibration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/help/">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about/">About</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 
-    </div>
-</nav>
+    <main role="main" class="flex-shrink-0">
 
-<main role="main" class="container">
+        <div v-cloak class="container" id="gravapp"> <!-- Start vue Sensor container -->
 
-    <h4>Available Tilts</h4>
+            <div class="card border-dark mb-3"><!-- TiltBridge Sensor Card -->
 
-    <!-- Start vue Sensor container -->
-    <div id="gravapp">
-        <div class="row">
-            <!-- Start vue Sensor loop div -->
-            <div class="col-12 col-sm-6 sm-padded" v-for="sensor in sensors">
-                <!-- Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">{{sensor.color}} Tilt</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">Google Sheets: {{sensor.gsheets_name}}</h6>
-                    </div>
+                <div class="card-header bg-light border-primary"> <!-- Tilt Line -->
+                    <h5>Available Tilts:</h5>
+                </div>
 
-                    <!-- GravitySensor Line -->
-                    <div class="row">
-                        <div class="col-6 d-flex flex-column text-center">
-                            <div class="p-2 h3">Gravity</div><div class="p-2">{{sensor.gravity | numeral('0.0000')}}</div>
-                        </div>
-                        <div class="col-6 d-flex flex-column text-center">
-                            <div class="p-2 h3">Temp</div><div class="p-2 text-center">{{sensor.temp}} &deg;{{sensor.tempUnit}}</div>
-                        </div>
-                    </div>
-                    <!-- End GravitySensor Line -->
+                <div class="card-body">
+
+                    <div class="row"> <!-- Row -->
+
+                        <div class="col-12 col-lg-6" v-for="sensor in sensors"><!-- Start vue Sensor loop div -->
+
+                            <div class="card mb-3 tilt"> <!-- Card -->
+
+                                <div class="card-header" v-bind:class="[sensor.bgClass]"> <!-- Tilt Line -->
+                                    <div class="row">
+                                        <div class="col-6 d-flex flex-column text-left inline">
+                                            <h5 class="card-title empty">{{sensor.color}} {{sensor.title}}</h5>
+                                        </div>
+                                        <div class="col-6 d-flex flex-column text-right inline">
+                                            <h6 class="card-title empty">RSSI: {{sensor.rssi}}</h6>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-7 d-flex flex-column text-left pr-0">
+                                            <h6 class="card-subtitle empty"><a :href="sensor.gsheets_link" target="_blank">{{sensor.gsheets_name}}</a></h6>
+                                        </div>
+                                        <div class="col-5 d-flex flex-column text-right pl-0">
+                                            <h6 class="card-subtitle empty">{{sensor.battery}}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+            
+                                <div class="row">
+                                    <div class="col-6 d-flex flex-column text-center">
+                                        <div class="h5">Gravity</div>
+                                        <div class="empty">{{sensor.gravity | numeral('0.0000')}}</div> 
+                                    </div>
+                                    <div class="col-6 d-flex flex-column text-center">
+                                        <div class="h5">Temp</div>
+                                        <div class="text-center empty">{{sensor.temp}} &deg;{{sensor.tempUnit}}</div>
+                                    </div>
+                                </div><!-- End Tilt Line -->
+                                    
+                            </div> <!-- End Card -->
+                            
+                        </div> <!-- End vue Sensor loop div -->
+
+                    </div>  <!-- Row -->
 
                 </div>
-                <!-- End Card -->
-            </div> <!-- End vue Sensor loop div -->
-        </div>
-    </div> <!-- End vue application container -->
-</main>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue-numeral-filter/dist/vue-numeral-filter.min.js" crossorigin="anonymous"></script>
-<script type="text/javascript">
-    var vm = new Vue({
-        el: '#gravapp',
-        data: {
-            sensors: []
-        },
-        mounted: function () {
-            this.getSensors();
-            window.setInterval(() => {
-                this.getSensors()
-            }, 10000)  // Extending the delay as we don't update that often
-        },
-        methods: {
-            getSensors: function() {
-                var xhr = new XMLHttpRequest();
-                var self = this;
-                xhr.open('GET', '/json/');
-                xhr.onload = function () {
-                    self.fullDict = JSON.parse(xhr.responseText);
-                    self.sensors = [];
-                    
-                    if (self.fullDict != null) {
-                        Object.keys(self.fullDict).forEach(function(key) {
-                        self.sensors.push(self.fullDict[key]);
-                        });
-                    }
-                    //console.log(self.fullDict);
-                    //console.log(self.sensors);
-                };
-                xhr.send()
-            }
-        }
-    });
-</script>
+            </div>
+
+        </div> <!-- End vue application container -->
+
+    </main>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">Copyright © 2018-2021, John Beeler</span>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+        crossorigin="anonymous">
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.6.0/umd/popper.min.js"
+        integrity="sha384-KsvD1yqQ1/1+IA7gi3P0tyJcT3vR+NdBTt13hSJ2lnve8agRGXTTyNaBYmCR/Nwi"
+        crossorigin="anonymous">
+    </script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous">
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"
+        integrity="sha384-cwVe6U8Tq7F/3JIj6xeDzOwuqeChcmRcdYqDGfoYmdAurw7L3f4dFHhEJKfxv96A"
+        crossorigin="anonymous">
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue-numeral-filter/dist/vue-numeral-filter.min.js"
+        integrity="sha384-pGPcmy1Jajk09xcYfAZOK04vZ/Hkjd6oIdhadIaKtKkMfXlfvARwLHBo0r3elbki"
+        crossorigin="anonymous">
+    </script>
+
+    <script src="/index.js"></script>
 
 </body>
+
 </html>

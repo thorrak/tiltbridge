@@ -10,6 +10,7 @@ spare phone or Raspberry Pi. A TiltBridge can be built without any soldering or 
 minutes or less.
 
 A TiltBridge consists of an ESP32-based controller (the :doc:`hardware`) and the TiltBridge Firmware (the software). The
-hardware can be purchased for as little as $15 in many cases, and the software is available on GitHub for free.
+hardware can be purchased for as little as $10 (less if you don't want a screen!), and the software is available on
+GitHub for free.
 
 
