@@ -83,14 +83,15 @@ void initWiFi() {
             if (url.isValidHostName(custom_mdns_name.getValue())) {
                 strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
                 saveConfig();
-                // Doing this to reset the DHCP name, the portal should never pop
-                ESP.restart();
             } else {
-                // If the mDNS name is invalid, reset the WiFi configuration and restart
-                // the ESP8266
+                // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
                 disconnectWiFi();
             }
         }
+        // Doing this to reset the DHCP name, the portal should never pop
+        // Additionally, there is a bug where the HTTP server doesn't spin up after the AP shuts down. Not sure where
+        // that issue is, but this solves it.
+        ESP.restart();
     }
 
     if (!MDNS.begin(config.mdnsID)) {
