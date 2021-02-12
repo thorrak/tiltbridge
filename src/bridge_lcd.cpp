@@ -175,6 +175,15 @@ void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap
     print_line("this AP via WiFi:", "", 2);
     print_line("Name:", ap_name, 3);
     print_line("Pass: ", ap_pass, 4);
+
+#ifdef LCD_TFT
+    tft->setFreeFont(&FreeSans9pt7b);
+    print_line("NOTE - If this appears upside-down,", "", 8);
+    print_line("this can be corrected via a setting in the", "", 9);
+    print_line("settings portal after connecting to WiFi", "", 10);
+//    print_line("", "", 11);
+#endif
+
     display();
 }
 
@@ -240,7 +249,11 @@ void bridge_lcd::print_line(const char *left_text, const char *right_text, uint8
 #endif
 }
 
-void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line)
+void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line) {
+    print_line(left_text, middle_text, right_text, line, false);
+}
+
+void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line, bool add_gutter)
 {
 #ifdef LCD_SSD1306
     int16_t starting_pixel_row = 0;
@@ -257,15 +270,21 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     oled_display->setTextAlignment(TEXT_ALIGN_RIGHT);
     oled_display->drawString(128, starting_pixel_row, right_text);
 #elif defined(LCD_TFT)
-
     int16_t starting_pixel_row = 0;
     starting_pixel_row = (tft->fontHeight(GFXFF)) * (line - 1) + 2;
 
-    tft->drawString(left_text, 25, starting_pixel_row, GFXFF);
+    if(add_gutter)  // We need space to the left to be able to display the Tilt color block
+        tft->drawString(left_text, 25, starting_pixel_row, GFXFF);
+    else
+        tft->drawString(left_text, 1, starting_pixel_row, GFXFF);
+
     yield();
     tft->drawString(middle_text, 134, starting_pixel_row, GFXFF);
     yield();
-    tft->drawString(right_text, 300 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+    if(add_gutter)
+        tft->drawString(right_text, 300 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+    else
+        tft->drawString(right_text, 319 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
 #elif defined(LCD_TFT_ESPI)
     // ignore left text as we color the text by the tilt
     int16_t starting_pixel_row = 0;
@@ -364,7 +383,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 #endif
 
     // Display the header row
-    print_line("Color", "Temp", "Gravity", header_row);
+    print_line("Color", "Temp", "Gravity", header_row, true);
 
     // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
     for (uint8_t i = 0; i < TILT_COLORS; i++) {
@@ -415,7 +434,8 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
     tft->setTextColor(tilt->text_color());
 #endif
 
-    print_line(tilt->color_name().c_str(), temp, gravity, line);
+    // Print line with gutter for the color block for TFT screens
+    print_line(tilt->color_name().c_str(), temp, gravity, line, true);
 
 #ifdef LCD_TFT
     uint16_t fHeight = tft->fontHeight(GFXFF);
