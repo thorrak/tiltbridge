@@ -286,18 +286,22 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
             if(strstr(name, "sheetName_") != NULL) {
                 // Set sheet name
                 if (strlen(value) < 25) {
+                    int to_color = TILT_COLORS;
                     // Basically, we're switching on color here and writing to the appropriate config variable
-                    if(strstr(name, "_red") != NULL) strlcpy(config.sheetName_red, value, 25);
-                    else if(strstr(name, "_green") != NULL) strlcpy(config.sheetName_green, value, 25);
-                    else if(strstr(name, "_black") != NULL) strlcpy(config.sheetName_black, value, 25);
-                    else if(strstr(name, "_purple") != NULL) strlcpy(config.sheetName_purple, value, 25);
-                    else if(strstr(name, "_orange") != NULL) strlcpy(config.sheetName_orange, value, 25);
-                    else if(strstr(name, "_yellow") != NULL) strlcpy(config.sheetName_yellow, value, 25);
-                    else if(strstr(name, "_blue") != NULL) strlcpy(config.sheetName_blue, value, 25);
-                    else if(strstr(name, "_pink") != NULL) strlcpy(config.sheetName_pink, value, 25);
-                    else {
+                    if(strstr(name, "_red") != NULL) to_color = TILT_COLOR_RED;
+                    else if(strstr(name, "_green") != NULL) to_color = TILT_COLOR_GREEN;
+                    else if(strstr(name, "_black") != NULL) to_color = TILT_COLOR_BLACK;
+                    else if(strstr(name, "_purple") != NULL) to_color = TILT_COLOR_PURPLE;
+                    else if(strstr(name, "_orange") != NULL) to_color = TILT_COLOR_ORANGE;
+                    else if(strstr(name, "_yellow") != NULL) to_color = TILT_COLOR_YELLOW;
+                    else if(strstr(name, "_blue") != NULL) to_color = TILT_COLOR_BLUE;
+                    else if(strstr(name, "_pink") != NULL) to_color = TILT_COLOR_PINK;
+
+                    if(to_color == TILT_COLORS) {
                         failCount++;
                         Log.warning(F("Settings update error, invalid color [%s]:(%s) not valid." CR), name, value);
+                    } else {
+                        strlcpy(config.gsheets_config[to_color].name, value, 25);
                     }
 
                     // Technically this will appear after a successful application of a color above. This could be

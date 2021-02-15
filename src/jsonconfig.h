@@ -36,24 +36,7 @@ struct Config {
     bool tempCorrect;
 
     TiltCalData tilt_calibration[TILT_COLORS];
-
-    char *sheetName_red = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_green = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_black = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_purple = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_orange = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_blue = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_yellow = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_pink = (char *)malloc(sizeof(char) * 25);
-
-    char *link_red = (char *)malloc(sizeof(char) * 255);
-    char *link_green = (char *)malloc(sizeof(char) * 255);
-    char *link_black = (char *)malloc(sizeof(char) * 255);
-    char *link_purple = (char *)malloc(sizeof(char) * 255);
-    char *link_orange = (char *)malloc(sizeof(char) * 255);
-    char *link_blue = (char *)malloc(sizeof(char) * 255);
-    char *link_yellow = (char *)malloc(sizeof(char) * 255);
-    char *link_pink = (char *)malloc(sizeof(char) * 255);
+    GsheetsConfig gsheets_config[TILT_COLORS];
 
     char *localTargetURL = (char *)malloc(sizeof(char) * 256);
     uint16_t localTargetPushEvery;

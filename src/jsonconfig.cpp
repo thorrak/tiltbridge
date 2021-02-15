@@ -191,26 +191,10 @@ void Config::save(JsonObject obj) const
         obj[tilt_color_names[x]]["x1"] = tilt_calibration[x].x1;
         obj[tilt_color_names[x]]["x2"] = tilt_calibration[x].x2;
         obj[tilt_color_names[x]]["x3"] = tilt_calibration[x].x3;
+
+        obj[tilt_color_names[x]]["name"] = gsheets_config[x].name;
+        obj[tilt_color_names[x]]["link"] = gsheets_config[x].link;
     }
-
-
-    obj["sheetName_red"] = sheetName_red;
-    obj["sheetName_green"] = sheetName_green;
-    obj["sheetName_black"] = sheetName_black;
-    obj["sheetName_purple"] = sheetName_purple;
-    obj["sheetName_orange"] = sheetName_orange;
-    obj["sheetName_blue"] = sheetName_blue;
-    obj["sheetName_yellow"] = sheetName_yellow;
-    obj["sheetName_pink"] = sheetName_pink;
-
-    obj["link_red"] = link_red;
-    obj["link_green"] = link_green;
-    obj["link_black"] = link_black;
-    obj["link_purple"] = link_purple;
-    obj["link_orange"] = link_orange;
-    obj["link_blue"] = link_blue;
-    obj["link_yellow"] = link_yellow;
-    obj["link_pink"] = link_pink;
 
     obj["localTargetURL"] = localTargetURL;
     obj["localTargetPushEvery"] = localTargetPushEvery;
@@ -295,8 +279,9 @@ void Config::load(JsonObjectConst obj) {
 		tempCorrect = obj["tempCorrect"];
 	}
 
-    // Calibration points
+    // Loop through everything that is a "tilt-specific" setting
     for(int x=0;x<TILT_COLORS;x++) {
+        // Calibration points
         if (obj[tilt_color_names[x]]["degree"].isNull()) {
             tilt_calibration[x].degree = 1;
         } else {
@@ -325,127 +310,26 @@ void Config::load(JsonObjectConst obj) {
             tilt_calibration[x].x3 = 0.0;
         } else {
             tilt_calibration[x].x3 = float(obj[tilt_color_names[x]]["x3"]);
-        }      
-    }    
+        }
 
+        // GSheet Info
+        if (obj[tilt_color_names[x]]["name"].isNull()) {
+            strlcpy(gsheets_config[x].name, "", 25);
+        } else {
+            const char *sn = obj[tilt_color_names[x]]["name"];
+            strlcpy(gsheets_config[x].name, sn, 25);
+        }
 
-    // GSheet Names
-    if (obj["sheetName_red"].isNull()) {
-        strlcpy(sheetName_red, "", 25);
-    } else {
-        const char *sn = obj["sheetName_red"];
-        strlcpy(sheetName_red, sn, 25);
-    }
+        if (obj[tilt_color_names[x]]["link"].isNull()) {
+            strlcpy(gsheets_config[x].link, "", 255);
+        } else {
+            const char *sn = obj[tilt_color_names[x]]["link"];
+            strlcpy(gsheets_config[x].link, sn, 255);
+        }
+    } // End Tilt-specific config loop
 
-    if (obj["sheetName_green"].isNull()) {
-        strlcpy(sheetName_green, "", 25);
-    } else {
-        const char *sn = obj["sheetName_green"];
-        strlcpy(sheetName_green, sn, 25);
-    }
-
-    if (obj["sheetName_black"].isNull()) {
-        strlcpy(sheetName_black, "", 25);
-    } else {
-        const char *sn = obj["sheetName_black"];
-        strlcpy(sheetName_black, sn, 25);
-    }
-
-    if (obj["sheetName_purple"].isNull()) {
-        strlcpy(sheetName_purple, "", 25);
-    } else {
-        const char *sn = obj["sheetName_purple"];
-        strlcpy(sheetName_purple, sn, 25);
-    }
-
-    if (obj["sheetName_orange"].isNull()) {
-        strlcpy(sheetName_orange, "", 25);
-    } else {
-        const char *sn = obj["sheetName_orange"];
-        strlcpy(sheetName_orange, sn, 25);
-    }
-
-    if (obj["sheetName_blue"].isNull()) {
-        strlcpy(sheetName_blue, "", 25);
-    } else {
-        const char *sn = obj["sheetName_blue"];
-        strlcpy(sheetName_blue, sn, 25);
-    }
-
-    if (obj["sheetName_yellow"].isNull()) {
-        strlcpy(sheetName_yellow, "", 25);
-    } else {
-        const char *sn = obj["sheetName_yellow"];
-        strlcpy(sheetName_yellow, sn, 25);
-    }
-
-    if (obj["sheetName_pink"].isNull()) {
-        strlcpy(sheetName_pink, "", 25);
-    } else {
-        const char *sn = obj["sheetName_pink"];
-        strlcpy(sheetName_pink, sn, 25);
-    }
-
-    // GSheet Links
-
-    if (obj["link_red"].isNull()) {
-        strlcpy(link_red, "", 255);
-    } else {
-        const char *sn = obj["link_red"];
-        strlcpy(link_red, sn, 255);
-    }
-
-    if (obj["link_green"].isNull()) {
-        strlcpy(link_green, "", 255);
-    } else {
-        const char *sn = obj["link_green"];
-        strlcpy(link_green, sn, 255);
-    }
-
-    if (obj["link_black"].isNull()) {
-        strlcpy(link_black, "", 255);
-    } else {
-        const char *sn = obj["link_black"];
-        strlcpy(link_black, sn, 255);
-    }
-
-    if (obj["link_purple"].isNull()) {
-        strlcpy(link_purple, "", 255);
-    } else {
-        const char *sn = obj["link_purple"];
-        strlcpy(link_purple, sn, 255);
-    }
-
-    if (obj["link_orange"].isNull()) {
-        strlcpy(link_orange, "", 255);
-    } else {
-        const char *sn = obj["link_orange"];
-        strlcpy(link_orange, sn, 255);
-    }
-
-    if (obj["link_blue"].isNull()) {
-        strlcpy(link_blue, "", 255);
-    } else {
-        const char *sn = obj["link_blue"];
-        strlcpy(link_blue, sn, 255);
-    }
-
-    if (obj["link_yellow"].isNull()) {
-        strlcpy(link_yellow, "", 255);
-    } else {
-        const char *sn = obj["link_yellow"];
-        strlcpy(link_yellow, sn, 255);
-    }
-
-    if (obj["link_pink"].isNull()) {
-        strlcpy(link_pink, "", 255);
-    } else {
-        const char *sn = obj["link_pink"];
-        strlcpy(link_pink, sn, 255);
-    }
 
     // Target URLs
-
     if (obj["localTargetURL"].isNull()) {
         strlcpy(localTargetURL, "", 256);
     } else {

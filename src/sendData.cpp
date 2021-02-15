@@ -320,53 +320,7 @@ bool dataSendHandler::send_to_google()
 #else
                                 deserializeJson(retval, http.getStream());
 #endif
-                                switch(i)
-                                {
-                                    case(0):
-                                    {
-                                        strlcpy(config.link_red, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(1):
-                                    {
-                                        strlcpy(config.link_green, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(2):
-                                    {
-                                        strlcpy(config.link_black, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(3):
-                                    {
-                                        strlcpy(config.link_purple, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(4):
-                                    {
-                                        strlcpy(config.link_orange, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(5):
-                                    {
-                                        strlcpy(config.link_blue, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(6):
-                                    {
-                                        strlcpy(config.link_yellow, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(7):
-                                    {
-                                        strlcpy(config.link_pink, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        break;
-                                    }
-                                }
+                                strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
                                 saveConfig();
                                 retval.clear();
                                 numSent++;

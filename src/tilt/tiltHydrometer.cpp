@@ -108,52 +108,14 @@ uint32_t tiltHydrometer::text_color()
 
 std::string tiltHydrometer::gsheets_beer_name()
 {
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return config.sheetName_red;
-    case TILT_COLOR_GREEN:
-        return config.sheetName_green;
-    case TILT_COLOR_BLACK:
-        return config.sheetName_black;
-    case TILT_COLOR_PURPLE:
-        return config.sheetName_purple;
-    case TILT_COLOR_ORANGE:
-        return config.sheetName_orange;
-    case TILT_COLOR_BLUE:
-        return config.sheetName_blue;
-    case TILT_COLOR_YELLOW:
-        return config.sheetName_yellow;
-    case TILT_COLOR_PINK:
-        return config.sheetName_pink;
-    default:
-        return "";
-    }
+    // TODO - See if this can be moved outside the class
+    return std::string(config.gsheets_config[m_color].name);
 }
 
 std::string tiltHydrometer::gsheets_link_name()
 {
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return config.link_red;
-    case TILT_COLOR_GREEN:
-        return config.link_green;
-    case TILT_COLOR_BLACK:
-        return config.link_black;
-    case TILT_COLOR_PURPLE:
-        return config.link_purple;
-    case TILT_COLOR_ORANGE:
-        return config.link_orange;
-    case TILT_COLOR_BLUE:
-        return config.link_blue;
-    case TILT_COLOR_YELLOW:
-        return config.link_yellow;
-    case TILT_COLOR_PINK:
-        return config.link_pink;
-    default:
-        return "";
-    }
+    // TODO - See if this can be moved outside the class
+    return std::string(config.gsheets_config[m_color].link);
 }
 
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
