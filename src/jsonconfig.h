@@ -13,46 +13,47 @@
 #define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
 
 struct TiltCalData {
-    uint8_t degree;
-    double x0;
-    double x1;
-    double x2;
-    double x3;
+    uint8_t degree = 1;
+    double x0 = 0.0;
+    double x1 = 1.0;
+    double x2 = 0.0;
+    double x3 = 0.0;
 };
 
 struct GsheetsConfig {
-    char name[26];
-    char link[256];
+    char name[26] = "";
+    char link[256] = "";
 };
 
 struct Config {
-    char mdnsID[32];
-    bool invertTFT;
-    bool update_spiffs;
-    int8_t TZoffset;
-    char tempUnit[2];
-    uint8_t smoothFactor;
-    bool applyCalibration;
-    bool tempCorrect;
+    char mdnsID[32] = "tiltbridge";
+    bool invertTFT = false;
+    bool update_spiffs = false;
+    int8_t TZoffset = -5;
+    char tempUnit[2] = "F";
+    uint8_t smoothFactor = 60;
+    bool applyCalibration = false;
+    bool tempCorrect = false;
 
     TiltCalData tilt_calibration[TILT_COLORS];
     GsheetsConfig gsheets_config[TILT_COLORS];
 
-    char *localTargetURL = (char *)malloc(sizeof(char) * 256);
-    uint16_t localTargetPushEvery;
-    char *brewstatusURL = (char *)malloc(sizeof(char) * 256);
-    uint16_t brewstatusPushEvery;
-    char *scriptsURL = (char *)malloc(sizeof(char) * 256);
-    char *scriptsEmail = (char *)malloc(sizeof(char) * 256);
-    char *brewersFriendKey = (char *)malloc(sizeof(char) * 65);
-    char *brewfatherKey = (char *)malloc(sizeof(char) * 65);
-    char *mqttBrokerHost = (char *)malloc(sizeof(char) * 256);
-    uint16_t mqttBrokerPort;
-    char *mqttUsername = (char *)malloc(sizeof(char) * 51);
-    char *mqttPassword = (char *)malloc(sizeof(char) * 65);
-    char *mqttTopic = (char *)malloc(sizeof(char) * 31);
-    uint16_t mqttPushEvery;
+    char localTargetURL[256] = "";
+    uint16_t localTargetPushEvery = 30;
+    char brewstatusURL[256] = "";
+    uint16_t brewstatusPushEvery = 30;
+    char scriptsURL[256] = "";
+    char scriptsEmail[256] = "";
+    char brewersFriendKey[65] = "";
+    char brewfatherKey[65] = "";
+    char mqttBrokerHost[256] = "";
+    uint16_t mqttBrokerPort = 1883;
+    char mqttUsername[51] = "";
+    char mqttPassword[65] = "";
+    char mqttTopic[31] = "";
+    uint16_t mqttPushEvery = 30;
 
+    Config();
     void load(JsonObjectConst);
     void save(JsonObject) const;
 };

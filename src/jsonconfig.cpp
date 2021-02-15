@@ -215,114 +215,70 @@ void Config::save(JsonObject obj) const
 void Config::load(JsonObjectConst obj) {
     // Load all config objects
     //
-    if (obj["mdnsID"].isNull()) {
-        strlcpy(mdnsID, "tiltbridge", 32);
-    } else {
+    if (!obj["mdnsID"].isNull()) {
         const char *md = obj["mdnsID"];
         strlcpy(mdnsID, md, 32);
     }
 
-	if (obj["invertTFT"].isNull())
-	{
-		invertTFT = false;
-	}
-	else
-	{
+	if (!obj["invertTFT"].isNull()) {
 		invertTFT = obj["invertTFT"];
 	}
 
-	if (obj["update_spiffs"].isNull())
-	{
-		update_spiffs = false;
-	}
-	else
-	{
+	if (!obj["update_spiffs"].isNull()) {
 		update_spiffs = obj["update_spiffs"];
 	}
 
-    if (obj["TZoffset"].isNull()) {
-        TZoffset = -5;
-    } else {
-        int to = obj["TZoffset"];
-        TZoffset = to;
+    if (!obj["TZoffset"].isNull()) {
+        TZoffset = int(obj["TZoffset"]);
     }
 
-    if (obj["tempUnit"].isNull()) {
-        strlcpy(tempUnit, "F", 2);
-    } else {
+    if (!obj["tempUnit"].isNull()) {
         const char *tu = obj["tempUnit"];
         strlcpy(tempUnit, tu, 2);
     }
 
-    if (obj["smoothFactor"].isNull()) {
-        smoothFactor = 60;
-    } else {
-        int sf = obj["smoothFactor"];
-        smoothFactor = sf;
+    if (!obj["smoothFactor"].isNull()) {
+        smoothFactor = int(obj["smoothFactor"]);
     }
 
-	if (obj["applyCalibration"].isNull())
-	{
-		applyCalibration = false;
-	}
-	else
-	{
+	if (!obj["applyCalibration"].isNull()) {
 		applyCalibration = obj["applyCalibration"];
 	}
 
-	if (obj["tempCorrect"].isNull())
-	{
-		tempCorrect = false;
-	}
-	else
-	{
+	if (!obj["tempCorrect"].isNull()) {
 		tempCorrect = obj["tempCorrect"];
 	}
 
     // Loop through everything that is a "tilt-specific" setting
     for(int x=0;x<TILT_COLORS;x++) {
         // Calibration points
-        if (obj[tilt_color_names[x]]["degree"].isNull()) {
-            tilt_calibration[x].degree = 1;
-        } else {
+        if (!obj[tilt_color_names[x]]["degree"].isNull()) {
             tilt_calibration[x].degree = int(obj[tilt_color_names[x]]["degree"]);
         }
 
-        if (obj[tilt_color_names[x]]["x0"].isNull()) {
-            tilt_calibration[x].x0 = 0.0;
-        } else {
+        if (!obj[tilt_color_names[x]]["x0"].isNull()) {
             tilt_calibration[x].x0 = float(obj[tilt_color_names[x]]["x0"]);
         }
 
-        if (obj[tilt_color_names[x]]["x1"].isNull()) {
-            tilt_calibration[x].x1 = 1.0;
-        } else {
+        if (!obj[tilt_color_names[x]]["x1"].isNull()) {
             tilt_calibration[x].x1 = float(obj[tilt_color_names[x]]["x1"]);
         }
 
-        if (obj[tilt_color_names[x]]["x2"].isNull()) {
-            tilt_calibration[x].x2 = 0.0;
-        } else {
+        if (!obj[tilt_color_names[x]]["x2"].isNull()) {
             tilt_calibration[x].x2 = float(obj[tilt_color_names[x]]["x2"]);
         }
 
-        if (obj[tilt_color_names[x]]["x3"].isNull()) {
-            tilt_calibration[x].x3 = 0.0;
-        } else {
+        if (!obj[tilt_color_names[x]]["x3"].isNull()) {
             tilt_calibration[x].x3 = float(obj[tilt_color_names[x]]["x3"]);
         }
 
         // GSheet Info
-        if (obj[tilt_color_names[x]]["name"].isNull()) {
-            strlcpy(gsheets_config[x].name, "", 25);
-        } else {
+        if (!obj[tilt_color_names[x]]["name"].isNull()) {
             const char *sn = obj[tilt_color_names[x]]["name"];
             strlcpy(gsheets_config[x].name, sn, 25);
         }
 
-        if (obj[tilt_color_names[x]]["link"].isNull()) {
-            strlcpy(gsheets_config[x].link, "", 255);
-        } else {
+        if (!obj[tilt_color_names[x]]["link"].isNull()) {
             const char *sn = obj[tilt_color_names[x]]["link"];
             strlcpy(gsheets_config[x].link, sn, 255);
         }
@@ -330,101 +286,106 @@ void Config::load(JsonObjectConst obj) {
 
 
     // Target URLs
-    if (obj["localTargetURL"].isNull()) {
-        strlcpy(localTargetURL, "", 256);
-    } else {
+    if (!obj["localTargetURL"].isNull()) {
         const char *tu = obj["localTargetURL"];
         strlcpy(localTargetURL, tu, 256);
     }
 
-    if (obj["localTargetPushEvery"].isNull()) {
-        localTargetPushEvery = 30;
-    } else {
-        int pe = obj["localTargetPushEvery"];
-        localTargetPushEvery = pe;
+    if (!obj["localTargetPushEvery"].isNull()) {
+        localTargetPushEvery = int(obj["localTargetPushEvery"]);
     }
 
-    if (obj["brewstatusURL"].isNull()) {
-        strlcpy(brewstatusURL, "", 256);
-    } else {
+    if (!obj["brewstatusURL"].isNull()) {
         const char *bu = obj["brewstatusURL"];
         strlcpy(brewstatusURL, bu, 256);
     }
 
-    if (obj["brewstatusPushEvery"].isNull()) {
-        brewstatusPushEvery = 30;
-    } else {
+    if (!obj["brewstatusPushEvery"].isNull()) {
         int pe = obj["brewstatusPushEvery"];
         brewstatusPushEvery = pe;
     }
 
-    if (obj["scriptsURL"].isNull()) {
-        strlcpy(scriptsURL, "", 256);
-    } else {
+    if (!obj["scriptsURL"].isNull()) {
         const char *su = obj["scriptsURL"];
         strlcpy(scriptsURL, su, 256);
     }
 
-    if (obj["scriptsEmail"].isNull()) {
-        strlcpy(scriptsEmail, "", 256);
-    } else {
+    if (!obj["scriptsEmail"].isNull()) {
         const char *se = obj["scriptsEmail"];
         strlcpy(scriptsEmail, se, 256);
     }
 
-    if (obj["brewersFriendKey"].isNull()) {
-        strlcpy(brewersFriendKey, "", 65);
-    } else {
+    if (!obj["brewersFriendKey"].isNull()) {
         const char *bf = obj["brewersFriendKey"];
         strlcpy(brewersFriendKey, bf, 65);
     }
 
-    if (obj["brewfatherKey"].isNull()) {
-        strlcpy(brewfatherKey, "", 65);
-    } else {
+    if (!obj["brewfatherKey"].isNull()) {
         const char *bk = obj["brewfatherKey"];
         strlcpy(brewfatherKey, bk, 65);
     }
 
-    if (obj["mqttBrokerHost"].isNull()) {
-        strlcpy(mqttBrokerHost, "", 256);
-    } else {
+    if (!obj["mqttBrokerHost"].isNull()) {
         const char *mi = obj["mqttBrokerHost"];
         strlcpy(mqttBrokerHost, mi, 256);
     }
 
-    if (obj["mqttBrokerPort"].isNull()) {
-        mqttBrokerPort = 1883;
-    } else {
-        int mp = obj["mqttBrokerPort"];
-        mqttBrokerPort = mp;
+    if (!obj["mqttBrokerPort"].isNull()) {
+        mqttBrokerPort = int(obj["mqttBrokerPort"]);
     }
 
-    if (obj["mqttUsername"].isNull()) {
-        strlcpy(mqttUsername, "", 51);
-    } else {
+    if (!obj["mqttUsername"].isNull()) {
         const char *mu = obj["mqttUsername"];
         strlcpy(mqttUsername, mu, 51);
     }
 
-    if (obj["mqttPassword"].isNull()) {
-        strlcpy(mqttPassword, "", 65);
-    } else {
+    if (!obj["mqttPassword"].isNull()) {
         const char *mp = obj["mqttPassword"];
         strlcpy(mqttPassword, mp, 65);
     }
 
-    if (obj["mqttTopic"].isNull()) {
-        strlcpy(mqttTopic, "tiltbridge", 31);
-    } else {
+    if (!obj["mqttTopic"].isNull()) {
         const char *mt = obj["mqttTopic"];
         strlcpy(mqttTopic, mt, 31);
     }
 
-    if (obj["mqttPushEvery"].isNull()) {
-        mqttPushEvery = 30;
-    } else {
-        int me = obj["mqttPushEvery"];
-        mqttPushEvery = me;
+    if (!obj["mqttPushEvery"].isNull()) {
+        mqttPushEvery = int(obj["mqttPushEvery"]);
     }
+}
+
+Config::Config() {
+//    strlcpy(mdnsID, "tiltbridge", 32);
+//    invertTFT = false;
+//    update_spiffs = false;  // TODO - Figure out WTF this is
+//    TZoffset = -5;
+//    strlcpy(tempUnit, "F", 2);
+//    smoothFactor = 60;
+//    applyCalibration = false;
+//    tempCorrect = false;
+
+//    for(int x=0;x<TILT_COLORS;x++) {
+//        tilt_calibration[x].degree = 1;
+//        tilt_calibration[x].x0 = 0.0;
+//        tilt_calibration[x].x1 = 1.0;
+//        tilt_calibration[x].x2 = 0.0;
+//        tilt_calibration[x].x3 = 0.0;
+//        strlcpy(gsheets_config[x].name,  "", 26);
+//        strlcpy(gsheets_config[x].link, "", 255);
+//    }
+
+//    strlcpy(localTargetURL, "", 256);
+//    localTargetPushEvery = 30;
+//    strlcpy(brewstatusURL, "", 256);
+//    brewstatusPushEvery = 30;
+//    strlcpy(scriptsURL, "", 256);
+//    strlcpy(scriptsEmail, "", 256);
+//    strlcpy(brewersFriendKey, "", 65);
+//    strlcpy(brewfatherKey, "", 65);
+//    strlcpy(mqttBrokerHost, "", 256);
+//    mqttBrokerPort = 1883;
+//    strlcpy(mqttUsername, "", 51);
+//    strlcpy(mqttPassword, "", 65);
+//    strlcpy(mqttTopic, "", 31);
+//    mqttPushEvery = 30;
 }
