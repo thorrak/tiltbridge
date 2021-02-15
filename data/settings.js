@@ -140,14 +140,14 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 // Google Sheets Tab
                 $('input[name="scriptsURL"]').val(config.scriptsURL);
                 $('input[name="scriptsEmail"]').val(config.scriptsEmail);
-                $('input[name="sheetName_red"]').val(config.sheetName_red);
-                $('input[name="sheetName_green"]').val(config.sheetName_green);
-                $('input[name="sheetName_black"]').val(config.sheetName_black);
-                $('input[name="sheetName_purple"]').val(config.sheetName_purple);
-                $('input[name="sheetName_orange"]').val(config.sheetName_orange);
-                $('input[name="sheetName_blue"]').val(config.sheetName_blue);
-                $('input[name="sheetName_yellow"]').val(config.sheetName_yellow);
-                $('input[name="sheetName_pink"]').val(config.sheetName_pink);
+                $('input[name="sheetName_red"]').val(config.Red.name);
+                $('input[name="sheetName_green"]').val(config.Green.name);
+                $('input[name="sheetName_black"]').val(config.Black.name);
+                $('input[name="sheetName_purple"]').val(config.Purple.name);
+                $('input[name="sheetName_orange"]').val(config.Orange.name);
+                $('input[name="sheetName_blue"]').val(config.Blue.name);
+                $('input[name="sheetName_yellow"]').val(config.Yellow.name);
+                $('input[name="sheetName_pink"]').val(config.Pink.name);
 
                 // Brewer's Friend Tab
                 $('input[name="brewersFriendKey"]').val(config.brewersFriendKey);

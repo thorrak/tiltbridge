@@ -177,8 +177,8 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     {
         if (tilt_scanner.tilt(i)->is_loaded())
         {
-            Log.verbose(F("Tilt loaded with color name: %s" CR), tilt_scanner.tilt(i)->color_name().c_str());
-            j["name"] = tilt_scanner.tilt(i)->color_name();
+            Log.verbose(F("Tilt loaded with color name: %s" CR), tilt_color_names[i]);
+            j["name"] = tilt_color_names[i];
             j["temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
             j["temp_unit"] = "F";
             j["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false);
@@ -227,7 +227,7 @@ bool dataSendHandler::send_to_brewstatus()
                     snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
                             tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
                             tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
-                            tilt_scanner.tilt(i)->color_name().c_str(),
+                            tilt_color_names[i],
                             ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
                     if (send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
                     {
@@ -272,16 +272,15 @@ bool dataSendHandler::send_to_google()
                 if (tilt_scanner.tilt(i)->is_loaded())
                 {
                     // If there is a color present
-                    if (tilt_scanner.tilt(i)->gsheets_beer_name().length() > 0)
-                    {
+                    if (strlen(config.gsheets_config[i].name) > 0) {
                         if (numSent == 0)
                             Log.notice(F("Beginning GSheets check-in." CR));
                         // If there's a sheet name saved
                         StaticJsonDocument<GSHEETS_JSON> payload;
-                        payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
+                        payload["Beer"] = config.gsheets_config[i].name;
                         payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
                         payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-                        payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                        payload["Color"] = tilt_color_names[i];
                         payload["Comment"] = "";
                         payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
                         payload["tzOffset"] = config.TZoffset;
@@ -303,7 +302,7 @@ bool dataSendHandler::send_to_google()
                         else
                         {
                             Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
-                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_scanner.tilt(i)->color_name().c_str(), payload_string);
+                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_color_names[i], payload_string);
 
                             http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
                             httpResponseCode = http.POST(payload_string);               // Send the payload
@@ -320,53 +319,7 @@ bool dataSendHandler::send_to_google()
 #else
                                 deserializeJson(retval, http.getStream());
 #endif
-                                switch(i)
-                                {
-                                    case(0):
-                                    {
-                                        strlcpy(config.link_red, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(1):
-                                    {
-                                        strlcpy(config.link_green, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(2):
-                                    {
-                                        strlcpy(config.link_black, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(3):
-                                    {
-                                        strlcpy(config.link_purple, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(4):
-                                    {
-                                        strlcpy(config.link_orange, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(5):
-                                    {
-                                        strlcpy(config.link_blue, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(6):
-                                    {
-                                        strlcpy(config.link_yellow, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(7):
-                                    {
-                                        strlcpy(config.link_pink, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        break;
-                                    }
-                                }
+                                strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
                                 saveConfig();
                                 retval.clear();
                                 numSent++;
@@ -375,7 +328,7 @@ bool dataSendHandler::send_to_google()
                             {
                                 // Post generated an error
                                 Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
-                                    tilt_scanner.tilt(i)->color_name().c_str(),
+                                    tilt_color_names[i],
                                     httpResponseCode,
                                     http.errorToString(httpResponseCode).c_str(),
                                     http.getString().c_str());
@@ -639,7 +592,7 @@ bool dataSendHandler::send_to_mqtt()
                     char tilt_topic[50] = {'\0'};
                     snprintf(tilt_topic, 50, "%s/tilt_%s",
                             config.mqttTopic,
-                            tilt_scanner.tilt(i)->color_name().c_str());
+                            tilt_color_names[i]);
 
                     for (uint8_t j = 0; j < 3; j++)
                     {
@@ -652,7 +605,7 @@ bool dataSendHandler::send_to_mqtt()
                         case 0: //Home Assistant Config Topic for Temperature
                             sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sT/config",
                                     config.mqttTopic,
-                                    tilt_scanner.tilt(i)->color_name().c_str());
+                                    tilt_color_names[i]);
                             payload["dev_cla"] = "temperature";
                             strcat(unit, "\u00b0");
                             strcat(unit, config.tempUnit);
@@ -660,7 +613,7 @@ bool dataSendHandler::send_to_mqtt()
                             payload["ic"] = "mdi:thermometer";
                             payload["stat_t"] = tilt_topic;
                             strcat(tilt_name, "Tilt Temperature - ");
-                            strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
+                            strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.Temp}}";
                             retain = true;
@@ -668,13 +621,13 @@ bool dataSendHandler::send_to_mqtt()
                         case 1: //Home Assistant Config Topic for Sp Gravity
                             sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/config",
                                     config.mqttTopic,
-                                    tilt_scanner.tilt(i)->color_name().c_str());
+                                    tilt_color_names[i]);
                             //payload["dev_cla"] = "None";
                             payload["unit_of_meas"] = "SG";
                             //payload["ic"] = "";
                             payload["stat_t"] = tilt_topic;
                             strcat(tilt_name, "Tilt Specific Gravity - ");
-                            strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
+                            strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.SG}}";
                             retain = true;
@@ -685,7 +638,7 @@ bool dataSendHandler::send_to_mqtt()
                             char current_temp[5] = {'\0'};
                             strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
                             strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
-                            payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                            payload["Color"] = tilt_color_names[i];
                             payload["timeStamp"] = (int)std::time(0);
                             payload["fermunits"] = "SG";
                             payload["SG"] = current_grav;

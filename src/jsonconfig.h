@@ -2,6 +2,7 @@
 #define _JSONCONFIG_H
 
 #include "serialhandler.h"
+#include "tilt/tiltHydrometer.h"
 #include <ArduinoJson.h>
 
 #if FILESYSTEM == SPIFFS
@@ -11,89 +12,48 @@
 
 #define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
 
+struct TiltCalData {
+    uint8_t degree = 1;
+    double x0 = 0.0;
+    double x1 = 1.0;
+    double x2 = 0.0;
+    double x3 = 0.0;
+};
+
+struct GsheetsConfig {
+    char name[26] = "";
+    char link[256] = "";
+};
+
 struct Config {
-    char *mdnsID = (char *)malloc(sizeof(char) * 32);
-    bool invertTFT;
-    bool update_spiffs;
-    int8_t TZoffset;
-    char *tempUnit = (char *)malloc(sizeof(char) * 2);
-    uint8_t smoothFactor;
-    bool applyCalibration;
-    bool tempCorrect;
-    uint8_t cal_red_degree;
-    double cal_red_x0;
-    double cal_red_x1;
-    double cal_red_x2;
-    double cal_red_x3;
-    uint8_t cal_green_degree;
-    double cal_green_x0;
-    double cal_green_x1;
-    double cal_green_x2;
-    double cal_green_x3;
-    uint8_t cal_black_degree;
-    double cal_black_x0;
-    double cal_black_x1;
-    double cal_black_x2;
-    double cal_black_x3;
-    uint8_t cal_purple_degree;
-    double cal_purple_x0;
-    double cal_purple_x1;
-    double cal_purple_x2;
-    double cal_purple_x3;
-    uint8_t cal_orange_degree;
-    double cal_orange_x0;
-    double cal_orange_x1;
-    double cal_orange_x2;
-    double cal_orange_x3;
-    uint8_t cal_blue_degree;
-    double cal_blue_x0;
-    double cal_blue_x1;
-    double cal_blue_x2;
-    double cal_blue_x3;
-    uint8_t cal_yellow_degree;
-    double cal_yellow_x0;
-    double cal_yellow_x1;
-    double cal_yellow_x2;
-    double cal_yellow_x3;
-    uint8_t cal_pink_degree;
-    double cal_pink_x0;
-    double cal_pink_x1;
-    double cal_pink_x2;
-    double cal_pink_x3;
+    char mdnsID[32] = "tiltbridge";
+    bool invertTFT = false;
+    bool update_spiffs = false;
+    int8_t TZoffset = -5;
+    char tempUnit[2] = "F";
+    uint8_t smoothFactor = 60;
+    bool applyCalibration = false;
+    bool tempCorrect = false;
 
-    char *sheetName_red = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_green = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_black = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_purple = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_orange = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_blue = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_yellow = (char *)malloc(sizeof(char) * 25);
-    char *sheetName_pink = (char *)malloc(sizeof(char) * 25);
+    TiltCalData tilt_calibration[TILT_COLORS];
+    GsheetsConfig gsheets_config[TILT_COLORS];
 
-	char *link_red = (char *)malloc(sizeof(char) * 255);
-	char *link_green = (char *)malloc(sizeof(char) * 255);
-	char *link_black = (char *)malloc(sizeof(char) * 255);
-	char *link_purple = (char *)malloc(sizeof(char) * 255);
-	char *link_orange = (char *)malloc(sizeof(char) * 255);
-	char *link_blue = (char *)malloc(sizeof(char) * 255);
-	char *link_yellow = (char *)malloc(sizeof(char) * 255);
-	char *link_pink = (char *)malloc(sizeof(char) * 255);
+    char localTargetURL[256] = "";
+    uint16_t localTargetPushEvery = 30;
+    char brewstatusURL[256] = "";
+    uint16_t brewstatusPushEvery = 30;
+    char scriptsURL[256] = "";
+    char scriptsEmail[256] = "";
+    char brewersFriendKey[65] = "";
+    char brewfatherKey[65] = "";
+    char mqttBrokerHost[256] = "";
+    uint16_t mqttBrokerPort = 1883;
+    char mqttUsername[51] = "";
+    char mqttPassword[65] = "";
+    char mqttTopic[31] = "";
+    uint16_t mqttPushEvery = 30;
 
-    char *localTargetURL = (char *)malloc(sizeof(char) * 256);
-    uint16_t localTargetPushEvery;
-    char *brewstatusURL = (char *)malloc(sizeof(char) * 256);
-    uint16_t brewstatusPushEvery;
-    char *scriptsURL = (char *)malloc(sizeof(char) * 256);
-    char *scriptsEmail = (char *)malloc(sizeof(char) * 256);
-    char *brewersFriendKey = (char *)malloc(sizeof(char) * 65);
-    char *brewfatherKey = (char *)malloc(sizeof(char) * 65);
-    char *mqttBrokerHost = (char *)malloc(sizeof(char) * 256);
-    uint16_t mqttBrokerPort;
-    char *mqttUsername = (char *)malloc(sizeof(char) * 51);
-    char *mqttPassword = (char *)malloc(sizeof(char) * 65);
-    char *mqttTopic = (char *)malloc(sizeof(char) * 31);
-    uint16_t mqttPushEvery;
-
+    Config();
     void load(JsonObjectConst);
     void save(JsonObject) const;
 };
