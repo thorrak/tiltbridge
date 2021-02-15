@@ -431,7 +431,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
     sprintf(temp, "%s %s", tilt->converted_temp(false).c_str(), tilt->is_celsius() ? "C" : "F");
 
 #ifdef LCD_TFT_ESPI
-    tft->setTextColor(tilt->text_color());
+    tft->setTextColor(tilt_text_colors[tilt->m_color]);
 #endif
 
     // Print line with gutter for the color block for TFT screens
@@ -439,7 +439,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
 
 #ifdef LCD_TFT
     uint16_t fHeight = tft->fontHeight(GFXFF);
-    if (tilt->text_color() == 0xFFFF) { // White outline, black square
+    if (tilt_text_colors[tilt->m_color] == 0xFFFF) { // White outline, black square
         tft->fillRect( // White square
             0,
             fHeight * (line - 1) + 2,
@@ -459,7 +459,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
             fHeight * (line - 1) + 2,
             15,
             fHeight - 8,
-            tilt->text_color());
+            tilt_text_colors[tilt->m_color]);
     }
 #elif defined(LCD_TFT_ESPI)
     tft->setTextColor(TFT_WHITE);

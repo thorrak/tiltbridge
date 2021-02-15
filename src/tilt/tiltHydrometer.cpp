@@ -16,6 +16,18 @@ const char* tilt_color_names[] = {
         "Pink"
 };
 
+
+const uint32_t tilt_text_colors[] = {
+        0xF800, // Red
+        0x07E0, // Green
+        0xFFFF, // Black (white)
+        0x780F, // Purple
+        0xBAA0, // Orange (hook 'em)
+        0x001F, // Blue
+        0xFFE0, // Yellow
+        0xFE19  // Pink
+};
+
 tiltHydrometer::tiltHydrometer(uint8_t color)
 {
     m_loaded = false;
@@ -70,32 +82,6 @@ uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
     else
     {
         return TILT_NONE;
-    }
-}
-
-uint32_t tiltHydrometer::text_color()
-{
-    // TODO - Change this to an array
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return 0xF800;
-    case TILT_COLOR_GREEN:
-        return 0x07E0;
-    case TILT_COLOR_BLACK:
-        return 0xFFFF;
-    case TILT_COLOR_PURPLE:
-        return 0x780F;
-    case TILT_COLOR_ORANGE:
-        return 0xBAA0; // 0xFDA0;
-    case TILT_COLOR_BLUE:
-        return 0x001F;
-    case TILT_COLOR_YELLOW:
-        return 0xFFE0;
-    case TILT_COLOR_PINK:
-        return 0xFE19;
-    default:
-        return 0xFFFF;
     }
 }
 
