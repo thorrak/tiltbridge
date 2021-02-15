@@ -435,7 +435,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
 #endif
 
     // Print line with gutter for the color block for TFT screens
-    print_line(tilt->color_name().c_str(), temp, gravity, line, true);
+    print_line(tilt_color_names[tilt->m_color], temp, gravity, line, true);
 
 #ifdef LCD_TFT
     uint16_t fHeight = tft->fontHeight(GFXFF);

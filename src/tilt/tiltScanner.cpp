@@ -168,8 +168,9 @@ void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
     {
         if (m_tilt_devices[i]->is_loaded())
         {
+            // TODO - Clean this up
             char color[TILT_COLOR_SIZE];
-            strlcpy(color, m_tilt_devices[i]->color_name().c_str(), TILT_COLOR_SIZE);
+            strlcpy(color, tilt_color_names[i], TILT_COLOR_SIZE);
             char tilt_data[TILT_DATA_SIZE];
             tilt_data[0] = {'\0'};
             m_tilt_devices[i]->to_json_string(tilt_data, use_raw_gravity);

@@ -73,16 +73,9 @@ uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
     }
 }
 
-std::string tiltHydrometer::color_name()
-{
-    // We store cstrings in tilt_color_names[] now
-    // TODO - Check every call to color_name to see if we still need this function
-    return std::string(tilt_color_names[m_color]);
-}
-
 uint32_t tiltHydrometer::text_color()
 {
-
+    // TODO - Change this to an array
     switch (m_color)
     {
     case TILT_COLOR_RED:
@@ -106,17 +99,6 @@ uint32_t tiltHydrometer::text_color()
     }
 }
 
-std::string tiltHydrometer::gsheets_beer_name()
-{
-    // TODO - See if this can be moved outside the class
-    return std::string(config.gsheets_config[m_color].name);
-}
-
-std::string tiltHydrometer::gsheets_link_name()
-{
-    // TODO - See if this can be moved outside the class
-    return std::string(config.gsheets_config[m_color].link);
-}
 
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
@@ -183,7 +165,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #if PRINT_GRAV_UPDATES == 1
     char value[7];
     sprintf(value, "%.4f", d_grav);
-    Log.verbose(F("%s Tilt gravity = %s" CR), color_name().c_str(), value);
+    Log.verbose(F("%s Tilt gravity = %s" CR), tilt_color_names[m_color], value);
 #endif
 
     if (config.applyCalibration)
@@ -209,7 +191,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[7];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt calibration corrected gravity = %s" CR), color_name().c_str(), calvalue);
+        Log.verbose(F("%s Tilt calibration corrected gravity = %s" CR), tilt_color_names[m_color], calvalue);
     }
 
     if (config.tempCorrect)
@@ -220,7 +202,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[6];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt temperature corrected gravity = %s" CR), color_name().c_str(), calvalue);
+        Log.verbose(F("%s Tilt temperature corrected gravity = %s" CR), tilt_color_names[m_color], calvalue);
     }
 
     gravity = (int)round(d_grav * grav_scalar);
@@ -251,17 +233,21 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
     StaticJsonDocument<TILT_DATA_SIZE> j;
 
-    j["color"] = color_name();
+    j["color"] = tilt_color_names[m_color];
     j["temp"] = converted_temp(false);
     j["tempUnit"] = is_celsius() ? "C" : "F";
     j["gravity"] = converted_gravity(use_raw_gravity);
-    j["gsheets_name"] = gsheets_beer_name();
-    j["gsheets_link"] = gsheets_link_name();
     j["weeks_on_battery"] = weeks_since_last_battery_change;
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
     j["fwVersion"] = version_code;
     j["rssi"] = rssi;
+
+    // These are loaded from config, but are included in the JSON for simplicity in generating the dashboard without
+    // an additional API call
+    j["gsheets_name"] = config.gsheets_config[m_color].name;
+    j["gsheets_link"] = config.gsheets_config[m_color].link;
+
 
     serializeJson(j, json_string, TILT_DATA_SIZE);
 }

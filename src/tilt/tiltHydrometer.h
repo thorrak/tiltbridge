@@ -46,11 +46,8 @@ public:
     explicit tiltHydrometer(uint8_t color);
 
     bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
-    std::string color_name();
     uint32_t text_color();
     std::string converted_gravity(bool use_raw_gravity);
-    std::string gsheets_beer_name();
-    std::string gsheets_link_name();
     void to_json_string(char *json_string, bool use_raw_gravity);
     std::string converted_temp(bool fahrenheit_only);
     bool is_celsius() const;
@@ -58,7 +55,6 @@ public:
 
     static uint8_t uuid_to_color_no(std::string data);
 
-    // There is no real reason these need to be uint32, given that we are receiving 2 bytes each (uint16)
     uint16_t temp;
     uint16_t gravity;
     uint16_t gravity_smoothed;
@@ -70,9 +66,9 @@ public:
 
     bool receives_battery;  // Tracks if this tilt sends battery life
     bool tilt_pro;  // Tracks if this tilt is "high resolution" or not (ie. is a Tilt Pro)
+    uint8_t m_color;  // Color number (0-7) for lookups
 
 private:
-    uint8_t m_color;
     bool m_loaded;              // Has data been loaded from an ad string
     unsigned long m_lastUpdate; // Keep track of when we last updated and stop propagating out stale information
     bool m_has_sent_197;        // Used to determine if the tilt sends battery life (a 197 tx_pwr followed by a non-197 tx_pwr)
