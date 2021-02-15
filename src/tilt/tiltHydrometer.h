@@ -5,7 +5,7 @@
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
 
-#include "jsonconfig.h"
+//#include "jsonconfig.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
 
@@ -77,5 +77,7 @@ private:
     unsigned long m_lastUpdate; // Keep track of when we last updated and stop propagating out stale information
     bool m_has_sent_197;        // Used to determine if the tilt sends battery life (a 197 tx_pwr followed by a non-197 tx_pwr)
 };
+
+extern const char* tilt_color_names[];
 
 #endif //TILTBRIDGE_TILTHYDROMETER_H

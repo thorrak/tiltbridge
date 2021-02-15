@@ -2,6 +2,7 @@
 #define _JSONCONFIG_H
 
 #include "serialhandler.h"
+#include "tilt/tiltHydrometer.h"
 #include <ArduinoJson.h>
 
 #if FILESYSTEM == SPIFFS
@@ -11,55 +12,30 @@
 
 #define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
 
+struct TiltCalData {
+    uint8_t degree;
+    double x0;
+    double x1;
+    double x2;
+    double x3;
+};
+
+struct GsheetsConfig {
+    char name[26];
+    char link[256];
+};
+
 struct Config {
-    char *mdnsID = (char *)malloc(sizeof(char) * 32);
+    char mdnsID[32];
     bool invertTFT;
     bool update_spiffs;
     int8_t TZoffset;
-    char *tempUnit = (char *)malloc(sizeof(char) * 2);
+    char tempUnit[2];
     uint8_t smoothFactor;
     bool applyCalibration;
     bool tempCorrect;
-    uint8_t cal_red_degree;
-    double cal_red_x0;
-    double cal_red_x1;
-    double cal_red_x2;
-    double cal_red_x3;
-    uint8_t cal_green_degree;
-    double cal_green_x0;
-    double cal_green_x1;
-    double cal_green_x2;
-    double cal_green_x3;
-    uint8_t cal_black_degree;
-    double cal_black_x0;
-    double cal_black_x1;
-    double cal_black_x2;
-    double cal_black_x3;
-    uint8_t cal_purple_degree;
-    double cal_purple_x0;
-    double cal_purple_x1;
-    double cal_purple_x2;
-    double cal_purple_x3;
-    uint8_t cal_orange_degree;
-    double cal_orange_x0;
-    double cal_orange_x1;
-    double cal_orange_x2;
-    double cal_orange_x3;
-    uint8_t cal_blue_degree;
-    double cal_blue_x0;
-    double cal_blue_x1;
-    double cal_blue_x2;
-    double cal_blue_x3;
-    uint8_t cal_yellow_degree;
-    double cal_yellow_x0;
-    double cal_yellow_x1;
-    double cal_yellow_x2;
-    double cal_yellow_x3;
-    uint8_t cal_pink_degree;
-    double cal_pink_x0;
-    double cal_pink_x1;
-    double cal_pink_x2;
-    double cal_pink_x3;
+
+    TiltCalData tilt_calibration[TILT_COLORS];
 
     char *sheetName_red = (char *)malloc(sizeof(char) * 25);
     char *sheetName_green = (char *)malloc(sizeof(char) * 25);
@@ -70,14 +46,14 @@ struct Config {
     char *sheetName_yellow = (char *)malloc(sizeof(char) * 25);
     char *sheetName_pink = (char *)malloc(sizeof(char) * 25);
 
-	char *link_red = (char *)malloc(sizeof(char) * 255);
-	char *link_green = (char *)malloc(sizeof(char) * 255);
-	char *link_black = (char *)malloc(sizeof(char) * 255);
-	char *link_purple = (char *)malloc(sizeof(char) * 255);
-	char *link_orange = (char *)malloc(sizeof(char) * 255);
-	char *link_blue = (char *)malloc(sizeof(char) * 255);
-	char *link_yellow = (char *)malloc(sizeof(char) * 255);
-	char *link_pink = (char *)malloc(sizeof(char) * 255);
+    char *link_red = (char *)malloc(sizeof(char) * 255);
+    char *link_green = (char *)malloc(sizeof(char) * 255);
+    char *link_black = (char *)malloc(sizeof(char) * 255);
+    char *link_purple = (char *)malloc(sizeof(char) * 255);
+    char *link_orange = (char *)malloc(sizeof(char) * 255);
+    char *link_blue = (char *)malloc(sizeof(char) * 255);
+    char *link_yellow = (char *)malloc(sizeof(char) * 255);
+    char *link_pink = (char *)malloc(sizeof(char) * 255);
 
     char *localTargetURL = (char *)malloc(sizeof(char) * 256);
     uint16_t localTargetPushEvery;

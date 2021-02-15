@@ -5,6 +5,17 @@
 #include "tiltHydrometer.h"
 #include "jsonconfig.h"
 
+const char* tilt_color_names[] = {
+        "Red",
+        "Green",
+        "Black",
+        "Purple",
+        "Orange",
+        "Blue",
+        "Yellow",
+        "Pink"
+};
+
 tiltHydrometer::tiltHydrometer(uint8_t color)
 {
     m_loaded = false;
@@ -64,28 +75,9 @@ uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
 
 std::string tiltHydrometer::color_name()
 {
-    // If these change, modify TILT_COLOR_SIZE (currrently 7 for "Yellow" + 1)
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return "Red";
-    case TILT_COLOR_GREEN:
-        return "Green";
-    case TILT_COLOR_BLACK:
-        return "Black";
-    case TILT_COLOR_PURPLE:
-        return "Purple";
-    case TILT_COLOR_ORANGE:
-        return "Orange";
-    case TILT_COLOR_BLUE:
-        return "Blue";
-    case TILT_COLOR_YELLOW:
-        return "Yellow";
-    case TILT_COLOR_PINK:
-        return "Pink";
-    default:
-        return "None";
-    }
+    // We store cstrings in tilt_color_names[] now
+    // TODO - Check every call to color_name to see if we still need this function
+    return std::string(tilt_color_names[m_color]);
 }
 
 uint32_t tiltHydrometer::text_color()
@@ -234,62 +226,10 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
     if (config.applyCalibration)
     {
-        double x0 = 0.0;
-        double x1 = 1.0;
-        double x2 = 0.0;
-        double x3 = 0.0;
-
-        switch (m_color)
-        {
-        case TILT_COLOR_RED:
-            x0 = config.cal_red_x0;
-            x1 = config.cal_red_x1;
-            x2 = config.cal_red_x2;
-            x3 = config.cal_red_x3;
-            break;
-        case TILT_COLOR_GREEN:
-            x0 = config.cal_green_x0;
-            x1 = config.cal_green_x1;
-            x2 = config.cal_green_x2;
-            x3 = config.cal_green_x3;
-            break;
-        case TILT_COLOR_BLACK:
-            x0 = config.cal_black_x0;
-            x1 = config.cal_black_x1;
-            x2 = config.cal_black_x2;
-            x3 = config.cal_black_x3;
-            break;
-        case TILT_COLOR_PURPLE:
-            x0 = config.cal_purple_x0;
-            x1 = config.cal_purple_x1;
-            x2 = config.cal_purple_x2;
-            x3 = config.cal_purple_x3;
-            break;
-        case TILT_COLOR_ORANGE:
-            x0 = config.cal_orange_x0;
-            x1 = config.cal_orange_x1;
-            x2 = config.cal_orange_x2;
-            x3 = config.cal_orange_x3;
-            break;
-        case TILT_COLOR_BLUE:
-            x0 = config.cal_blue_x0;
-            x1 = config.cal_blue_x1;
-            x2 = config.cal_blue_x2;
-            x3 = config.cal_blue_x3;
-            break;
-        case TILT_COLOR_YELLOW:
-            x0 = config.cal_yellow_x0;
-            x1 = config.cal_yellow_x1;
-            x2 = config.cal_yellow_x2;
-            x3 = config.cal_yellow_x3;
-            break;
-        case TILT_COLOR_PINK:
-            x0 = config.cal_pink_x0;
-            x1 = config.cal_pink_x1;
-            x2 = config.cal_pink_x2;
-            x3 = config.cal_pink_x3;
-            break;
-        }
+        double x0 = config.tilt_calibration[m_color].x0;
+        double x1 = config.tilt_calibration[m_color].x1;
+        double x2 = config.tilt_calibration[m_color].x2;
+        double x3 = config.tilt_calibration[m_color].x3;
 
         /*       for (auto& el : cal_params.items()) {
             std::string coeff = el.key();

@@ -184,41 +184,15 @@ void Config::save(JsonObject obj) const
     obj["applyCalibration"] = applyCalibration;
     obj["tempCorrect"] = tempCorrect;
 
-    obj["cal_red_degree"] = cal_red_degree;
-    obj["cal_red_x0"] = cal_red_x0;
-    obj["cal_red_x1"] = cal_red_x1;
-    obj["cal_red_x2"] = cal_red_x2;
-    obj["cal_red_x3"] = cal_red_x3;
-    obj["cal_black_degree"] = cal_black_degree;
-    obj["cal_black_x0"] = cal_black_x0;
-    obj["cal_black_x1"] = cal_black_x1;
-    obj["cal_black_x2"] = cal_black_x2;
-    obj["cal_black_x3"] = cal_black_x3;
-    obj["cal_purple_degree"] = cal_purple_degree;
-    obj["cal_purple_x0"] = cal_purple_x0;
-    obj["cal_purple_x1"] = cal_purple_x1;
-    obj["cal_purple_x2"] = cal_purple_x2;
-    obj["cal_purple_x3"] = cal_purple_x3;
-    obj["cal_orange_degree"] = cal_orange_degree;
-    obj["cal_orange_x0"] = cal_orange_x0;
-    obj["cal_orange_x1"] = cal_orange_x1;
-    obj["cal_orange_x2"] = cal_orange_x2;
-    obj["cal_orange_x3"] = cal_orange_x3;
-    obj["cal_blue_degree"] = cal_blue_degree;
-    obj["cal_blue_x0"] = cal_blue_x0;
-    obj["cal_blue_x1"] = cal_blue_x1;
-    obj["cal_blue_x2"] = cal_blue_x2;
-    obj["cal_blue_x3"] = cal_blue_x3;
-    obj["cal_yellow_degree"] = cal_yellow_degree;
-    obj["cal_yellow_x0"] = cal_yellow_x0;
-    obj["cal_yellow_x1"] = cal_yellow_x1;
-    obj["cal_yellow_x2"] = cal_yellow_x2;
-    obj["cal_yellow_x3"] = cal_yellow_x3;
-    obj["cal_pink_degree"] = cal_pink_degree;
-    obj["cal_pink_x0"] = cal_pink_x0;
-    obj["cal_pink_x1"] = cal_pink_x1;
-    obj["cal_pink_x2"] = cal_pink_x2;
-    obj["cal_pink_x3"] = cal_pink_x3;
+
+    for(int x=0;x<TILT_COLORS;x++) {
+        obj[tilt_color_names[x]]["degree"] = tilt_calibration[x].degree;
+        obj[tilt_color_names[x]]["x0"] = tilt_calibration[x].x0;
+        obj[tilt_color_names[x]]["x1"] = tilt_calibration[x].x1;
+        obj[tilt_color_names[x]]["x2"] = tilt_calibration[x].x2;
+        obj[tilt_color_names[x]]["x3"] = tilt_calibration[x].x3;
+    }
+
 
     obj["sheetName_red"] = sheetName_red;
     obj["sheetName_green"] = sheetName_green;
@@ -322,289 +296,40 @@ void Config::load(JsonObjectConst obj) {
 	}
 
     // Calibration points
+    for(int x=0;x<TILT_COLORS;x++) {
+        if (obj[tilt_color_names[x]]["degree"].isNull()) {
+            tilt_calibration[x].degree = 1;
+        } else {
+            tilt_calibration[x].degree = int(obj[tilt_color_names[x]]["degree"]);
+        }
 
-    if (obj["cal_red_degree"].isNull()) {
-        cal_red_degree = 1;
-    } else {
-        int rd = obj["cal_red_degree"];
-        cal_red_degree = rd;
-    }
+        if (obj[tilt_color_names[x]]["x0"].isNull()) {
+            tilt_calibration[x].x0 = 0.0;
+        } else {
+            tilt_calibration[x].x0 = float(obj[tilt_color_names[x]]["x0"]);
+        }
 
-    if (obj["cal_red_x0"].isNull()) {
-        cal_red_x0 = 0.0;
-    } else {
-        float rc = obj["cal_red_x0"];
-        cal_red_x0 = rc;
-    }
+        if (obj[tilt_color_names[x]]["x1"].isNull()) {
+            tilt_calibration[x].x1 = 1.0;
+        } else {
+            tilt_calibration[x].x1 = float(obj[tilt_color_names[x]]["x1"]);
+        }
 
-    if (obj["cal_red_x1"].isNull()) {
-        cal_red_x1 = 1.0;
-    } else {
-        float rc = obj["cal_red_x1"];
-        cal_red_x1 = rc;
-    }
+        if (obj[tilt_color_names[x]]["x2"].isNull()) {
+            tilt_calibration[x].x2 = 0.0;
+        } else {
+            tilt_calibration[x].x2 = float(obj[tilt_color_names[x]]["x2"]);
+        }
 
-    if (obj["cal_red_x2"].isNull()) {
-        cal_red_x2 = 0.0;
-    } else {
-        float rc = obj["cal_red_x2"];
-        cal_red_x2 = rc;
-    }
+        if (obj[tilt_color_names[x]]["x3"].isNull()) {
+            tilt_calibration[x].x3 = 0.0;
+        } else {
+            tilt_calibration[x].x3 = float(obj[tilt_color_names[x]]["x3"]);
+        }      
+    }    
 
-    if (obj["cal_red_x3"].isNull()) {
-        cal_red_x3 = 0.0;
-    } else {
-        float rc = obj["cal_red_x3"];
-        cal_red_x3 = rc;
-    }
-
-    if (obj["cal_green_degree"].isNull()) {
-        cal_green_degree = 1;
-    } else {
-        int rd = obj["cal_green_degree"];
-        cal_green_degree = rd;
-    }
-
-    if (obj["cal_green_x0"].isNull()) {
-        cal_green_x0 = 0.0;
-    } else {
-        float rc = obj["cal_green_x0"];
-        cal_green_x0 = rc;
-    }
-
-    if (obj["cal_green_x1"].isNull()) {
-        cal_green_x1 = 1.0;
-    } else {
-        float rc = obj["cal_green_x1"];
-        cal_green_x1 = rc;
-    }
-
-    if (obj["cal_green_x2"].isNull()) {
-        cal_green_x2 = 0.0;
-    } else {
-        float rc = obj["cal_green_x2"];
-        cal_green_x2 = rc;
-    }
-
-    if (obj["cal_green_x3"].isNull()) {
-        cal_green_x3 = 0.0;
-    } else {
-        float rc = obj["cal_green_x3"];
-        cal_green_x3 = rc;
-    }
-
-    if (obj["cal_black_degree"].isNull()) {
-        cal_black_degree = 1;
-    } else {
-        int rd = obj["cal_black_degree"];
-        cal_black_degree = rd;
-    }
-
-    if (obj["cal_black_x0"].isNull()) {
-        cal_black_x0 = 0.0;
-    } else {
-        float rc = obj["cal_black_x0"];
-        cal_black_x0 = rc;
-    }
-
-    if (obj["cal_black_x1"].isNull()) {
-        cal_black_x1 = 1.0;
-    } else {
-        float rc = obj["cal_black_x1"];
-        cal_black_x1 = rc;
-    }
-
-    if (obj["cal_black_x2"].isNull()) {
-        cal_black_x2 = 0.0;
-    } else {
-        float rc = obj["cal_black_x2"];
-        cal_black_x2 = rc;
-    }
-
-    if (obj["cal_black_x3"].isNull()) {
-        cal_black_x3 = 0.0;
-    } else {
-        float rc = obj["cal_black_x3"];
-        cal_black_x3 = rc;
-    }
-
-    if (obj["cal_purple_degree"].isNull()) {
-        cal_purple_degree = 1;
-    } else {
-        int rd = obj["cal_purple_degree"];
-        cal_purple_degree = rd;
-    }
-
-    if (obj["cal_purple_x0"].isNull()) {
-        cal_purple_x0 = 0.0;
-    } else {
-        float rc = obj["cal_purple_x0"];
-        cal_purple_x0 = rc;
-    }
-
-    if (obj["cal_purple_x1"].isNull()) {
-        cal_purple_x1 = 1.0;
-    } else {
-        float rc = obj["cal_purple_x1"];
-        cal_purple_x1 = rc;
-    }
-
-    if (obj["cal_purple_x2"].isNull()) {
-        cal_purple_x2 = 0.0;
-    } else {
-        float rc = obj["cal_purple_x2"];
-        cal_purple_x2 = rc;
-    }
-
-    if (obj["cal_purple_x3"].isNull()) {
-        cal_purple_x3 = 0.0;
-    } else {
-        float rc = obj["cal_purple_x3"];
-        cal_purple_x3 = rc;
-    }
-
-    if (obj["cal_orange_degree"].isNull()) {
-        cal_orange_degree = 1;
-    } else {
-        int rd = obj["cal_orange_degree"];
-        cal_orange_degree = rd;
-    }
-
-    if (obj["cal_orange_x0"].isNull()) {
-        cal_orange_x0 = 0.0;
-    } else {
-        float rc = obj["cal_orange_x0"];
-        cal_orange_x0 = rc;
-    }
-
-    if (obj["cal_orange_x1"].isNull()) {
-        cal_orange_x1 = 1.0;
-    } else {
-        float rc = obj["cal_orange_x1"];
-        cal_orange_x1 = rc;
-    }
-
-    if (obj["cal_orange_x2"].isNull()) {
-        cal_orange_x2 = 0.0;
-    } else {
-        float rc = obj["cal_orange_x2"];
-        cal_orange_x2 = rc;
-    }
-
-    if (obj["cal_orange_x3"].isNull()) {
-        cal_orange_x3 = 0.0;
-    } else {
-        float rc = obj["cal_orange_x3"];
-        cal_orange_x3 = rc;
-    }
-
-    if (obj["cal_blue_degree"].isNull()) {
-        cal_blue_degree = 1;
-    } else {
-        int rd = obj["cal_blue_degree"];
-        cal_blue_degree = rd;
-    }
-
-    if (obj["cal_blue_x0"].isNull()) {
-        cal_blue_x0 = 0.0;
-    } else {
-        float rc = obj["cal_blue_x0"];
-        cal_blue_x0 = rc;
-    }
-
-    if (obj["cal_blue_x1"].isNull()) {
-        cal_blue_x1 = 1.0;
-    } else {
-        float rc = obj["cal_blue_x1"];
-        cal_blue_x1 = rc;
-    }
-
-    if (obj["cal_blue_x2"].isNull()) {
-        cal_blue_x2 = 0.0;
-    } else {
-        float rc = obj["cal_blue_x2"];
-        cal_blue_x2 = rc;
-    }
-
-    if (obj["cal_blue_x3"].isNull()) {
-        cal_blue_x3 = 0.0;
-    } else {
-        float rc = obj["cal_blue_x3"];
-        cal_blue_x3 = rc;
-    }
-
-    if (obj["cal_yellow_degree"].isNull()) {
-        cal_yellow_degree = 1;
-    } else {
-        int rd = obj["cal_yellow_degree"];
-        cal_yellow_degree = rd;
-    }
-
-    if (obj["cal_yellow_x0"].isNull()) {
-        cal_yellow_x0 = 0.0;
-    } else {
-        float rc = obj["cal_yellow_x0"];
-        cal_yellow_x0 = rc;
-    }
-
-    if (obj["cal_yellow_x1"].isNull()) {
-        cal_yellow_x1 = 1.0;
-    } else {
-        float rc = obj["cal_yellow_x1"];
-        cal_yellow_x1 = rc;
-    }
-
-    if (obj["cal_yellow_x2"].isNull()) {
-        cal_yellow_x2 = 0.0;
-    } else {
-        float rc = obj["cal_yellow_x2"];
-        cal_yellow_x2 = rc;
-    }
-
-    if (obj["cal_yellow_x3"].isNull()) {
-        cal_yellow_x3 = 0.0;
-    } else {
-        float rc = obj["cal_yellow_x3"];
-        cal_yellow_x3 = rc;
-    }
-
-    if (obj["cal_pink_degree"].isNull()) {
-        cal_pink_degree = 1;
-    } else {
-        int rd = obj["cal_pink_degree"];
-        cal_pink_degree = rd;
-    }
-
-    if (obj["cal_pink_x0"].isNull()) {
-        cal_pink_x0 = 0.0;
-    } else {
-        float rc = obj["cal_pink_x0"];
-        cal_pink_x0 = rc;
-    }
-
-    if (obj["cal_pink_x1"].isNull()) {
-        cal_pink_x1 = 1.0;
-    } else {
-        float rc = obj["cal_pink_x1"];
-        cal_pink_x1 = rc;
-    }
-
-    if (obj["cal_pink_x2"].isNull()) {
-        cal_pink_x2 = 0.0;
-    } else {
-        float rc = obj["cal_pink_x2"];
-        cal_pink_x2 = rc;
-    }
-
-    if (obj["cal_pink_x3"].isNull()) {
-        cal_pink_x3 = 0.0;
-    } else {
-        float rc = obj["cal_pink_x3"];
-        cal_pink_x3 = rc;
-    }
 
     // GSheet Names
-
     if (obj["sheetName_red"].isNull()) {
         strlcpy(sheetName_red, "", 25);
     } else {
