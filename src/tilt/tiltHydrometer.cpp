@@ -102,7 +102,7 @@ uint32_t tiltHydrometer::text_color()
     case TILT_COLOR_PURPLE:
         return 0x780F;
     case TILT_COLOR_ORANGE:
-        return 0xFDA0;
+        return 0xBAA0; // 0xFDA0;
     case TILT_COLOR_BLUE:
         return 0x001F;
     case TILT_COLOR_YELLOW:
