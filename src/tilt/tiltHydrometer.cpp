@@ -151,7 +151,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #if PRINT_GRAV_UPDATES == 1
     char value[7];
     sprintf(value, "%.4f", d_grav);
-    Log.verbose(F("%s Tilt gravity = %s" CR), tilt_color_names[m_color], value);
+    Log.verbose(F("%s Tilt gravity = %s\r\n"), tilt_color_names[m_color], value);
 #endif
 
     if (config.applyCalibration)
@@ -164,7 +164,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
         /*       for (auto& el : cal_params.items()) {
             std::string coeff = el.key();
             double val = el.value().get<double>();
-            Log.verbose(F("Calibration coefficient %s = %D" CR), coeff.c_str(), val);
+            Log.verbose(F("Calibration coefficient %s = %D\r\n"), coeff.c_str(), val);
 
             if (!coeff.compare("x0")) x0 = val;
             if (!coeff.compare("x1")) x1 = val;
@@ -177,7 +177,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[7];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt calibration corrected gravity = %s" CR), tilt_color_names[m_color], calvalue);
+        Log.verbose(F("%s Tilt calibration corrected gravity = %s\r\n"), tilt_color_names[m_color], calvalue);
     }
 
     if (config.tempCorrect)
@@ -188,7 +188,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[6];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt temperature corrected gravity = %s" CR), tilt_color_names[m_color], calvalue);
+        Log.verbose(F("%s Tilt temperature corrected gravity = %s\r\n"), tilt_color_names[m_color], calvalue);
     }
 
     gravity = (int)round(d_grav * grav_scalar);

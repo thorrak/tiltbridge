@@ -22,7 +22,7 @@ void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDev
             advertisedDevice->getManufacturerData()[2] == 0x02 && advertisedDevice->getManufacturerData()[3] == 0x15)
         {
 #ifdef BLE_PRINT_ALL_DEVICES
-            Log.verbose(F("Advertised iBeacon Device: %s " CR), advertisedDevice->toString().c_str());
+            Log.verbose(F("Advertised iBeacon Device: %s \r\n"), advertisedDevice->toString().c_str());
 #endif
             tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData(), advertisedDevice->getRSSI());
         }
@@ -79,7 +79,7 @@ bool tiltScanner::scan()
             }
             else
             {
-                Log.verbose(F("Scan failed to start." CR));
+                Log.verbose(F("Scan failed to start.\r\n"));
             }
         }
     }

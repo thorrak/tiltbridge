@@ -25,7 +25,7 @@ void serial()
     SERIAL.flush();
     Log.begin(ARDUINO_LOG_LEVEL, &SERIAL, true);
     Log.setPrefix(printTimestamp);
-    Log.notice(F("Serial logging started at %l." CR), BAUD);
+    Log.notice(F("Serial logging started at %l.\r\n"), BAUD);
 }
 
 void printTimestamp(Print *_logOutput)
