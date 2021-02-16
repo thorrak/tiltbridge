@@ -249,6 +249,7 @@ bool dataSendHandler::send_to_brewstatus()
 
 bool dataSendHandler::send_to_google()
 {
+    bool result = true;
 
     if (send_gSheets && !send_lock) {
         // Google Sheets
@@ -256,7 +257,6 @@ bool dataSendHandler::send_to_google()
         send_lock = true;
 
         //tilt_scanner.deinit();
-        bool result = true;
         StaticJsonDocument<GSHEETS_JSON> payload;
         char payload_string[GSHEETS_JSON];
         StaticJsonDocument<GSHEETS_JSON> retval;
@@ -312,7 +312,7 @@ bool dataSendHandler::send_to_google()
 #if (ARDUINO_LOG_LEVEL == 6)
                                 // We need to use a buffer in order to be able to use the response twice
                                 strlcpy(buff, http.getString().c_str(), 1024);
-                                Log.verbose(F("HTTP Response: 200\r\nFull Response:\r\n\t%s"), buff);
+                                Log.verbose(F("HTTP Response: 200\r\nFull Response:\r\n\t%s\r\n"), buff);
                                 deserializeJson(retval, buff);
 //                                deserializeJson(retval, http.getString().c_str());
 #else

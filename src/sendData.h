@@ -29,8 +29,7 @@
 #include <LCBUrl.h>
 #include <ArduinoLog.h>
 
-//#define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
-#define GSCRIPTS_DELAY (1 * 60)       // 10 minute delay between pushes to Google Sheets directly
+#define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60)     // 15 minute delay between pushes to Brewfather
 
