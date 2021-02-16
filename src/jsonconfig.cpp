@@ -353,39 +353,3 @@ void Config::load(JsonObjectConst obj) {
         mqttPushEvery = int(obj["mqttPushEvery"]);
     }
 }
-
-Config::Config() {
-//    strlcpy(mdnsID, "tiltbridge", 32);
-//    invertTFT = false;
-//    update_spiffs = false;  // TODO - Figure out WTF this is
-//    TZoffset = -5;
-//    strlcpy(tempUnit, "F", 2);
-//    smoothFactor = 60;
-//    applyCalibration = false;
-//    tempCorrect = false;
-
-//    for(int x=0;x<TILT_COLORS;x++) {
-//        tilt_calibration[x].degree = 1;
-//        tilt_calibration[x].x0 = 0.0;
-//        tilt_calibration[x].x1 = 1.0;
-//        tilt_calibration[x].x2 = 0.0;
-//        tilt_calibration[x].x3 = 0.0;
-//        strlcpy(gsheets_config[x].name,  "", 26);
-//        strlcpy(gsheets_config[x].link, "", 255);
-//    }
-
-//    strlcpy(localTargetURL, "", 256);
-//    localTargetPushEvery = 30;
-//    strlcpy(brewstatusURL, "", 256);
-//    brewstatusPushEvery = 30;
-//    strlcpy(scriptsURL, "", 256);
-//    strlcpy(scriptsEmail, "", 256);
-//    strlcpy(brewersFriendKey, "", 65);
-//    strlcpy(brewfatherKey, "", 65);
-//    strlcpy(mqttBrokerHost, "", 256);
-//    mqttBrokerPort = 1883;
-//    strlcpy(mqttUsername, "", 51);
-//    strlcpy(mqttPassword, "", 65);
-//    strlcpy(mqttTopic, "", 31);
-//    mqttPushEvery = 30;
-}

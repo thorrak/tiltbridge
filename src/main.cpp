@@ -13,7 +13,7 @@ void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d\r\n"), free, max, frag);
+    Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
 }
 
 void setup() {
@@ -28,7 +28,7 @@ void setup() {
     Log.verbose(F("Initializing WiFi.\r\n"));
     initWiFi();
 
-#ifdef LOG_LOCAL_LEVEL
+#if defined(LOG_LOCAL_LEVEL) && !defined(DISABLE_LOGGING)
     esp_log_level_set("*", ESP_LOG_WARN);
 
     esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
@@ -67,7 +67,7 @@ void setup() {
     initButtons();          // Initialize buttons
 
     // Start independent timers
-#if (ARDUINO_LOG_LEVEL >= 5)
+#if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
 }

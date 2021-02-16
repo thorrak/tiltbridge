@@ -67,18 +67,13 @@ void tiltScanner::deinit()
 bool tiltScanner::scan()
 {
     bool retval = false;
-    if (shouldRun)
-    {
-        if (!pBLEScan->isScanning()) // Check if scan already in progress
-        //Try to start a new scan
-        {
+    if (shouldRun) {
+        if (!pBLEScan->isScanning()) { // Check if scan already in progress
+            //Try to start a new scan
             pBLEScan->clearResults();
-            if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true)) //This no longer ever returns true...possibly a bug??
-            {
+            if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true)) {
                 retval = true; //Scan successfully started.
-            }
-            else
-            {
+            } else {
                 Log.verbose(F("Scan failed to start.\r\n"));
             }
         }

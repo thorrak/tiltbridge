@@ -52,7 +52,7 @@ bool dataSendHandler::send_to_localTarget()
         // Local Target
         send_localTarget = false;
         send_lock = true;
-        tilt_scanner.deinit();
+//        tilt_scanner.deinit();
 
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
         {
@@ -78,7 +78,7 @@ bool dataSendHandler::send_to_localTarget()
             }
         }
         localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
-        tilt_scanner.init();
+//        tilt_scanner.init();
     }
     send_lock = false;
     return result;
@@ -249,85 +249,86 @@ bool dataSendHandler::send_to_brewstatus()
 
 bool dataSendHandler::send_to_google()
 {
-    bool result = true;
 
-    if (send_gSheets && ! send_lock)
-    {
+    if (send_gSheets && !send_lock) {
         // Google Sheets
         send_gSheets = false;
         send_lock = true;
 
-        tilt_scanner.deinit();
-
+        //tilt_scanner.deinit();
+        bool result = true;
+        StaticJsonDocument<GSHEETS_JSON> payload;
+        char payload_string[GSHEETS_JSON];
+        StaticJsonDocument<GSHEETS_JSON> retval;
         int httpResponseCode;
         int numSent = 0;
+#if (ARDUINO_LOG_LEVEL == 6)
+        char buff[1024] = "";
+#endif
 
-        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
-        {
+        // The google sheets handler only fires if we have both a Google Scripts URL to post to, and an email address.
+        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH) {
             Log.verbose(F("Checking for any pending Google Sheets pushes.\r\n"));
+//            Log.verbose(F("Executing on core %i.\r\n"), xPortGetCoreID());
+            printMem();
 
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
-            {
-                // Loop through each of the tilt colors cached by tilt_scanner
-                if (tilt_scanner.tilt(i)->is_loaded())
-                {
-                    // If there is a color present
+            for (uint8_t i = 0; i < TILT_COLORS; i++) {
+                // Loop through each of the tilt colors and check if it is both available and has active data
+                if (tilt_scanner.tilt(i)->is_loaded()) {
+                    // Check if there is a google sheet name associated with the specific Tilt
                     if (strlen(config.gsheets_config[i].name) > 0) {
+                        // If there's a sheet name saved, then we should send the data
                         if (numSent == 0)
                             Log.notice(F("Beginning GSheets check-in.\r\n"));
-                        // If there's a sheet name saved
-                        StaticJsonDocument<GSHEETS_JSON> payload;
                         payload["Beer"] = config.gsheets_config[i].name;
-                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always send in Fahrenheit
                         payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
                         payload["Color"] = tilt_color_names[i];
                         payload["Comment"] = "";
                         payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
                         payload["tzOffset"] = config.TZoffset;
 
-                        char payload_string[GSHEETS_JSON];
                         serializeJson(payload, payload_string);
                         payload.clear();
 
-                        http.useHTTP10(true);                                   // Turn off chunked transfer encoding to parse the stream
                         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
-                        http.setConnectTimeout(3000);                           // Set 3 second timeout
+                        http.setConnectTimeout(6000);                           // Set 6 second timeout
+                        http.setReuse(false);
                         secureClient.setInsecure();                             // Ignore SHA fingerprint
 
-                        if (! http.begin(secureClient, config.scriptsURL))      // Connect secure
-                        {
+                        if (!http.begin(secureClient, config.scriptsURL)) {      // Connect secure
                             Log.error(F("Unable to create secure connection to %s.\r\n"), config.scriptsURL);
                             result = false;
-                        } // Failed to open a connection
-                        else
-                        {
+                        } else {
+                            // Failed to open a connection
                             Log.verbose(F("Created secure connection to %s.\r\n"), config.scriptsURL);
-                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s\r\n"), tilt_color_names[i], payload_string);
+                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\r\n\t\t%s\r\n"), tilt_color_names[i], payload_string);
 
                             http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
                             httpResponseCode = http.POST(payload_string);               // Send the payload
 
-                            if (httpResponseCode == 200)
-                            {
+                            if (httpResponseCode == HTTP_CODE_OK) {  // HTTP_CODE_OK = 200
                                 // POST success
-                                StaticJsonDocument<GSHEETS_JSON> retval;
 #if (ARDUINO_LOG_LEVEL == 6)
-                                Log.verbose(F("JSON Response:\r\n"));
-                                ReadLoggingStream loggingStream(http.getStream(), Serial);
-                                deserializeJson(retval, loggingStream);
-                                Serial.println();
+                                // We need to use a buffer in order to be able to use the response twice
+                                strlcpy(buff, http.getString().c_str(), 1024);
+                                Log.verbose(F("HTTP Response: 200\r\nFull Response:\r\n\t%s"), buff);
+                                deserializeJson(retval, buff);
+//                                deserializeJson(retval, http.getString().c_str());
 #else
-                                deserializeJson(retval, http.getStream());
+                                deserializeJson(retval, http.getString().c_str());
 #endif
-                                strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
-                                saveConfig();
+
+                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str()) != 0) {
+                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<String>().c_str());
+                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
+                                    saveConfig();
+                                }
                                 retval.clear();
                                 numSent++;
-                            } // Response code = 200
-                            else
-                            {
-                                // Post generated an error
-                                Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s\r\n"),
+                            } else {
+                                // Post generated an error (response code != 200)
+                                Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
                                     tilt_color_names[i],
                                     httpResponseCode,
                                     http.errorToString(httpResponseCode).c_str(),
@@ -336,7 +337,7 @@ bool dataSendHandler::send_to_google()
                             } // Response code != 200
                         } // Good connection
                         http.end();
-                        yield();
+                        delay(100);  // Give garbage collection time to run
                     } // Check we have a sheet name for the color
                 } // Check scanner is loaded for color
             } // Loop through colors
@@ -345,7 +346,7 @@ bool dataSendHandler::send_to_google()
         }
         gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
-        tilt_scanner.init();
+        //tilt_scanner.init();
     }
     send_lock = false;
     return result;
@@ -357,41 +358,29 @@ void dataSendHandler::init_mqtt()
 
     if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
     {
-        if (url.isMDNS(config.mqttBrokerHost))
-        {
+        if (url.isMDNS(config.mqttBrokerHost)) {
             Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
                 config.mqttBrokerHost,
                 url.getIP(config.mqttBrokerHost).toString().c_str(),
                 config.mqttBrokerPort);
-        }
-        else
-        {
+        } else {
             Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
                 config.mqttBrokerHost,
                 config.mqttBrokerPort);
         }
 
-        if (mqtt_alreadyinit)
-        {
+        if (mqtt_alreadyinit) {
             mqttClient.disconnect();
             delay(250);
-            if (url.isMDNS(config.mqttBrokerHost))
-            {
+            if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
-            }
-            else
-            {
+            } else {
                 mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
             }
-        }
-        else
-        {
-            if (url.isMDNS(config.mqttBrokerHost))
-            {
+        } else {
+            if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
-            }
-            else
-            {
+            } else {
                 mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
             }
         }
@@ -666,17 +655,14 @@ bool dataSendHandler::send_to_mqtt()
                     }
                 }
             }
+            if (result) {
+                Log.notice(F("Completed publish to MQTT Broker.\r\n"));
+            } else {
+                result = false; // There was an error with the previous send
+                Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
+            }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
-        if (result)
-        {
-            Log.notice(F("Completed publish to MQTT Broker.\r\n"));
-        }
-        else
-        {
-            result = false; // There was an error with the previous send
-            Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
-        }
     }
     send_lock = false;
     return result;
