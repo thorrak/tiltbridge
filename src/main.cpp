@@ -28,7 +28,7 @@ void setup() {
     Log.verbose(F("Initializing WiFi.\r\n"));
     initWiFi();
 
-#ifdef LOG_LOCAL_LEVEL
+#if defined(LOG_LOCAL_LEVEL) && !defined(DISABLE_LOGGING)
     esp_log_level_set("*", ESP_LOG_WARN);
 
     esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
@@ -67,7 +67,7 @@ void setup() {
     initButtons();          // Initialize buttons
 
     // Start independent timers
-#if (ARDUINO_LOG_LEVEL >= 5)
+#if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
 }

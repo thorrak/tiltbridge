@@ -299,7 +299,7 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
 }
 
 void bridge_lcd::check_screen() {
-    if (! onResetScreen && next_screen_at < millis()) {
+    if (!onResetScreen && next_screen_at < millis()) {
         next_screen_at = display_next() * 1000 + millis();
     }
 }

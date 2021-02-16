@@ -53,7 +53,6 @@ struct Config {
     char mqttTopic[31] = "";
     uint16_t mqttPushEvery = 30;
 
-    Config();
     void load(JsonObjectConst);
     void save(JsonObject) const;
 };
