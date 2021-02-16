@@ -142,9 +142,9 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_
         return TILT_NONE;
     }
 
-    uint16_t temp = std::stoul(temp_arr, nullptr, 16);
-    uint16_t gravity = std::stoul(grav_arr, nullptr, 16);
-    uint8_t tx_pwr = std::stoul(tx_pwr_arr, nullptr, 16);
+    uint16_t temp = std::strtoul(temp_arr, nullptr, 16);
+    uint16_t gravity = std::strtoul(grav_arr, nullptr, 16);
+    uint8_t tx_pwr = std::strtoul(tx_pwr_arr, nullptr, 16);
 
     m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr, current_rssi);
 
