@@ -1,7 +1,3 @@
-//
-// Created by John Beeler on 2/18/19.
-//
-
 #ifndef TILTBRIDGE_SENDDATA_H
 #define TILTBRIDGE_SENDDATA_H
 
@@ -14,10 +10,6 @@
 #include <ctime>
 #include <ArduinoJson.h>
 #include <Ticker.h>
-
-#if (ARDUINO_LOG_LEVEL == 6)
-#include <StreamUtils.h>
-#endif
 
 #include <WiFi.h>
 #include <MQTT.h>
@@ -42,7 +34,7 @@
 #define GSCRIPTS_MIN_EMAIL_LENGTH 7
 #define GSHEETS_JSON 512
 
-// This is me being simplifying the reuse of code. The formats for Brewer's
+// This is me being lazy and simplifying the reuse of code. The formats for Brewer's
 // Friend and Brewfather are basically the same so I'm combining them together
 // in one function
 #define BF_MEANS_BREWFATHER 1
