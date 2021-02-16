@@ -666,17 +666,14 @@ bool dataSendHandler::send_to_mqtt()
                     }
                 }
             }
+            if (result) {
+                Log.notice(F("Completed publish to MQTT Broker.\r\n"));
+            } else {
+                result = false; // There was an error with the previous send
+                Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
+            }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
-        if (result)
-        {
-            Log.notice(F("Completed publish to MQTT Broker.\r\n"));
-        }
-        else
-        {
-            result = false; // There was an error with the previous send
-            Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
-        }
     }
     send_lock = false;
     return result;
