@@ -13,7 +13,7 @@ void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d\r\n"), free, max, frag);
+    Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
 }
 
 void setup() {
