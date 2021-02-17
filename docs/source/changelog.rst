@@ -2,7 +2,7 @@ Changelog
 #########
 
 
-v1.0.1 - XXX XX, 2021 - Bugfixes & Configuration Tweaks
+v1.0.1 - Feb 16, 2021 - Bugfixes & Configuration Tweaks
 -------------------------------------------------------
 
 - Rewrite code for storing/loading Google Sheets configuration
