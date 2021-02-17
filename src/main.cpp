@@ -13,22 +13,22 @@ void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.verbose(F("Free Heap: %d, Max Allocated: %d, Frag: %d" CR), free, max, frag);
+    Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
 }
 
 void setup() {
     serial();
 
-    Log.verbose(F("Loading config." CR));
+    Log.verbose(F("Loading config.\r\n"));
     loadConfig();
 
-    Log.verbose(F("Initializing LCD." CR));
+    Log.verbose(F("Initializing LCD.\r\n"));
     lcd.init();
 
-    Log.verbose(F("Initializing WiFi." CR));
+    Log.verbose(F("Initializing WiFi.\r\n"));
     initWiFi();
 
-#ifdef LOG_LOCAL_LEVEL
+#if defined(LOG_LOCAL_LEVEL) && !defined(DISABLE_LOGGING)
     esp_log_level_set("*", ESP_LOG_WARN);
 
     esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
@@ -58,7 +58,7 @@ void setup() {
     esp_log_level_set("dhcpc", ESP_LOG_WARN);
 #endif
 
-    Log.verbose(F("Initializing scanner." CR));
+    Log.verbose(F("Initializing scanner.\r\n"));
     tilt_scanner.init();                        // Initialize the BLE scanner
     tilt_scanner.wait_until_scan_complete();    // Wait until the initial scan completes
 
@@ -67,7 +67,7 @@ void setup() {
     initButtons();          // Initialize buttons
 
     // Start independent timers
-#if (ARDUINO_LOG_LEVEL >= 5)
+#if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
 }
@@ -93,7 +93,7 @@ void loop() {
     // Check semaphores
 
     if (doBoardReset || http_server.restart_requested) {
-        Log.verbose(F("Resetting controller." CR));
+        Log.verbose(F("Resetting controller.\r\n"));
         http_server.restart_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
         delay(1000);
@@ -101,7 +101,7 @@ void loop() {
     }
 
     if (doWiFiReset || http_server.wifi_reset_requested) {
-        Log.verbose(F("Resetting WiFi configuration." CR));
+        Log.verbose(F("Resetting WiFi configuration.\r\n"));
         http_server.wifi_reset_requested = false; 
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
         delay(1000);
@@ -110,13 +110,13 @@ void loop() {
     }
 
     if (http_server.name_reset_requested) {
-        Log.verbose(F("Resetting host name." CR));
+        Log.verbose(F("Resetting host name.\r\n"));
         http_server.name_reset_requested = false;
         mdnsReset();
     }
 
     if (http_server.factoryreset_requested) {
-        Log.verbose(F("Resetting to original settings." CR));
+        Log.verbose(F("Resetting to original settings.\r\n"));
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
         deleteConfigFile();                         // Delete the config file in SPIFFS
@@ -124,13 +124,13 @@ void loop() {
     }
 
     if (http_server.mqtt_init_rqd) {
-        Log.verbose(F("Re-initializing MQTT." CR));
+        Log.verbose(F("Re-initializing MQTT.\r\n"));
         http_server.mqtt_init_rqd = false;
         data_sender.init_mqtt();
     }
 
     if (http_server.lcd_reinit_rqd) {
-        Log.verbose(F("Re-initializing LCD." CR));
+        Log.verbose(F("Re-initializing LCD.\r\n"));
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
     }

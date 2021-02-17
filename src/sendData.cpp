@@ -52,11 +52,11 @@ bool dataSendHandler::send_to_localTarget()
         // Local Target
         send_localTarget = false;
         send_lock = true;
-        tilt_scanner.deinit();
+//        tilt_scanner.deinit();
 
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
         {
-            Log.verbose(F("Calling send to Local Target." CR));
+            Log.verbose(F("Calling send to Local Target.\r\n"));
             DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
@@ -69,16 +69,16 @@ bool dataSendHandler::send_to_localTarget()
 
             if (send_to_url(config.localTargetURL, "", tilt_data, "application/json"))
             {
-                Log.notice(F("Completed send to Local Target." CR));
+                Log.notice(F("Completed send to Local Target.\r\n"));
             }
             else
             {
                 result = false; // There was an error with the previous send
-                Log.verbose(F("Error sending to Local Target." CR));
+                Log.verbose(F("Error sending to Local Target.\r\n"));
             }
         }
         localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
-        tilt_scanner.init();
+//        tilt_scanner.init();
     }
     send_lock = false;
     return result;
@@ -94,15 +94,15 @@ bool send_to_bf_and_bf()
         send_brewersFriend = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
-            Log.verbose(F("Calling send to Brewer's Friend." CR));
+            Log.verbose(F("Calling send to Brewer's Friend.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
             if (retval)
             {
-                Log.notice(F("Completed send to Brewer's Friend." CR));
+                Log.notice(F("Completed send to Brewer's Friend.\r\n"));
             }
             else
             {
-                Log.verbose(F("Error sending to Brewer's Friend." CR));
+                Log.verbose(F("Error sending to Brewer's Friend.\r\n"));
             }
         }
         brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
@@ -116,15 +116,15 @@ bool send_to_bf_and_bf()
         send_brewfather = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
         {
-            Log.verbose(F("Calling send to Brewfather." CR));
+            Log.verbose(F("Calling send to Brewfather.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
             if (retval)
             {
-                Log.notice(F("Completed send to Brewer's Friend." CR));
+                Log.notice(F("Completed send to Brewer's Friend.\r\n"));
             }
             else
             {
-                Log.verbose(F("Error sending to Brewer's Friend." CR));
+                Log.verbose(F("Error sending to Brewer's Friend.\r\n"));
             }
         }
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
@@ -149,7 +149,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     {
         if (strlen(config.brewfatherKey) <= BREWFATHER_MIN_KEY_LENGTH)
         {
-            Log.verbose(F("Brewfather key not populated. Returning." CR));
+            Log.verbose(F("Brewfather key not populated. Returning.\r\n"));
             return false;
         }
         strcpy(url, "http://log.brewfather.net/stream?id=");
@@ -159,7 +159,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     {
         if (strlen(config.brewersFriendKey) <= BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
-            Log.verbose(F("Brewer's Friend key not populated. Returning." CR));
+            Log.verbose(F("Brewer's Friend key not populated. Returning.\r\n"));
             return false;
         }
         strcpy(url, "http://log.brewersfriend.com/stream/");
@@ -167,7 +167,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     }
     else
     {
-        Log.error(F("Invalid value of which_bf passed to send_to_bf_and_bf." CR));
+        Log.error(F("Invalid value of which_bf passed to send_to_bf_and_bf.\r\n"));
         return false;
     }
 
@@ -177,8 +177,8 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     {
         if (tilt_scanner.tilt(i)->is_loaded())
         {
-            Log.verbose(F("Tilt loaded with color name: %s" CR), tilt_scanner.tilt(i)->color_name().c_str());
-            j["name"] = tilt_scanner.tilt(i)->color_name();
+            Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
+            j["name"] = tilt_color_names[i];
             j["temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
             j["temp_unit"] = "F";
             j["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false);
@@ -208,7 +208,7 @@ bool dataSendHandler::send_to_brewstatus()
         send_lock = true;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
         {
-            Log.verbose(F("Calling send to Brew Status." CR));
+            Log.verbose(F("Calling send to Brew Status.\r\n"));
 
             // The payload should look like this when sent to Brewstatus:
             // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=Beer&Comment=Comment')
@@ -227,16 +227,16 @@ bool dataSendHandler::send_to_brewstatus()
                     snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
                             tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
                             tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
-                            tilt_scanner.tilt(i)->color_name().c_str(),
+                            tilt_color_names[i],
                             ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
                     if (send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
                     {
-                        Log.notice(F("Completed send to Brew Status." CR));
+                        Log.notice(F("Completed send to Brew Status.\r\n"));
                     }
                     else
                     {
                         result = false;
-                        Log.verbose(F("Error sending to Brew Status." CR));
+                        Log.verbose(F("Error sending to Brew Status.\r\n"));
                     }
                 }
             }
@@ -251,131 +251,85 @@ bool dataSendHandler::send_to_google()
 {
     bool result = true;
 
-    if (send_gSheets && ! send_lock)
-    {
+    if (send_gSheets && !send_lock) {
         // Google Sheets
         send_gSheets = false;
         send_lock = true;
 
-        tilt_scanner.deinit();
-
+        //tilt_scanner.deinit();
+        StaticJsonDocument<GSHEETS_JSON> payload;
+        char payload_string[GSHEETS_JSON];
+        StaticJsonDocument<GSHEETS_JSON> retval;
         int httpResponseCode;
         int numSent = 0;
+#if (ARDUINO_LOG_LEVEL == 6)
+        char buff[1024] = "";
+#endif
 
-        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH)
-        {
-            Log.verbose(F("Checking for any pending Google Sheets pushes." CR));
+        // The google sheets handler only fires if we have both a Google Scripts URL to post to, and an email address.
+        if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH) {
+            Log.verbose(F("Checking for any pending Google Sheets pushes.\r\n"));
+//            Log.verbose(F("Executing on core %i.\r\n"), xPortGetCoreID());
+            printMem();
 
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
-            {
-                // Loop through each of the tilt colors cached by tilt_scanner
-                if (tilt_scanner.tilt(i)->is_loaded())
-                {
-                    // If there is a color present
-                    if (tilt_scanner.tilt(i)->gsheets_beer_name().length() > 0)
-                    {
+            for (uint8_t i = 0; i < TILT_COLORS; i++) {
+                // Loop through each of the tilt colors and check if it is both available and has active data
+                if (tilt_scanner.tilt(i)->is_loaded()) {
+                    // Check if there is a google sheet name associated with the specific Tilt
+                    if (strlen(config.gsheets_config[i].name) > 0) {
+                        // If there's a sheet name saved, then we should send the data
                         if (numSent == 0)
-                            Log.notice(F("Beginning GSheets check-in." CR));
-                        // If there's a sheet name saved
-                        StaticJsonDocument<GSHEETS_JSON> payload;
-                        payload["Beer"] = tilt_scanner.tilt(i)->gsheets_beer_name();
-                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                            Log.notice(F("Beginning GSheets check-in.\r\n"));
+                        payload["Beer"] = config.gsheets_config[i].name;
+                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always send in Fahrenheit
                         payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-                        payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                        payload["Color"] = tilt_color_names[i];
                         payload["Comment"] = "";
                         payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
                         payload["tzOffset"] = config.TZoffset;
 
-                        char payload_string[GSHEETS_JSON];
                         serializeJson(payload, payload_string);
                         payload.clear();
 
-                        http.useHTTP10(true);                                   // Turn off chunked transfer encoding to parse the stream
                         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
-                        http.setConnectTimeout(3000);                           // Set 3 second timeout
+                        http.setConnectTimeout(6000);                           // Set 6 second timeout
+                        http.setReuse(false);
                         secureClient.setInsecure();                             // Ignore SHA fingerprint
 
-                        if (! http.begin(secureClient, config.scriptsURL))      // Connect secure
-                        {
-                            Log.error(F("Unable to create secure connection to %s." CR), config.scriptsURL);
+                        if (!http.begin(secureClient, config.scriptsURL)) {      // Connect secure
+                            Log.error(F("Unable to create secure connection to %s.\r\n"), config.scriptsURL);
                             result = false;
-                        } // Failed to open a connection
-                        else
-                        {
-                            Log.verbose(F("Created secure connection to %s." CR), config.scriptsURL);
-                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\n\t\t%s" CR), tilt_scanner.tilt(i)->color_name().c_str(), payload_string);
+                        } else {
+                            // Failed to open a connection
+                            Log.verbose(F("Created secure connection to %s.\r\n"), config.scriptsURL);
+                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\r\n\t\t%s\r\n"), tilt_color_names[i], payload_string);
 
                             http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
                             httpResponseCode = http.POST(payload_string);               // Send the payload
 
-                            if (httpResponseCode == 200)
-                            {
+                            if (httpResponseCode == HTTP_CODE_OK) {  // HTTP_CODE_OK = 200
                                 // POST success
-                                StaticJsonDocument<GSHEETS_JSON> retval;
 #if (ARDUINO_LOG_LEVEL == 6)
-                                Log.verbose(F("JSON Response:" CR));
-                                ReadLoggingStream loggingStream(http.getStream(), Serial);
-                                deserializeJson(retval, loggingStream);
-                                Serial.println();
+                                // We need to use a buffer in order to be able to use the response twice
+                                strlcpy(buff, http.getString().c_str(), 1024);
+                                Log.verbose(F("HTTP Response: 200\r\nFull Response:\r\n\t%s\r\n"), buff);
+                                deserializeJson(retval, buff);
+//                                deserializeJson(retval, http.getString().c_str());
 #else
-                                deserializeJson(retval, http.getStream());
+                                deserializeJson(retval, http.getString().c_str());
 #endif
-                                switch(i)
-                                {
-                                    case(0):
-                                    {
-                                        strlcpy(config.link_red, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(1):
-                                    {
-                                        strlcpy(config.link_green, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(2):
-                                    {
-                                        strlcpy(config.link_black, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(3):
-                                    {
-                                        strlcpy(config.link_purple, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(4):
-                                    {
-                                        strlcpy(config.link_orange, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(5):
-                                    {
-                                        strlcpy(config.link_blue, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(6):
-                                    {
-                                        strlcpy(config.link_yellow, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    case(7):
-                                    {
-                                        strlcpy(config.link_pink, retval["doclongurl"].as<String>().c_str(), 255);
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        break;
-                                    }
+
+                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str()) != 0) {
+                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<String>().c_str());
+                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
+                                    saveConfig();
                                 }
-                                saveConfig();
                                 retval.clear();
                                 numSent++;
-                            } // Response code = 200
-                            else
-                            {
-                                // Post generated an error
-                                Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\n%s" CR),
-                                    tilt_scanner.tilt(i)->color_name().c_str(),
+                            } else {
+                                // Post generated an error (response code != 200)
+                                Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
+                                    tilt_color_names[i],
                                     httpResponseCode,
                                     http.errorToString(httpResponseCode).c_str(),
                                     http.getString().c_str());
@@ -383,16 +337,16 @@ bool dataSendHandler::send_to_google()
                             } // Response code != 200
                         } // Good connection
                         http.end();
-                        yield();
+                        delay(100);  // Give garbage collection time to run
                     } // Check we have a sheet name for the color
                 } // Check scanner is loaded for color
             } // Loop through colors
-            Log.notice(F("Submitted %l sheet%s to Google." CR), numSent, (numSent== 1) ? "" : "s");
+            Log.notice(F("Submitted %l sheet%s to Google.\r\n"), numSent, (numSent== 1) ? "" : "s");
 
         }
         gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
-        tilt_scanner.init();
+        //tilt_scanner.init();
     }
     send_lock = false;
     return result;
@@ -404,41 +358,29 @@ void dataSendHandler::init_mqtt()
 
     if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
     {
-        if (url.isMDNS(config.mqttBrokerHost))
-        {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d" CR),
+        if (url.isMDNS(config.mqttBrokerHost)) {
+            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
                 config.mqttBrokerHost,
                 url.getIP(config.mqttBrokerHost).toString().c_str(),
                 config.mqttBrokerPort);
-        }
-        else
-        {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d" CR),
+        } else {
+            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
                 config.mqttBrokerHost,
                 config.mqttBrokerPort);
         }
 
-        if (mqtt_alreadyinit)
-        {
+        if (mqtt_alreadyinit) {
             mqttClient.disconnect();
             delay(250);
-            if (url.isMDNS(config.mqttBrokerHost))
-            {
+            if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
-            }
-            else
-            {
+            } else {
                 mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
             }
-        }
-        else
-        {
-            if (url.isMDNS(config.mqttBrokerHost))
-            {
+        } else {
+            if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
-            }
-            else
-            {
+            } else {
                 mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
             }
         }
@@ -490,29 +432,29 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
                 // Use the IP address we resolved (necessary for mDNS)
-                Log.verbose(F("Connecting to: %s at %s on port %l" CR),
+                Log.verbose(F("Connecting to: %s at %s on port %l\r\n"),
                             lcburl.getHost().c_str(),
                             lcburl.getIP(lcburl.getHost().c_str() ).toString().c_str(),
                             lcburl.getPort());
             else
-                Log.verbose(F("Connecting to: %s on port %l" CR),
+                Log.verbose(F("Connecting to: %s on port %l\r\n"),
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
             if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
             {
-                Log.verbose(F("Connected to: %s." CR), lcburl.getHost().c_str());
+                Log.verbose(F("Connected to: %s.\r\n"), lcburl.getHost().c_str());
 
                 // Open POST connection
                 if (lcburl.getAfterPath().length() > 0)
                 {
-                    Log.verbose(F("POST /%s%s HTTP/1.1" CR),
+                    Log.verbose(F("POST /%s%s HTTP/1.1\r\n"),
                                 lcburl.getPath().c_str(),
                                 lcburl.getAfterPath().c_str());
                 }
                 else
                 {
-                    Log.verbose(F("POST /%s HTTP/1.1" CR), lcburl.getPath().c_str());
+                    Log.verbose(F("POST /%s HTTP/1.1\r\n"), lcburl.getPath().c_str());
                 }
                 client.print(F("POST /"));
                 client.print(lcburl.getPath().c_str());
@@ -525,31 +467,31 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 // Begin headers
                 //
                 // Host
-                Log.verbose(F("Host: %s:%l" CR), lcburl.getHost().c_str(), lcburl.getPort());
+                Log.verbose(F("Host: %s:%l\r\n"), lcburl.getHost().c_str(), lcburl.getPort());
                 client.print(F("Host: "));
                 client.print(lcburl.getHost().c_str());
                 client.print(F(":"));
                 client.println(lcburl.getPort());
                 //
-                Log.verbose(F("Connection: close" CR));
+                Log.verbose(F("Connection: close\r\n"));
                 client.println(F("Connection: close"));
                 // Content
-                Log.verbose(F("Content-Length: %l" CR), strlen(dataToSend));
+                Log.verbose(F("Content-Length: %l\r\n"), strlen(dataToSend));
                 client.print(F("Content-Length: "));
                 client.println(strlen(dataToSend));
                 // Content Type
-                Log.verbose(F("Content-Type: %s" CR), contentType);
+                Log.verbose(F("Content-Type: %s\r\n"), contentType);
                 client.print(F("Content-Type: "));
                 client.println(contentType);
                 // API Key
                 if (strlen(apiKey) > 2)
                 {
-                        Log.verbose(F("X-API-KEY: %s" CR), apiKey);
+                        Log.verbose(F("X-API-KEY: %s\r\n"), apiKey);
                         client.print(F("X-API-KEY: "));
                         client.println(apiKey);
                 }
                 // Terminate headers with a blank line
-                Log.verbose(F("End headers." CR));
+                Log.verbose(F("End headers.\r\n"));
                 client.println();
                 //
                 // End Headers
@@ -560,7 +502,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 char status[32] = {0};
                 client.readBytesUntil('\r', status, sizeof(status));
                 client.stop();
-                Log.verbose(F("Status: %s" CR), status);
+                Log.verbose(F("Status: %s\r\n"), status);
                 if (strcmp(status + 9, "200 OK") == 0)
                 {
                     if (checkBody == true) // We can do additional checks here
@@ -569,42 +511,42 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                         String response = String(status);
                         if (response.indexOf(bodyCheck) >= 0)
                         {
-                            Log.verbose(F("Response body ok." CR));
+                            Log.verbose(F("Response body ok.\r\n"));
                             retVal = true;
                         }
                         else
                         {
-                            Log.error(F("Unexpected body content: %s" CR), response.c_str());
+                            Log.error(F("Unexpected body content: %s\r\n"), response.c_str());
                             retVal = false;
                         }
                     }
                     else
                     {
-                        Log.verbose(F("Post to %s was successful." CR), lcburl.getHost().c_str());
+                        Log.verbose(F("Post to %s was successful.\r\n"), lcburl.getHost().c_str());
                         retVal = true;
                     }
                 }
                 else
                 {
-                    Log.error(F("Unexpected status: %s" CR), status);
+                    Log.error(F("Unexpected status: %s\r\n"), status);
                     retVal = false;
                 }
             }
             else
             {
-                Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)" CR),
+                Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)\r\n"),
                             lcburl.getHost().c_str(), lcburl.getPort(), client.connected());
                 retVal = false;
             }
         }
         else
         {
-            Log.error(F("Invalid target: %s." CR), url);
+            Log.error(F("Invalid target: %s.\r\n"), url);
         }
     }
     else
     {
-        Log.notice(F("No URL provided, or no data to send." CR));
+        Log.notice(F("No URL provided, or no data to send.\r\n"));
         retVal = false;
     }
     return retVal;
@@ -624,7 +566,7 @@ bool dataSendHandler::send_to_mqtt()
         send_lock = true;
         if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
         {
-            Log.verbose(F("Publishing available results to MQTT Broker." CR));
+            Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
             // Function sends three payloads with the first two designed to
             // support autodiscovery and configuration on Home Assistant.
             // General payload formatted as json when sent to mqTT:
@@ -639,7 +581,7 @@ bool dataSendHandler::send_to_mqtt()
                     char tilt_topic[50] = {'\0'};
                     snprintf(tilt_topic, 50, "%s/tilt_%s",
                             config.mqttTopic,
-                            tilt_scanner.tilt(i)->color_name().c_str());
+                            tilt_color_names[i]);
 
                     for (uint8_t j = 0; j < 3; j++)
                     {
@@ -652,7 +594,7 @@ bool dataSendHandler::send_to_mqtt()
                         case 0: //Home Assistant Config Topic for Temperature
                             sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sT/config",
                                     config.mqttTopic,
-                                    tilt_scanner.tilt(i)->color_name().c_str());
+                                    tilt_color_names[i]);
                             payload["dev_cla"] = "temperature";
                             strcat(unit, "\u00b0");
                             strcat(unit, config.tempUnit);
@@ -660,7 +602,7 @@ bool dataSendHandler::send_to_mqtt()
                             payload["ic"] = "mdi:thermometer";
                             payload["stat_t"] = tilt_topic;
                             strcat(tilt_name, "Tilt Temperature - ");
-                            strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
+                            strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.Temp}}";
                             retain = true;
@@ -668,13 +610,13 @@ bool dataSendHandler::send_to_mqtt()
                         case 1: //Home Assistant Config Topic for Sp Gravity
                             sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/config",
                                     config.mqttTopic,
-                                    tilt_scanner.tilt(i)->color_name().c_str());
+                                    tilt_color_names[i]);
                             //payload["dev_cla"] = "None";
                             payload["unit_of_meas"] = "SG";
                             //payload["ic"] = "";
                             payload["stat_t"] = tilt_topic;
                             strcat(tilt_name, "Tilt Specific Gravity - ");
-                            strcat(tilt_name, tilt_scanner.tilt(i)->color_name().c_str());
+                            strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.SG}}";
                             retain = true;
@@ -685,7 +627,7 @@ bool dataSendHandler::send_to_mqtt()
                             char current_temp[5] = {'\0'};
                             strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
                             strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
-                            payload["Color"] = tilt_scanner.tilt(i)->color_name();
+                            payload["Color"] = tilt_color_names[i];
                             payload["timeStamp"] = (int)std::time(0);
                             payload["fermunits"] = "SG";
                             payload["SG"] = current_grav;
@@ -697,12 +639,12 @@ bool dataSendHandler::send_to_mqtt()
                         char payload_string[300] = {'\0'};
                         serializeJson(payload, payload_string);
 
-                        Log.verbose(F("Topic: %s" CR), m_topic);
-                        Log.verbose(F("Message: %s" CR), payload_string);
+                        Log.verbose(F("Topic: %s\r\n"), m_topic);
+                        Log.verbose(F("Message: %s\r\n"), payload_string);
 
                         if (!mqttClient.connected() && j == 0)
                         {
-                            Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker" CR));
+                            Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker\r\n"));
                             connect_mqtt();
                         }
 
@@ -713,17 +655,14 @@ bool dataSendHandler::send_to_mqtt()
                     }
                 }
             }
+            if (result) {
+                Log.notice(F("Completed publish to MQTT Broker.\r\n"));
+            } else {
+                result = false; // There was an error with the previous send
+                Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
+            }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
-        if (result)
-        {
-            Log.notice(F("Completed publish to MQTT Broker." CR));
-        }
-        else
-        {
-            result = false; // There was an error with the previous send
-            Log.verbose(F("Error publishing to MQTT Broker." CR));
-        }
     }
     send_lock = false;
     return result;

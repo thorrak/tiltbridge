@@ -5,6 +5,29 @@
 #include "tiltHydrometer.h"
 #include "jsonconfig.h"
 
+const char* tilt_color_names[] = {
+        "Red",
+        "Green",
+        "Black",
+        "Purple",
+        "Orange",
+        "Blue",
+        "Yellow",
+        "Pink"
+};
+
+
+const uint32_t tilt_text_colors[] = {
+        0xF800, // Red
+        0x07E0, // Green
+        0xFFFF, // Black (white)
+        0x780F, // Purple
+        0xBAA0, // Orange (hook 'em)
+        0x001F, // Blue
+        0xFFE0, // Yellow
+        0xFE19  // Pink
+};
+
 tiltHydrometer::tiltHydrometer(uint8_t color)
 {
     m_loaded = false;
@@ -62,107 +85,6 @@ uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
     }
 }
 
-std::string tiltHydrometer::color_name()
-{
-    // If these change, modify TILT_COLOR_SIZE (currrently 7 for "Yellow" + 1)
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return "Red";
-    case TILT_COLOR_GREEN:
-        return "Green";
-    case TILT_COLOR_BLACK:
-        return "Black";
-    case TILT_COLOR_PURPLE:
-        return "Purple";
-    case TILT_COLOR_ORANGE:
-        return "Orange";
-    case TILT_COLOR_BLUE:
-        return "Blue";
-    case TILT_COLOR_YELLOW:
-        return "Yellow";
-    case TILT_COLOR_PINK:
-        return "Pink";
-    default:
-        return "None";
-    }
-}
-
-uint32_t tiltHydrometer::text_color()
-{
-
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return 0xF800;
-    case TILT_COLOR_GREEN:
-        return 0x07E0;
-    case TILT_COLOR_BLACK:
-        return 0xFFFF;
-    case TILT_COLOR_PURPLE:
-        return 0x780F;
-    case TILT_COLOR_ORANGE:
-        return 0xFDA0;
-    case TILT_COLOR_BLUE:
-        return 0x001F;
-    case TILT_COLOR_YELLOW:
-        return 0xFFE0;
-    case TILT_COLOR_PINK:
-        return 0xFE19;
-    default:
-        return 0xFFFF;
-    }
-}
-
-std::string tiltHydrometer::gsheets_beer_name()
-{
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return config.sheetName_red;
-    case TILT_COLOR_GREEN:
-        return config.sheetName_green;
-    case TILT_COLOR_BLACK:
-        return config.sheetName_black;
-    case TILT_COLOR_PURPLE:
-        return config.sheetName_purple;
-    case TILT_COLOR_ORANGE:
-        return config.sheetName_orange;
-    case TILT_COLOR_BLUE:
-        return config.sheetName_blue;
-    case TILT_COLOR_YELLOW:
-        return config.sheetName_yellow;
-    case TILT_COLOR_PINK:
-        return config.sheetName_pink;
-    default:
-        return "";
-    }
-}
-
-std::string tiltHydrometer::gsheets_link_name()
-{
-    switch (m_color)
-    {
-    case TILT_COLOR_RED:
-        return config.link_red;
-    case TILT_COLOR_GREEN:
-        return config.link_green;
-    case TILT_COLOR_BLACK:
-        return config.link_black;
-    case TILT_COLOR_PURPLE:
-        return config.link_purple;
-    case TILT_COLOR_ORANGE:
-        return config.link_orange;
-    case TILT_COLOR_BLUE:
-        return config.link_blue;
-    case TILT_COLOR_YELLOW:
-        return config.link_yellow;
-    case TILT_COLOR_PINK:
-        return config.link_pink;
-    default:
-        return "";
-    }
-}
 
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
@@ -229,72 +151,20 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #if PRINT_GRAV_UPDATES == 1
     char value[7];
     sprintf(value, "%.4f", d_grav);
-    Log.verbose(F("%s Tilt gravity = %s" CR), color_name().c_str(), value);
+    Log.verbose(F("%s Tilt gravity = %s\r\n"), tilt_color_names[m_color], value);
 #endif
 
     if (config.applyCalibration)
     {
-        double x0 = 0.0;
-        double x1 = 1.0;
-        double x2 = 0.0;
-        double x3 = 0.0;
-
-        switch (m_color)
-        {
-        case TILT_COLOR_RED:
-            x0 = config.cal_red_x0;
-            x1 = config.cal_red_x1;
-            x2 = config.cal_red_x2;
-            x3 = config.cal_red_x3;
-            break;
-        case TILT_COLOR_GREEN:
-            x0 = config.cal_green_x0;
-            x1 = config.cal_green_x1;
-            x2 = config.cal_green_x2;
-            x3 = config.cal_green_x3;
-            break;
-        case TILT_COLOR_BLACK:
-            x0 = config.cal_black_x0;
-            x1 = config.cal_black_x1;
-            x2 = config.cal_black_x2;
-            x3 = config.cal_black_x3;
-            break;
-        case TILT_COLOR_PURPLE:
-            x0 = config.cal_purple_x0;
-            x1 = config.cal_purple_x1;
-            x2 = config.cal_purple_x2;
-            x3 = config.cal_purple_x3;
-            break;
-        case TILT_COLOR_ORANGE:
-            x0 = config.cal_orange_x0;
-            x1 = config.cal_orange_x1;
-            x2 = config.cal_orange_x2;
-            x3 = config.cal_orange_x3;
-            break;
-        case TILT_COLOR_BLUE:
-            x0 = config.cal_blue_x0;
-            x1 = config.cal_blue_x1;
-            x2 = config.cal_blue_x2;
-            x3 = config.cal_blue_x3;
-            break;
-        case TILT_COLOR_YELLOW:
-            x0 = config.cal_yellow_x0;
-            x1 = config.cal_yellow_x1;
-            x2 = config.cal_yellow_x2;
-            x3 = config.cal_yellow_x3;
-            break;
-        case TILT_COLOR_PINK:
-            x0 = config.cal_pink_x0;
-            x1 = config.cal_pink_x1;
-            x2 = config.cal_pink_x2;
-            x3 = config.cal_pink_x3;
-            break;
-        }
+        double x0 = config.tilt_calibration[m_color].x0;
+        double x1 = config.tilt_calibration[m_color].x1;
+        double x2 = config.tilt_calibration[m_color].x2;
+        double x3 = config.tilt_calibration[m_color].x3;
 
         /*       for (auto& el : cal_params.items()) {
             std::string coeff = el.key();
             double val = el.value().get<double>();
-            Log.verbose(F("Calibration coefficient %s = %D" CR), coeff.c_str(), val);
+            Log.verbose(F("Calibration coefficient %s = %D\r\n"), coeff.c_str(), val);
 
             if (!coeff.compare("x0")) x0 = val;
             if (!coeff.compare("x1")) x1 = val;
@@ -307,7 +177,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[7];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt calibration corrected gravity = %s" CR), color_name().c_str(), calvalue);
+        Log.verbose(F("%s Tilt calibration corrected gravity = %s\r\n"), tilt_color_names[m_color], calvalue);
     }
 
     if (config.tempCorrect)
@@ -318,7 +188,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 
         char calvalue[6];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt temperature corrected gravity = %s" CR), color_name().c_str(), calvalue);
+        Log.verbose(F("%s Tilt temperature corrected gravity = %s\r\n"), tilt_color_names[m_color], calvalue);
     }
 
     gravity = (int)round(d_grav * grav_scalar);
@@ -349,17 +219,21 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
     StaticJsonDocument<TILT_DATA_SIZE> j;
 
-    j["color"] = color_name();
+    j["color"] = tilt_color_names[m_color];
     j["temp"] = converted_temp(false);
     j["tempUnit"] = is_celsius() ? "C" : "F";
     j["gravity"] = converted_gravity(use_raw_gravity);
-    j["gsheets_name"] = gsheets_beer_name();
-    j["gsheets_link"] = gsheets_link_name();
     j["weeks_on_battery"] = weeks_since_last_battery_change;
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
     j["fwVersion"] = version_code;
     j["rssi"] = rssi;
+
+    // These are loaded from config, but are included in the JSON for simplicity in generating the dashboard without
+    // an additional API call
+    j["gsheets_name"] = config.gsheets_config[m_color].name;
+    j["gsheets_link"] = config.gsheets_config[m_color].link;
+
 
     serializeJson(j, json_string, TILT_DATA_SIZE);
 }

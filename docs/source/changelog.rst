@@ -2,6 +2,15 @@ Changelog
 #########
 
 
+v1.0.1 - Feb 16, 2021 - Bugfixes & Configuration Tweaks
+-------------------------------------------------------
+
+- Rewrite code for storing/loading Google Sheets configuration
+- Fix issue that can cause Google Sheets posts to periodically fail
+- Corrected delay timers for Google Sheets, Brewer's Friend, and BrewFather
+- Other behind-the-scenes cleanup
+
+
 v1.0.0 - Feb 12, 2021 - UI Overhaul, Scanner Overhaul, and loads more
 ---------------------------------------------------------------------
 

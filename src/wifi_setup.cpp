@@ -11,7 +11,7 @@ void saveParamsCallback() {
 
 void apCallback(WiFiManager *myWiFiManager) {
     // Callback to display the WiFi LCD notification and set bandwidth
-    Log.verbose(F("Entered config mode: SSID: %s, IP: %s" CR), myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
+    Log.verbose(F("Entered config mode: SSID: %s, IP: %s\r\n"), myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
     esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW_HT20);  // Set the bandwidth of ESP32 interface 
 }
@@ -33,7 +33,7 @@ void mdnsReset() {
         Log.error(F("Error resetting MDNS responder."));
         ESP.restart();
     } else {
-        Log.notice(F("mDNS responder restarted, hostname: %s.local." CR), WiFi.getHostname());
+        Log.notice(F("mDNS responder restarted, hostname: %s.local.\r\n"), WiFi.getHostname());
         MDNS.addService("http", "tcp", WEBPORT);
         MDNS.addService("tiltbridge", "tcp", WEBPORT);
 #if DOTELNET == true
@@ -67,7 +67,7 @@ void initWiFi() {
     wm.addParameter(&custom_mdns_name);
 
     if (!wm.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
-        Log.warning(F("Failed to connect and/or hit timeout. Restarting." CR));
+        Log.warning(F("Failed to connect and/or hit timeout. Restarting.\r\n"));
         ESP.restart();
     } else {
         // We finished with portal (We were configured)
@@ -95,7 +95,7 @@ void initWiFi() {
     }
 
     if (!MDNS.begin(config.mdnsID)) {
-        Log.error(F("Error setting up MDNS responder." CR));
+        Log.error(F("Error setting up MDNS responder.\r\n"));
     }
 
     MDNS.addService("http", "tcp", WEBPORT);       // technically we should wait on this, but I'm impatient.

@@ -22,7 +22,7 @@ void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDev
             advertisedDevice->getManufacturerData()[2] == 0x02 && advertisedDevice->getManufacturerData()[3] == 0x15)
         {
 #ifdef BLE_PRINT_ALL_DEVICES
-            Log.verbose(F("Advertised iBeacon Device: %s " CR), advertisedDevice->toString().c_str());
+            Log.verbose(F("Advertised iBeacon Device: %s \r\n"), advertisedDevice->toString().c_str());
 #endif
             tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData(), advertisedDevice->getRSSI());
         }
@@ -67,19 +67,14 @@ void tiltScanner::deinit()
 bool tiltScanner::scan()
 {
     bool retval = false;
-    if (shouldRun)
-    {
-        if (!pBLEScan->isScanning()) // Check if scan already in progress
-        //Try to start a new scan
-        {
+    if (shouldRun) {
+        if (!pBLEScan->isScanning()) { // Check if scan already in progress
+            //Try to start a new scan
             pBLEScan->clearResults();
-            if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true)) //This no longer ever returns true...possibly a bug??
-            {
+            if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true)) {
                 retval = true; //Scan successfully started.
-            }
-            else
-            {
-                Log.verbose(F("Scan failed to start." CR));
+            } else {
+                Log.verbose(F("Scan failed to start.\r\n"));
             }
         }
     }
@@ -147,9 +142,9 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_
         return TILT_NONE;
     }
 
-    uint16_t temp = std::stoul(temp_arr, nullptr, 16);
-    uint16_t gravity = std::stoul(grav_arr, nullptr, 16);
-    uint8_t tx_pwr = std::stoul(tx_pwr_arr, nullptr, 16);
+    uint16_t temp = std::strtoul(temp_arr, nullptr, 16);
+    uint16_t gravity = std::strtoul(grav_arr, nullptr, 16);
+    uint8_t tx_pwr = std::strtoul(tx_pwr_arr, nullptr, 16);
 
     m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr, current_rssi);
 
@@ -164,16 +159,14 @@ tiltHydrometer *tiltScanner::tilt(uint8_t color)
 void tiltScanner::tilt_to_json_string(char *all_tilt_json, bool use_raw_gravity)
 {
     DynamicJsonDocument doc(TILT_ALL_DATA_SIZE);
-    for (uint8_t i = 0; i < TILT_COLORS; i++)
+    char tilt_data[TILT_DATA_SIZE];
+    for(uint8_t i = 0; i < TILT_COLORS; i++)
     {
         if (m_tilt_devices[i]->is_loaded())
         {
-            char color[TILT_COLOR_SIZE];
-            strlcpy(color, m_tilt_devices[i]->color_name().c_str(), TILT_COLOR_SIZE);
-            char tilt_data[TILT_DATA_SIZE];
             tilt_data[0] = {'\0'};
             m_tilt_devices[i]->to_json_string(tilt_data, use_raw_gravity);
-            doc[color] = serialized(tilt_data);
+            doc[tilt_color_names[i]] = serialized(tilt_data);
         }
     }
     serializeJson(doc, all_tilt_json, TILT_ALL_DATA_SIZE);
