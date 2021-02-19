@@ -279,54 +279,59 @@ var TiltPoints = {
         }
     },
     regression: function () {
-        if (this.points.length < 2) {
-            $("#linear_polynomial").hide();
-            $("#quadratic_polynomial").hide();
-            $("#cubic_polynomial").hide();
-            $("#graph").hide();
+        var degree;
+        $("#linear_polynomial").hide();
+        $("#quadratic_polynomial").hide();
+        $("#cubic_polynomial").hide();
+        $("#graph").hide();
+        if (this.points.length > 3) {
+            degree = 3;  // Cubic fit
+            $("#cubic_polynomial").show();
+        } else if (this.points.length === 3) {
+            degree = 2;  // Quadratic fit
+            $("#quadratic_polynomial").show();
+        } else if (this.points.length === 2) {
+            degree = 1;  // Linear fit (or add constant)
+            $("#linear_polynomial").show();
+        } else {
+            // Not enough points to run a regression
+            document.getElementById('degree').value = 0;
             return;
         }
-        var firstRegression = regression('polynomial', this.points, 1, {
+        document.getElementById('degree').value = degree;
+
+        // For the regressions, we're going to run all 3 if we have the points, even though the UI only shows/has the
+        // user submit the highest order polynomial fit. We may decide to let the user select at some point in the
+        // future (and the code is already written to run all three).
+        var firstRegression, secondRegression, thirdRegression;
+
+        // Always run the linear regression
+        firstRegression = regression('polynomial', this.points, 1, {
             precision: 5
         });
-        var secondRegression, thirdRegression;
+        document.getElementById('linearFitx0').value = firstRegression.x0;
+        document.getElementById('linearFitx1').value = firstRegression.x1;
+        fit = firstRegression.string;
+
         if (this.points.length > 2) {
             secondRegression = regression('polynomial', this.points, 2, {
                 precision: 5
             });
-        }
-        if (this.points.length > 3) {
-            thirdRegression = regression('polynomial', this.points, 3, {
-                precision: 5
-            });
-        }
-
-        $("#quadratic_polynomial").hide();
-        $("#cubic_polynomial").hide();
-        document.getElementById('linearFitx0').value = firstRegression.x0;
-        document.getElementById('linearFitx1').value = firstRegression.x1;
-        $("#linear_polynomial").show();
-        fit = firstRegression.string;
-
-        if (this.points.length > 2) {
-            $("#linear_polynomial").hide();
-            $("#cubic_polynomial").hide();
             document.getElementById('quadraticFitx0').value = secondRegression.x0;
             document.getElementById('quadraticFitx1').value = secondRegression.x1;
             document.getElementById('quadraticFitx2').value = secondRegression.x2;
-            $("#quadratic_polynomial").show();
             fit = secondRegression.string;
 
         }
 
         if (this.points.length > 3) {
-            $("#linear_polynomial").hide();
-            $("#quadratic_polynomial").hide();
+            thirdRegression = regression('polynomial', this.points, 3, {
+                precision: 5
+            });
             document.getElementById('cubicFitx0').value = thirdRegression.x0;
             document.getElementById('cubicFitx1').value = thirdRegression.x1;
             document.getElementById('cubicFitx2').value = thirdRegression.x2;
             document.getElementById('cubicFitx3').value = thirdRegression.x3;
-            $("#cubic_polynomial").show();
             fit = thirdRegression.string;
         }
 
@@ -341,8 +346,8 @@ var TiltPoints = {
             ]
         });
 
-        // caluate errors
-        var secoe, thridoe;
+        // calculate errors
+        var secoe, thirdcoe;
 
         var first_error = [];
         var first_value = [];
@@ -392,13 +397,13 @@ var TiltPoints = {
         }
 
         if (this.points.length > 3) {
+            window.thirdError = third_error;
             window.equation3rd = thirdcoe;
             window.thirdValue = third_value;
-            window.thirdError = third_error;
         } else if (typeof window.equation3rd != "undefined") {
+            delete (window.thirdError);
             delete (window.equation3rd);
             delete (window.thirdValue);
-            delete (window.thirdError);
         }
 
     },
