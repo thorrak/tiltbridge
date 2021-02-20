@@ -444,6 +444,60 @@ function instrumentchange() {
     instrument($("#instrument").val() == "hydro");
 }
 
+function populateCalibrationFormula(TiltCalibration, tilt_no) {
+    var tilt_prefix = "tilt" + tilt_no;
+    if (TiltCalibration.degree >= 3) {
+        $("#" + tilt_prefix + "cubic").show();
+        $("#" + tilt_prefix + "x3").text(TiltCalibration.x3);
+    }
+
+    if (TiltCalibration.degree >= 2) {
+        $("#" + tilt_prefix + "quadratic").show();
+        $("#" + tilt_prefix + "x2").text(TiltCalibration.x2);
+    }
+
+    $("#" + tilt_prefix + "x1").text(TiltCalibration.x1);
+    $("#" + tilt_prefix + "x0").text(TiltCalibration.x0);
+}
+
+function populateConfig(callback = null) { // Get configuration settings, populate forms
+    var url = "/settings/json/";
+    var config = $.getJSON(url, function () {
+        //settingsAlert.warning()
+    })
+        .done(function (config) {
+            try {
+                populateCalibrationFormula(config.Red, 0);
+                populateCalibrationFormula(config.Green, 1);
+                populateCalibrationFormula(config.Black, 2);
+                populateCalibrationFormula(config.Purple, 3);
+                populateCalibrationFormula(config.Orange, 4);
+                populateCalibrationFormula(config.Blue, 5);
+                populateCalibrationFormula(config.Yellow, 6);
+                populateCalibrationFormula(config.Pink, 7);
+            }
+            catch {
+                if (!unloadingState) {
+                    //settingsAlert.warning("Unable to parse configuration data.");
+                }
+            }
+        })
+        .fail(function () {
+            if (!unloadingState) {
+                //settingsAlert.error("Unable to retrieve configuration data.");
+            }
+        })
+        .always(function () {
+            // Can post-process here
+            // if (loaded < numReq) {
+            //     loaded++;
+            // }
+            if (typeof callback == "function") {
+                callback();
+            }
+        });
+}
+
 function loaded() {
     //default to brix and refractometer
     instrument(false);
@@ -451,6 +505,23 @@ function loaded() {
     $("#quadratic_polynomial").hide();
     $("#cubic_polynomial").hide();
     $("#graph").hide();
+    $("#tilt0cubic").hide();
+    $("#tilt0quadratic").hide();
+    $("#tilt1cubic").hide();
+    $("#tilt1quadratic").hide();
+    $("#tilt2cubic").hide();
+    $("#tilt2quadratic").hide();
+    $("#tilt3cubic").hide();
+    $("#tilt3quadratic").hide();
+    $("#tilt4cubic").hide();
+    $("#tilt4quadratic").hide();
+    $("#tilt5cubic").hide();
+    $("#tilt5quadratic").hide();
+    $("#tilt6cubic").hide();
+    $("#tilt6quadratic").hide();
+    $("#tilt7cubic").hide();
+    $("#tilt7quadratic").hide();
+    populateConfig();
 }
 
 function buttonDisable() {
