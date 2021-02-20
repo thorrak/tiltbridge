@@ -2,7 +2,7 @@ Changelog
 #########
 
 
-v1.0.2 - Feb XX, 2021 - Calibration Bugfixes
+v1.0.2 - Feb 19, 2021 - Calibration Bugfixes
 --------------------------------------------
 
 - Fixed bugs in calibration workflow
