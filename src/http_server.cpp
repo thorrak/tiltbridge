@@ -10,6 +10,7 @@ extern bool send_brewfather;
 extern bool send_grainfather;
 extern bool send_localTarget;
 extern bool send_brewStatus;
+extern bool send_taplistio;
 extern bool send_gSheets;
 extern bool send_mqtt;
 
@@ -529,6 +530,57 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request) {
     }
 }
 
+bool processTaplistioSettings(AsyncWebServerRequest *request) {
+    int failCount = 0;
+    // Loop through all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter *p = request->getParam(i);
+        if (p->isPost()) {
+            // Process any p->name().c_str() / p->value().c_str() pairs
+            const char *name = p->name().c_str();
+            const char *value = p->value().c_str();
+            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+
+            if (strcmp(name, "taplistioURL") == 0) {
+                if (strlen(value) < 255) {
+                    strlcpy(config.taplistioURL, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    sendNowTicker.once(5, [](){send_taplistio = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.taplistioURL, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+            if (strcmp(name, "taplistioPushEvery") == 0) {
+                // Set the push frequency in seconds
+                const double val = atof(value);
+                if ((val < 300) || (val > 3600)) {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                } else {
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    config.taplistioPushEvery = val;
+                }
+            }
+        }
+    }
+    if (failCount) {
+        Log.error(F("Error: Invalid Taplist.io configuration.\r\n"));
+        return false;
+    } else {
+        if (saveConfig()) {
+            return true;
+        } else {
+            Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
+            return false;
+        }
+    }
+}
+
 bool processMqttSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
@@ -883,6 +935,14 @@ void setPostPages() {
     server.on("/settings/brewstatus/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewstatus/.\r\n"));
         if (processBrewstatusSettings(request)) {
+            request->send(200, F("text/plain"), F("Ok"));
+        } else {
+            request->send(500, F("text/plain"), F("Unable to process data"));
+        }
+    });
+    server.on("/settings/taplistio/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/taplistio/.\r\n"));
+        if (processTaplistioSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
         } else {
             request->send(500, F("text/plain"), F("Unable to process data"));

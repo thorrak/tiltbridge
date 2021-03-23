@@ -54,6 +54,7 @@ public:
     bool send_to_google();
     bool send_to_localTarget();
     bool send_to_brewstatus();
+    bool send_to_taplistio();
     bool send_to_mqtt();
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
     bool send_to_grainfather();

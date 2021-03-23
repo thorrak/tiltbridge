@@ -169,6 +169,10 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="brewstatusURL"]').val(config.brewstatusURL);
                 $('input[name="brewstatusPushEvery"]').val(config.brewstatusPushEvery);
 
+                // Taplist.io Tab
+                $('input[name="taplistioURL"]').val(config.taplistioURL);
+                $('input[name="taplistioPushEvery"]').val(config.taplistioPushEvery);
+
                 // MQTT Tab
                 $('input[name="mqttBrokerHost"]').val(config.mqttBrokerHost);
                 $('input[name="mqttBrokerPort"]').val(config.mqttBrokerPort);
@@ -277,6 +281,9 @@ function processPost(obj) { // Disable buttons and call POST handler for form
             break;
         case "#brewstatus":
             processBrewstatusPost(url, obj);
+            break;
+        case "#taplistio":
+            processTaplistioPost(url, obj);
             break;
         case "#mqtt":
             processMqttPost(url, obj);
@@ -467,6 +474,20 @@ function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
     postData(url, data);
 }
 
+function processTaplistioPost(url, obj) {
+    // Get form data
+    var $form = $(obj.form),
+        taplistioURLVal = $form.find("input[name='taplistioURL']").val(),
+        taplistioPushEveryVal = $form.find("input[name='taplistioPushEvery']").val();
+
+    // Process post
+    data = {
+        taplistioURL: taplistioURLVal,
+        taplistioPushEvery: taplistioPushEveryVal
+    };
+    postData(url, data);
+}
+
 function processMqttPost(url, obj) { // Handle MQTT posts
     // Get form data
     var $form = $(obj.form),
@@ -560,6 +581,9 @@ function updateHelp(hashLoc) {
             url = url + "";
             break;
         case "#brewstatus":
+            url = url + "";
+            break;
+        case "#taplistio":
             url = url + "";
             break;
         case "#mqtt":
