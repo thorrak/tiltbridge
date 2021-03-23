@@ -9,11 +9,20 @@
 Ticker memCheck;
 #endif
 
+Ticker reboot24;
+
 void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
     Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
+}
+
+void reboot()
+{
+    Log.notice(F("Rebooting on 24-hour timer." CR));
+    delay(500);
+    ESP.restart();
 }
 
 void setup() {
@@ -70,6 +79,9 @@ void setup() {
 #if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
+
+    // Set a reboot timer for 24 hours
+    reboot24.once(86400, reboot);
 }
 
 void loop() {
