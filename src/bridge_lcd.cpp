@@ -349,7 +349,7 @@ uint8_t bridge_lcd::display_next() {
     } else if (on_screen == SCREEN_LOGO) {
         display_logo();
         on_screen++;
-        return 5; // This is currently a noop
+        return 2; // This is currently a noop
     } else {
         on_screen = SCREEN_TILT;
         return 0; // Immediately move on to the next screen
