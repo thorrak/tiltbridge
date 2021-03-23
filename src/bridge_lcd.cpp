@@ -345,11 +345,11 @@ uint8_t bridge_lcd::display_next() {
             on_screen++;
         }
 
-        return 10; // Display this screen for 10 seconds
+        return TILT_TIME; // Display this screen for 10 seconds
     } else if (on_screen == SCREEN_LOGO) {
         display_logo();
         on_screen++;
-        return 5; // This is currently a noop
+        return LOGO_TIME; // This is currently a noop
     } else {
         on_screen = SCREEN_TILT;
         return 0; // Immediately move on to the next screen

@@ -1,6 +1,9 @@
 #ifndef TILTBRIDGE_BRIDGE_LCD_H
 #define TILTBRIDGE_BRIDGE_LCD_H
 
+#define LOGO_TIME 2     // Time (in seconds) to display the logo
+#define TILT_TIME 10    // Time (in seconds) to display the Tilt screen
+
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include <Arduino.h>
