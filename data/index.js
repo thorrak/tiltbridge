@@ -60,6 +60,13 @@ var vm = new Vue({
                             cardData['title'] = "Tilt";
                         }
 
+                        // Make a gracefull landing if we have no GSheets URL
+                        if (cardData['gsheets_link']) {
+                            cardData['glink'] = cardData['gsheets_link']
+                        } else {
+                            cardData['glink'] = "/gsheets/"
+                        }
+
                         self.sensors.push(cardData);
                     });
                 }
