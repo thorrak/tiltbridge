@@ -18,15 +18,19 @@ bridge_lcd lcd;
 bool onResetScreen = false;
 
 bridge_lcd::bridge_lcd() {
+#if HAVE_LCD
     next_screen_at = 0;
     on_screen = 0; // Initialize to 0 (AKA screen_tilt)
     tilt_on_page = 0;
     tilt_pages_in_run = 0;
+#endif
 }
 
 ////////////////////////////////////////////////////////////
 // Public Methods
 ////////////////////////////////////////////////////////////
+
+#if HAVE_LCD
 
 void bridge_lcd::init() {
 #ifdef LCD_SSD1306
@@ -315,9 +319,36 @@ void bridge_lcd::clear() {
     yield();
 }
 
+#else // HAVE_LCD
+
+// No-op implementation.
+void bridge_lcd::init() {}
+void bridge_lcd::reinit() {}
+void bridge_lcd::display_logo(bool fromReset) {}
+void bridge_lcd::checkTouch() {}
+
+void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap_pass) {}
+void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *ip_address_url) {}
+void bridge_lcd::display_wifi_reset_screen() {}
+void bridge_lcd::display_ota_update_screen() {}
+
+void bridge_lcd::display_wifi_disconnected_screen() {}
+void bridge_lcd::display_wifi_reconnect_failed() {}
+
+void bridge_lcd::print_line(const char *left_text, const char *right_text, uint8_t line) {}
+void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line) {}
+void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line, bool add_gutter) {}
+
+void bridge_lcd::check_screen() {}
+void bridge_lcd::clear() {}
+
+#endif // HAVE_LCD
+
 ////////////////////////////////////////////////////////////
 // Private Methods
 ////////////////////////////////////////////////////////////
+
+#if HAVE_LCD
 
 uint8_t bridge_lcd::display_next() {
     // Returns the number of seconds to "hold" on this screen
@@ -487,6 +518,8 @@ void bridge_lcd::display() {
     oled_display->display();
 #endif
 }
+
+#endif // HAVE_LCD
 
 void screenFlip() {
     lcd.check_screen();
