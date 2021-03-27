@@ -2,6 +2,13 @@ Changelog
 #########
 
 
+Unreleased
+----------
+
+- Fixed typo in Brewfather log messages
+
+
+
 v1.0.1 - Feb 16, 2021 - Bugfixes & Configuration Tweaks
 -------------------------------------------------------
 

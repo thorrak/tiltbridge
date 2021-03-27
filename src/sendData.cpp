@@ -120,11 +120,11 @@ bool send_to_bf_and_bf()
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
             if (retval)
             {
-                Log.notice(F("Completed send to Brewer's Friend.\r\n"));
+                Log.notice(F("Completed send to Brewfather.\r\n"));
             }
             else
             {
-                Log.verbose(F("Error sending to Brewer's Friend.\r\n"));
+                Log.verbose(F("Error sending to Brewfather.\r\n"));
             }
         }
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
