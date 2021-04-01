@@ -12,6 +12,11 @@ v1.0.3 - Unreleased
 - Added reboot if reconnecting to WiFi fails
 
 
+v1.0.2 - Feb 19, 2021 - Calibration Bugfixes
+--------------------------------------------
+
+- Fixed bugs in calibration workflow
+- Display calibration functions on calibration page
 
 
 v1.0.1 - Feb 16, 2021 - Bugfixes & Configuration Tweaks
