@@ -43,7 +43,7 @@ or because you created the TiltBridge manually) you will need to manually set th
 settings page.
 
 #. Identify the IP address of your Fermentrack installation
-#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup. You might see a "404: Not Found" message, this is normal during setup)
 #. Click the ``Settings`` link at the top of the dashboard
 #. Choose the ``Target Settings`` tab and then select ``Fermentrack/BrewPi-Remix Settings``
 #. In the ``Target URL`` field enter http://<fermentrack_ip_address>/tiltbridge/ and click ``Update``
@@ -77,7 +77,7 @@ Adding the TiltBridge to BrewPi Remix
 **************************************
 
 #. Identify the IP address of your BrewPi Remix installation
-#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup, You might see a "404: Not Found" message, this is normal during setup)
 #. Click the ``Settings`` link at the top of the dashboard
 #. Choose the ``Target Settings`` tab and then select ``Fermentrack/BrewPi-Remix Settings``
 #. In the ``Fermentrack/BrewPi-Remix Settings`` field enter http://<brewpi_remix__ip_address>//brewpi-api.php and click ``Update``
@@ -122,7 +122,7 @@ TiltBridge.
 #. Go to `Brewers Friend`_ and log in to your account
 #. Click the ``Profile`` button in the upper right, and click ``Integrations``
 #. Copy the API key (not one of the URLs) to your clipboard
-#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup. You might see a "404: Not Found" message, this is normal during setup.)
 #. Click the ``Settings`` link at the top of the dashboard
 #. Choose the ``Target Settings`` tab and then select ``Brewers Friend``
 #. In the ``Brewers Friend API Key`` field paste the API key you copied earlier and click ``Update``
@@ -187,7 +187,7 @@ Configuring the TiltBridge for Google Sheets
 Once you have prepared Google Sheets to receive data pushed by the TiltBridge, you will need to update a handful of
 settings on the TiltBridge itself so that it knows where to send the data.
 
-#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup. You might see a "404: Not Found" message, this is normal during setup.)
 #. Click the ``Settings`` link at the top of the dashboard
 #. Choose the ``Target Settings`` tab and then select ``Google Sheets``
 #. In the ``Google Script URL`` field paste the Google Script URL you made note of during the preparation step above
@@ -207,7 +207,7 @@ After configuring the TiltBridge each Tilt your TiltBridge detects can be indivi
 Sheets. To enable logging, you will need to specify a sheet name in TiltBridge. If this sheet does not exist on Google
 Sheets it will be created. If the sheet does exist, new data points will be appended to it.
 
-#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup. You might see a "404: Not Found" message, this is normal during setup.)
 #. Click the ``Settings`` link at the top of the dashboard
 #. Choose the ``Target Settings`` tab and then select ``Google Sheets``
 #. Type a name for the Google Sheet to which you want to log data points in the appropriate ``Tilt Sheet Name`` field and click ``Update``
@@ -234,7 +234,7 @@ TiltBridge will need your Brewfather stream ID in order to post to your Brewfath
 #. Click the ``Settings`` option in the menu on the left
 #. Under "Power-ups" in the lower left corner, click the "switch" next to "Custom Stream" if it is not already toggled
 #. Copy just the string of letters/numbers that appears after the start of the URL (http://log.brewfather.net/stream?id=) to your clipboard
-#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup. You might see a "404: Not Found" message, this is normal during setup.)
 #. Click the ``Settings`` link at the top of the dashboard
 #. Choose the ``Target Settings`` tab and then select ``Brewfather``
 #. In the ``Brewfather Stream key`` field paste the string you copied earlier and click ``Update``
