@@ -24,10 +24,12 @@
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60)     // 15 minute delay between pushes to Brewfather
+#define GRAINFATHER_DELAY (15 * 60)    // 15 minute delay between pushes to Grainfather
 
 #define BREWFATHER_MIN_KEY_LENGTH 5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
 #define BF_SIZE 192
+#define GF_SIZE 256
 #define LOCALTARGET_MIN_URL_LENGTH 9
 #define BREWSTATUS_MIN_URL_LENGTH 12
 #define GSCRIPTS_MIN_URL_LENGTH 24
@@ -54,6 +56,7 @@ public:
     bool send_to_brewstatus();
     bool send_to_mqtt();
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
+    bool send_to_grainfather();
 
 private:
     void connect_mqtt();

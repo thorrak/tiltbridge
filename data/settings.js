@@ -155,6 +155,16 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 // Brewfather Tab
                 $('input[name="brewfatherKey"]').val(config.brewfatherKey);
 
+                // Grainfather Tab
+                $('input[name="grainfatherURL_red"]').val(config.grainfatherURL.Red);
+                $('input[name="grainfatherURL_green"]').val(config.grainfatherURL.Green);
+                $('input[name="grainfatherURL_black"]').val(config.grainfatherURL.Black);
+                $('input[name="grainfatherURL_purple"]').val(config.grainfatherURL.Purple);
+                $('input[name="grainfatherURL_orange"]').val(config.grainfatherURL.Orange);
+                $('input[name="grainfatherURL_blue"]').val(config.grainfatherURL.Blue);
+                $('input[name="grainfatherURL_yellow"]').val(config.grainfatherURL.Yellow);
+                $('input[name="grainfatherURL_pink"]').val(config.grainfatherURL.Pink);
+
                 // Brewstatus Tab
                 $('input[name="brewstatusURL"]').val(config.brewstatusURL);
                 $('input[name="brewstatusPushEvery"]').val(config.brewstatusPushEvery);
@@ -261,6 +271,9 @@ function processPost(obj) { // Disable buttons and call POST handler for form
             break;
         case "#brewfather":
             processBrewfatherPost(url, obj);
+            break;
+        case "#grainfather":
+            processGrainfatherPost(url, obj);
             break;
         case "#brewstatus":
             processBrewstatusPost(url, obj);
@@ -410,6 +423,32 @@ function processBrewfatherPost(url, obj) { // Handle Brewfather posts
     // Process post
     data = {
         brewfatherKey: brewfatherKeyVal
+    };
+    postData(url, data);
+}
+
+function processGrainfatherPost(url, obj) { // Handle Grainfather posts
+    // Get form data
+    var $form = $(obj.form),
+        grainfatherURL_redVal = $form.find("input[name='grainfatherURL_red']").val(),
+        grainfatherURL_greenVal = $form.find("input[name='grainfatherURL_green']").val(),
+        grainfatherURL_blackVal = $form.find("input[name='grainfatherURL_black']").val(),
+        grainfatherURL_purpleVal = $form.find("input[name='grainfatherURL_purple']").val(),
+        grainfatherURL_orangeVal = $form.find("input[name='grainfatherURL_orange']").val(),
+        grainfatherURL_blueVal = $form.find("input[name='grainfatherURL_blue']").val(),
+        grainfatherURL_yellowVal = $form.find("input[name='grainfatherURL_yellow']").val(),
+        grainfatherURL_pinkVal = $form.find("input[name='grainfatherURL_pink']").val();
+
+    // Process post
+    data = {
+        grainfatherURL_red: grainfatherURL_redVal,
+        grainfatherURL_green: grainfatherURL_greenVal,
+        grainfatherURL_black: grainfatherURL_blackVal,
+        grainfatherURL_purple: grainfatherURL_purpleVal,
+        grainfatherURL_orange: grainfatherURL_orangeVal,
+        grainfatherURL_blue: grainfatherURL_blueVal,
+        grainfatherURL_yellow: grainfatherURL_yellowVal,
+        grainfatherURL_pink: grainfatherURL_pinkVal,
     };
     postData(url, data);
 }

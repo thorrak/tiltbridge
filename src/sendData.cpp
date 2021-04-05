@@ -12,6 +12,7 @@ MQTTClient mqttClient(256);
 Ticker localTargetTicker;
 Ticker brewersFriendTicker;
 Ticker brewfatherTicker;
+Ticker grainfatherTicker;
 Ticker brewStatusTicker;
 Ticker gSheetsTicker;
 Ticker mqttTicker;
@@ -20,6 +21,7 @@ Ticker mqttTicker;
 bool send_localTarget = false;
 bool send_brewersFriend = false;
 bool send_brewfather = false;
+bool send_grainfather = false;
 bool send_brewStatus = false;
 bool send_gSheets = false;
 bool send_mqtt = false;
@@ -38,6 +40,7 @@ void dataSendHandler::init()
     // DEBUG^
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
+    grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
     gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
@@ -192,6 +195,49 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
                 result = false; // There was an error with the previous send
         }
     }
+    return result;
+}
+
+bool dataSendHandler::send_to_grainfather()
+{
+    bool result = true;
+    StaticJsonDocument<GF_SIZE> j;
+
+    if (send_grainfather && ! send_lock)
+    {
+        // Brew Status
+        send_grainfather = false;
+        send_lock = true;
+        if (WiFiClass::status() == WL_CONNECTED)
+        {
+            Log.verbose(F("Calling send to Grainfather.\r\n"));
+
+            // Loop through each of the tilt colors cached by tilt_scanner, sending
+            // data for each of the active tilts
+            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            {
+                if (strlen(config.grainfatherURL[i].link) == 0) {
+                    continue;
+                }
+
+                if (tilt_scanner.tilt(i)->is_loaded())
+                {
+                    Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
+                    j["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                    j["Unit"] = "F";
+                    j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+
+                    char payload_string[GF_SIZE];
+                    serializeJson(j, payload_string);
+
+                    if (!send_to_url(config.grainfatherURL[i].link, "", payload_string, "application/json"))
+                        result = false; // There was an error with the previous send
+                }
+            }
+        }
+        grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Brew Status
+    }
+    send_lock = false;
     return result;
 }
 
