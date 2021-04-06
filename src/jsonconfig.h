@@ -26,7 +26,7 @@ struct GsheetsConfig {
 };
 
 struct GrainfatherURL {
-    char link[256] = "";
+    char link[65] = "";
 };
 
 struct Config {

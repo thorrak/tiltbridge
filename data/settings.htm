@@ -499,81 +499,83 @@
                         <div class="card-body">
                             <p class="card-text">
                                 These settings control how TiltBridge talks to <a href="https://community.grainfather.com/">
-                                Grainfather.</a> With an account, Grainfather supports logging from gravity
-                                sensors such as the Tilt Hydrometer. To find your API url, log into your Grainfather
-                                account and go to Equipment > Fermentation Devices. the url can be found under setup 
-                                instructions.
+                                Grainfather.</a> Grainfather supports logging from gravity sensors such as the Tilt
+                                Hydrometer with an account. To find your API url, log into your Grainfather
+                                account and go to Equipment > Fermentation Devices. Add a "Tilt" fermentation device for
+                                each color Tilt you want to log. After adding the Tilt, the URL required below can be 
+                                found under setup instructions (accessible by clicking the circled "i" next to the Tilt 
+                                in Grainfather).
                             </p>
                             <form action="/settings/grainfather/" method="POST">
                                 <div class="form-group row">
                                     <label for="grainfatherURL_red" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url red</label>
+                                        title="Grainfather URL for a Red Tilt">Grainfather URL (Red)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_red" id="grainfatherURL_red"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_red"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_red"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_green" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url green</label>
+                                        title="Grainfather URL for a Green Tilt">Grainfather URL (Green)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_green" id="grainfatherURL_green"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_green"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_green"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_black" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url black</label>
+                                        title="Grainfather URL for a Black Tilt">Grainfather URL (Black)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_black" id="grainfatherURL_black"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_black"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_black"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_purple" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url purple</label>
+                                        title="Grainfather URL for a Purple Tilt">Grainfather URL (Purple)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_purple" id="grainfatherURL_purple"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_purple"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_purple"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_orange" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url orange</label>
+                                        title="Grainfather URL for a Orange Tilt">Grainfather URL (Orange)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_orange" id="grainfatherURL_orange"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_orange"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_orange"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_blue" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url blue</label>
+                                        title="Grainfather URL for a Blue Tilt">Grainfather URL (Blue)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_blue" id="grainfatherURL_blue"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_blue"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_blue"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_yellow" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url yellow</label>
+                                        title="Grainfather URL for a Yellow Tilt">Grainfather URL (Yellow)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_yellow" id="grainfatherURL_yellow"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_yellow"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_yellow"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="grainfatherURL_pink" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Your Grainfather url">Grainfather url pink</label>
+                                        title="Grainfather URL for a Pink Tilt">Grainfather URL (Pink)</label>
                                     <div class="col-sm-8">
                                         <input type="text" class="form-control" name="grainfatherURL_pink" id="grainfatherURL_pink"
-                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt " :value="settings.grainfatherURL_pink"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_pink"
                                             minlength="44" maxlength="64">
                                     </div>
                                 </div>

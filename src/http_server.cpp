@@ -447,12 +447,12 @@ bool processGrainfatherSettings(AsyncWebServerRequest *request)
                 else if(strstr(name, "_pink") != NULL) to_color = TILT_COLOR_PINK;
                 else continue;
 
-                if (strlen(value) > GRAINFATHER_MIN_URL_LENGTH && strlen(value) < 255) {
-                    strlcpy(config.grainfatherURL[to_color].link, value, 255);
+                if (GRAINFATHER_MIN_URL_LENGTH < strlen(value) && strlen(value) < 64) {
+                    strlcpy(config.grainfatherURL[to_color].link, value, 64);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     sendNowTicker.once(5, [](){send_grainfather = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
-                    strlcpy(config.brewfatherKey, value, 65);
+                    strlcpy(config.grainfatherURL[to_color].link, value, 64);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
                 } else {
                     failCount++;
