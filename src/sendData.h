@@ -61,6 +61,7 @@ public:
 private:
     void connect_mqtt();
     bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
+    bool http_send_json(const char *url, const char * payload);
     HTTPClient http;
     WiFiClient client;
     WiFiClient mqClient;
