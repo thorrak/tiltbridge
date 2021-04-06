@@ -288,7 +288,7 @@ void Config::load(JsonObjectConst obj) {
         // Grainfather URLs
         if (!obj[tilt_color_names[x]]["grainfatherURL"].isNull()) {
             const char *sn = obj[tilt_color_names[x]]["grainfatherURL"];
-            strlcpy(grainfatherURL[x].link, sn, 255);
+            strlcpy(grainfatherURL[x].link, sn, 64);
         }
     } // End Tilt-specific config loop
 

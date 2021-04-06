@@ -35,15 +35,15 @@ void dataSendHandler::init()
 
     // Set up timers
     // DEBUG:
-    // localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
-    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+//    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
     // DEBUG^
-    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
-    grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
-    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
+    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
+    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
+    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
+    grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
 }
 
 bool dataSendHandler::send_to_localTarget()
@@ -235,7 +235,7 @@ bool dataSendHandler::send_to_grainfather()
                 }
             }
         }
-        grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Brew Status
+        grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Grainfather
     }
     send_lock = false;
     return result;
