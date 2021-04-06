@@ -194,6 +194,8 @@ void Config::save(JsonObject obj) const
 
         obj[tilt_color_names[x]]["name"] = gsheets_config[x].name;
         obj[tilt_color_names[x]]["link"] = gsheets_config[x].link;
+
+        obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
     obj["localTargetURL"] = localTargetURL;
@@ -281,6 +283,12 @@ void Config::load(JsonObjectConst obj) {
         if (!obj[tilt_color_names[x]]["link"].isNull()) {
             const char *sn = obj[tilt_color_names[x]]["link"];
             strlcpy(gsheets_config[x].link, sn, 255);
+        }
+
+        // Grainfather URLs
+        if (!obj[tilt_color_names[x]]["grainfatherURL"].isNull()) {
+            const char *sn = obj[tilt_color_names[x]]["grainfatherURL"];
+            strlcpy(grainfatherURL[x].link, sn, 255);
         }
     } // End Tilt-specific config loop
 

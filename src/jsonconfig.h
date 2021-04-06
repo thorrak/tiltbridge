@@ -25,6 +25,10 @@ struct GsheetsConfig {
     char link[256] = "";
 };
 
+struct GrainfatherURL {
+    char link[256] = "";
+};
+
 struct Config {
     char mdnsID[32] = "tiltbridge";
     bool invertTFT = false;
@@ -37,6 +41,7 @@ struct Config {
 
     TiltCalData tilt_calibration[TILT_COLORS];
     GsheetsConfig gsheets_config[TILT_COLORS];
+    GrainfatherURL grainfatherURL[TILT_COLORS];
 
     char localTargetURL[256] = "";
     uint16_t localTargetPushEvery = 30;

@@ -11,6 +11,7 @@ relay their gravity readings to the cloud. At the moment, TiltBridge supports si
 * `Brewers Friend`_
 * Google Sheets
 * `Brewfather`_
+* `Grainfather`_
 * `BrewStatus`_
 * Home Assistant/MQTT
 

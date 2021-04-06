@@ -7,6 +7,7 @@ Ticker sendNowTicker;
 
 extern bool send_brewersFriend;
 extern bool send_brewfather;
+extern bool send_grainfather;
 extern bool send_localTarget;
 extern bool send_brewStatus;
 extern bool send_gSheets;
@@ -418,6 +419,61 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
     }
 }
 
+bool processGrainfatherSettings(AsyncWebServerRequest *request)
+{
+    int failCount = 0;
+    // Loop through all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter *p = request->getParam(i);
+        if (p->isPost()) {
+            // Process any p->name().c_str() / p->value().c_str() pairs
+            const char *name = p->name().c_str();
+            const char *value = p->value().c_str();
+            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+
+            // Grainfather settings
+            //
+            if(strstr(name, "grainfatherURL_") != NULL) {
+                int to_color = TILT_COLORS;
+                // Basically, we're switching on color here and writing to the appropriate config variable
+                if(strstr(name, "_red") != NULL) to_color = TILT_COLOR_RED;
+                else if(strstr(name, "_green") != NULL) to_color = TILT_COLOR_GREEN;
+                else if(strstr(name, "_black") != NULL) to_color = TILT_COLOR_BLACK;
+                else if(strstr(name, "_purple") != NULL) to_color = TILT_COLOR_PURPLE;
+                else if(strstr(name, "_orange") != NULL) to_color = TILT_COLOR_ORANGE;
+                else if(strstr(name, "_yellow") != NULL) to_color = TILT_COLOR_YELLOW;
+                else if(strstr(name, "_blue") != NULL) to_color = TILT_COLOR_BLUE;
+                else if(strstr(name, "_pink") != NULL) to_color = TILT_COLOR_PINK;
+                else continue;
+
+                if (strlen(value) > GRAINFATHER_MIN_URL_LENGTH && strlen(value) < 255) {
+                    strlcpy(config.grainfatherURL[to_color].link, value, 255);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    sendNowTicker.once(5, [](){send_grainfather = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.brewfatherKey, value, 65);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+        }
+    }
+    if (failCount) {
+        Log.error(F("Error: Invalid Grainfather configuration.\r\n"));
+        return false;
+    } else {
+        if (saveConfig()) {
+            return true;
+        } else {
+            Log.error(F("Error: Unable to save Grainfather configuration data.\r\n"));
+            return false;
+        }
+    }
+}
+
 bool processBrewstatusSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
@@ -811,6 +867,14 @@ void setPostPages() {
     server.on("/settings/brewfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewfather/.\r\n"));
         if (processBrewfatherSettings(request)) {
+            request->send(200, F("text/plain"), F("Ok"));
+        } else {
+            request->send(500, F("text/plain"), F("Unable to process data"));
+        }
+    });
+    server.on("/settings/grainfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/grainfather/.\r\n"));
+        if (processGrainfatherSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
         } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
