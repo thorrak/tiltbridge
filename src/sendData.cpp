@@ -82,8 +82,8 @@ bool dataSendHandler::send_to_localTarget()
         }
         localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
 //        tilt_scanner.init();
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -131,8 +131,8 @@ bool send_to_bf_and_bf()
             }
         }
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        send_lock = false;
     }
-    send_lock = false;
     return retval;
 }
 
@@ -238,8 +238,8 @@ bool dataSendHandler::send_to_grainfather()
             }
         }
         grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Grainfather
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -290,8 +290,8 @@ bool dataSendHandler::send_to_brewstatus()
             }
         }
         brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -427,8 +427,8 @@ bool dataSendHandler::send_to_google()
         gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         //tilt_scanner.init();
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -743,7 +743,8 @@ bool dataSendHandler::send_to_mqtt()
             }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+        send_lock = false;
     }
-    send_lock = false;
+
     return result;
 }
