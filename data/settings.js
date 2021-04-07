@@ -156,14 +156,14 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="brewfatherKey"]').val(config.brewfatherKey);
 
                 // Grainfather Tab
-                $('input[name="grainfatherURL_red"]').val(config.grainfatherURL.Red);
-                $('input[name="grainfatherURL_green"]').val(config.grainfatherURL.Green);
-                $('input[name="grainfatherURL_black"]').val(config.grainfatherURL.Black);
-                $('input[name="grainfatherURL_purple"]').val(config.grainfatherURL.Purple);
-                $('input[name="grainfatherURL_orange"]').val(config.grainfatherURL.Orange);
-                $('input[name="grainfatherURL_blue"]').val(config.grainfatherURL.Blue);
-                $('input[name="grainfatherURL_yellow"]').val(config.grainfatherURL.Yellow);
-                $('input[name="grainfatherURL_pink"]').val(config.grainfatherURL.Pink);
+                $('input[name="grainfatherURL_red"]').val(config.Red.grainfatherURL);
+                $('input[name="grainfatherURL_green"]').val(config.Green.grainfatherURL);
+                $('input[name="grainfatherURL_black"]').val(config.Black.grainfatherURL);
+                $('input[name="grainfatherURL_purple"]').val(config.Purple.grainfatherURL);
+                $('input[name="grainfatherURL_orange"]').val(config.Orange.grainfatherURL);
+                $('input[name="grainfatherURL_blue"]').val(config.Blue.grainfatherURL);
+                $('input[name="grainfatherURL_yellow"]').val(config.Yellow.grainfatherURL);
+                $('input[name="grainfatherURL_pink"]').val(config.Pink.grainfatherURL);
 
                 // Brewstatus Tab
                 $('input[name="brewstatusURL"]').val(config.brewstatusURL);
