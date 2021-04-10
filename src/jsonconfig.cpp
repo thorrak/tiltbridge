@@ -176,8 +176,11 @@ bool merge(JsonVariant dst, JsonVariantConst src) {
 void Config::save(JsonObject obj) const
 {
     obj["mdnsID"] = mdnsID;
+    obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
     obj["cloudEnabled"] = cloudEnabled;
+    obj["cloudAppID"] = cloudAppID;
+    obj["cloudClientKey"] = cloudClientKey;
     obj["update_spiffs"] = update_spiffs;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
@@ -221,6 +224,15 @@ void Config::load(JsonObjectConst obj) {
         strlcpy(mdnsID, md, 32);
     }
 
+    if (!obj["guid"].isNull()) {
+        const char *gd = obj["guid"];
+        strlcpy(guid, gd, sizeof(guid));
+    } else {
+        char newguid[sizeof(guid)];
+        getGuid(newguid, sizeof(guid));
+        strlcpy(guid, newguid, sizeof(guid));
+    }
+
 	if (!obj["invertTFT"].isNull()) {
 		invertTFT = obj["invertTFT"];
 	}
@@ -228,6 +240,16 @@ void Config::load(JsonObjectConst obj) {
 	if (!obj["cloudEnabled"].isNull()) {
 		cloudEnabled = obj["cloudEnabled"];
 	}
+
+    if (!obj["cloudAppID"].isNull()) {
+        const char *ci = obj["cloudAppID"];
+        strlcpy(cloudAppID, ci, sizeof(cloudAppID));
+    }
+
+    if (!obj["cloudClientKey"].isNull()) {
+        const char *ck = obj["cloudClientKey"];
+        strlcpy(cloudClientKey, ck, sizeof(cloudClientKey));
+    }
 
 	if (!obj["update_spiffs"].isNull()) {
 		update_spiffs = obj["update_spiffs"];

@@ -3,8 +3,11 @@
 ```
 {
     "mdnsID":"'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "guid":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "invertTFT":false,
     "cloudEnabled":false,
+    "cloudAppID":"K0MUwJQR44zJ9Ni7RCag7QjNLIEnqbb7FmWS2ZHB",
+    "cloudClientKey":"8pqpmXUbYzvOdPYWeZY0Q4wSJG72YiiNceUGrt5X",
     "update_spiffs":false,
     "TZoffset":-14,
     "tempUnit":"FF",
@@ -92,8 +95,11 @@ Serialize JSON
 DynamicJsonDocument doc(6144);
 
 doc["mdnsID"] = "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+doc["guid"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["invertTFT"] = false;
 doc["cloudEnabled"] = false;
+doc["cloudAppID"] = "K0MUwJQR44zJ9Ni7RCag7QjNLIEnqbb7FmWS2ZHB";
+doc["cloudClientKey"] = "8pqpmXUbYzvOdPYWeZY0Q4wSJG72YiiNceUGrt5X";
 doc["update_spiffs"] = false;
 doc["TZoffset"] = -14;
 doc["tempUnit"] = "FF";
@@ -190,8 +196,11 @@ if (error) {
 }
 
 const char* mdnsID = doc["mdnsID"]; // "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+const char* guid = doc["guid"]; // "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 bool invertTFT = doc["invertTFT"]; // false
 bool cloudEnabled = doc["cloudEnabled"]; // false
+const char* cloudAppID = doc["cloudAppID"]; // "K0MUwJQR44zJ9Ni7RCag7QjNLIEnqbb7FmWS2ZHB"
+const char* cloudClientKey = doc["cloudClientKey"]; // "8pqpmXUbYzvOdPYWeZY0Q4wSJG72YiiNceUGrt5X"
 bool update_spiffs = doc["update_spiffs"]; // false
 int TZoffset = doc["TZoffset"]; // -14
 const char* tempUnit = doc["tempUnit"]; // "FF"

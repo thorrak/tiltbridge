@@ -3,6 +3,7 @@
 
 #include "serialhandler.h"
 #include "tilt/tiltHydrometer.h"
+#include "getGuid.h"
 #include <ArduinoJson.h>
 
 #if FILESYSTEM == SPIFFS
@@ -27,8 +28,11 @@ struct GsheetsConfig {
 
 struct Config {
     char mdnsID[32] = "tiltbridge";
+    char guid[41] = "";
     bool invertTFT = false;
     bool cloudEnabled = false;
+    char cloudAppID[41] = "";
+    char cloudClientKey[41] = "";
     bool update_spiffs = false;
     int8_t TZoffset = -5;
     char tempUnit[2] = "F";
