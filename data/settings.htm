@@ -264,14 +264,25 @@
                         <div class="card-body">
                             <p class="card-text">TiltBridge Cloud allows you to leverage native
                                 Android and iOS application integration without being in Bluetooth
-                                range of your Tilts.</p>
+                                range of your Tilts.
+                            </p>
                             <form action="/settings/cloudtarget/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
-                                    <label for="cloudTargetEnabled" class="col-sm-3 col-form-label" data-toggle="tooltip"
-                                        title="Enable to leverage TiltBridge Cloud.">Enable</label>
-                                    <div class="col-sm-8">
+                                    <div class="col-sm-1">
+                                        <!-- Buffer -->
+                                    </div>
+                                    <label for="cloudTargetEnabled" class="col-sm-2 col-form-label" data-toggle="tooltip"
+                                        title="Enable to leverage TiltBridge Cloud.">Enable:
+                                    </label>
+                                    <div class="col-sm-1">
                                         <input class="form-check-input" value="off" type="checkbox" id="cloudTargetEnabled"
                                             name="cloudTargetEnabled">
+                                    </div>
+                                    <label for="cloudTargetEnabled" class="col-sm-2 col-form-label" data-toggle="tooltip"
+                                        title="QR code used by mobile application.">App QR:
+                                    </label>
+                                    <div class="col-sm-6">
+                                        <img id="qrious">
                                     </div>
                                 </div>
                                 <div class="row col-sm-12 justify-content-center">
@@ -753,10 +764,10 @@
         crossorigin="anonymous">
     </script>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"
-        integrity="sha384-c8inZyD0O4L/ErSuX3RVWgqsgtiAUw34TeSWiUwbKaXaI2RQg8SKVe80cipDBf0D"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
+        integrity="sha384-Dr98ddmUw2QkdCarNQ+OL7xLty7cSxgR0T7v1tq4UErS/qLV0132sBYTolRAFuOV"
         crossorigin="anonymous">
-    </script> -->
+    </script>
 
     <script src="/settings.js" defer></script>
     <script src="/alerts.js" defer></script>

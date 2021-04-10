@@ -13,6 +13,13 @@ var hashLoc;
 var didreset = false;
 var posted = false;
 
+// QR Code Generator
+var qr = window.qr = new QRious({
+    element: document.getElementById('qrious'),
+    size: 0,
+    value: ''
+});
+
 // Tab tracking
 var previousTab = "";
 var currentTab = "";
@@ -138,6 +145,16 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                     $('input[name="cloudTargetEnabled"]').prop("checked", true);
                 } else {
                     $('input[name="cloudTargetEnabled"]').prop("checked", false);
+                }
+                if (config.cloudUrl) {
+                    var uVal = "https://" + config.cloudUrl;
+                    uVal += "/?=appID=" + config.cloudAppID;
+                    uVal += "&clientKey=" + config.cloudClientKey;
+                    qr.value = uVal;
+                    qr.size = 100;
+                } else {
+                    qr.size = 0;
+                    qr.value = '';
                 }
 
                 // Local Target Tab
