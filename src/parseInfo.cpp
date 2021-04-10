@@ -12,9 +12,9 @@ void doParsePoll()
 
     String payload = "{}";
 
-    if (httpResponseCode > 0)
+    if (httpResponseCode >= 200 && httpResponseCode <= 299)
     {
-        Log.verbose(F("Parse Info: HTTP Response code: %d" CR), httpResponseCode);
+        Log.verbose(F("Parse info loaded from repository." CR));
         payload = http.getString();
         http.end(); // Free resources
 

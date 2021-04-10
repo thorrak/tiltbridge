@@ -28,7 +28,7 @@ struct GsheetsConfig {
 
 struct Config {
     char mdnsID[32] = "tiltbridge";
-    char guid[41] = "";
+    char guid[9] = "";
     bool invertTFT = false;
     bool cloudEnabled = false;
     char cloudUrl[129] = "";
