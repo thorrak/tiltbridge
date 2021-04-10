@@ -179,6 +179,9 @@ void Config::save(JsonObject obj) const
     obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
     obj["cloudEnabled"] = cloudEnabled;
+    obj["cloudUrl"] = cloudUrl;
+    obj["cloudAppID"] = cloudAppID;
+    obj["cloudClientKey"] = cloudAppID;
     obj["update_spiffs"] = update_spiffs;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;

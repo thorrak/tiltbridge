@@ -6,6 +6,7 @@
     "guid":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "invertTFT":false,
     "cloudEnabled":false,
+    "cloudUrl":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "cloudAppID":"K0MUwJQR44zJ9Ni7RCag7QjNLIEnqbb7FmWS2ZHB",
     "cloudClientKey":"8pqpmXUbYzvOdPYWeZY0Q4wSJG72YiiNceUGrt5X",
     "update_spiffs":false,
@@ -98,6 +99,7 @@ doc["mdnsID"] = "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["guid"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["invertTFT"] = false;
 doc["cloudEnabled"] = false;
+doc["cloudUrl"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["cloudAppID"] = "K0MUwJQR44zJ9Ni7RCag7QjNLIEnqbb7FmWS2ZHB";
 doc["cloudClientKey"] = "8pqpmXUbYzvOdPYWeZY0Q4wSJG72YiiNceUGrt5X";
 doc["update_spiffs"] = false;
@@ -199,6 +201,7 @@ const char* mdnsID = doc["mdnsID"]; // "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 const char* guid = doc["guid"]; // "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 bool invertTFT = doc["invertTFT"]; // false
 bool cloudEnabled = doc["cloudEnabled"]; // false
+const char* cloudUrl = doc["cloudUrl"];
 const char* cloudAppID = doc["cloudAppID"]; // "K0MUwJQR44zJ9Ni7RCag7QjNLIEnqbb7FmWS2ZHB"
 const char* cloudClientKey = doc["cloudClientKey"]; // "8pqpmXUbYzvOdPYWeZY0Q4wSJG72YiiNceUGrt5X"
 bool update_spiffs = doc["update_spiffs"]; // false
