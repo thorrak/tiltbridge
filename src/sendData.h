@@ -5,7 +5,6 @@
 #include "wifi_setup.h"
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
-#include "main.h"   // DEBUG
 
 #include <ctime>
 #include <ArduinoJson.h>

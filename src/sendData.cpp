@@ -32,10 +32,7 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    // DEBUG:
-    // localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
-    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
-    // DEBUG^
+    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
@@ -269,8 +266,6 @@ bool dataSendHandler::send_to_google()
         // The google sheets handler only fires if we have both a Google Scripts URL to post to, and an email address.
         if (strlen(config.scriptsURL) >= GSCRIPTS_MIN_URL_LENGTH && strlen(config.scriptsEmail) >= GSCRIPTS_MIN_EMAIL_LENGTH) {
             Log.verbose(F("Checking for any pending Google Sheets pushes.\r\n"));
-//            Log.verbose(F("Executing on core %i.\r\n"), xPortGetCoreID());
-            printMem();
 
             for (uint8_t i = 0; i < TILT_COLORS; i++) {
                 // Loop through each of the tilt colors and check if it is both available and has active data
