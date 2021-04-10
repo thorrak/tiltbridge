@@ -82,8 +82,8 @@ bool dataSendHandler::send_to_localTarget()
         }
         localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
 //        tilt_scanner.init();
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -131,8 +131,8 @@ bool send_to_bf_and_bf()
             }
         }
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        send_lock = false;
     }
-    send_lock = false;
     return retval;
 }
 
@@ -230,14 +230,16 @@ bool dataSendHandler::send_to_grainfather()
                     char payload_string[GF_SIZE];
                     serializeJson(j, payload_string);
 
-                    if (!send_to_url(config.grainfatherURL[i].link, "", payload_string, "application/json"))
+                    if (!http_send_json(config.grainfatherURL[i].link, payload_string))
+                    {
                         result = false; // There was an error with the previous send
+                    }
                 }
             }
         }
         grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Grainfather
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -288,9 +290,41 @@ bool dataSendHandler::send_to_brewstatus()
             }
         }
         brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        send_lock = false;
     }
-    send_lock = false;
     return result;
+}
+
+bool dataSendHandler::http_send_json(const char * url, const char * payload)
+{
+    int httpResponseCode;
+    StaticJsonDocument<GF_SIZE> retval;
+    http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+    http.setConnectTimeout(6000);
+    http.setReuse(false);
+    
+    secureClient.setInsecure();
+
+    http.addHeader(F("Content-Type"), F("application/json"));
+    http.addHeader(F("Accept"), F("application/json"));
+    httpResponseCode = http.POST(payload);
+
+    if (httpResponseCode >= 400) {
+        Log.error(F("HTTP error %d: %s, %s.\r\n"), httpResponseCode, http.errorToString(httpResponseCode).c_str(), http.getString().c_str());
+        return false;
+    }
+
+    if (!http.begin(secureClient, url)) {
+        Log.error(F("Unable to create secure connection to %s.\r\n"), url);
+        return false;
+    }
+
+    deserializeJson(retval, http.getString().c_str());
+
+    http.end();
+    retval.clear();
+
+    return true;
 }
 
 bool dataSendHandler::send_to_google()
@@ -393,8 +427,8 @@ bool dataSendHandler::send_to_google()
         gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         //tilt_scanner.init();
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -709,7 +743,8 @@ bool dataSendHandler::send_to_mqtt()
             }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+        send_lock = false;
     }
-    send_lock = false;
+
     return result;
 }
