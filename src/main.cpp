@@ -82,6 +82,8 @@ void setup() {
 
     // Set a reboot timer for 24 hours
     reboot24.once(86400, reboot);
+
+    doParsePoll();
 }
 
 void loop() {
