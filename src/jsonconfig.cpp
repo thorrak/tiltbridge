@@ -179,15 +179,12 @@ void Config::save(JsonObject obj) const
     obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
     obj["cloudEnabled"] = cloudEnabled;
-    obj["cloudAppID"] = cloudAppID;
-    obj["cloudClientKey"] = cloudClientKey;
     obj["update_spiffs"] = update_spiffs;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
     obj["smoothFactor"] = smoothFactor;
     obj["applyCalibration"] = applyCalibration;
     obj["tempCorrect"] = tempCorrect;
-
 
     for(int x=0;x<TILT_COLORS;x++) {
         obj[tilt_color_names[x]]["degree"] = tilt_calibration[x].degree;
@@ -240,16 +237,6 @@ void Config::load(JsonObjectConst obj) {
 	if (!obj["cloudEnabled"].isNull()) {
 		cloudEnabled = obj["cloudEnabled"];
 	}
-
-    if (!obj["cloudAppID"].isNull()) {
-        const char *ci = obj["cloudAppID"];
-        strlcpy(cloudAppID, ci, sizeof(cloudAppID));
-    }
-
-    if (!obj["cloudClientKey"].isNull()) {
-        const char *ck = obj["cloudClientKey"];
-        strlcpy(cloudClientKey, ck, sizeof(cloudClientKey));
-    }
 
 	if (!obj["update_spiffs"].isNull()) {
 		update_spiffs = obj["update_spiffs"];

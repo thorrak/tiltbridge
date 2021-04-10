@@ -31,6 +31,7 @@ struct Config {
     char guid[41] = "";
     bool invertTFT = false;
     bool cloudEnabled = false;
+    char cloudUrl[129] = "";
     char cloudAppID[41] = "";
     char cloudClientKey[41] = "";
     bool update_spiffs = false;
