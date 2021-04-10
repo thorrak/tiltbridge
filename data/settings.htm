@@ -103,6 +103,7 @@
                     <li class="nav-item dropdown">
                         <span class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Target Settings</span>
                         <div class="dropdown-menu">
+                            <a class="dropdown-item" data-toggle="tab" href="#cloudtarget">TiltBridge Cloud</a>
                             <a class="dropdown-item" data-toggle="tab" href="#localtarget">Fermentrack/BrewPi Remix</a>
                             <a class="dropdown-item" data-toggle="tab" href="#googlesheets">Google Sheets</a>
                             <a class="dropdown-item" data-toggle="tab" href="#brewersfriend">Brewer's Friend</a>
@@ -253,6 +254,33 @@
                         </div>
 
                     </div> <!-- Calibration Tab -->
+
+                    <div class="tab-pane fade" id="cloudtarget"> <!-- Cloud Target Tab -->
+
+                        <div class="card-header bg-light border-primary">
+                            <h5 class="card-title">TiltBridge Cloud</h5>
+                        </div>
+        
+                        <div class="card-body">
+                            <p class="card-text">Enable TiltBridge Cloud to leverage native Android and iOS integration.</p>
+                            <form action="/settings/cloudtarget/" method="POST" enctype="multipart/form-data">
+                                <div class="form-group row">
+                                    <label for="cloudTargetEnabled" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Enable to leverage TiltBridge Cloud.">Enable TiltBridge Cloud</label>
+                                    <div class="col-sm-8">
+                                        <input class="form-check-input" value="off" type="checkbox" id="cloudTargetEnabled"
+                                            name="cloudTargetEnabled">
+                                    </div>
+                                </div>
+                                <div class="row col-sm-12 justify-content-center">
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">
+                                    Update</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div> <!-- Cloud Target Tab -->
 
                     <div class="tab-pane fade" id="localtarget"> <!-- Local Target Tab -->
 

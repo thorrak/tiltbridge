@@ -133,6 +133,13 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                     $('input[name="tempCorrect"]').prop("checked", false);
                 }
 
+                // TiltBridge Cloud Tab
+                if (config.cloudEnabled) {
+                    $('input[name="cloudTargetEnabled"]').prop("checked", true);
+                } else {
+                    $('input[name="cloudTargetEnabled"]').prop("checked", false);
+                }
+
                 // Local Target Tab
                 $('input[name="localTargetURL"]').val(config.localTargetURL);
                 $('input[name="localTargetPushEvery"]').val(config.localTargetPushEvery);
@@ -250,6 +257,9 @@ function processPost(obj) { // Disable buttons and call POST handler for form
         case "#calibration":
             processCalibrationPost(url, obj);
             break;
+        case "#cloudtarget":
+            processCloudTargetPost(url, obj);
+            break;
         case "#localtarget":
             processLocalTargetPost(url, obj);
             break;
@@ -344,6 +354,18 @@ function processCalibrationPost(url, obj) { // Handle Calibration Tab posts
     postData(url, data);
 }
 
+function processCloudTargetPost(url, obj) { // Handle Cloud Target posts
+    // Get form data
+    var $form = $(obj.form),
+        cloudTargetEnabledVal = $form.find('input[name="cloudTargetEnabled"]').is(":checked");
+
+    // Process post
+    data = {
+        cloudTargetEnabled: cloudTargetEnabledVal
+    };
+    postData(url, data);
+}
+
 function processLocalTargetPost(url, obj) { // Handle Target URL posts
     // Get form data
     var $form = $(obj.form),
@@ -389,8 +411,6 @@ function processGoogleSheetsPost(url, obj) { // Handle Google Sheets posts
 }
 
 function processBrewersFriendPost(url, obj) { // Handle Brewer's Friend posts
-
-
     // Get form data
     var $form = $(obj.form),
         brewersFriendKeyVal = $form.find("input[name='brewersFriendKey']").val();
@@ -498,7 +518,7 @@ function buttonClearDelay() { // Poll to see if entire page is loaded
 
 function updateHelp(hashLoc) {
     // TODO:  Can set context sensitive help for page
-    var url = "https://docs.tiltbridge.com"
+    var url = "https://docs.tiltbridge.com/context/"
 
     // Switch here for hashLoc
     switch (hashLoc) {
@@ -506,6 +526,9 @@ function updateHelp(hashLoc) {
             url = url + "";
             break;
         case "#calibration":
+            url = url + "";
+            break;
+        case "#cloudtarget":
             url = url + "";
             break;
         case "#localtarget":
