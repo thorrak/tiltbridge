@@ -177,6 +177,7 @@ void Config::save(JsonObject obj) const
 {
     obj["mdnsID"] = mdnsID;
     obj["invertTFT"] = invertTFT;
+    obj["cloudEnabled"] = cloudEnabled;
     obj["update_spiffs"] = update_spiffs;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
@@ -222,6 +223,10 @@ void Config::load(JsonObjectConst obj) {
 
 	if (!obj["invertTFT"].isNull()) {
 		invertTFT = obj["invertTFT"];
+	}
+
+	if (!obj["cloudEnabled"].isNull()) {
+		cloudEnabled = obj["cloudEnabled"];
 	}
 
 	if (!obj["update_spiffs"].isNull()) {

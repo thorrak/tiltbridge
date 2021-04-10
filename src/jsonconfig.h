@@ -28,6 +28,7 @@ struct GsheetsConfig {
 struct Config {
     char mdnsID[32] = "tiltbridge";
     bool invertTFT = false;
+    bool cloudEnabled = false;
     bool update_spiffs = false;
     int8_t TZoffset = -5;
     char tempUnit[2] = "F";
