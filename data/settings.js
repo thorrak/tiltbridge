@@ -517,37 +517,36 @@ function buttonClearDelay() { // Poll to see if entire page is loaded
 }
 
 function updateHelp(hashLoc) {
-    // TODO:  Can set context sensitive help for page
     var url = "https://docs.tiltbridge.com/context/"
 
     // Switch here for hashLoc
     switch (hashLoc) {
         case "#tiltbridge":
-            url = url + "";
+            url = url + "tiltbridge/";
             break;
         case "#calibration":
-            url = url + "";
+            url = url + "calibration/";
             break;
         case "#cloudtarget":
-            url = url + "";
+            url = url + "cloudtarget/";
             break;
         case "#localtarget":
-            url = url + "";
+            url = url + "localtarget/";
             break;
         case "#googlesheets":
-            url = url + "";
+            url = url + "googlesheets/";
             break;
         case "#brewersfriend":
-            url = url + "";
+            url = url + "brewersfriend/";
             break;
         case "#brewfather":
-            url = url + "";
+            url = url + "brewfather/";
             break;
         case "#brewstatus":
-            url = url + "";
+            url = url + "brewstatus/";
             break;
         case "#mqtt":
-            url = url + "";
+            url = url + "mqtt/";
             break;
         default:
             // Unknown hash location passed
