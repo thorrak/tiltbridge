@@ -5,7 +5,7 @@
 static bool parseHasData = false;
 static bool parseIsSetup = false;
 
-void doParsePoll()
+void doParsePoll() // Get Parse data from git repo
 {
     if (!parseHasData)
     {
@@ -60,7 +60,7 @@ void doParsePoll()
     }
 }
 
-void doParseSetup()
+void doParseSetup() // Add this TiltBridge to Parse DB
 {
     if (parseHasData)
     {
@@ -101,37 +101,78 @@ void doParseSetup()
     }
 }
 
-void addTiltToParse()
+void addTiltToParse() // Dispatch data to Parse
 {
     if (parseIsSetup)
     {
         ParseCloudFunction cloudFunction;
-        for(uint8_t i = 0; i < TILT_COLORS; i++)
+        for (uint8_t i = 0; i < TILT_COLORS; i++)
         {
-            // TODO:  Determine if Color can be skipped
-            
-            // Concatenate name of log
-            char logName[12];
-            strcpy(logName, "add");
-            strcat(logName, tilt_color_names[i]);
-            strcat(logName, "Log");
-            // Concatenate name of temperature point
-            char tempName[18];
-            strcpy(tempName, "temperature");
-            strcat(tempName, tilt_color_names[i]);
-            // Concatenate name of gravity pont
-            char gravName[18];
-            strcpy(gravName, "gravity");
-            strcat(gravName, tilt_color_names[i]);
+            // Determine if Color is active
+            if (tilt_scanner.tilt(i)->is_loaded())
+            {
+                Log.verbose(F("Parse: Processing report for %s Tilt." CR), tilt_color_names[i]);
 
-            cloudFunction.setFunctionName(logName);
-            cloudFunction.add("tiltbridgeID", config.guid);
-            cloudFunction.add(tempName, tilt_scanner.tilt(i)->temp);
-            cloudFunction.add(gravName, tilt_scanner.tilt(i)->gravity_smoothed);
+                // Concatenate field names:
+                //
+                // Name of log
+                char logName[13];
+                strcpy(logName, "add");
+                strcat(logName, tilt_color_names[i]);
+                strcat(logName, "Log");
+                // Name of temperature point
+                char tempName[18];
+                strcpy(tempName, "temperature");
+                strcat(tempName, tilt_color_names[i]);
+                // Name of gravity point
+                char gravName[14];
+                strcpy(gravName, "gravity");
+                strcat(gravName, tilt_color_names[i]);
+                // Name of Pro point
+                char proName[10];
+                strcpy(gravName, "pro");
+                strcat(gravName, tilt_color_names[i]);
 
-            ParseResponse responseBlack = cloudFunction.send();
-            // Free the resource
-            responseBlack.close();
+                cloudFunction.setFunctionName(logName);
+                cloudFunction.add("tiltbridgeID", config.guid);
+
+                cloudFunction.add(proName, tilt_scanner.tilt(i)->tilt_pro); // Pro or not
+
+                if (tilt_scanner.tilt(i)->receives_battery)
+                {
+                    // Concatenate name of battery pont
+                    char battName[14];
+                    strcpy(gravName, "battery");
+                    strcat(gravName, tilt_color_names[i]);
+                    // Add field for battery life
+                    cloudFunction.add(battName, tilt_scanner.tilt(i)->weeks_since_last_battery_change);
+                }
+
+                if (tilt_scanner.tilt(i)->tilt_pro) // Send Pro gravity and temp
+                {
+                    cloudFunction.add(tempName, tilt_scanner.tilt(i)->temp);
+                    cloudFunction.add(gravName, tilt_scanner.tilt(i)->gravity_smoothed);
+                }
+                else                                // Send non-Pro gravity and temp
+                {
+                    cloudFunction.add(tempName, tilt_scanner.tilt(i)->temp * 10);
+                    cloudFunction.add(gravName, tilt_scanner.tilt(i)->gravity_smoothed * 10);
+                }
+
+                ParseResponse response = cloudFunction.send();
+                if (!response.getErrorCode())
+                {
+                    // The object has been saved
+                    Log.verbose(F("Parse: %s Tilt dispatched to DB." CR), tilt_color_names[i]);
+                }
+                else
+                {
+                    // There was a problem, check response
+                    Log.error(F("Parse: Error sending %s Tilt to DB." CR), tilt_color_names[i]);
+                }
+                // Free the resource
+                response.close();
+            }
         }
     }
     else
