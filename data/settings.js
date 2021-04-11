@@ -146,12 +146,13 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 } else {
                     $('input[name="cloudTargetEnabled"]').prop("checked", false);
                 }
-                if (config.cloudUrl) {
-                    var uVal = "https://" + config.cloudUrl;
-                    uVal += "/?=appID=" + config.cloudAppID;
-                    uVal += "&clientKey=" + config.cloudClientKey;
-                    qr.value = uVal;
+                if (config.guid) {
+                    var urlVal = "https://www.tiltbridge.com/mobile/";
+                    urlVal += "?=guid=" + config.guid;
+                    qr.value = urlVal;
                     qr.size = 100;
+                    var link = document.getElementById("qrlink");
+                    link.setAttribute('href', urlVal);
                 } else {
                     qr.size = 0;
                     qr.value = '';
