@@ -148,7 +148,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 }
                 if (config.guid) {
                     var urlVal = "https://www.tiltbridge.com/mobile/";
-                    urlVal += "?=guid=" + config.guid;
+                    urlVal += "?guid=" + config.guid;
                     qr.value = urlVal;
                     qr.size = 100;
                     var link = document.getElementById("qrlink");
