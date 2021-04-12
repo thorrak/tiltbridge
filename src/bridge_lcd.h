@@ -1,13 +1,15 @@
 #ifndef TILTBRIDGE_BRIDGE_LCD_H
 #define TILTBRIDGE_BRIDGE_LCD_H
 
+#define LOGO_TIME 2     // Time (in seconds) to display the logo
+#define TILT_TIME 10    // Time (in seconds) to display the Tilt screen
+
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include <Arduino.h>
 
 #ifdef LCD_SSD1306
-
-#include <SSD1306.h>
+#include <SSD1306Wire.h>
 #define SSD1306_FONT_HEIGHT     10
 #define SSD_LINE_CLEARANCE      2
 #define SSD1306_FONT            ArialMT_Plain_10
@@ -73,7 +75,7 @@ private:
     void display();
 
 #ifdef LCD_SSD1306
-    SSD1306 *oled_display;
+    SSD1306Wire *oled_display;
 #elif defined(LCD_TFT)
     TFT_eSPI *tft;
 #elif defined(LCD_TFT_ESPI)

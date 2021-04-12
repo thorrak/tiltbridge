@@ -137,6 +137,9 @@ void reconnectWiFi() {
         if (WiFiClass::status() != WL_CONNECTED) {
             // We failed to reconnect.
             lcd.display_wifi_reconnect_failed();
+            Log.error(F("Unable to reconnect WiFI, restarting." CR));
+            delay(1000);
+            ESP.restart();
         } else {
             // We reconnected successfully
             lcd.display_logo();

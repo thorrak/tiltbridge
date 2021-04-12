@@ -155,9 +155,23 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 // Brewfather Tab
                 $('input[name="brewfatherKey"]').val(config.brewfatherKey);
 
+                // Grainfather Tab
+                $('input[name="grainfatherURL_red"]').val(config.Red.grainfatherURL);
+                $('input[name="grainfatherURL_green"]').val(config.Green.grainfatherURL);
+                $('input[name="grainfatherURL_black"]').val(config.Black.grainfatherURL);
+                $('input[name="grainfatherURL_purple"]').val(config.Purple.grainfatherURL);
+                $('input[name="grainfatherURL_orange"]').val(config.Orange.grainfatherURL);
+                $('input[name="grainfatherURL_blue"]').val(config.Blue.grainfatherURL);
+                $('input[name="grainfatherURL_yellow"]').val(config.Yellow.grainfatherURL);
+                $('input[name="grainfatherURL_pink"]').val(config.Pink.grainfatherURL);
+
                 // Brewstatus Tab
                 $('input[name="brewstatusURL"]').val(config.brewstatusURL);
                 $('input[name="brewstatusPushEvery"]').val(config.brewstatusPushEvery);
+
+                // Taplist.io Tab
+                $('input[name="taplistioURL"]').val(config.taplistioURL);
+                $('input[name="taplistioPushEvery"]').val(config.taplistioPushEvery);
 
                 // MQTT Tab
                 $('input[name="mqttBrokerHost"]').val(config.mqttBrokerHost);
@@ -262,8 +276,14 @@ function processPost(obj) { // Disable buttons and call POST handler for form
         case "#brewfather":
             processBrewfatherPost(url, obj);
             break;
+        case "#grainfather":
+            processGrainfatherPost(url, obj);
+            break;
         case "#brewstatus":
             processBrewstatusPost(url, obj);
+            break;
+        case "#taplistio":
+            processTaplistioPost(url, obj);
             break;
         case "#mqtt":
             processMqttPost(url, obj);
@@ -414,6 +434,32 @@ function processBrewfatherPost(url, obj) { // Handle Brewfather posts
     postData(url, data);
 }
 
+function processGrainfatherPost(url, obj) { // Handle Grainfather posts
+    // Get form data
+    var $form = $(obj.form),
+        grainfatherURL_redVal = $form.find("input[name='grainfatherURL_red']").val(),
+        grainfatherURL_greenVal = $form.find("input[name='grainfatherURL_green']").val(),
+        grainfatherURL_blackVal = $form.find("input[name='grainfatherURL_black']").val(),
+        grainfatherURL_purpleVal = $form.find("input[name='grainfatherURL_purple']").val(),
+        grainfatherURL_orangeVal = $form.find("input[name='grainfatherURL_orange']").val(),
+        grainfatherURL_blueVal = $form.find("input[name='grainfatherURL_blue']").val(),
+        grainfatherURL_yellowVal = $form.find("input[name='grainfatherURL_yellow']").val(),
+        grainfatherURL_pinkVal = $form.find("input[name='grainfatherURL_pink']").val();
+
+    // Process post
+    data = {
+        grainfatherURL_red: grainfatherURL_redVal,
+        grainfatherURL_green: grainfatherURL_greenVal,
+        grainfatherURL_black: grainfatherURL_blackVal,
+        grainfatherURL_purple: grainfatherURL_purpleVal,
+        grainfatherURL_orange: grainfatherURL_orangeVal,
+        grainfatherURL_blue: grainfatherURL_blueVal,
+        grainfatherURL_yellow: grainfatherURL_yellowVal,
+        grainfatherURL_pink: grainfatherURL_pinkVal,
+    };
+    postData(url, data);
+}
+
 function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
     // Get form data
     var $form = $(obj.form),
@@ -424,6 +470,20 @@ function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
     data = {
         brewstatusURL: brewstatusURLVal,
         brewstatusPushEvery: brewstatusPushEveryVal
+    };
+    postData(url, data);
+}
+
+function processTaplistioPost(url, obj) {
+    // Get form data
+    var $form = $(obj.form),
+        taplistioURLVal = $form.find("input[name='taplistioURL']").val(),
+        taplistioPushEveryVal = $form.find("input[name='taplistioPushEvery']").val();
+
+    // Process post
+    data = {
+        taplistioURL: taplistioURLVal,
+        taplistioPushEvery: taplistioPushEveryVal
     };
     postData(url, data);
 }
@@ -521,6 +581,9 @@ function updateHelp(hashLoc) {
             url = url + "";
             break;
         case "#brewstatus":
+            url = url + "";
+            break;
+        case "#taplistio":
             url = url + "";
             break;
         case "#mqtt":

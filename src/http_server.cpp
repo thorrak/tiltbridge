@@ -7,8 +7,10 @@ Ticker sendNowTicker;
 
 extern bool send_brewersFriend;
 extern bool send_brewfather;
+extern bool send_grainfather;
 extern bool send_localTarget;
 extern bool send_brewStatus;
+extern bool send_taplistio;
 extern bool send_gSheets;
 extern bool send_mqtt;
 
@@ -418,6 +420,61 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
     }
 }
 
+bool processGrainfatherSettings(AsyncWebServerRequest *request)
+{
+    int failCount = 0;
+    // Loop through all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter *p = request->getParam(i);
+        if (p->isPost()) {
+            // Process any p->name().c_str() / p->value().c_str() pairs
+            const char *name = p->name().c_str();
+            const char *value = p->value().c_str();
+            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+
+            // Grainfather settings
+            //
+            if(strstr(name, "grainfatherURL_") != NULL) {
+                int to_color = TILT_COLORS;
+                // Basically, we're switching on color here and writing to the appropriate config variable
+                if(strstr(name, "_red") != NULL) to_color = TILT_COLOR_RED;
+                else if(strstr(name, "_green") != NULL) to_color = TILT_COLOR_GREEN;
+                else if(strstr(name, "_black") != NULL) to_color = TILT_COLOR_BLACK;
+                else if(strstr(name, "_purple") != NULL) to_color = TILT_COLOR_PURPLE;
+                else if(strstr(name, "_orange") != NULL) to_color = TILT_COLOR_ORANGE;
+                else if(strstr(name, "_yellow") != NULL) to_color = TILT_COLOR_YELLOW;
+                else if(strstr(name, "_blue") != NULL) to_color = TILT_COLOR_BLUE;
+                else if(strstr(name, "_pink") != NULL) to_color = TILT_COLOR_PINK;
+                else continue;
+
+                if (GRAINFATHER_MIN_URL_LENGTH < strlen(value) && strlen(value) < 64) {
+                    strlcpy(config.grainfatherURL[to_color].link, value, 64);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    sendNowTicker.once(5, [](){send_grainfather = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.grainfatherURL[to_color].link, value, 64);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+        }
+    }
+    if (failCount) {
+        Log.error(F("Error: Invalid Grainfather configuration.\r\n"));
+        return false;
+    } else {
+        if (saveConfig()) {
+            return true;
+        } else {
+            Log.error(F("Error: Unable to save Grainfather configuration data.\r\n"));
+            return false;
+        }
+    }
+}
+
 bool processBrewstatusSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
@@ -468,6 +525,57 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Brewstatus configuration data.\r\n"));
+            return false;
+        }
+    }
+}
+
+bool processTaplistioSettings(AsyncWebServerRequest *request) {
+    int failCount = 0;
+    // Loop through all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter *p = request->getParam(i);
+        if (p->isPost()) {
+            // Process any p->name().c_str() / p->value().c_str() pairs
+            const char *name = p->name().c_str();
+            const char *value = p->value().c_str();
+            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+
+            if (strcmp(name, "taplistioURL") == 0) {
+                if (strlen(value) < 255) {
+                    strlcpy(config.taplistioURL, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    sendNowTicker.once(5, [](){send_taplistio = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.taplistioURL, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+            if (strcmp(name, "taplistioPushEvery") == 0) {
+                // Set the push frequency in seconds
+                const double val = atof(value);
+                if ((val < 300) || (val > 3600)) {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                } else {
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    config.taplistioPushEvery = val;
+                }
+            }
+        }
+    }
+    if (failCount) {
+        Log.error(F("Error: Invalid Taplist.io configuration.\r\n"));
+        return false;
+    } else {
+        if (saveConfig()) {
+            return true;
+        } else {
+            Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
             return false;
         }
     }
@@ -762,6 +870,7 @@ void setStaticPages() {
     server.serveStatic("/controllerrestart/", FILESYSTEM, "/").setDefaultFile("controllerrestart.htm").setCacheControl("max-age=600");
     server.serveStatic("/wifireset/", FILESYSTEM, "/").setDefaultFile("wifireset.htm").setCacheControl("max-age=600");
     server.serveStatic("/factoryreset/", FILESYSTEM, "/").setDefaultFile("factoryreset.htm").setCacheControl("max-age=600");
+    server.serveStatic("/gsheets/", FILESYSTEM, "/").setDefaultFile("gsheets.htm").setCacheControl("max-age=600");
     server.serveStatic("/404/", FILESYSTEM, "/").setDefaultFile("404.htm").setCacheControl("max-age=600");
 }
 
@@ -815,9 +924,25 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
+    server.on("/settings/grainfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/grainfather/.\r\n"));
+        if (processGrainfatherSettings(request)) {
+            request->send(200, F("text/plain"), F("Ok"));
+        } else {
+            request->send(500, F("text/plain"), F("Unable to process data"));
+        }
+    });
     server.on("/settings/brewstatus/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewstatus/.\r\n"));
         if (processBrewstatusSettings(request)) {
+            request->send(200, F("text/plain"), F("Ok"));
+        } else {
+            request->send(500, F("text/plain"), F("Unable to process data"));
+        }
+    });
+    server.on("/settings/taplistio/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/taplistio/.\r\n"));
+        if (processTaplistioSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
         } else {
             request->send(500, F("text/plain"), F("Unable to process data"));
