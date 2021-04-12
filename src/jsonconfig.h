@@ -47,6 +47,8 @@ struct Config {
     uint16_t localTargetPushEvery = 30;
     char brewstatusURL[256] = "";
     uint16_t brewstatusPushEvery = 30;
+    char taplistioURL[256] = "";
+    uint16_t taplistioPushEvery = 300;
     char scriptsURL[256] = "";
     char scriptsEmail[256] = "";
     char brewersFriendKey[65] = "";

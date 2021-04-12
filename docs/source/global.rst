@@ -13,5 +13,6 @@
 .. _BrewFlasher: https://www.brewflasher.com/
 .. _Brewstatus: http://www.brewstat.us/
 .. _PlatformIO: https://platformio.org/
+.. _Taplist.io: https://taplist.io/
 
 

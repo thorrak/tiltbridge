@@ -93,6 +93,7 @@ void loop() {
     send_to_bf_and_bf();
     data_sender.send_to_brewstatus();
     data_sender.send_to_grainfather();
+    data_sender.send_to_taplistio();
     data_sender.send_to_google();
     data_sender.send_to_mqtt();
 

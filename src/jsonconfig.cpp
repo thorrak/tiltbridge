@@ -202,6 +202,8 @@ void Config::save(JsonObject obj) const
     obj["localTargetPushEvery"] = localTargetPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
+    obj["taplistioURL"] = taplistioURL;
+    obj["taplistioPushEvery"] = taplistioPushEvery;
     obj["scriptsURL"] = scriptsURL;
     obj["scriptsEmail"] = scriptsEmail;
     obj["brewersFriendKey"] = brewersFriendKey;
@@ -311,6 +313,15 @@ void Config::load(JsonObjectConst obj) {
     if (!obj["brewstatusPushEvery"].isNull()) {
         int pe = obj["brewstatusPushEvery"];
         brewstatusPushEvery = pe;
+    }
+
+    if (!obj["taplistioURL"].isNull()) {
+        const char *tu = obj["taplistioURL"];
+        strlcpy(taplistioURL, tu, 256);
+    }
+
+    if (!obj["taplistioPushEvery"].isNull()) {
+        taplistioPushEvery = obj["taplistioPushEvery"];
     }
 
     if (!obj["scriptsURL"].isNull()) {
