@@ -4,6 +4,7 @@
 .. _Tilt Hydrometers: https://tilthydrometer.com/
 .. _Brewers Friend: https://www.brewersfriend.com/
 .. _Brewfather: https://brewfather.app
+.. _Grainfather: https://community.grainfather.com/
 .. _TiltBridge: https://www.tiltbridge.com/
 .. _tiltbridge.com: https://www.tiltbridge.com/
 .. _Fermentrack: https://www.fermentrack.com/
@@ -12,5 +13,6 @@
 .. _BrewFlasher: https://www.brewflasher.com/
 .. _Brewstatus: http://www.brewstat.us/
 .. _PlatformIO: https://platformio.org/
+.. _Taplist.io: https://taplist.io/
 
 

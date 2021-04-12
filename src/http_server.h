@@ -26,6 +26,7 @@
 #define BREWFATHER_MIN_KEY_LENGTH       5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH   12
 #define BREWSTATUS_MIN_KEY_LENGTH       12
+#define GRAINFATHER_MIN_URL_LENGTH       44
 
 class httpServer {
 public:
