@@ -9,3 +9,4 @@ copy_binary () {
 copy_binary "d32_pro_tft"
 copy_binary "lcd_ssd1306"
 copy_binary "tft_espi"
+copy_binary "m5stickc"
