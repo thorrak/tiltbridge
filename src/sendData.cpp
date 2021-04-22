@@ -751,8 +751,13 @@ bool dataSendHandler::send_to_mqtt()
                     {
                         char m_topic[90] = {'\0'};
                         char tilt_name[35] = {'\0'};
+                        char uniq_id[30] = {'\0'};
                         char unit[10] = {'\0'};
                         bool retain = false;
+
+                        strcat(uniq_id, "tiltbridge_tilt");
+                        strcat(uniq_id, tilt_color_names[i]);
+
                         switch (j)
                         {
                         case 0: //Home Assistant Config Topic for Temperature
@@ -769,6 +774,7 @@ bool dataSendHandler::send_to_mqtt()
                             strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.Temp}}";
+                            payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
                         case 1: //Home Assistant Config Topic for Sp Gravity
@@ -783,6 +789,7 @@ bool dataSendHandler::send_to_mqtt()
                             strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.SG}}";
+                            payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
                         case 2: //General payload with sensor data

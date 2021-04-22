@@ -11,6 +11,7 @@ v1.0.3 - Unreleased
 - Shorten logo display time by 60%
 - Added reboot if reconnecting to WiFi fails
 - Added Grainfather as a push target (Thanks @teanooki!)
+- Send 'uniq_id' as part of MQTT config messages
 
 
 v1.0.2 - Feb 19, 2021 - Calibration Bugfixes
