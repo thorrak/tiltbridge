@@ -146,7 +146,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 } else {
                     $('input[name="cloudTargetEnabled"]').prop("checked", false);
                 }
-                if (config.guid) {
+                if (config.guid && config.cloudEnabled) {
                     var urlVal = "https://www.tiltbridge.com/mobile/";
                     urlVal += "?guid=" + config.guid;
                     qr.value = urlVal;
@@ -381,7 +381,8 @@ function processCloudTargetPost(url, obj) { // Handle Cloud Target posts
     data = {
         cloudTargetEnabled: cloudTargetEnabledVal
     };
-    postData(url, data);
+    jQuery('#overlay').fadeIn();
+    postData(url, data, false, true);
 }
 
 function processLocalTargetPost(url, obj) { // Handle Target URL posts
