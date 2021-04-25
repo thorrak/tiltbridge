@@ -52,6 +52,9 @@ void setup() {
 
     // Set a reboot timer for 24 hours
     reboot24.once(86400, reboot);
+
+    // Set up Parse
+    doParsePoll();
 }
 
 void loop() {
@@ -59,6 +62,7 @@ void loop() {
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
 
+    send_to_cloud();
     data_sender.send_to_localTarget();
     send_to_bf_and_bf();
     data_sender.send_to_brewstatus();

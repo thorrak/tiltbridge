@@ -9,6 +9,7 @@ dataSendHandler data_sender; // Global data sender
 MQTTClient mqttClient(256);
 
 // POST Timers
+Ticker cloudTargetTicker;
 Ticker localTargetTicker;
 Ticker brewersFriendTicker;
 Ticker brewfatherTicker;
@@ -17,6 +18,7 @@ Ticker gSheetsTicker;
 Ticker mqttTicker;
 
 // POST Semaphores
+bool send_cloudTarget = false;
 bool send_localTarget = false;
 bool send_brewersFriend = false;
 bool send_brewfather = false;
@@ -32,12 +34,13 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
+    cloudTargetTicker.once(10, [](){send_cloudTarget = true;});      // Schedule first send to Cloud Target
     localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
-    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
-    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
+    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
+    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
+    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
 }
 
 bool dataSendHandler::send_to_localTarget()
@@ -128,6 +131,17 @@ bool send_to_bf_and_bf()
     }
     send_lock = false;
     return retval;
+}
+
+void send_to_cloud()
+{
+    if (send_cloudTarget && ! send_lock) {
+        send_lock = true;
+        send_cloudTarget = false;
+        addTiltToParse();
+        cloudTargetTicker.once(CLOUD_DELAY, [](){send_cloudTarget = true;}); // Set up subsequent send to localTarget        
+    }
+    send_lock = false;
 }
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)

@@ -2,12 +2,14 @@
 
 #define SERVER_URL "http://tiltbridge.com/cloudkeys/keys.json"
 
-static bool parseHasData = false;
+static bool parseHasKeys = false;
 static bool parseIsSetup = false;
+
+extern bool send_cloudTarget;
 
 void doParsePoll() // Get Parse data from git repo
 {
-    if (!parseHasData)
+    if (!parseHasKeys)
     {
         HTTPClient http;
         http.begin(SERVER_URL);
@@ -50,7 +52,8 @@ void doParsePoll() // Get Parse data from git repo
                     const char *ck = doc["cloudClientKey"];
                     strlcpy(config.cloudClientKey, ck, sizeof(config.cloudClientKey));
                 }
-                parseHasData = true;
+                parseHasKeys = true;
+                doParseSetup();
             }
         }
         else
@@ -62,7 +65,7 @@ void doParsePoll() // Get Parse data from git repo
 
 void doParseSetup() // Add this TiltBridge to Parse DB
 {
-    if (parseHasData)
+    if (parseHasKeys && config.cloudEnabled)
     {
         if (!parseIsSetup)
         {
@@ -85,11 +88,13 @@ void doParseSetup() // Add this TiltBridge to Parse DB
             if (!response.getErrorCode())
             {
                 // The object has been saved
+                Log.verbose(F("Added TiltBridge to cloud DB." CR));
                 parseIsSetup = true;
             }
             else
             {
                 // There was a problem, check response.
+                Log.warning(F("Failed to add TiltBridge to cloud database." CR));
             }
             // Free the resource
             response.close();
@@ -128,15 +133,11 @@ void addTiltToParse() // Dispatch data to Parse
                 char gravName[14];
                 strcpy(gravName, "gravity");
                 strcat(gravName, tilt_color_names[i]);
-                // Name of Pro point
-                char proName[10];
-                strcpy(gravName, "pro");
-                strcat(gravName, tilt_color_names[i]);
 
                 cloudFunction.setFunctionName(logName);
                 cloudFunction.add("tiltbridgeID", config.guid);
 
-                cloudFunction.add(proName, tilt_scanner.tilt(i)->tilt_pro); // Pro or not
+                cloudFunction.add(gravName, tilt_scanner.tilt(i)->tilt_pro); // Pro or not
 
                 if (tilt_scanner.tilt(i)->receives_battery)
                 {
@@ -178,5 +179,6 @@ void addTiltToParse() // Dispatch data to Parse
     else
     {
         doParseSetup();
+        send_cloudTarget = true;
     }
 }

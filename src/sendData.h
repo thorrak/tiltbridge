@@ -20,9 +20,10 @@
 #include <LCBUrl.h>
 #include <ArduinoLog.h>
 
-#define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
-#define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
-#define BREWFATHER_DELAY (15 * 60)     // 15 minute delay between pushes to Brewfather
+#define GSCRIPTS_DELAY (10 * 60)        // 10 minute delay between pushes to Google Sheets directly
+#define BREWERS_FRIEND_DELAY (15 * 60)  // 15 minute delay between pushes to Brewer's Friend
+#define BREWFATHER_DELAY (15 * 60)      // 15 minute delay between pushes to Brewfather
+#define CLOUD_DELAY (30 * 60)           // 30 minute delay between pushes to Brewfather
 
 #define BREWFATHER_MIN_KEY_LENGTH 5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
@@ -64,6 +65,7 @@ private:
 };
 
 bool send_to_bf_and_bf();
+void send_to_cloud();
 
 extern dataSendHandler data_sender;
 
