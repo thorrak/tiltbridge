@@ -137,8 +137,6 @@ void addTiltToParse() // Dispatch data to Parse
                 cloudFunction.setFunctionName(logName);
                 cloudFunction.add("tiltbridgeID", config.guid);
 
-                cloudFunction.add(gravName, tilt_scanner.tilt(i)->tilt_pro); // Pro or not
-
                 if (tilt_scanner.tilt(i)->receives_battery)
                 {
                     // Concatenate name of battery pont
