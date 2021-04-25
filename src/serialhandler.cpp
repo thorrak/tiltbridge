@@ -26,6 +26,40 @@ void serial()
     Log.begin(ARDUINO_LOG_LEVEL, &SERIAL, true);
     Log.setPrefix(printTimestamp);
     Log.notice(F("Serial logging started at %l.\r\n"), BAUD);
+
+    debug();
+}
+
+void debug() {
+    #if defined(LOG_LOCAL_LEVEL) && !defined(DISABLE_LOGGING)
+    esp_log_level_set("*", ESP_LOG_WARN);
+
+    esp_log_level_set("FreeRTOS", ESP_LOG_WARN);
+    esp_log_level_set("NimBLE", ESP_LOG_WARN);
+    esp_log_level_set("NIMBLE_NVS", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAddress", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertisedDevice", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertising", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEAdvertisingReport", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEBeacon", ESP_LOG_WARN);
+    esp_log_level_set("NimBLECharacteristic", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEClient", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEDescriptor", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEDevice", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEEddystoneTLM", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEEddystoneURL", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteCharacteristic", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteDescriptor", ESP_LOG_WARN);
+    esp_log_level_set("NimBLERemoteService", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEScan", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEServer", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEService", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEUtils", ESP_LOG_WARN);
+    esp_log_level_set("NimBLEUUID", ESP_LOG_WARN);
+    
+    esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
+    esp_log_level_set("dhcpc", ESP_LOG_WARN);
+#endif
 }
 
 void printTimestamp(Print *_logOutput)

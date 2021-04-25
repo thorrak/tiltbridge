@@ -19,6 +19,7 @@ void serial();
 void toggleSerialCompat(bool);
 void printTimestamp(Print *_logOutput);
 void serialLoop();
+void debug();
 
 // Print outputs
 size_t printChar(bool, const char *);
