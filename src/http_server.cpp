@@ -4,6 +4,7 @@
 httpServer http_server;
 Ticker sendNowTicker;
 
+extern bool send_cloudTarget;
 extern bool send_brewersFriend;
 extern bool send_brewfather;
 extern bool send_localTarget;
@@ -202,6 +203,8 @@ bool processCloudTargetSettings(AsyncWebServerRequest *request) {
                 if (strcmp(value, "true") == 0) {
                     if (!config.cloudEnabled) {
                         config.cloudEnabled = true;
+                        // Trigger a send to Cloud in 5 seconds
+                        sendNowTicker.once(5, [](){send_cloudTarget = true;});
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                 } else if (strcmp(value, "false") == 0) {
