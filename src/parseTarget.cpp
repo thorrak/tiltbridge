@@ -110,14 +110,13 @@ void addTiltToParse() // Dispatch data to Parse
 {
     if (parseIsSetup)
     {
-        ParseCloudFunction cloudFunction;
         for (uint8_t i = 0; i < TILT_COLORS; i++)
         {
             // Determine if Color is active
             if (tilt_scanner.tilt(i)->is_loaded())
             {
                 Log.verbose(F("Parse: Processing report for %s Tilt." CR), tilt_color_names[i]);
-
+                ParseCloudFunction cloudFunction;
                 // Concatenate field names:
                 //
                 // Name of log
@@ -141,8 +140,8 @@ void addTiltToParse() // Dispatch data to Parse
                 {
                     // Concatenate name of battery pont
                     char battName[14];
-                    strcpy(gravName, "battery");
-                    strcat(gravName, tilt_color_names[i]);
+                    strcpy(battName, "battery");
+                    strcat(battName, tilt_color_names[i]);
                     // Add field for battery life
                     cloudFunction.add(battName, tilt_scanner.tilt(i)->weeks_since_last_battery_change);
                 }
