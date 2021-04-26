@@ -142,8 +142,10 @@ function populateConfig(callback = null) { // Get configuration settings, popula
 
                 // TiltBridge Cloud Tab
                 if (config.cloudEnabled) {
+                    document.getElementById('applink').style.visibility = 'visible';
                     $('input[name="cloudTargetEnabled"]').prop("checked", true);
                 } else {
+                    document.getElementById('applink').style.visibility = 'hidden';
                     $('input[name="cloudTargetEnabled"]').prop("checked", false);
                 }
                 if (config.guid && config.cloudEnabled) {
