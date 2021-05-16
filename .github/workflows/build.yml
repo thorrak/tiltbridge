@@ -43,8 +43,8 @@ jobs:
 
     - name: Build all environments
       run: |
-        pio run
-        pio run --target buildfs
+        pio run -e m5stickc -e tft_espi -e d32_pro_tft -e lcd_ssd1306
+        pio run --target buildfs -e m5stickc -e tft_espi -e d32_pro_tft -e lcd_ssd1306
         sh ./copy_bins.sh
 
     - name: "Update development release"
