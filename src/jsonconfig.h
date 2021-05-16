@@ -26,6 +26,10 @@ struct GsheetsConfig {
     char link[256] = "";
 };
 
+struct GrainfatherURL {
+    char link[65] = "";
+};
+
 struct Config {
     char mdnsID[32] = "tiltbridge";
     char guid[9] = "";
@@ -43,11 +47,14 @@ struct Config {
 
     TiltCalData tilt_calibration[TILT_COLORS];
     GsheetsConfig gsheets_config[TILT_COLORS];
+    GrainfatherURL grainfatherURL[TILT_COLORS];
 
     char localTargetURL[256] = "";
     uint16_t localTargetPushEvery = 30;
     char brewstatusURL[256] = "";
     uint16_t brewstatusPushEvery = 30;
+    char taplistioURL[256] = "";
+    uint16_t taplistioPushEvery = 300;
     char scriptsURL[256] = "";
     char scriptsEmail[256] = "";
     char brewersFriendKey[65] = "";

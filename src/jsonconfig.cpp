@@ -198,12 +198,16 @@ void Config::save(JsonObject obj) const
 
         obj[tilt_color_names[x]]["name"] = gsheets_config[x].name;
         obj[tilt_color_names[x]]["link"] = gsheets_config[x].link;
+
+        obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
     obj["localTargetURL"] = localTargetURL;
     obj["localTargetPushEvery"] = localTargetPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
+    obj["taplistioURL"] = taplistioURL;
+    obj["taplistioPushEvery"] = taplistioPushEvery;
     obj["scriptsURL"] = scriptsURL;
     obj["scriptsEmail"] = scriptsEmail;
     obj["brewersFriendKey"] = brewersFriendKey;
@@ -299,6 +303,12 @@ void Config::load(JsonObjectConst obj) {
             const char *sn = obj[tilt_color_names[x]]["link"];
             strlcpy(gsheets_config[x].link, sn, 255);
         }
+
+        // Grainfather URLs
+        if (!obj[tilt_color_names[x]]["grainfatherURL"].isNull()) {
+            const char *sn = obj[tilt_color_names[x]]["grainfatherURL"];
+            strlcpy(grainfatherURL[x].link, sn, 64);
+        }
     } // End Tilt-specific config loop
 
 
@@ -320,6 +330,15 @@ void Config::load(JsonObjectConst obj) {
     if (!obj["brewstatusPushEvery"].isNull()) {
         int pe = obj["brewstatusPushEvery"];
         brewstatusPushEvery = pe;
+    }
+
+    if (!obj["taplistioURL"].isNull()) {
+        const char *tu = obj["taplistioURL"];
+        strlcpy(taplistioURL, tu, 256);
+    }
+
+    if (!obj["taplistioPushEvery"].isNull()) {
+        taplistioPushEvery = obj["taplistioPushEvery"];
     }
 
     if (!obj["scriptsURL"].isNull()) {
