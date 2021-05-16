@@ -47,14 +47,20 @@ jobs:
         pio run --target buildfs -e m5stickc -e tft_espi -e d32_pro_tft -e lcd_ssd1306
         sh ./copy_bins.sh
 
+    - name: Extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      id: extract_branch
+
     - name: "Update development release"
       uses: "marvinpinto/action-automatic-releases@latest"
-      if: github.event.pull_request.merged == true
+#      if: github.event.pull_request.merged == true
+      if: steps.extract_branch.outputs.branch != "master"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-${{ github.event.pull_request.base.ref }}"
-        prerelease: true
-        title: "Development Build"
+        automatic_release_tag: "latest-${{ steps.extract_branch.outputs.branch }}"
+        prerelease: false
+        title: "Development Build for Branch ${{ steps.extract_branch.outputs.branch }}"
         files: |
           LICENSE
           bin/*.bin
