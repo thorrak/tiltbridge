@@ -32,7 +32,7 @@ struct GrainfatherURL {
 
 struct Config {
     char mdnsID[32] = "tiltbridge";
-    char guid[9] = "";
+    char guid[17] = "";
     bool invertTFT = false;
     bool cloudEnabled = false;
     char cloudUrl[129] = "";

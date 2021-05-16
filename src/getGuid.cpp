@@ -10,6 +10,6 @@ void getGuid(char *str, size_t len)
     uint64_t macAddressTrunc = macAddress;
     chipID = macAddressTrunc;
 #endif
-    snprintf(str, len, "%08X", chipID);
+    snprintf(str, len, "%016X", chipID);
     str[len - 1] = '\0';
 }

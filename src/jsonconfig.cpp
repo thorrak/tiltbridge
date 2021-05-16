@@ -2,7 +2,7 @@
 
 Config config;
 const char *filename = JSON_CONFIG_FILE;
-const size_t capacitySerial = 6144;
+const size_t capacitySerial = 6152;
 const size_t capacityDeserial = 8192;
 
 bool deleteConfigFile() {
@@ -228,14 +228,15 @@ void Config::load(JsonObjectConst obj) {
         strlcpy(mdnsID, md, 32);
     }
 
-    if (!obj["guid"].isNull()) {
-        const char *gd = obj["guid"];
-        strlcpy(guid, gd, sizeof(guid));
-    } else {
-        char newguid[sizeof(guid)];
-        getGuid(newguid, sizeof(guid));
-        strlcpy(guid, newguid, sizeof(guid));
-    }
+//    if (!obj["guid"].isNull()) {
+//        const char *gd = obj["guid"];
+//        strlcpy(guid, gd, sizeof(guid));
+//    } else {
+    // Always regenerate the guid
+    char newguid[sizeof(guid)];
+    getGuid(newguid, sizeof(guid));
+    strlcpy(guid, newguid, sizeof(guid));
+//    }
 
 	if (!obj["invertTFT"].isNull()) {
 		invertTFT = obj["invertTFT"];
