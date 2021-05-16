@@ -1,15 +1,17 @@
 #include "getGuid.h"
 
-void getGuid(char *str, size_t len)
+void getGuid(char *str)
 {
-#ifdef ESP8266
-    chipID = ESP.getChipId();
-#elif defined ESP32
-    uint32_t chipID;
-    uint64_t macAddress = ESP.getEfuseMac();
-    uint64_t macAddressTrunc = macAddress;
-    chipID = macAddressTrunc;
-#endif
-    snprintf(str, len, "%016X", chipID);
-    str[len - 1] = '\0';
+    uint64_t chipid = ESP.getEfuseMac();
+    uint32_t int32_1, int32_2;
+
+    int32_1 = chipid & 0x00000000FFFFFFFF;
+    int32_2 = (chipid & 0xFFFFFFFF00000000) >> 32;
+
+    char first[9], secon[9];
+    sprintf(first, "%08X", int32_1);
+    sprintf(secon, "%08X", int32_2);
+
+    strcpy(str, first);
+    strcat(str, secon);
 }

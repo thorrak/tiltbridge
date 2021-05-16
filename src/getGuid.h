@@ -3,6 +3,6 @@
 
 #include <Arduino.h>
 
-void getGuid(char *str, size_t len);
+void getGuid(char *str);
 
 #endif // _GET_GUID_H

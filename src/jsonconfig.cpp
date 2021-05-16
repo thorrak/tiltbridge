@@ -234,7 +234,7 @@ void Config::load(JsonObjectConst obj) {
 //    } else {
     // Always regenerate the guid
     char newguid[sizeof(guid)];
-    getGuid(newguid, sizeof(guid));
+    getGuid(newguid);
     strlcpy(guid, newguid, sizeof(guid));
 //    }
 
