@@ -29,7 +29,7 @@ void setup() {
     serial();
 
     Log.verbose(F("Loading config.\r\n"));
-    loadConfig();
+    config.loadConfig();
 
     Log.verbose(F("Initializing LCD.\r\n"));
     lcd.init();

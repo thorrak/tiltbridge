@@ -30,7 +30,9 @@ struct GrainfatherURL {
     char link[65] = "";
 };
 
-struct Config {
+class Config {
+public:
+
     char mdnsID[32] = "tiltbridge";
     char guid[17] = "";
     bool invertTFT = false;
@@ -66,22 +68,30 @@ struct Config {
     char mqttTopic[31] = "";
     uint16_t mqttPushEvery = 30;
 
-    void load(JsonObjectConst);
-    void save(JsonObject) const;
+    void load_from_json(DynamicJsonDocument obj);
+    DynamicJsonDocument to_json();
+
+    bool serializeConfig(Print &);
+    bool deserializeConfig(Stream &);
+
+    bool save();
+    bool loadConfig();
+
+private:
+    bool saveFile();
+    bool loadFile();
+
+
 };
 
 bool deleteConfigFile();
-bool loadConfig();
-bool saveConfig();
-bool loadFile();
-bool saveFile();
+
 bool printConfig();
 bool printFile();
-bool serializeConfig(Print &);
-bool deserializeConfig(Stream &);
-bool merge(JsonVariant, JsonVariantConst);
-bool mergeJsonObject(JsonVariantConst);
-bool mergeJsonString(String);
+
+// bool merge(JsonVariant, JsonVariantConst);
+// bool mergeJsonObject(JsonVariantConst);
+// bool mergeJsonString(String);
 
 extern Config config;
 extern const size_t capacitySerial;

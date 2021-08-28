@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "getGuid.h"
 
 void getGuid(char *str)

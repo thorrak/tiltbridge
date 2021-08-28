@@ -12,7 +12,7 @@ bool deleteConfigFile() {
     return FILESYSTEM.remove(filename);
 }
 
-bool loadConfig() {
+bool Config::loadConfig() {
     FILESYSTEM.begin();
     // Manage loading the configuration
     if (!loadFile()) {
@@ -23,7 +23,7 @@ bool loadConfig() {
     }
 }
 
-bool loadFile() {
+bool Config::loadFile() {
     if (!FILESYSTEM.begin()) {
         return false;
     }
@@ -44,11 +44,11 @@ bool loadFile() {
     }
 }
 
-bool saveConfig() {
+bool Config::save() {
     return saveFile();
 }
 
-bool saveFile() {
+bool Config::saveFile() {
     // Saves the configuration to a file on FILESYSTEM
     File file = FILESYSTEM.open(filename, "w");
     if (!file) {
@@ -65,7 +65,7 @@ bool saveFile() {
     return true;
 }
 
-bool deserializeConfig(Stream &src) {
+bool Config::deserializeConfig(Stream &src) {
     // Deserialize configuration
     DynamicJsonDocument doc(capacityDeserial);
 
@@ -73,23 +73,17 @@ bool deserializeConfig(Stream &src) {
     DeserializationError err = deserializeJson(doc, src);
 
     if (err) {
-        config.load(doc.as<JsonObject>());
+        load_from_json(doc);
         return true;
     } else {
-        config.load(doc.as<JsonObject>());
+        load_from_json(doc);
         return true;
     }
 }
 
-bool serializeConfig(Print &dst) {
+bool Config::serializeConfig(Print &dst) {
     // Serialize configuration
-    DynamicJsonDocument doc(capacitySerial);
-
-    // Create an object at the root
-    JsonObject root = doc.to<JsonObject>();
-
-    // Fill the object
-    config.save(root);
+    DynamicJsonDocument doc = to_json();
 
     // Serialize JSON to file
     return serializeJson(doc, dst) > 0;
@@ -111,13 +105,7 @@ bool printFile() {
 
 bool printConfig() {
     // Serialize configuration
-    DynamicJsonDocument doc(capacitySerial);
-
-    // Create an object at the root
-    JsonObject root = doc.to<JsonObject>();
-
-    // Fill the object
-    config.save(root);
+    DynamicJsonDocument doc = config.to_json();
 
     bool retval = true;
     // Serialize JSON to file
@@ -126,55 +114,9 @@ bool printConfig() {
     return retval;
 }
 
-bool mergeJsonString(String newJson) {
-    // Serialize configuration
-    DynamicJsonDocument doc(capacityDeserial);
+DynamicJsonDocument Config::to_json() {
+    DynamicJsonDocument obj(capacityDeserial); // TODO - Fix the capacity here
 
-    // Parse directly from file
-    DeserializationError err = deserializeJson(doc, newJson);
-    if (err) {
-        printChar(true, err.c_str());
-        printCR(true);
-    }
-
-    return mergeJsonObject(doc);
-}
-
-bool mergeJsonObject(JsonVariantConst src) {
-    // Serialize configuration
-    DynamicJsonDocument doc(capacityDeserial);
-
-    // Create an object at the root
-    JsonObject root = doc.to<JsonObject>();
-
-    // Fill the object
-    config.save(root);
-
-    // Merge in the configuration
-    if (merge(root, src)) {
-        // Move new object to config
-        config.load(root);
-        saveFile();
-        return true;
-    }
-
-    return false;
-}
-
-bool merge(JsonVariant dst, JsonVariantConst src) {
-    if (src.is<JsonObject>()) {
-        for (auto kvp : src.as<JsonObject>())
-        {
-            merge(dst.getOrAddMember(kvp.key()), kvp.value());
-        }
-    } else {
-        dst.set(src);
-    }
-    return true;
-}
-
-void Config::save(JsonObject obj) const
-{
     obj["mdnsID"] = mdnsID;
     obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
@@ -218,9 +160,11 @@ void Config::save(JsonObject obj) const
     obj["mqttPassword"] = mqttPassword;
     obj["mqttTopic"] = mqttTopic;
     obj["mqttPushEvery"] = mqttPushEvery;
+
+    return obj;
 }
 
-void Config::load(JsonObjectConst obj) {
+void Config::load_from_json(DynamicJsonDocument obj) {
     // Load all config objects
     //
     if (!obj["mdnsID"].isNull()) {
@@ -238,17 +182,17 @@ void Config::load(JsonObjectConst obj) {
     strlcpy(guid, newguid, sizeof(guid));
 //    }
 
-	if (!obj["invertTFT"].isNull()) {
-		invertTFT = obj["invertTFT"];
-	}
+    if (!obj["invertTFT"].isNull()) {
+        invertTFT = obj["invertTFT"];
+    }
 
-	if (!obj["cloudEnabled"].isNull()) {
-		cloudEnabled = obj["cloudEnabled"];
-	}
+    if (!obj["cloudEnabled"].isNull()) {
+        cloudEnabled = obj["cloudEnabled"];
+    }
 
-	if (!obj["update_spiffs"].isNull()) {
-		update_spiffs = obj["update_spiffs"];
-	}
+    if (!obj["update_spiffs"].isNull()) {
+        update_spiffs = obj["update_spiffs"];
+    }
 
     if (!obj["TZoffset"].isNull()) {
         TZoffset = int(obj["TZoffset"]);
@@ -263,13 +207,13 @@ void Config::load(JsonObjectConst obj) {
         smoothFactor = int(obj["smoothFactor"]);
     }
 
-	if (!obj["applyCalibration"].isNull()) {
-		applyCalibration = obj["applyCalibration"];
-	}
+    if (!obj["applyCalibration"].isNull()) {
+        applyCalibration = obj["applyCalibration"];
+    }
 
-	if (!obj["tempCorrect"].isNull()) {
-		tempCorrect = obj["tempCorrect"];
-	}
+    if (!obj["tempCorrect"].isNull()) {
+        tempCorrect = obj["tempCorrect"];
+    }
 
     // Loop through everything that is a "tilt-specific" setting
     for(int x=0;x<TILT_COLORS;x++) {

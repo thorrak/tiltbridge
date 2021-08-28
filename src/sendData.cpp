@@ -1,7 +1,3 @@
-//
-// Created by John Beeler on 2/18/19.
-//
-
 #include "sendData.h"
 
 dataSendHandler data_sender; // Global data sender
@@ -500,7 +496,7 @@ bool dataSendHandler::send_to_google()
                                 if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str()) != 0) {
                                     Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<String>().c_str());
                                     strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
-                                    saveConfig();
+                                    config.save();
                                 }
                                 retval.clear();
                                 numSent++;
