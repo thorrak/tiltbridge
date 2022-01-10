@@ -11,6 +11,9 @@ v1.0.3 - Unreleased
 - Shorten logo display time by 60%
 - Added reboot if reconnecting to WiFi fails
 - Added Grainfather as a push target (Thanks @teanooki!)
+- Replaced WiFi management libraries & WiFi reconnection process
+- Added Taplistio as a push target (Thanks @TaplistIO!)
+- Refactored configuration storage backend for performance
 
 
 v1.0.2 - Feb 19, 2021 - Calibration Bugfixes

@@ -97,7 +97,7 @@ void initWiFi() {
             // If the mDNS name is valid, save it.
             if (url.isValidHostName(custom_mdns_name.getValue())) {
                 strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
-                saveConfig();
+                config.save();
             } else {
                 // If the mDNS name is invalid, reset the WiFi configuration and restart the ESP8266
                 disconnectWiFi();
