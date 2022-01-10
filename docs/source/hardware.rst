@@ -42,6 +42,18 @@ Sources
 - `Heltec WiFi Kit 32 <https://heltec.org/project/wifi-kit-32/>`_
 
 
+M5Stack M5Stick-C
+-----------------
+
+The M5Stick-C is an ESP32 device with a built-in TFT display, enclosure, and even a small battery.
+Support for this device is experimental and does not yet include support for the display.
+
+Sources
+*******
+
+- `M5Stick-C on Adafruit <https://www.adafruit.com/product/4290>`_
+
+
 
 Additional Hardware Required
 ----------------------------

@@ -2,6 +2,17 @@ Changelog
 #########
 
 
+v1.0.3 - Unreleased
+-------------------
+
+- Fixed typo in Brewfather log messages
+- Added placeholder page when waiting for the first GSheets push
+- Added 24 hour reboot timer to improve overall stability
+- Shorten logo display time by 60%
+- Added reboot if reconnecting to WiFi fails
+- Added Grainfather as a push target (Thanks @teanooki!)
+
+
 v1.0.2 - Feb 19, 2021 - Calibration Bugfixes
 --------------------------------------------
 

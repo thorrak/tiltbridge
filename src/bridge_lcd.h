@@ -1,13 +1,15 @@
 #ifndef TILTBRIDGE_BRIDGE_LCD_H
 #define TILTBRIDGE_BRIDGE_LCD_H
 
+#define LOGO_TIME 2     // Time (in seconds) to display the logo
+#define TILT_TIME 10    // Time (in seconds) to display the Tilt screen
+
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include <Arduino.h>
 
 #ifdef LCD_SSD1306
-
-#include <SSD1306.h>
+#include <SSD1306Wire.h>
 #define SSD1306_FONT_HEIGHT     10
 #define SSD_LINE_CLEARANCE      2
 #define SSD1306_FONT            ArialMT_Plain_10
@@ -35,7 +37,21 @@
 #define GFXFF                   1
 #define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
 
+#elif defined(LCD_TFT_M5STICKC)
+
+#include <M5StickC.h>
+
+#define TFT_M5STICKC_LINE_CLEARANCE 0
+#define GFXFF                   2
+#define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
+
 #endif // LCD_SSD1306
+
+#ifdef TILTS_PER_PAGE
+#define HAVE_LCD                1
+#else
+#define HAVE_LCD                0
+#endif
 
 #define SCREEN_TILT             0
 #define SCREEN_LOGO             1
@@ -66,6 +82,7 @@ public:
     void clear();
 
 private:
+#if HAVE_LCD
     uint8_t display_next();
     void display_tilt_screen(uint8_t screen_number);
     void print_tilt_to_line(tiltHydrometer *tilt, uint8_t line);
@@ -73,10 +90,8 @@ private:
     void display();
 
 #ifdef LCD_SSD1306
-    SSD1306 *oled_display;
-#elif defined(LCD_TFT)
-    TFT_eSPI *tft;
-#elif defined(LCD_TFT_ESPI)
+    SSD1306Wire *oled_display;
+#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
     TFT_eSPI *tft;
 #endif // LCD_SSD1306
 
@@ -86,6 +101,7 @@ private:
     unsigned long next_screen_at;
 
     bool touchLatch = false;    // Ensure we only trigger a touch once
+#endif // HAVE_LCD
 };
 
 void screenFlip();
