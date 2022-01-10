@@ -135,5 +135,7 @@ void loop() {
         lcd.reinit();
     }
 
+    reconnectWiFi();
+
     screenFlip(); // This must be in the loop
 }
