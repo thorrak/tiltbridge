@@ -3,6 +3,7 @@
 //
 
 #include "tiltScanner.h"
+#include <ArduinoLog.h>
 
 // Create the scanner
 BLEScan *pBLEScan;
