@@ -11,6 +11,8 @@ v1.0.3 - Unreleased
 - Shorten logo display time by 60%
 - Added reboot if reconnecting to WiFi fails
 - Added Grainfather as a push target (Thanks @teanooki!)
+- Send 'uniq_id' as part of MQTT config messages
+- Change MQTT keep alive timing to seconds to match MQTT spec
 - Replaced WiFi management libraries & WiFi reconnection process
 - Added Taplistio as a push target (Thanks @TaplistIO!)
 - Refactored configuration storage backend for performance
