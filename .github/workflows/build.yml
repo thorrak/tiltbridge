@@ -48,7 +48,7 @@ jobs:
 
     - name: "Update development release"
       uses: "marvinpinto/action-automatic-releases@latest"
-      if: github.event.pull_request.merged == true
+      # if: github.event.pull_request.merged == true
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest-${{ github.event.pull_request.base.ref }}"
