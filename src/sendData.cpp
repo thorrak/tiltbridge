@@ -3,6 +3,7 @@
 //
 
 #include "sendData.h"
+#include "send_targets/taplistio.h"
 
 dataSendHandler data_sender; // Global data sender
 
@@ -14,7 +15,7 @@ Ticker brewersFriendTicker;
 Ticker brewfatherTicker;
 Ticker grainfatherTicker;
 Ticker brewStatusTicker;
-Ticker taplistioTicker;
+//Ticker taplistioTicker;  // Now inside dataSendHandler object
 Ticker gSheetsTicker;
 Ticker mqttTicker;
 
@@ -24,7 +25,7 @@ bool send_brewersFriend = false;
 bool send_brewfather = false;
 bool send_grainfather = false;
 bool send_brewStatus = false;
-bool send_taplistio = false;
+//bool send_taplistio = false;  // Now inside dataSendHandler object
 bool send_gSheets = false;
 bool send_mqtt = false;
 bool send_lock = false;
@@ -43,7 +44,7 @@ void dataSendHandler::init()
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    taplistioTicker.once(20, [](){send_taplistio = true;});          // Schedule first send to Taplist.io
+    taplistioTicker.once(20, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
     gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
     grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
@@ -330,86 +331,86 @@ bool dataSendHandler::http_send_json(const char * url, const char * payload)
     return true;
 }
 
-bool dataSendHandler::send_to_taplistio()
-{
-    bool result = true;
+// bool dataSendHandler::send_to_taplistio()
+// {
+//     StaticJsonDocument<192> j;
+//     char payload_string[192];
+//     int httpResponseCode;
+//     bool result = true;
 
-    // See if it's our time to send.
-    if (!send_taplistio) {
-        return false;
-    } else if (send_lock) {
-        return false;
-    }
+//     // See if it's our time to send.
+//     if (!send_taplistio) {
+//         return false;
+//     } else if (send_lock) {
+//         return false;
+//     }
 
-    // Attempt to send.
-    send_taplistio = false;
-    send_lock = true;
+//     // Attempt to send.
+//     send_taplistio = false;
+//     send_lock = true;
 
-    if (WiFiClass::status() != WL_CONNECTED) {
-        Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
-        taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
-        send_lock = false;
-        return false;
-    }
+//     if (WiFiClass::status() != WL_CONNECTED) {
+//         Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
+//         taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
+//         send_lock = false;
+//         return false;
+//     }
 
-    char userAgent[128];
-    snprintf(userAgent, sizeof(userAgent),
-        "tiltbridge/%s (branch %s; build %s)",
-        version(),
-        branch(),
-        build()
-    );
+//     char userAgent[128];
+//     snprintf(userAgent, sizeof(userAgent),
+//         "tiltbridge/%s (branch %s; build %s)",
+//         version(),
+//         branch(),
+//         build()
+//     );
 
-    for (uint8_t i = 0; i < TILT_COLORS; i++) {
-        StaticJsonDocument<192> j;
-        char payload_string[192];
-        int httpResponseCode;
+//     for (uint8_t i = 0; i < TILT_COLORS; i++) {
 
-        if (!tilt_scanner.tilt(i)->is_loaded()) {
-            continue;
-        }
+//         if (!tilt_scanner.tilt(i)->is_loaded()) {
+//             continue;
+//         }
 
-        j["Color"] = tilt_color_names[i];
-        j["Temp"] = tilt_scanner.tilt(i)->converted_temp(false);
-        j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-        j["temperature_unit"] = "F";
-        j["gravity_unit"] = "G";
+//         j["Color"] = tilt_color_names[i];
+//         j["Temp"] = tilt_scanner.tilt(i)->converted_temp(false);
+//         j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+//         j["temperature_unit"] = "F";
+//         j["gravity_unit"] = "G";
 
-        serializeJson(j, payload_string);
+//         serializeJson(j, payload_string);
 
-        http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-        http.setConnectTimeout(6000);
-        http.setReuse(false);
-        secureClient.setInsecure();
+//         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+//         http.setConnectTimeout(6000);
+//         http.setReuse(false);
+//         secureClient.setInsecure();
 
-        Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
+//         Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
 
-        if (!http.begin(secureClient, config.taplistioURL)) {
-            Log.error(F("taplist.io: Unable to create secure connection to %s\r\n"), config.taplistioURL);
-            result = false;
-            break;
-        }
+//         if (!http.begin(secureClient, config.taplistioURL)) {
+//             Log.error(F("taplist.io: Unable to create secure connection to %s\r\n"), config.taplistioURL);
+//             result = false;
+//             break;
+//         }
 
-        http.addHeader(F("Content-Type"), F("application/json"));
-        http.setUserAgent(userAgent);
-        httpResponseCode = http.POST(payload_string);
+//         http.addHeader(F("Content-Type"), F("application/json"));
+//         http.setUserAgent(userAgent);
+//         httpResponseCode = http.POST(payload_string);
 
-        if (httpResponseCode < HTTP_CODE_OK || httpResponseCode > HTTP_CODE_NO_CONTENT) {
-            Log.error(F("taplist.io: send %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
-                tilt_color_names[i],
-                httpResponseCode,
-                http.errorToString(httpResponseCode).c_str(),
-                http.getString().c_str());
-            result = false;
-        } else {
-            Log.verbose(F("taplist.io: %s Tilt: success!\r\n"), tilt_color_names[i]);
-        }
-    }
+//         if (httpResponseCode < HTTP_CODE_OK || httpResponseCode > HTTP_CODE_NO_CONTENT) {
+//             Log.error(F("taplist.io: send %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
+//                 tilt_color_names[i],
+//                 httpResponseCode,
+//                 http.errorToString(httpResponseCode).c_str(),
+//                 http.getString().c_str());
+//             result = false;
+//         } else {
+//             Log.verbose(F("taplist.io: %s Tilt: success!\r\n"), tilt_color_names[i]);
+//         }
+//     }
 
-    taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
-    send_lock = false;
-    return result;
-}
+//     taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
+//     send_lock = false;
+//     return result;
+// }
 
 bool dataSendHandler::send_to_google()
 {

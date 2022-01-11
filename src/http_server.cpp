@@ -10,7 +10,6 @@ extern bool send_brewfather;
 extern bool send_grainfather;
 extern bool send_localTarget;
 extern bool send_brewStatus;
-extern bool send_taplistio;
 extern bool send_gSheets;
 extern bool send_mqtt;
 
@@ -546,7 +545,7 @@ bool processTaplistioSettings(AsyncWebServerRequest *request) {
                 if (strlen(value) < 255) {
                     strlcpy(config.taplistioURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    sendNowTicker.once(5, [](){send_taplistio = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_taplistio = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.taplistioURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
