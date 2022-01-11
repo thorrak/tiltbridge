@@ -16,6 +16,7 @@ v1.0.3 - Unreleased
 - Replaced WiFi management libraries & WiFi reconnection process
 - Added Taplistio as a push target (Thanks @TaplistIO!)
 - Refactored configuration storage backend for performance
+- Changed "Invert TFT" option to also work for OLED screens
 
 
 v1.0.2 - Feb 19, 2021 - Calibration Bugfixes
