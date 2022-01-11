@@ -1,11 +1,10 @@
-name: Build
+name: Build (devel)
 
 on:
   push:
     branches:
-      - master
-    tags:
-      - "v*"
+      - devel
+
   pull_request:
     types: [ open, synchronize, edited, reopened, closed ]
 
@@ -50,7 +49,7 @@ jobs:
       # if: github.event.pull_request.merged == true
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-${{ github.event.pull_request.base.ref }}"
+        automatic_release_tag: "latest-devel"
         prerelease: true
         title: "Development Build"
         files: |
