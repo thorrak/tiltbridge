@@ -117,7 +117,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid controller configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             if (hostnamechanged) {
                 // We reset hostname, process
                 hostnamechanged = false;
@@ -178,7 +178,7 @@ bool processCalibrationSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid Local Target configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Local Target configuration data.\r\n"));
@@ -234,7 +234,7 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid Local Target configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Local Target configuration data.\r\n"));
@@ -322,7 +322,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid Google Sheets configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Google Sheets configuration data.\r\n"));
@@ -366,7 +366,7 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid Brewer's Friend configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Brewer's configuration data.\r\n"));
@@ -411,7 +411,7 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
         Log.error(F("Error: Invalid Brewfather configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Brewfather configuration data.\r\n"));
@@ -466,7 +466,7 @@ bool processGrainfatherSettings(AsyncWebServerRequest *request)
         Log.error(F("Error: Invalid Grainfather configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Grainfather configuration data.\r\n"));
@@ -521,7 +521,7 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid Brewstatus configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Brewstatus configuration data.\r\n"));
@@ -572,7 +572,7 @@ bool processTaplistioSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid Taplist.io configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             return true;
         } else {
             Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
@@ -686,7 +686,7 @@ bool processMqttSettings(AsyncWebServerRequest *request) {
         Log.error(F("Error: Invalid MQTT configuration.\r\n"));
         return false;
     } else {
-        if (saveConfig()) {
+        if (config.save()) {
             // Trigger a send via MQTT in 5 seconds using the updated data
             sendNowTicker.once(5, [](){send_mqtt = true;});
             return true;
@@ -777,13 +777,12 @@ void http_json(AsyncWebServerRequest *request) {
 
 void settings_json(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving settings JSON.\r\n"));
-    DynamicJsonDocument doc(capacitySerial);
-    JsonObject root = doc.to<JsonObject>();
-    config.save(root);
+    DynamicJsonDocument doc = config.to_json_external();
 
-    String config_js;
+    char config_js[4096];  // TODO - Shrink this considerably
     serializeJson(doc, config_js);
-    
+    doc.clear();  // Shouldn't be necessary, but we have leaks somewhere
+
     request->send(200, "application/json", config_js);
 }
 

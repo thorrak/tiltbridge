@@ -483,10 +483,10 @@ bool dataSendHandler::send_to_google()
                                 deserializeJson(retval, http.getString().c_str());
 #endif
 
-                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str()) != 0) {
-                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<String>().c_str());
-                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
-                                    saveConfig();
+                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<const char *>()) != 0) {
+                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<const char *>());
+                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<const char *>(), 255);
+                                    config.save();
                                 }
                                 retval.clear();
                                 numSent++;
@@ -549,7 +549,7 @@ void dataSendHandler::init_mqtt()
             }
         }
         mqtt_alreadyinit = true;
-        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
+        mqttClient.setKeepAlive(config.mqttPushEvery);
     }
 }
 

@@ -12,6 +12,10 @@ v1.0.3 - Unreleased
 - Added reboot if reconnecting to WiFi fails
 - Added Grainfather as a push target (Thanks @teanooki!)
 - Send 'uniq_id' as part of MQTT config messages
+- Change MQTT keep alive timing to seconds to match MQTT spec
+- Replaced WiFi management libraries & WiFi reconnection process
+- Added Taplistio as a push target (Thanks @TaplistIO!)
+- Refactored configuration storage backend for performance
 
 
 v1.0.2 - Feb 19, 2021 - Calibration Bugfixes
