@@ -2,8 +2,8 @@ Changelog
 #########
 
 
-v1.1.0 - Unreleased - Grainfather & Taplistio Support
------------------------------------------------------
+v1.1.0 - Jan 12, 2022 - Grainfather & Taplistio Support
+-------------------------------------------------------
 
 - Added Grainfather as a push target (Thanks @teanooki!)
 - Added Taplistio as a push target (Thanks @TaplistIO!)
