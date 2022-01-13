@@ -4,6 +4,7 @@
 
 #include "sendData.h"
 
+
 dataSendHandler data_sender; // Global data sender
 
 MQTTClient mqttClient(256);
@@ -12,7 +13,9 @@ MQTTClient mqttClient(256);
 Ticker localTargetTicker;
 Ticker brewersFriendTicker;
 Ticker brewfatherTicker;
+Ticker grainfatherTicker;
 Ticker brewStatusTicker;
+//Ticker taplistioTicker;  // Now inside dataSendHandler object
 Ticker gSheetsTicker;
 Ticker mqttTicker;
 
@@ -20,7 +23,9 @@ Ticker mqttTicker;
 bool send_localTarget = false;
 bool send_brewersFriend = false;
 bool send_brewfather = false;
+bool send_grainfather = false;
 bool send_brewStatus = false;
+//bool send_taplistio = false;  // Now inside dataSendHandler object
 bool send_gSheets = false;
 bool send_mqtt = false;
 bool send_lock = false;
@@ -33,14 +38,16 @@ void dataSendHandler::init()
 
     // Set up timers
     // DEBUG:
-    // localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
-    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
+//    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
     // DEBUG^
-    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
-    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
+    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
+    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
+    taplistioTicker.once(20, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
+    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
+    grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
 }
 
 bool dataSendHandler::send_to_localTarget()
@@ -79,8 +86,8 @@ bool dataSendHandler::send_to_localTarget()
         }
         localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
 //        tilt_scanner.init();
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -120,16 +127,16 @@ bool send_to_bf_and_bf()
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
             if (retval)
             {
-                Log.notice(F("Completed send to Brewer's Friend.\r\n"));
+                Log.notice(F("Completed send to Brewfather.\r\n"));
             }
             else
             {
-                Log.verbose(F("Error sending to Brewer's Friend.\r\n"));
+                Log.verbose(F("Error sending to Brewfather.\r\n"));
             }
         }
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        send_lock = false;
     }
-    send_lock = false;
     return retval;
 }
 
@@ -195,6 +202,51 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     return result;
 }
 
+bool dataSendHandler::send_to_grainfather()
+{
+    bool result = true;
+    StaticJsonDocument<GF_SIZE> j;
+
+    if (send_grainfather && ! send_lock)
+    {
+        // Brew Status
+        send_grainfather = false;
+        send_lock = true;
+        if (WiFiClass::status() == WL_CONNECTED)
+        {
+            Log.verbose(F("Calling send to Grainfather.\r\n"));
+
+            // Loop through each of the tilt colors cached by tilt_scanner, sending
+            // data for each of the active tilts
+            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            {
+                if (strlen(config.grainfatherURL[i].link) == 0) {
+                    continue;
+                }
+
+                if (tilt_scanner.tilt(i)->is_loaded())
+                {
+                    Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
+                    j["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                    j["Unit"] = "F";
+                    j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+
+                    char payload_string[GF_SIZE];
+                    serializeJson(j, payload_string);
+
+                    if (!http_send_json(config.grainfatherURL[i].link, payload_string))
+                    {
+                        result = false; // There was an error with the previous send
+                    }
+                }
+            }
+        }
+        grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Grainfather
+        send_lock = false;
+    }
+    return result;
+}
+
 bool dataSendHandler::send_to_brewstatus()
 {
     bool result = true;
@@ -242,10 +294,123 @@ bool dataSendHandler::send_to_brewstatus()
             }
         }
         brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
+
+bool dataSendHandler::http_send_json(const char * url, const char * payload)
+{
+    int httpResponseCode;
+    StaticJsonDocument<GF_SIZE> retval;
+    http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+    http.setConnectTimeout(6000);
+    http.setReuse(false);
+    
+    secureClient.setInsecure();
+
+    http.addHeader(F("Content-Type"), F("application/json"));
+    http.addHeader(F("Accept"), F("application/json"));
+    httpResponseCode = http.POST(payload);
+
+    if (httpResponseCode >= 400) {
+        Log.error(F("HTTP error %d: %s, %s.\r\n"), httpResponseCode, http.errorToString(httpResponseCode).c_str(), http.getString().c_str());
+        return false;
+    }
+
+    if (!http.begin(secureClient, url)) {
+        Log.error(F("Unable to create secure connection to %s.\r\n"), url);
+        return false;
+    }
+
+    deserializeJson(retval, http.getString().c_str());
+
+    http.end();
+    retval.clear();
+
+    return true;
+}
+
+// bool dataSendHandler::send_to_taplistio()
+// {
+//     StaticJsonDocument<192> j;
+//     char payload_string[192];
+//     int httpResponseCode;
+//     bool result = true;
+
+//     // See if it's our time to send.
+//     if (!send_taplistio) {
+//         return false;
+//     } else if (send_lock) {
+//         return false;
+//     }
+
+//     // Attempt to send.
+//     send_taplistio = false;
+//     send_lock = true;
+
+//     if (WiFiClass::status() != WL_CONNECTED) {
+//         Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
+//         taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
+//         send_lock = false;
+//         return false;
+//     }
+
+//     char userAgent[128];
+//     snprintf(userAgent, sizeof(userAgent),
+//         "tiltbridge/%s (branch %s; build %s)",
+//         version(),
+//         branch(),
+//         build()
+//     );
+
+//     for (uint8_t i = 0; i < TILT_COLORS; i++) {
+
+//         if (!tilt_scanner.tilt(i)->is_loaded()) {
+//             continue;
+//         }
+
+//         j["Color"] = tilt_color_names[i];
+//         j["Temp"] = tilt_scanner.tilt(i)->converted_temp(false);
+//         j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+//         j["temperature_unit"] = "F";
+//         j["gravity_unit"] = "G";
+
+//         serializeJson(j, payload_string);
+
+//         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+//         http.setConnectTimeout(6000);
+//         http.setReuse(false);
+//         secureClient.setInsecure();
+
+//         Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
+
+//         if (!http.begin(secureClient, config.taplistioURL)) {
+//             Log.error(F("taplist.io: Unable to create secure connection to %s\r\n"), config.taplistioURL);
+//             result = false;
+//             break;
+//         }
+
+//         http.addHeader(F("Content-Type"), F("application/json"));
+//         http.setUserAgent(userAgent);
+//         httpResponseCode = http.POST(payload_string);
+
+//         if (httpResponseCode < HTTP_CODE_OK || httpResponseCode > HTTP_CODE_NO_CONTENT) {
+//             Log.error(F("taplist.io: send %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
+//                 tilt_color_names[i],
+//                 httpResponseCode,
+//                 http.errorToString(httpResponseCode).c_str(),
+//                 http.getString().c_str());
+//             result = false;
+//         } else {
+//             Log.verbose(F("taplist.io: %s Tilt: success!\r\n"), tilt_color_names[i]);
+//         }
+//     }
+
+//     taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
+//     send_lock = false;
+//     return result;
+// }
 
 bool dataSendHandler::send_to_google()
 {
@@ -319,10 +484,10 @@ bool dataSendHandler::send_to_google()
                                 deserializeJson(retval, http.getString().c_str());
 #endif
 
-                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str()) != 0) {
-                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<String>().c_str());
-                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<String>().c_str(), 255);
-                                    saveConfig();
+                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<const char *>()) != 0) {
+                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<const char *>());
+                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<const char *>(), 255);
+                                    config.save();
                                 }
                                 retval.clear();
                                 numSent++;
@@ -347,8 +512,8 @@ bool dataSendHandler::send_to_google()
         gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         //tilt_scanner.init();
+        send_lock = false;
     }
-    send_lock = false;
     return result;
 }
 
@@ -385,7 +550,7 @@ void dataSendHandler::init_mqtt()
             }
         }
         mqtt_alreadyinit = true;
-        mqttClient.setKeepAlive(config.mqttPushEvery * 1000);
+        mqttClient.setKeepAlive(config.mqttPushEvery);
     }
 }
 
@@ -441,7 +606,7 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
-            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), 80))
+            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
             {
                 Log.verbose(F("Connected to: %s.\r\n"), lcburl.getHost().c_str());
 
@@ -587,8 +752,13 @@ bool dataSendHandler::send_to_mqtt()
                     {
                         char m_topic[90] = {'\0'};
                         char tilt_name[35] = {'\0'};
+                        char uniq_id[30] = {'\0'};
                         char unit[10] = {'\0'};
                         bool retain = false;
+
+                        strcat(uniq_id, "tiltbridge_tilt");
+                        strcat(uniq_id, tilt_color_names[i]);
+
                         switch (j)
                         {
                         case 0: //Home Assistant Config Topic for Temperature
@@ -605,6 +775,7 @@ bool dataSendHandler::send_to_mqtt()
                             strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.Temp}}";
+                            payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
                         case 1: //Home Assistant Config Topic for Sp Gravity
@@ -619,6 +790,7 @@ bool dataSendHandler::send_to_mqtt()
                             strcat(tilt_name, tilt_color_names[i]);
                             payload["name"] = tilt_name;
                             payload["val_tpl"] = "{{value_json.SG}}";
+                            payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
                         case 2: //General payload with sensor data
@@ -663,7 +835,8 @@ bool dataSendHandler::send_to_mqtt()
             }
         }
         mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+        send_lock = false;
     }
-    send_lock = false;
+
     return result;
 }

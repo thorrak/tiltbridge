@@ -9,6 +9,8 @@
 Ticker memCheck;
 #endif
 
+Ticker reboot24;
+
 void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
@@ -16,11 +18,18 @@ void printMem() {
     Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
 }
 
+void reboot()
+{
+    Log.notice(F("Rebooting on 24-hour timer." CR));
+    delay(500);
+    ESP.restart();
+}
+
 void setup() {
     serial();
 
     Log.verbose(F("Loading config.\r\n"));
-    loadConfig();
+    config.load();
 
     Log.verbose(F("Initializing LCD.\r\n"));
     lcd.init();
@@ -70,6 +79,9 @@ void setup() {
 #if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
+
+    // Set a reboot timer for 24 hours
+    reboot24.once(86400, reboot);
 }
 
 void loop() {
@@ -80,6 +92,8 @@ void loop() {
     data_sender.send_to_localTarget();
     send_to_bf_and_bf();
     data_sender.send_to_brewstatus();
+    data_sender.send_to_grainfather();
+    data_sender.send_to_taplistio();
     data_sender.send_to_google();
     data_sender.send_to_mqtt();
 
@@ -119,7 +133,7 @@ void loop() {
         Log.verbose(F("Resetting to original settings.\r\n"));
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
-        deleteConfigFile();                         // Delete the config file in SPIFFS
+        config.deleteFile();                        // Delete the config file in SPIFFS
         disconnectWiFi();                           // Clear wifi config and restart
     }
 
@@ -134,6 +148,8 @@ void loop() {
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
     }
+
+    reconnectWiFi();
 
     screenFlip(); // This must be in the loop
 }

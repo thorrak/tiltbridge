@@ -11,7 +11,9 @@ relay their gravity readings to the cloud. At the moment, TiltBridge supports si
 * `Brewers Friend`_
 * Google Sheets
 * `Brewfather`_
+* `Grainfather`_
 * `BrewStatus`_
+* `Taplist.io`_
 * Home Assistant/MQTT
 
 
@@ -265,6 +267,17 @@ contributors to the project on `GitHub`_ and has not yet been documented.
 .. note:: If you use `Brewstatus`_ and would like to help write this documentation, please reach out!
 
 .. todo:: Document Brewstatus configuration
+
+
+Setting up TiltBridge for Taplist.io
+------------------------------------
+
+TiltBridge has built-in support for `Taplist.io`_. To use, follow these steps:
+
+#. Log in to the Taplist.io Dashboard.
+#. Visit :menuselection:`Account --> Integrations --> Tilt Hydrometer`
+#. Create a new Tilt integration and copy the webhook URL.
+#. Paste the URL into TiltBridge settings.
 
 
 Setting up TiltBridge for Home Assistant/MQTT

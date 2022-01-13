@@ -1,38 +1,50 @@
+#include <ArduinoLog.h>
+#include <ArduinoJson.h>
+
+#if FILESYSTEM == SPIFFS
+#include <SPIFFS.h>
+#include <FS.h>
+#endif
+
+
+#include "main.h"
+#include "serialhandler.h"
+
+
 #include "jsonconfig.h"
+#include "bridge_lcd.h"
+
+
+#define MAX_FILENAME_LENGTH  32
+
 
 Config config;
 const char *filename = JSON_CONFIG_FILE;
 const size_t capacitySerial = 6144;
 const size_t capacityDeserial = 8192;
 
-bool deleteConfigFile() {
+
+
+bool ConfigFile::loadFile(const char * filename) {
     if (!FILESYSTEM.begin()) {
         return false;
     }
-    return FILESYSTEM.remove(filename);
-}
 
-bool loadConfig() {
-    FILESYSTEM.begin();
-    // Manage loading the configuration
-    if (!loadFile()) {
-        return false;
-    } else {
-        saveFile();
-        return true;
-    }
-}
-
-bool loadFile() {
-    if (!FILESYSTEM.begin()) {
-        return false;
-    }
     // Loads the configuration from a file on FILESYSTEM
-    File file = FILESYSTEM.open(filename, "r");
-    if (!FILESYSTEM.exists(filename) || !file) {
-        // File does not exist or unable to read file
+    if (!FILESYSTEM.exists(filename)) {
+        // File does not exist
+        Log.info(F("Config file %s does not exist - creating with defaults\r\n"), filename);
+        saveFile(filename);
     } else {
         // Existing configuration present
+        Log.verbose(F("Found existing config file %s\r\n"), filename);
+    }
+    
+    File file = FILESYSTEM.open(filename, "r");
+    if (!file) {
+        // Unable to open the file
+        Log.error(F("Unable to access config file %s\r\n"), filename);
+        return false;
     }
 
     if (!deserializeConfig(file)) {
@@ -44,12 +56,12 @@ bool loadFile() {
     }
 }
 
-bool saveConfig() {
-    return saveFile();
-}
-
-bool saveFile() {
+bool ConfigFile::saveFile(const char * filename) {
     // Saves the configuration to a file on FILESYSTEM
+    if (!FILESYSTEM.begin()) {
+        return false;
+    }
+
     File file = FILESYSTEM.open(filename, "w");
     if (!file) {
         file.close();
@@ -65,7 +77,7 @@ bool saveFile() {
     return true;
 }
 
-bool deserializeConfig(Stream &src) {
+bool ConfigFile::deserializeConfig(Stream &src) {
     // Deserialize configuration
     DynamicJsonDocument doc(capacityDeserial);
 
@@ -73,30 +85,66 @@ bool deserializeConfig(Stream &src) {
     DeserializationError err = deserializeJson(doc, src);
 
     if (err) {
-        config.load(doc.as<JsonObject>());
+        load_from_json(doc);
         return true;
     } else {
-        config.load(doc.as<JsonObject>());
+        load_from_json(doc);
         return true;
     }
 }
 
-bool serializeConfig(Print &dst) {
+bool ConfigFile::serializeConfig(Print &dst) {
     // Serialize configuration
-    DynamicJsonDocument doc(capacitySerial);
-
-    // Create an object at the root
-    JsonObject root = doc.to<JsonObject>();
-
-    // Fill the object
-    config.save(root);
+    DynamicJsonDocument doc = to_json();
 
     // Serialize JSON to file
     return serializeJson(doc, dst) > 0;
 }
 
-bool printFile() {
+DynamicJsonDocument ConfigFile::to_json_external() {
+    return to_json();
+}
+
+bool ConfigFile::save() {
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))
+        return false;
+    return saveFile(filename);
+}
+
+bool ConfigFile::load() {
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))   
+        return false;
+    return loadFile(filename);
+}
+
+bool ConfigFile::deleteFile() {
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))
+        return false;
+    if (!FILESYSTEM.begin()) {
+        return false;
+    }
+    return FILESYSTEM.remove(filename);
+}
+
+bool ConfigFile::printConfig() {
+    // Serialize configuration
+    DynamicJsonDocument doc = to_json();
+
+    bool retval = true;
+    // Serialize JSON to file
+    retval = serializeJson(doc, Serial) > 0;
+    printCR(true);
+    return retval;
+}
+
+bool ConfigFile::printConfigFile() {
     // Prints the content of a file to the Serial
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))
+        return false;
     File file = FILESYSTEM.open(filename, "r");
     if (!file)
         return false;
@@ -109,72 +157,35 @@ bool printFile() {
     return true;
 }
 
-bool printConfig() {
-    // Serialize configuration
-    DynamicJsonDocument doc(capacitySerial);
-
-    // Create an object at the root
-    JsonObject root = doc.to<JsonObject>();
-
-    // Fill the object
-    config.save(root);
-
-    bool retval = true;
-    // Serialize JSON to file
-    retval = serializeJson(doc, Serial) > 0;
-    printCR(true);
-    return retval;
-}
-
-bool mergeJsonString(String newJson) {
-    // Serialize configuration
-    DynamicJsonDocument doc(capacityDeserial);
-
-    // Parse directly from file
-    DeserializationError err = deserializeJson(doc, newJson);
-    if (err) {
-        printChar(true, err.c_str());
-        printCR(true);
-    }
-
-    return mergeJsonObject(doc);
-}
-
-bool mergeJsonObject(JsonVariantConst src) {
-    // Serialize configuration
-    DynamicJsonDocument doc(capacityDeserial);
-
-    // Create an object at the root
-    JsonObject root = doc.to<JsonObject>();
-
-    // Fill the object
-    config.save(root);
-
-    // Merge in the configuration
-    if (merge(root, src)) {
-        // Move new object to config
-        config.load(root);
-        saveFile();
-        return true;
-    }
-
-    return false;
-}
-
-bool merge(JsonVariant dst, JsonVariantConst src) {
-    if (src.is<JsonObject>()) {
-        for (auto kvp : src.as<JsonObject>())
-        {
-            merge(dst.getOrAddMember(kvp.key()), kvp.value());
-        }
-    } else {
-        dst.set(src);
-    }
+bool Config::getFilename(char *filename) {
+    // Build the filename from the prefix & config file name
+    snprintf(filename, MAX_FILENAME_LENGTH, "%s/%s", CONFIG_DIR, JSON_CONFIG_FILE);
     return true;
 }
 
-void Config::save(JsonObject obj) const
-{
+DynamicJsonDocument Config::to_json_external() {
+    // This function generates the JSON document that gets served externally. Can add keys here that we don't
+    // save as part of the configuration.
+    DynamicJsonDocument obj = to_json();
+
+#ifdef HAVE_LCD
+    obj["have_lcd"] = true;
+#else
+    obj["have_lcd"] = false;
+#endif
+
+#ifdef HAVE_STATUS_LED
+    obj["have_led"] = true;
+#else
+    obj["have_led"] = false;
+#endif
+
+    return obj;
+}
+
+DynamicJsonDocument Config::to_json() {
+    DynamicJsonDocument obj(capacityDeserial); // TODO - Fix the capacity here 
+
     obj["mdnsID"] = mdnsID;
     obj["invertTFT"] = invertTFT;
     obj["update_spiffs"] = update_spiffs;
@@ -194,12 +205,16 @@ void Config::save(JsonObject obj) const
 
         obj[tilt_color_names[x]]["name"] = gsheets_config[x].name;
         obj[tilt_color_names[x]]["link"] = gsheets_config[x].link;
+
+        obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
     obj["localTargetURL"] = localTargetURL;
     obj["localTargetPushEvery"] = localTargetPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
+    obj["taplistioURL"] = taplistioURL;
+    obj["taplistioPushEvery"] = taplistioPushEvery;
     obj["scriptsURL"] = scriptsURL;
     obj["scriptsEmail"] = scriptsEmail;
     obj["brewersFriendKey"] = brewersFriendKey;
@@ -210,9 +225,11 @@ void Config::save(JsonObject obj) const
     obj["mqttPassword"] = mqttPassword;
     obj["mqttTopic"] = mqttTopic;
     obj["mqttPushEvery"] = mqttPushEvery;
+
+    return obj;
 }
 
-void Config::load(JsonObjectConst obj) {
+void Config::load_from_json(DynamicJsonDocument obj) {
     // Load all config objects
     //
     if (!obj["mdnsID"].isNull()) {
@@ -282,6 +299,12 @@ void Config::load(JsonObjectConst obj) {
             const char *sn = obj[tilt_color_names[x]]["link"];
             strlcpy(gsheets_config[x].link, sn, 255);
         }
+
+        // Grainfather URLs
+        if (!obj[tilt_color_names[x]]["grainfatherURL"].isNull()) {
+            const char *sn = obj[tilt_color_names[x]]["grainfatherURL"];
+            strlcpy(grainfatherURL[x].link, sn, 64);
+        }
     } // End Tilt-specific config loop
 
 
@@ -303,6 +326,15 @@ void Config::load(JsonObjectConst obj) {
     if (!obj["brewstatusPushEvery"].isNull()) {
         int pe = obj["brewstatusPushEvery"];
         brewstatusPushEvery = pe;
+    }
+
+    if (!obj["taplistioURL"].isNull()) {
+        const char *tu = obj["taplistioURL"];
+        strlcpy(taplistioURL, tu, 256);
+    }
+
+    if (!obj["taplistioPushEvery"].isNull()) {
+        taplistioPushEvery = obj["taplistioPushEvery"];
     }
 
     if (!obj["scriptsURL"].isNull()) {

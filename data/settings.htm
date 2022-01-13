@@ -107,7 +107,9 @@
                             <a class="dropdown-item" data-toggle="tab" href="#googlesheets">Google Sheets</a>
                             <a class="dropdown-item" data-toggle="tab" href="#brewersfriend">Brewer's Friend</a>
                             <a class="dropdown-item" data-toggle="tab" href="#brewfather">Brewfather</a>
+                            <a class="dropdown-item" data-toggle="tab" href="#grainfather">Grainfather</a>
                             <a class="dropdown-item" data-toggle="tab" href="#brewstatus">Brewstatus</a>
+                            <a class="dropdown-item" data-toggle="tab" href="#taplistio">Taplist.io</a>
                             <a class="dropdown-item" data-toggle="tab" href="#mqtt">MQTT</a>
                         </div>
                     </li>
@@ -195,7 +197,7 @@
                                 </div>
                                 <div class="form-group row">
                                     <label for="invertTFT" class="col-sm-4 form-check-label" data-toggle="tooltip"
-                                        title="Rotate TFT Display 180 degrees">Invert TFT Display</label>
+                                        title="Rotate TFT Display 180 degrees">Invert Display</label>
                                     <div class="col-sm-8">
                                         <input class="form-check-input" value="on" type="checkbox" id="invertTFT"
                                             name="invertTFT">
@@ -489,6 +491,104 @@
 
                     </div> <!-- BrewFather Tab -->
 
+                    <div class="tab-pane fade" id="grainfather"> <!-- Grainfather Tab -->
+
+                        <div class="card-header bg-light border-primary">
+                            <h5 class="card-title">Grainfather Settings</h5>
+                        </div>
+        
+                        <div class="card-body">
+                            <p class="card-text">
+                                These settings control how TiltBridge talks to <a href="https://community.grainfather.com/">
+                                Grainfather.</a> Grainfather supports logging from gravity sensors such as the Tilt
+                                Hydrometer with an account. To find your API url, log into your Grainfather
+                                account and go to Equipment > Fermentation Devices. Add a "Tilt" fermentation device for
+                                each color Tilt you want to log. After adding the Tilt, the URL required below can be 
+                                found under setup instructions (accessible by clicking the circled "i" next to the Tilt 
+                                in Grainfather).
+                            </p>
+                            <form action="/settings/grainfather/" method="POST">
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_red" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Red Tilt">Grainfather URL (Red)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_red" id="grainfatherURL_red"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_red"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_green" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Green Tilt">Grainfather URL (Green)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_green" id="grainfatherURL_green"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_green"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_black" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Black Tilt">Grainfather URL (Black)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_black" id="grainfatherURL_black"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_black"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_purple" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Purple Tilt">Grainfather URL (Purple)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_purple" id="grainfatherURL_purple"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_purple"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_orange" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Orange Tilt">Grainfather URL (Orange)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_orange" id="grainfatherURL_orange"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_orange"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_blue" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Blue Tilt">Grainfather URL (Blue)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_blue" id="grainfatherURL_blue"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_blue"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_yellow" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Yellow Tilt">Grainfather URL (Yellow)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_yellow" id="grainfatherURL_yellow"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_yellow"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="grainfatherURL_pink" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Grainfather URL for a Pink Tilt">Grainfather URL (Pink)</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" name="grainfatherURL_pink" id="grainfatherURL_pink"
+                                            placeholder="https://community.grainfather.com/iot/xxxx-xxxx/tilt" :value="settings.grainfatherURL_pink"
+                                            minlength="44" maxlength="64">
+                                    </div>
+                                </div>
+                                <div class="row col-sm-12 justify-content-center">
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div> <!-- Grainfather Tab -->
+
                     <div class="tab-pane fade" id="brewstatus"> <!-- Brewstatus Tab -->
 
                         <div class="card-header bg-light border-primary">
@@ -530,6 +630,48 @@
                         </div>
 
                     </div> <!-- Brewstatus Tab -->
+
+                    <div class="tab-pane fade" id="taplistio"> <!-- Taplist.io Tab -->
+
+                        <div class="card-header bg-light border-primary">
+                            <h5 class="card-title">Taplist.io Settings</h5>
+                        </div>
+
+                        <div class="card-body">
+                            <p class="card-text">These settings control how TiltBridge talks to
+                                <a href="https://taplist.io/">Taplist.io</a>. To disable pushing to Taplist.io,
+                                delete the Taplist.io URL.
+                            </p>
+                            <form action="/settings/taplistio/" method="POST" enctype="multipart/form-data">
+                                <div class="form-group row">
+                                    <label for="taplistioURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                        title="Target Taplist.io tiltbridge URL. Delete to disable pushing to Taplist.io">
+                                        Taplist.io URL</label>
+                                    <div class="col-sm-8">
+                                        <input type="url" class="form-control" name="taplistioURL" id="taplistioURL"
+                                            placeholder="https://api.taplist.io/api/v1/tilt-webhook/xxxx" :value="settings.taplistioURL"
+                                            minlength="12" maxlength="254">
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label for="taplistioPushEvery" class="col-sm-3 col-form-label"
+                                        data-toggle="tooltip"
+                                        title="How often to push data to Taplist.io (Range: 30 - 3600 seconds)">Push
+                                        Frequency (s)</label>
+                                    <div class="col-sm-8">
+                                        <input type="number" class="form-control" name="taplistioPushEvery"
+                                        min="300" max="3600">
+                                    </div>
+                                </div>
+                                <div class="row col-sm-12 justify-content-center">
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">Update</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div> <!-- Taplist.io Tab -->
 
                     <div class="tab-pane fade" id="mqtt"> <!-- MQTT Tab -->
 

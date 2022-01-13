@@ -1,0 +1,68 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v*"
+  pull_request:
+    types: [ open, synchronize, edited, reopened, closed ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - run: git fetch --prune --unshallow
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+
+    - name: Build all environments
+      run: |
+        pio run
+        pio run --target buildfs
+        sh ./copy_bins.sh
+
+    - name: "Update development release"
+      uses: "marvinpinto/action-automatic-releases@latest"
+      # if: github.event.pull_request.merged == true
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest-${{ github.event.pull_request.base.ref }}"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          LICENSE
+          bin/*.bin
+
+    - name: "Publish tagged release"
+      uses: "marvinpinto/action-automatic-releases@latest"
+      if: startsWith(github.ref, 'refs/tags')
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        files: |
+          LICENSE
+          bin/*.bin
