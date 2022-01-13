@@ -100,3 +100,4 @@ docs/.build/doctrees/
 
 cmake-build-*
 
+.DS_Store

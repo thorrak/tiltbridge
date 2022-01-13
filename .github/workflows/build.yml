@@ -6,8 +6,8 @@ on:
       - master
     tags:
       - "v*"
-  pull_request:
-    types: [ open, synchronize, edited, reopened, closed ]
+  # pull_request:
+  #   types: [ open, synchronize, edited, reopened, closed ]
 
 jobs:
   build:
@@ -50,9 +50,9 @@ jobs:
       # if: github.event.pull_request.merged == true
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-${{ github.event.pull_request.base.ref }}"
+        # automatic_release_tag: "latest-${{ github.event.pull_request.base.ref }}"
         prerelease: true
-        title: "Development Build"
+        # title: "Development Build"
         files: |
           LICENSE
           bin/*.bin
