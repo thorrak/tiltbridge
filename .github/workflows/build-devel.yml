@@ -1,13 +1,12 @@
-name: Build
+name: Build Development Release
 
 on:
   push:
     branches:
-      - master
-    tags:
-      - "v*"
-  # pull_request:
-  #   types: [ open, synchronize, edited, reopened, closed ]
+      - devel
+
+  pull_request:
+    types: [ open, synchronize, edited, reopened, closed ]
 
 jobs:
   build:
@@ -41,15 +40,18 @@ jobs:
 
     - name: Build all environments
       run: |
-        pio run -e m5stickc -e tft_espi -e d32_pro_tft -e lcd_ssd1306
-        pio run --target buildfs -e m5stickc -e tft_espi -e d32_pro_tft -e lcd_ssd1306
+        pio run
+        pio run --target buildfs
         sh ./copy_bins.sh
 
-    - name: "Create Prerelease"
+    - name: "Update development release"
       uses: "marvinpinto/action-automatic-releases@latest"
+      # if: github.event.pull_request.merged == true
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest-devel"
         prerelease: true
+        title: "Development Build"
         files: |
           LICENSE
           bin/*.bin

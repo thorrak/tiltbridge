@@ -1,11 +1,6 @@
-//
-// Created by Lee Bussy on 1/4/21
-//
-
 #ifndef _SERIALLOG_H
 #define _SERIALLOG_H
 
-#include <ArduinoLog.h>
 #include <Arduino.h>
 
 #if DOTELNET == true
@@ -17,6 +12,7 @@
 
 void serial();
 void toggleSerialCompat(bool);
+void printPrefix(Print* _logOutput, int logLevel);
 void printTimestamp(Print *_logOutput);
 void serialLoop();
 void debug();
@@ -62,16 +58,7 @@ void nullDoc(const char *);
 
 #define prefLen 22
 
-extern struct ThatVersion thatVersion;
-extern struct Config config;
-extern const size_t capacitySerial;
-#if KCWEIGH == false
-extern struct Flowmeter flow;
-extern const size_t capacityFlowSerial;
-extern const size_t capacityPulseSerial;
-#endif
-extern struct Devices device;
-extern const size_t capacityTempsSerial;
-extern struct Thermostat tstat;
+// extern struct ThatVersion thatVersion;
+// extern const size_t capacitySerial;
 
 #endif //_SERIALLOG_H

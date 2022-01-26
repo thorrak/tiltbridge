@@ -60,6 +60,11 @@ public:
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
     bool send_to_grainfather();
 
+
+    Ticker taplistioTicker;
+
+    bool send_taplistio = false;
+
 private:
     void connect_mqtt();
     bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");

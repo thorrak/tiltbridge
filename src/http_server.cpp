@@ -11,7 +11,6 @@ extern bool send_brewfather;
 extern bool send_grainfather;
 extern bool send_localTarget;
 extern bool send_brewStatus;
-extern bool send_taplistio;
 extern bool send_gSheets;
 extern bool send_mqtt;
 
@@ -594,7 +593,7 @@ bool processTaplistioSettings(AsyncWebServerRequest *request) {
                 if (strlen(value) < 255) {
                     strlcpy(config.taplistioURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    sendNowTicker.once(5, [](){send_taplistio = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_taplistio = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.taplistioURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -824,11 +823,12 @@ void http_json(AsyncWebServerRequest *request) {
 
 void settings_json(AsyncWebServerRequest *request) {
     Log.verbose(F("Serving settings JSON.\r\n"));
-    DynamicJsonDocument doc = config.to_json();
+    DynamicJsonDocument doc = config.to_json_external();
 
-    String config_js;
+    char config_js[4096];  // TODO - Shrink this considerably
     serializeJson(doc, config_js);
-    
+    doc.clear();  // Shouldn't be necessary, but we have leaks somewhere
+
     request->send(200, "application/json", config_js);
 }
 

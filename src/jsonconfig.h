@@ -1,17 +1,11 @@
 #ifndef _JSONCONFIG_H
 #define _JSONCONFIG_H
 
-#include "serialhandler.h"
-#include "tilt/tiltHydrometer.h"
-#include "getGuid.h"
 #include <ArduinoJson.h>
+#include "tilt/tiltHydrometer.h"
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#include <FS.h>
-#endif
-
-#define JSON_CONFIG_FILE "/tiltbridgeConfig.json"
+#define CONFIG_DIR "/conf"
+#define JSON_CONFIG_FILE "tiltbridgeConfig.json"
 
 struct TiltCalData {
     uint8_t degree = 1;
@@ -30,9 +24,33 @@ struct GrainfatherURL {
     char link[65] = "";
 };
 
-class Config {
+class ConfigFile {
 public:
+    // The following two functions when implemented should handle the derivation of the config filename as
+    // well as then passing that filename to saveFile/loadFile
+    bool save();
+    bool load();
+    bool deleteFile();
 
+    // The following function can optionally be implemented to serve external json
+    DynamicJsonDocument to_json_external();
+    bool printConfig();
+    bool printConfigFile();
+
+protected:
+    // The following two functions must be defined in inheriting classes
+    virtual void load_from_json(DynamicJsonDocument obj);
+    virtual DynamicJsonDocument to_json();
+
+    bool deserializeConfig(Stream &);
+    bool serializeConfig(Print &);
+    bool saveFile(const char * filename);
+    bool loadFile(const char * filename);
+    virtual bool getFilename(char *filename);
+};
+
+class Config: public ConfigFile {
+public:
     char mdnsID[32] = "tiltbridge";
     char guid[17] = "";
     bool invertTFT = false;
@@ -68,30 +86,14 @@ public:
     char mqttTopic[31] = "";
     uint16_t mqttPushEvery = 30;
 
+
+    DynamicJsonDocument to_json_external();
+private:
     void load_from_json(DynamicJsonDocument obj);
     DynamicJsonDocument to_json();
-
-    bool serializeConfig(Print &);
-    bool deserializeConfig(Stream &);
-
-    bool save();
-    bool loadConfig();
-
-private:
-    bool saveFile();
-    bool loadFile();
-
-
+    bool getFilename(char *filename);
 };
 
-bool deleteConfigFile();
-
-bool printConfig();
-bool printFile();
-
-// bool merge(JsonVariant, JsonVariantConst);
-// bool mergeJsonObject(JsonVariantConst);
-// bool mergeJsonString(String);
 
 extern Config config;
 extern const size_t capacitySerial;

@@ -29,7 +29,7 @@ void setup() {
     serial();
 
     Log.verbose(F("Loading config.\r\n"));
-    config.loadConfig();
+    config.load();
 
     Log.verbose(F("Initializing LCD.\r\n"));
     lcd.init();
@@ -107,7 +107,7 @@ void loop() {
         Log.verbose(F("Resetting to original settings.\r\n"));
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
-        deleteConfigFile();                         // Delete the config file in SPIFFS
+        config.deleteFile();                        // Delete the config file in SPIFFS
         disconnectWiFi();                           // Clear wifi config and restart
     }
 
@@ -122,6 +122,8 @@ void loop() {
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
     }
+
+    reconnectWiFi();
 
     screenFlip(); // This must be in the loop
 }

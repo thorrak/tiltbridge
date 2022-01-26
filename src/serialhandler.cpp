@@ -1,6 +1,5 @@
-//
-// Created by Lee Bussy on 1/4/21
-//
+#include <Arduino.h>
+#include <ArduinoLog.h>
 
 #include "serialhandler.h"
 
@@ -24,7 +23,7 @@ void serial()
     SERIAL.println();
     SERIAL.flush();
     Log.begin(ARDUINO_LOG_LEVEL, &SERIAL, true);
-    Log.setPrefix(printTimestamp);
+    Log.setPrefix(printPrefix);
     Log.notice(F("Serial logging started at %l.\r\n"), BAUD);
 
     debug();
@@ -60,6 +59,11 @@ void debug() {
     esp_log_level_set("wifi", ESP_LOG_WARN);      // Enable WARN logs from WiFi stack
     esp_log_level_set("dhcpc", ESP_LOG_WARN);
 #endif
+}
+
+void printPrefix(Print* _logOutput, int logLevel) {
+    printTimestamp(_logOutput);
+//    printLogLevel (_logOutput, logLevel);
 }
 
 void printTimestamp(Print *_logOutput)

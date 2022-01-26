@@ -2,6 +2,7 @@
 // Created by John Beeler on 4/28/18.
 //
 
+#include <ArduinoLog.h>
 #include "tiltHydrometer.h"
 #include "jsonconfig.h"
 

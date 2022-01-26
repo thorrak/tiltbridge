@@ -1,38 +1,50 @@
+#include <ArduinoLog.h>
+#include <ArduinoJson.h>
+
+#if FILESYSTEM == SPIFFS
+#include <SPIFFS.h>
+#include <FS.h>
+#endif
+
+
+#include "main.h"
+#include "serialhandler.h"
+
+
 #include "jsonconfig.h"
+#include "bridge_lcd.h"
+
+
+#define MAX_FILENAME_LENGTH  32
+
 
 Config config;
 const char *filename = JSON_CONFIG_FILE;
 const size_t capacitySerial = 6152;
 const size_t capacityDeserial = 8192;
 
-bool deleteConfigFile() {
+
+
+bool ConfigFile::loadFile(const char * filename) {
     if (!FILESYSTEM.begin()) {
         return false;
     }
-    return FILESYSTEM.remove(filename);
-}
 
-bool Config::loadConfig() {
-    FILESYSTEM.begin();
-    // Manage loading the configuration
-    if (!loadFile()) {
-        return false;
-    } else {
-        saveFile();
-        return true;
-    }
-}
-
-bool Config::loadFile() {
-    if (!FILESYSTEM.begin()) {
-        return false;
-    }
     // Loads the configuration from a file on FILESYSTEM
-    File file = FILESYSTEM.open(filename, "r");
-    if (!FILESYSTEM.exists(filename) || !file) {
-        // File does not exist or unable to read file
+    if (!FILESYSTEM.exists(filename)) {
+        // File does not exist
+        Log.info(F("Config file %s does not exist - creating with defaults\r\n"), filename);
+        saveFile(filename);
     } else {
         // Existing configuration present
+        Log.verbose(F("Found existing config file %s\r\n"), filename);
+    }
+    
+    File file = FILESYSTEM.open(filename, "r");
+    if (!file) {
+        // Unable to open the file
+        Log.error(F("Unable to access config file %s\r\n"), filename);
+        return false;
     }
 
     if (!deserializeConfig(file)) {
@@ -44,12 +56,12 @@ bool Config::loadFile() {
     }
 }
 
-bool Config::save() {
-    return saveFile();
-}
-
-bool Config::saveFile() {
+bool ConfigFile::saveFile(const char * filename) {
     // Saves the configuration to a file on FILESYSTEM
+    if (!FILESYSTEM.begin()) {
+        return false;
+    }
+
     File file = FILESYSTEM.open(filename, "w");
     if (!file) {
         file.close();
@@ -65,7 +77,7 @@ bool Config::saveFile() {
     return true;
 }
 
-bool Config::deserializeConfig(Stream &src) {
+bool ConfigFile::deserializeConfig(Stream &src) {
     // Deserialize configuration
     DynamicJsonDocument doc(capacityDeserial);
 
@@ -81,7 +93,7 @@ bool Config::deserializeConfig(Stream &src) {
     }
 }
 
-bool Config::serializeConfig(Print &dst) {
+bool ConfigFile::serializeConfig(Print &dst) {
     // Serialize configuration
     DynamicJsonDocument doc = to_json();
 
@@ -89,8 +101,50 @@ bool Config::serializeConfig(Print &dst) {
     return serializeJson(doc, dst) > 0;
 }
 
-bool printFile() {
+DynamicJsonDocument ConfigFile::to_json_external() {
+    return to_json();
+}
+
+bool ConfigFile::save() {
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))
+        return false;
+    return saveFile(filename);
+}
+
+bool ConfigFile::load() {
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))   
+        return false;
+    return loadFile(filename);
+}
+
+bool ConfigFile::deleteFile() {
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))
+        return false;
+    if (!FILESYSTEM.begin()) {
+        return false;
+    }
+    return FILESYSTEM.remove(filename);
+}
+
+bool ConfigFile::printConfig() {
+    // Serialize configuration
+    DynamicJsonDocument doc = to_json();
+
+    bool retval = true;
+    // Serialize JSON to file
+    retval = serializeJson(doc, Serial) > 0;
+    printCR(true);
+    return retval;
+}
+
+bool ConfigFile::printConfigFile() {
     // Prints the content of a file to the Serial
+    char filename[MAX_FILENAME_LENGTH];
+    if(!getFilename(filename))
+        return false;
     File file = FILESYSTEM.open(filename, "r");
     if (!file)
         return false;
@@ -103,19 +157,34 @@ bool printFile() {
     return true;
 }
 
-bool printConfig() {
-    // Serialize configuration
-    DynamicJsonDocument doc = config.to_json();
+bool Config::getFilename(char *filename) {
+    // Build the filename from the prefix & config file name
+    snprintf(filename, MAX_FILENAME_LENGTH, "%s/%s", CONFIG_DIR, JSON_CONFIG_FILE);
+    return true;
+}
 
-    bool retval = true;
-    // Serialize JSON to file
-    retval = serializeJson(doc, Serial) > 0;
-    printCR(true);
-    return retval;
+DynamicJsonDocument Config::to_json_external() {
+    // This function generates the JSON document that gets served externally. Can add keys here that we don't
+    // save as part of the configuration.
+    DynamicJsonDocument obj = to_json();
+
+#ifdef HAVE_LCD
+    obj["have_lcd"] = true;
+#else
+    obj["have_lcd"] = false;
+#endif
+
+#ifdef HAVE_STATUS_LED
+    obj["have_led"] = true;
+#else
+    obj["have_led"] = false;
+#endif
+
+    return obj;
 }
 
 DynamicJsonDocument Config::to_json() {
-    DynamicJsonDocument obj(capacityDeserial); // TODO - Fix the capacity here
+    DynamicJsonDocument obj(capacityDeserial); // TODO - Fix the capacity here 
 
     obj["mdnsID"] = mdnsID;
     obj["guid"] = guid;

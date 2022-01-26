@@ -2,15 +2,27 @@ Changelog
 #########
 
 
-v1.0.3 - Unreleased
--------------------
+v1.1.1 - Unpublished
+--------------------
 
+
+
+
+v1.1.0 - Jan 12, 2022 - Grainfather & Taplistio Support
+-------------------------------------------------------
+
+- Added Grainfather as a push target (Thanks @teanooki!)
+- Added Taplistio as a push target (Thanks @TaplistIO!)
 - Fixed typo in Brewfather log messages
 - Added placeholder page when waiting for the first GSheets push
 - Added 24 hour reboot timer to improve overall stability
 - Shorten logo display time by 60%
-- Added reboot if reconnecting to WiFi fails
-- Added Grainfather as a push target (Thanks @teanooki!)
+- Added reboot if reconnecting to WiFi fails after some time
+- Send 'uniq_id' as part of MQTT config messages
+- Change MQTT keep alive timing to seconds to match MQTT spec
+- Replaced WiFi management libraries & WiFi reconnection process
+- Refactored configuration storage backend for performance
+- Changed "Invert TFT" option to also work for OLED screens
 
 
 v1.0.2 - Feb 19, 2021 - Calibration Bugfixes

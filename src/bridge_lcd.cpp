@@ -57,7 +57,14 @@ void bridge_lcd::init() {
     }
 
     oled_display->init();
-    oled_display->flipScreenVertically();
+    if(!config.invertTFT) {
+        // Due to historical reasons, the "non-inverted" orientation is technically the one that has had 
+        // flipScreenVertically() called.
+        oled_display->flipScreenVertically();
+    } else {
+        // config.invertTFT is set. Toggle the semaphore.
+        oled_display->resetOrientation();
+    }
     oled_display->setFont(ArialMT_Plain_10);
 #elif defined(LCD_TFT)
     tft = new TFT_eSPI();
@@ -118,7 +125,16 @@ void bridge_lcd::reinit() {
     } else {
         tft->setRotation(3);
     }
+#elif defined (LCD_SSD1306)
+    // We can only flip the screen, not determine the current orientation
+    if(config.invertTFT) {
+        oled_display->resetOrientation();
+    } else if (!config.invertTFT) {
+        oled_display->flipScreenVertically();
+    }
 #endif
+
+
 }
 
 void bridge_lcd::display_logo(bool fromReset) {
