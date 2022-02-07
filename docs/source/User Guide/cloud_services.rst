@@ -4,7 +4,7 @@ Cloud Service Setup
 ===================
 
 Once your Tiltbridge has completed the :doc:`initial_setup` process it is ready to begin scanning for `Tilt Hydrometers`_ and
-relay their gravity readings to the cloud. At the moment, TiltBridge supports six cloud service targets for this data:
+relay their gravity readings to the cloud. At the moment, TiltBridge supports a number of cloud service targets for this data:
 
 * `Fermentrack`_
 * `BrewPi Remix`_

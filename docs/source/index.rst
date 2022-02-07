@@ -12,6 +12,7 @@ TiltBridge
 
 .. toctree::
     :maxdepth: 2
+    :titlesonly:
     :caption: Contents:
 
     about
