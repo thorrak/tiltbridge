@@ -43,11 +43,10 @@ void dataSendHandler::init()
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    taplistioTicker.once(20, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
     gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
     grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
-    taplistioTicker.once(80, [](){send_taplistio = true;});          // Schedule first send to Taplist.io
+    taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
 }
 
 bool dataSendHandler::send_to_localTarget()

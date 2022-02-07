@@ -20,6 +20,7 @@ TiltBridge automatically logs your data to the following cloud data services:
 * [Brewstatus](https://brewstat.us)
 * [Grainfather](https://community.grainfather.com/)
 * [Taplist.io](https://taplist.io)
+* TiltBridge Cloud ([Android](https://play.google.com/store/apps/details?id=com.jed.tiltbridge))
 * [MQTT](https://mqtt.org/) Broker
 
 #### Features

@@ -25,7 +25,7 @@
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60)     // 15 minute delay between pushes to Brewfather
 #define GRAINFATHER_DELAY (15 * 60)    // 15 minute delay between pushes to Grainfather
-#define CLOUD_DELAY (30 * 60)           // 30 minute delay between pushes to Brewfather
+#define CLOUD_DELAY (30 * 60)          // 30 minute delay between pushes to Parse Cloud
 
 #define BREWFATHER_MIN_KEY_LENGTH 5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
