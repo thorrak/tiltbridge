@@ -4,7 +4,7 @@ Cloud Service Setup
 ===================
 
 Once your Tiltbridge has completed the :doc:`initial_setup` process it is ready to begin scanning for `Tilt Hydrometers`_ and
-relay their gravity readings to the cloud. At the moment, TiltBridge supports six cloud service targets for this data:
+relay their gravity readings to the cloud. At the moment, TiltBridge supports a number of cloud service targets for this data:
 
 * `Fermentrack`_
 * `BrewPi Remix`_
@@ -14,6 +14,7 @@ relay their gravity readings to the cloud. At the moment, TiltBridge supports si
 * `Grainfather`_
 * `BrewStatus`_
 * `Taplist.io`_
+* TiltBridge Cloud
 * Home Assistant/MQTT
 
 
@@ -278,6 +279,20 @@ TiltBridge has built-in support for `Taplist.io`_. To use, follow these steps:
 #. Visit :menuselection:`Account --> Integrations --> Tilt Hydrometer`
 #. Create a new Tilt integration and copy the webhook URL.
 #. Paste the URL into TiltBridge settings.
+
+
+
+Setting up TiltBridge for TiltBridge Cloud
+------------------------------------------
+
+A TiltBridge-specific app for phones has been released to allow users to view the gravity of their brews remotely. This app 
+and the cloud behind it are specific to the TiltBridge and are designed to target the device. To begin using the TiltBridge
+Cloud, download the relevant phone app to begin setup:
+
+* Android support: `TiltBridge Cloud Android App`_
+* iPhone App: (Coming Soon)
+
+.. todo:: Document TiltBridge Cloud setup
 
 
 Setting up TiltBridge for Home Assistant/MQTT

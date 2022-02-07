@@ -3,7 +3,12 @@
 ```
 {
     "mdnsID":"'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "guid":"XXXXXXXX",
     "invertTFT":false,
+    "cloudEnabled":false,
+    "cloudUrl":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "cloudAppID":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "cloudClientKey":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "update_spiffs":false,
     "TZoffset":-14,
     "tempUnit":"FF",
@@ -90,13 +95,15 @@
 Serialize JSON
 
 ```
-// char* output;
-// size_t outputCapacity;
-
 DynamicJsonDocument doc(6144);
 
 doc["mdnsID"] = "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+doc["guid"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["invertTFT"] = false;
+doc["cloudEnabled"] = false;
+doc["cloudUrl"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+doc["cloudAppID"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+doc["cloudClientKey"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["update_spiffs"] = false;
 doc["TZoffset"] = -14;
 doc["tempUnit"] = "FF";
@@ -176,7 +183,7 @@ doc["mqttPassword"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 doc["mqttTopic"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["mqttPushEvery"] = 9999;
 
-serializeJson(doc, output, outputCapacity);
+serializeJson(doc, output);
 ```
 
 ## Deserialize:
@@ -185,12 +192,28 @@ serializeJson(doc, output, outputCapacity);
 // Stream& input;
 
 DynamicJsonDocument doc(8192);
-deserializeJson(doc, input);
+
+DeserializationError error = deserializeJson(doc, input);
+
+if (error) {
+  Serial.print(F("deserializeJson() failed: "));
+  Serial.println(error.f_str());
+  return;
+}
 
 const char* mdnsID = doc["mdnsID"]; // "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+const char* guid = doc["guid"]; // "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+bool invertTFT = doc["invertTFT"]; // false
+bool cloudEnabled = doc["cloudEnabled"]; // false
+const char* cloudUrl = doc["cloudUrl"];
+const char* cloudAppID = doc["cloudAppID"]; // "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+const char* cloudClientKey = doc["cloudClientKey"]; // "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+bool update_spiffs = doc["update_spiffs"]; // false
 int TZoffset = doc["TZoffset"]; // -14
 const char* tempUnit = doc["tempUnit"]; // "FF"
 int smoothFactor = doc["smoothFactor"]; // 9999
+bool applyCalibration = doc["applyCalibration"]; // false
+bool tempCorrect = doc["tempCorrect"]; // false
 int cal_red_degree = doc["cal_red_degree"]; // -99
 float cal_red_x0 = doc["cal_red_x0"]; // -999.999
 float cal_red_x1 = doc["cal_red_x1"]; // -999.999

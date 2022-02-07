@@ -8,6 +8,7 @@
 #include "OTAUpdate.h"
 #include "sendData.h"
 #include "jsonconfig.h"
+#include "parseTarget.h"
 
 #include <LCBUrl.h>
 #include <Arduino.h>

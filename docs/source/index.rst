@@ -10,10 +10,9 @@ TiltBridge
 
 .. image:: http://www.tiltbridge.com/static/img/tiltbridge_logo_md.png
 
-
-
 .. toctree::
     :maxdepth: 2
+    :titlesonly:
     :caption: Contents:
 
     about
@@ -22,3 +21,7 @@ TiltBridge
     User Guide/index
     development
 
+Dcumentation Needing Development
+=================================
+
+.. todolist::
