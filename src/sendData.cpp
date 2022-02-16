@@ -3,7 +3,7 @@
 
 dataSendHandler data_sender; // Global data sender
 
-MQTTClient mqttClient(256);
+MQTTClient mqttClient(512);
 
 // POST Timers
 Ticker cloudTargetTicker;
