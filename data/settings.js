@@ -13,6 +13,13 @@ var hashLoc;
 var didreset = false;
 var posted = false;
 
+// QR Code Generator
+var qr = window.qr = new QRious({
+    element: document.getElementById('qrious'),
+    size: 0,
+    value: ''
+});
+
 // Tab tracking
 var previousTab = "";
 var currentTab = "";
@@ -131,6 +138,26 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                     $('input[name="tempCorrect"]').prop("checked", true);
                 } else {
                     $('input[name="tempCorrect"]').prop("checked", false);
+                }
+
+                // TiltBridge Cloud Tab
+                if (config.cloudEnabled) {
+                    document.getElementById('applink').style.visibility = 'visible';
+                    $('input[name="cloudTargetEnabled"]').prop("checked", true);
+                } else {
+                    document.getElementById('applink').style.visibility = 'hidden';
+                    $('input[name="cloudTargetEnabled"]').prop("checked", false);
+                }
+                if (config.guid && config.cloudEnabled) {
+                    var urlVal = "https://www.tiltbridge.com/mobile/";
+                    urlVal += "?guid=" + config.guid;
+                    qr.value = urlVal;
+                    qr.size = 100;
+                    var link = document.getElementById("qrlink");
+                    link.setAttribute('href', urlVal);
+                } else {
+                    qr.size = 0;
+                    qr.value = '';
                 }
 
                 // Local Target Tab
@@ -264,6 +291,9 @@ function processPost(obj) { // Disable buttons and call POST handler for form
         case "#calibration":
             processCalibrationPost(url, obj);
             break;
+        case "#cloudtarget":
+            processCloudTargetPost(url, obj);
+            break;
         case "#localtarget":
             processLocalTargetPost(url, obj);
             break;
@@ -364,6 +394,19 @@ function processCalibrationPost(url, obj) { // Handle Calibration Tab posts
     postData(url, data);
 }
 
+function processCloudTargetPost(url, obj) { // Handle Cloud Target posts
+    // Get form data
+    var $form = $(obj.form),
+        cloudTargetEnabledVal = $form.find('input[name="cloudTargetEnabled"]').is(":checked");
+
+    // Process post
+    data = {
+        cloudTargetEnabled: cloudTargetEnabledVal
+    };
+    jQuery('#overlay').fadeIn();
+    postData(url, data, false, true);
+}
+
 function processLocalTargetPost(url, obj) { // Handle Target URL posts
     // Get form data
     var $form = $(obj.form),
@@ -409,8 +452,6 @@ function processGoogleSheetsPost(url, obj) { // Handle Google Sheets posts
 }
 
 function processBrewersFriendPost(url, obj) { // Handle Brewer's Friend posts
-
-
     // Get form data
     var $form = $(obj.form),
         brewersFriendKeyVal = $form.find("input[name='brewersFriendKey']").val();
@@ -557,37 +598,39 @@ function buttonClearDelay() { // Poll to see if entire page is loaded
 }
 
 function updateHelp(hashLoc) {
-    // TODO:  Can set context sensitive help for page
-    var url = "https://docs.tiltbridge.com"
+    var url = "https://docs.tiltbridge.com/context/"
 
     // Switch here for hashLoc
     switch (hashLoc) {
         case "#tiltbridge":
-            url = url + "";
+            url = url + "tiltbridge/";
             break;
         case "#calibration":
-            url = url + "";
+            url = url + "calibration/";
+            break;
+        case "#cloudtarget":
+            url = url + "cloudtarget/";
             break;
         case "#localtarget":
-            url = url + "";
+            url = url + "localtarget/";
             break;
         case "#googlesheets":
-            url = url + "";
+            url = url + "googlesheets/";
             break;
         case "#brewersfriend":
-            url = url + "";
+            url = url + "brewersfriend/";
             break;
         case "#brewfather":
-            url = url + "";
+            url = url + "brewfather/";
             break;
         case "#brewstatus":
-            url = url + "";
+            url = url + "brewstatus/";
             break;
         case "#taplistio":
             url = url + "";
             break;
         case "#mqtt":
-            url = url + "";
+            url = url + "mqtt/";
             break;
         default:
             // Unknown hash location passed

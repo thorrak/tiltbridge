@@ -103,6 +103,7 @@
                     <li class="nav-item dropdown">
                         <span class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Target Settings</span>
                         <div class="dropdown-menu">
+                            <a class="dropdown-item" data-toggle="tab" href="#cloudtarget">TiltBridge Cloud</a>
                             <a class="dropdown-item" data-toggle="tab" href="#localtarget">Fermentrack/BrewPi Remix</a>
                             <a class="dropdown-item" data-toggle="tab" href="#googlesheets">Google Sheets</a>
                             <a class="dropdown-item" data-toggle="tab" href="#brewersfriend">Brewer's Friend</a>
@@ -255,6 +256,50 @@
                         </div>
 
                     </div> <!-- Calibration Tab -->
+
+                    <div class="tab-pane fade" id="cloudtarget"> <!-- Cloud Target Tab -->
+
+                        <div class="card-header bg-light border-primary">
+                            <h5 class="card-title">TiltBridge Cloud</h5>
+                        </div>
+        
+                        <div class="card-body">
+                            <p class="card-text">TiltBridge Cloud allows you to leverage native
+                                Android and iOS application integration without being in Bluetooth
+                                range of your Tilts.
+                            </p>
+                            <form action="/settings/cloudtarget/" method="POST" enctype="multipart/form-data">
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                        <!-- Buffer -->
+                                    </div>
+                                    <label for="cloudTargetEnabled" class="col-sm-2 col-form-label" data-toggle="tooltip"
+                                        title="Enable to leverage TiltBridge Cloud.">Enable:
+                                    </label>
+                                    <div class="col-sm-1">
+                                        <input class="form-check-input" value="off" type="checkbox" id="cloudTargetEnabled"
+                                            name="cloudTargetEnabled">
+                                    </div>
+                                    <div class="col-sm-8" id="applink">
+                                        <label for="cloudTargetEnabled" class="col-sm-2 col-form-label" data-toggle="tooltip"
+                                            title="QR code used by mobile application.">App QR:
+                                        </label>
+                                        <div class="col-sm-5">
+                                            <a href="#" id="qrlink" onclick="linkQR()">
+                                                <img id="qrious">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row col-sm-12 justify-content-center">
+                                    <button type="submit" class="btn btn-primary button-update"
+                                    onclick="if(!this.form.checkValidity(this)){return (false);}">
+                                    Update</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div> <!-- Cloud Target Tab -->
 
                     <div class="tab-pane fade" id="localtarget"> <!-- Local Target Tab -->
 
@@ -865,10 +910,10 @@
         crossorigin="anonymous">
     </script>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.min.js"
-        integrity="sha384-c8inZyD0O4L/ErSuX3RVWgqsgtiAUw34TeSWiUwbKaXaI2RQg8SKVe80cipDBf0D"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
+        integrity="sha384-Dr98ddmUw2QkdCarNQ+OL7xLty7cSxgR0T7v1tq4UErS/qLV0132sBYTolRAFuOV"
         crossorigin="anonymous">
-    </script> -->
+    </script>
 
     <script src="/settings.js" defer></script>
     <script src="/alerts.js" defer></script>

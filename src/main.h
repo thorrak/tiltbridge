@@ -9,6 +9,7 @@
 #include "wifi_setup.h"
 #include "serialhandler.h"
 #include "jsonconfig.h"
+#include "parseTarget.h"
 #include <Arduino.h>
 #include <Ticker.h>
 #include <esp_log.h>

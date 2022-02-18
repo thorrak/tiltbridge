@@ -20,7 +20,7 @@
 
 Config config;
 const char *filename = JSON_CONFIG_FILE;
-const size_t capacitySerial = 6144;
+const size_t capacitySerial = 6152;
 const size_t capacityDeserial = 8192;
 
 
@@ -187,14 +187,18 @@ DynamicJsonDocument Config::to_json() {
     DynamicJsonDocument obj(capacityDeserial); // TODO - Fix the capacity here 
 
     obj["mdnsID"] = mdnsID;
+    obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
+    obj["cloudEnabled"] = cloudEnabled;
+    obj["cloudUrl"] = cloudUrl;
+    obj["cloudAppID"] = cloudAppID;
+    obj["cloudClientKey"] = cloudAppID;
     obj["update_spiffs"] = update_spiffs;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
     obj["smoothFactor"] = smoothFactor;
     obj["applyCalibration"] = applyCalibration;
     obj["tempCorrect"] = tempCorrect;
-
 
     for(int x=0;x<TILT_COLORS;x++) {
         obj[tilt_color_names[x]]["degree"] = tilt_calibration[x].degree;
@@ -237,13 +241,27 @@ void Config::load_from_json(DynamicJsonDocument obj) {
         strlcpy(mdnsID, md, 32);
     }
 
-	if (!obj["invertTFT"].isNull()) {
-		invertTFT = obj["invertTFT"];
-	}
+//    if (!obj["guid"].isNull()) {
+//        const char *gd = obj["guid"];
+//        strlcpy(guid, gd, sizeof(guid));
+//    } else {
+    // Always regenerate the guid
+    char newguid[sizeof(guid)];
+    getGuid(newguid);
+    strlcpy(guid, newguid, sizeof(guid));
+//    }
 
-	if (!obj["update_spiffs"].isNull()) {
-		update_spiffs = obj["update_spiffs"];
-	}
+    if (!obj["invertTFT"].isNull()) {
+        invertTFT = obj["invertTFT"];
+    }
+
+    if (!obj["cloudEnabled"].isNull()) {
+        cloudEnabled = obj["cloudEnabled"];
+    }
+
+    if (!obj["update_spiffs"].isNull()) {
+        update_spiffs = obj["update_spiffs"];
+    }
 
     if (!obj["TZoffset"].isNull()) {
         TZoffset = int(obj["TZoffset"]);
@@ -258,13 +276,13 @@ void Config::load_from_json(DynamicJsonDocument obj) {
         smoothFactor = int(obj["smoothFactor"]);
     }
 
-	if (!obj["applyCalibration"].isNull()) {
-		applyCalibration = obj["applyCalibration"];
-	}
+    if (!obj["applyCalibration"].isNull()) {
+        applyCalibration = obj["applyCalibration"];
+    }
 
-	if (!obj["tempCorrect"].isNull()) {
-		tempCorrect = obj["tempCorrect"];
-	}
+    if (!obj["tempCorrect"].isNull()) {
+        tempCorrect = obj["tempCorrect"];
+    }
 
     // Loop through everything that is a "tilt-specific" setting
     for(int x=0;x<TILT_COLORS;x++) {

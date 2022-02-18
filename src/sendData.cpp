@@ -1,15 +1,12 @@
-//
-// Created by John Beeler on 2/18/19.
-//
-
 #include "sendData.h"
 
 
 dataSendHandler data_sender; // Global data sender
 
-MQTTClient mqttClient(256);
+MQTTClient mqttClient(512);
 
 // POST Timers
+Ticker cloudTargetTicker;
 Ticker localTargetTicker;
 Ticker brewersFriendTicker;
 Ticker brewfatherTicker;
@@ -20,6 +17,7 @@ Ticker gSheetsTicker;
 Ticker mqttTicker;
 
 // POST Semaphores
+bool send_cloudTarget = false;
 bool send_localTarget = false;
 bool send_brewersFriend = false;
 bool send_brewfather = false;
@@ -38,16 +36,17 @@ void dataSendHandler::init()
 
     // Set up timers
     // DEBUG:
+    cloudTargetTicker.once(10, [](){send_cloudTarget = true;});      // Schedule first send to Cloud Target
     localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
 //    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
     // DEBUG^
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    taplistioTicker.once(20, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
     mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
     gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
     grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
+    taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
 }
 
 bool dataSendHandler::send_to_localTarget()
@@ -138,6 +137,17 @@ bool send_to_bf_and_bf()
         send_lock = false;
     }
     return retval;
+}
+
+void send_to_cloud()
+{
+    if (send_cloudTarget && ! send_lock) {
+        send_lock = true;
+        send_cloudTarget = false;
+        addTiltToParse();
+        cloudTargetTicker.once(CLOUD_DELAY, [](){send_cloudTarget = true;}); // Set up subsequent send to localTarget
+    }
+    send_lock = false;
 }
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
@@ -306,7 +316,7 @@ bool dataSendHandler::http_send_json(const char * url, const char * payload)
     http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
     http.setConnectTimeout(6000);
     http.setReuse(false);
-    
+
     secureClient.setInsecure();
 
     http.addHeader(F("Content-Type"), F("application/json"));
