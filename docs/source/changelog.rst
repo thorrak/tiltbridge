@@ -6,9 +6,9 @@ v1.1.1 - Feb 18, 2022 - TiltBridge Cloud Support
 ------------------------------------------------
 
 - Increased MQTT client size to support 1.1.0 additions
+- Fix Home Assistant MQTT autodiscovery (Thanks @pletch)
 - Add TiltBridge Cloud support (Thanks @djmarlow)
 - Change to using 4MB partition scheme for non-TFT firmware
-
 
 
 v1.1.0 - Jan 12, 2022 - Grainfather & Taplistio Support
