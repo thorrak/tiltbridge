@@ -731,7 +731,7 @@ bool dataSendHandler::send_to_mqtt()
 {
     // TODO: (JSON) Come back and tighten this up
     bool result = false;
-    StaticJsonDocument<1500> payload;
+    StaticJsonDocument<512> payload;
     mqttClient.loop();
 
     if (send_mqtt && ! send_lock)
@@ -761,18 +761,26 @@ bool dataSendHandler::send_to_mqtt()
                     for (uint8_t j = 0; j < 3; j++)
                     {
                         char m_topic[90] = {'\0'};
-                        char tilt_name[35] = {'\0'};
+                        char tilt_name[15] = {'\0'};
+                        char tilt_sensor_name[35] = {'\0'};
                         char uniq_id[30] = {'\0'};
                         char unit[10] = {'\0'};
                         bool retain = false;
 
-                        strcat(uniq_id, "tiltbridge_tilt");
-                        strcat(uniq_id, tilt_color_names[i]);
+                        strcat(tilt_name, "Tilt ");
+                        strcat(tilt_name, tilt_color_names[i]);
+
+                        if (j < 2 ) 
+                        {
+                            JsonObject device = payload.createNestedObject("device");
+                            device["identifiers"] = tilt_color_names[i];
+                            device["name"] = tilt_name;
+                        }
 
                         switch (j)
                         {
                         case 0: //Home Assistant Config Topic for Temperature
-                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sT/config",
+                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config",
                                     config.mqttTopic,
                                     tilt_color_names[i]);
                             payload["dev_cla"] = "temperature";
@@ -781,25 +789,29 @@ bool dataSendHandler::send_to_mqtt()
                             payload["unit_of_meas"] = unit;
                             payload["ic"] = "mdi:thermometer";
                             payload["stat_t"] = tilt_topic;
-                            strcat(tilt_name, "Tilt Temperature - ");
-                            strcat(tilt_name, tilt_color_names[i]);
-                            payload["name"] = tilt_name;
+                            strcat(tilt_sensor_name, "Tilt Temperature - ");
+                            strcat(tilt_sensor_name, tilt_color_names[i]);
+                            payload["name"] = tilt_sensor_name;
                             payload["val_tpl"] = "{{value_json.Temp}}";
+                            snprintf(uniq_id, 30, "tiltbridge_tilt%sT",
+                                tilt_color_names[i]);
                             payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
                         case 1: //Home Assistant Config Topic for Sp Gravity
-                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/config",
+                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config",
                                     config.mqttTopic,
                                     tilt_color_names[i]);
                             //payload["dev_cla"] = "None";
                             payload["unit_of_meas"] = "SG";
                             //payload["ic"] = "";
                             payload["stat_t"] = tilt_topic;
-                            strcat(tilt_name, "Tilt Specific Gravity - ");
-                            strcat(tilt_name, tilt_color_names[i]);
-                            payload["name"] = tilt_name;
+                            strcat(tilt_sensor_name, "Tilt Specific Gravity - ");
+                            strcat(tilt_sensor_name, tilt_color_names[i]);
+                            payload["name"] = tilt_sensor_name;
                             payload["val_tpl"] = "{{value_json.SG}}";
+                            snprintf(uniq_id, 30, "tiltbridge_tilt%sG",
+                                tilt_color_names[i]);
                             payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
@@ -818,7 +830,7 @@ bool dataSendHandler::send_to_mqtt()
                             retain = false;
                             break;
                         }
-                        char payload_string[300] = {'\0'};
+                        char payload_string[320] = {'\0'};
                         serializeJson(payload, payload_string);
 
                         Log.verbose(F("Topic: %s\r\n"), m_topic);
