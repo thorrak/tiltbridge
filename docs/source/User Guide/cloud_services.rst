@@ -298,11 +298,16 @@ Cloud, download the relevant phone app to begin setup:
 Setting up TiltBridge for Home Assistant/MQTT
 ---------------------------------------------
 
-TiltBridge is designed to allow for data to be pushed to Home Assistant via MQTT. This functionality was helpfully added by
-contributors to the project on `GitHub`_ and has not yet been documented.
-
-.. note:: If you use Home Assistant (or use MQTT without Home Assistant, or both!) and would like to help write this documentation, please reach out!
-
-.. todo:: Document MQTT configuration
+TiltBridge is designed to allow for data to be pushed to Home Assistant via MQTT.
 
 
+#. Follow :doc:`initial_setup` to flash your ESP32.
+
+.. todo:: #213 is tracking integration ESPhome to support flashing from within home-assistant.io
+
+#. Configure TiltBridge to upload to your favourite cloud provider
+#. Verify your Home Assistant installation is configured for MQTT (either via the Add-On or an independent MQTT broker)
+#. If desired, add a new user for tiltbridge to MQTT Broker configuration. Avoid generating a long password.
+#. In http://tiltbridge.local/ , configure IP of MQTT broker, user and password details. Configure MQTT Topic to be `tiltbridge`,
+   which will result inthe MQTT topic(s)0 of `tiltbridge/tilt_$colour` for your Tilt device(s)
+#. TiltBridge will now be auto-discovered and can be automatically configured in Home Assistant
