@@ -15,9 +15,7 @@ tiltScanner tilt_scanner;
 
 void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDevice)
 {
-    //        uint8_t color = tilt_scanner.load_tilt_from_advert_hex(advertisedDevice.getManufacturerData());
-
-    if (advertisedDevice->getManufacturerData().length() > 4)
+    if (advertisedDevice->getManufacturerData().length() >= 24)
     {
         if (advertisedDevice->getManufacturerData()[0] == 0x4c && advertisedDevice->getManufacturerData()[1] == 0x00 &&
             advertisedDevice->getManufacturerData()[2] == 0x02 && advertisedDevice->getManufacturerData()[3] == 0x15)
