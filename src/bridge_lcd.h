@@ -19,7 +19,8 @@
 
 // For the LCD_TFT displays, we're connecting via SPI
 #include <SPI.h>
-#include <TFT_eSPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
 
 #define TILTS_PER_PAGE          15 // The actual number is one fewer than this - the first row is used for headers
 #define TILT_FONT_SIZE          2
@@ -91,7 +92,12 @@ private:
 
 #ifdef LCD_SSD1306
     SSD1306Wire *oled_display;
-#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#elif defined(LCD_TFT)
+    Adafruit_ILI9341 *tft;
+    // TODO - See if we can just update the below defines
+#define TFT_WHITE ILI9341_WHITE
+#define TFT_BLACK ILI9341_BLACK
+#elif defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
     TFT_eSPI *tft;
 #endif // LCD_SSD1306
 

@@ -1,6 +1,7 @@
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
 #include <WiFi.h>
+#include <ArduinoLog.h>
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
@@ -67,11 +68,10 @@ void bridge_lcd::init() {
     }
     oled_display->setFont(ArialMT_Plain_10);
 #elif defined(LCD_TFT)
-    tft = new TFT_eSPI();
+    tft = new Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
     tft->begin();
-    tft->setFreeFont(&FreeSans12pt7b);
-    tft->setSwapBytes(true);
-    tft->initDMA();
+    tft->fillScreen(ILI9341_BLACK);
+    tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 
 #ifdef LCD_TFT_M5_STACK
     // +4 "mirrors" the text (supposedly)
@@ -156,11 +156,12 @@ void bridge_lcd::display_logo(bool fromReset) {
         oled_logo_bits);
     display();
 #elif defined(LCD_TFT)
-    tft->pushImage(
-        (320 - 288) / 2, 0,
-        gimp_image.width,
-        gimp_image.height,
-        gimp_image.pixel_data);
+    // TODO - Reenable this using the Adafruit-equivalent funciton
+    // tft->pushImage(
+    //     (320 - 288) / 2, 0,
+    //     gimp_image.width,
+    //     gimp_image.height,
+    //     gimp_image.pixel_data);
 #elif defined(LCD_TFT_ESPI) || defined (LCD_TFT_M5STICKC)
     tft->drawXBitmap(
         (tft->width() - oled_logo_width) / 2,
@@ -178,7 +179,9 @@ void bridge_lcd::checkTouch()
 #ifdef TOUCH_CS
 
     uint16_t x = 0, y = 0; // Touch coordinates (not used here)
-    bool touched = tft->getTouch(&x, &y, MIN_PRESSURE);
+    // TODO - Fix this to use the updated touch lib
+    bool touched = false;
+    // bool touched = tft->getTouch(&x, &y, MIN_PRESSURE);
 
     if (touched && ! touchLatch && ! setWiFiPushed) {
         // New touch, not currently waiting to process a touch elsewhere
@@ -206,11 +209,9 @@ void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap
     print_line("Pass: ", ap_pass, 4);
 
 #ifdef LCD_TFT
-    tft->setFreeFont(&FreeSans9pt7b);
     print_line("NOTE - If this appears upside-down,", "", 8);
     print_line("this can be corrected via a setting in the", "", 9);
     print_line("settings portal after connecting to WiFi", "", 10);
-//    print_line("", "", 11);
 #endif
 
     display();
@@ -300,20 +301,30 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     oled_display->drawString(128, starting_pixel_row, right_text);
 #elif defined(LCD_TFT)
     int16_t starting_pixel_row = 0;
-    starting_pixel_row = (tft->fontHeight(GFXFF)) * (line - 1) + 2;
+    // uint16_t fHeight = tft->fontHeight(GFXFF);
+    uint16_t fHeight = 7;
+    starting_pixel_row = (fHeight * (line - 1) + 2);
 
     if(add_gutter)  // We need space to the left to be able to display the Tilt color block
-        tft->drawString(left_text, 25, starting_pixel_row, GFXFF);
+        tft->setCursor(25, starting_pixel_row);
     else
-        tft->drawString(left_text, 1, starting_pixel_row, GFXFF);
+        tft->setCursor(1, starting_pixel_row);
+    tft->print(left_text);
+
 
     yield();
-    tft->drawString(middle_text, 134, starting_pixel_row, GFXFF);
+    tft->setCursor(134, starting_pixel_row);
+    tft->print(left_text);
     yield();
+
+    // TODO - Fix the "300-50" below
     if(add_gutter)
-        tft->drawString(right_text, 300 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+        tft->setCursor(300-50, starting_pixel_row);
+        // tft->drawString(right_text, 300 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
     else
-        tft->drawString(right_text, 319 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+        tft->setCursor(319-50, starting_pixel_row);
+        // tft->drawString(right_text, 319 - tft->textWidth(right_text, GFXFF), starting_pixel_row, GFXFF);
+    tft->print(right_text);
 #elif defined(LCD_TFT_ESPI)
     // ignore left text as we color the text by the tilt
     int16_t starting_pixel_row = 0;
@@ -429,8 +440,6 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     uint8_t first_tilt_row_offset = 2;
 
 #ifdef LCD_TFT
-    tft->setFreeFont(&FreeSans9pt7b);
-
     // Display IP address or indicate if not connected
     if (WiFi.status() == WL_CONNECTED) {
         char ip[16];
@@ -499,7 +508,8 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
     print_line(tilt_color_names[tilt->m_color], temp, gravity, line, true);
 
 #ifdef LCD_TFT
-    uint16_t fHeight = tft->fontHeight(GFXFF);
+    // uint16_t fHeight = tft->fontHeight(GFXFF);
+    uint16_t fHeight = 7;
     if (tilt_text_colors[tilt->m_color] == 0xFFFF) { // White outline, black square
         tft->fillRect( // White square
             0,
