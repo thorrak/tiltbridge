@@ -496,6 +496,21 @@ void dataSendHandler::connect_mqtt()
     }
 }
 
+String lcburl_getAfterPath(LCBUrl url) // Get anything after the path
+{
+    String afterpath = "";
+
+    if (url.getQuery().length() > 0) {
+        afterpath = "?" + url.getQuery();
+    }
+
+    if (url.getFragment().length() > 0) {
+        afterpath = afterpath + "#" + url.getFragment();
+    }
+
+    return afterpath;
+}
+
 bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
 {
     // This handles the generic act of sending data to an endpoint
@@ -541,11 +556,11 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 Log.verbose(F("Connected to: %s.\r\n"), lcburl.getHost().c_str());
 
                 // Open POST connection
-                if (lcburl.getAfterPath().length() > 0)
+                if (lcburl_getAfterPath(lcburl).length() > 0)
                 {
                     Log.verbose(F("POST /%s%s HTTP/1.1\r\n"),
                                 lcburl.getPath().c_str(),
-                                lcburl.getAfterPath().c_str());
+                                lcburl_getAfterPath(lcburl).c_str());
                 }
                 else
                 {
@@ -553,9 +568,9 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 }
                 client.print(F("POST /"));
                 client.print(lcburl.getPath().c_str());
-                if (lcburl.getAfterPath().length() > 0)
+                if (lcburl_getAfterPath(lcburl).length() > 0)
                 {
-                    client.print(lcburl.getAfterPath().c_str());
+                    client.print(lcburl_getAfterPath(lcburl).c_str());
                 }
                 client.println(F(" HTTP/1.1"));
 
