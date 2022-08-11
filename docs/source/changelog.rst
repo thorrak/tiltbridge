@@ -2,6 +2,20 @@ Changelog
 #########
 
 
+
+v1.1.3 - Aug 18, 2022 - Fix WiFi Manager
+----------------------------------------
+
+- Fix WiFiManager (Resolves "white screen" loop on D32 builds)
+- Update/lock library versions
+
+
+v1.1.2 - Jul 26, 2022 - Fix TFT Firmware
+----------------------------------------
+
+- Change to using 4MB partition scheme for TFT firmware
+
+
 v1.1.1 - Feb 18, 2022 - TiltBridge Cloud Support
 ------------------------------------------------
 

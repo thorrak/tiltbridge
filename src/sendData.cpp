@@ -341,86 +341,6 @@ bool dataSendHandler::http_send_json(const char * url, const char * payload)
     return true;
 }
 
-// bool dataSendHandler::send_to_taplistio()
-// {
-//     StaticJsonDocument<192> j;
-//     char payload_string[192];
-//     int httpResponseCode;
-//     bool result = true;
-
-//     // See if it's our time to send.
-//     if (!send_taplistio) {
-//         return false;
-//     } else if (send_lock) {
-//         return false;
-//     }
-
-//     // Attempt to send.
-//     send_taplistio = false;
-//     send_lock = true;
-
-//     if (WiFiClass::status() != WL_CONNECTED) {
-//         Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
-//         taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
-//         send_lock = false;
-//         return false;
-//     }
-
-//     char userAgent[128];
-//     snprintf(userAgent, sizeof(userAgent),
-//         "tiltbridge/%s (branch %s; build %s)",
-//         version(),
-//         branch(),
-//         build()
-//     );
-
-//     for (uint8_t i = 0; i < TILT_COLORS; i++) {
-
-//         if (!tilt_scanner.tilt(i)->is_loaded()) {
-//             continue;
-//         }
-
-//         j["Color"] = tilt_color_names[i];
-//         j["Temp"] = tilt_scanner.tilt(i)->converted_temp(false);
-//         j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-//         j["temperature_unit"] = "F";
-//         j["gravity_unit"] = "G";
-
-//         serializeJson(j, payload_string);
-
-//         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-//         http.setConnectTimeout(6000);
-//         http.setReuse(false);
-//         secureClient.setInsecure();
-
-//         Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
-
-//         if (!http.begin(secureClient, config.taplistioURL)) {
-//             Log.error(F("taplist.io: Unable to create secure connection to %s\r\n"), config.taplistioURL);
-//             result = false;
-//             break;
-//         }
-
-//         http.addHeader(F("Content-Type"), F("application/json"));
-//         http.setUserAgent(userAgent);
-//         httpResponseCode = http.POST(payload_string);
-
-//         if (httpResponseCode < HTTP_CODE_OK || httpResponseCode > HTTP_CODE_NO_CONTENT) {
-//             Log.error(F("taplist.io: send %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
-//                 tilt_color_names[i],
-//                 httpResponseCode,
-//                 http.errorToString(httpResponseCode).c_str(),
-//                 http.getString().c_str());
-//             result = false;
-//         } else {
-//             Log.verbose(F("taplist.io: %s Tilt: success!\r\n"), tilt_color_names[i]);
-//         }
-//     }
-
-//     taplistioTicker.once(config.taplistioPushEvery, [](){send_taplistio = true;});
-//     send_lock = false;
-//     return result;
-// }
 
 bool dataSendHandler::send_to_google()
 {
@@ -576,6 +496,21 @@ void dataSendHandler::connect_mqtt()
     }
 }
 
+String lcburl_getAfterPath(LCBUrl url) // Get anything after the path
+{
+    String afterpath = "";
+
+    if (url.getQuery().length() > 0) {
+        afterpath = "?" + url.getQuery();
+    }
+
+    if (url.getFragment().length() > 0) {
+        afterpath = afterpath + "#" + url.getFragment();
+    }
+
+    return afterpath;
+}
+
 bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
 {
     // This handles the generic act of sending data to an endpoint
@@ -621,11 +556,11 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 Log.verbose(F("Connected to: %s.\r\n"), lcburl.getHost().c_str());
 
                 // Open POST connection
-                if (lcburl.getAfterPath().length() > 0)
+                if (lcburl_getAfterPath(lcburl).length() > 0)
                 {
                     Log.verbose(F("POST /%s%s HTTP/1.1\r\n"),
                                 lcburl.getPath().c_str(),
-                                lcburl.getAfterPath().c_str());
+                                lcburl_getAfterPath(lcburl).c_str());
                 }
                 else
                 {
@@ -633,9 +568,9 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                 }
                 client.print(F("POST /"));
                 client.print(lcburl.getPath().c_str());
-                if (lcburl.getAfterPath().length() > 0)
+                if (lcburl_getAfterPath(lcburl).length() > 0)
                 {
-                    client.print(lcburl.getAfterPath().c_str());
+                    client.print(lcburl_getAfterPath(lcburl).c_str());
                 }
                 client.println(F(" HTTP/1.1"));
 
