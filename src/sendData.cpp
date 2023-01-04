@@ -10,6 +10,7 @@ Ticker cloudTargetTicker;
 Ticker localTargetTicker;
 Ticker brewersFriendTicker;
 Ticker brewfatherTicker;
+Ticker userTargetTicker;
 Ticker grainfatherTicker;
 Ticker brewStatusTicker;
 //Ticker taplistioTicker;  // Now inside dataSendHandler object
@@ -21,6 +22,7 @@ bool send_cloudTarget = false;
 bool send_localTarget = false;
 bool send_brewersFriend = false;
 bool send_brewfather = false;
+bool send_userTarget = false;
 bool send_grainfather = false;
 bool send_brewStatus = false;
 //bool send_taplistio = false;  // Now inside dataSendHandler object
@@ -43,7 +45,8 @@ void dataSendHandler::init()
     brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
     brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    mqttTicker.once(60, [](){send_mqtt = true;});                    // Schedule first send to MQTT
+    userTargetTicker.once(60, [](){send_userTarget = true;});        // Schedule first send to User-defined JSON target
+    mqttTicker.once(65, [](){send_mqtt = true;});                    // Schedule first send to MQTT
     gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
     grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
     taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
@@ -136,6 +139,29 @@ bool send_to_bf_and_bf()
         brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
         send_lock = false;
     }
+
+
+    if (send_userTarget && ! send_lock)
+    {
+        send_lock = true;
+        // User Target
+        send_userTarget = false;
+        if (WiFiClass::status() == WL_CONNECTED && strlen(config.userTargetURL) > USER_TARGET_MIN_URL_LENGTH)
+        {
+            Log.verbose(F("Calling send to User Target.\r\n"));
+            retval = data_sender.send_to_bf_and_bf(BF_MEANS_USER_TARGET);
+            if (retval)
+            {
+                Log.notice(F("Completed send to User Target.\r\n"));
+            }
+            else
+            {
+                Log.verbose(F("Error sending to User Target.\r\n"));
+            }
+        }
+        userTargetTicker.once(USER_TARGET_DELAY, [](){send_userTarget = true;}); // Set up subsequent send to User Target
+        send_lock = false;
+    }
     return retval;
 }
 
@@ -181,6 +207,15 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
         }
         strcpy(url, "http://log.brewersfriend.com/stream/");
         strcat(url, config.brewersFriendKey);
+    }
+    else if (which_bf == BF_MEANS_USER_TARGET)
+    {
+        if (strlen(config.userTargetURL) <= USER_TARGET_MIN_URL_LENGTH)
+        {
+            Log.verbose(F("User target URL not populated. Returning.\r\n"));
+            return false;
+        }
+        strcpy(url, config.userTargetURL);
     }
     else
     {

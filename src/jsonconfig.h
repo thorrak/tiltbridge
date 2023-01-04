@@ -79,6 +79,7 @@ public:
     char scriptsEmail[256] = "";
     char brewersFriendKey[65] = "";
     char brewfatherKey[65] = "";
+    char userTargetURL[129] = "";
     char mqttBrokerHost[256] = "";
     uint16_t mqttBrokerPort = 1883;
     char mqttUsername[51] = "";
