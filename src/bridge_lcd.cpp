@@ -533,7 +533,8 @@ bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
     // multiple OLED ESP32 boards
     byte error;
 
-    Wire.begin(sda_pin, scl_pin);
+   if(!Wire.begin(sda_pin, scl_pin))
+       return false;  // Failed to initialize twowire on selected sda/scl
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
 
