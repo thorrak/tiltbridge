@@ -1,6 +1,7 @@
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
 #include <WiFi.h>
+#include <ArduinoLog.h>
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
@@ -525,10 +526,13 @@ bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
     // multiple OLED ESP32 boards
     byte error;
 
-   if(!Wire.begin(sda_pin, scl_pin))
-       return false;  // Failed to initialize twowire on selected sda/scl
+   if(!Wire.begin(sda_pin, scl_pin)) {
+        Log.error(F("Failed to initialize Wire on pin %d/%d\r\n"), sda_pin, scl_pin);
+        return false;  // Failed to initialize twowire on selected sda/scl
+   }
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
+    Wire.end();
 
     if (error == 0) // No error means that a device responded
         return true;
