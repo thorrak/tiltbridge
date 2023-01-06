@@ -14,6 +14,7 @@
 #define SSD_LINE_CLEARANCE      2
 #define SSD1306_FONT            ArialMT_Plain_10
 #define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
+#define HAVE_LCD                1
 
 #elif defined(LCD_TFT)
 
@@ -24,6 +25,7 @@
 #define TILTS_PER_PAGE          15 // The actual number is one fewer than this - the first row is used for headers
 #define TILT_FONT_SIZE          2
 #define MIN_PRESSURE            2000
+#define HAVE_LCD                1
 
 #elif defined(LCD_TFT_ESPI)
 
@@ -36,22 +38,16 @@
 #define FF17                    &FreeSans9pt7b
 #define GFXFF                   1
 #define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
+#define HAVE_LCD                1
 
-#elif defined(LCD_TFT_M5STICKC)
-
-#include <M5StickC.h>
-
-#define TFT_M5STICKC_LINE_CLEARANCE 0
-#define GFXFF                   2
-#define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
 
 #endif // LCD_SSD1306
 
-#ifdef TILTS_PER_PAGE
-#define HAVE_LCD                1
-#else
-#define HAVE_LCD                0
-#endif
+// #ifdef TILTS_PER_PAGE
+// #define HAVE_LCD                1
+// #else
+// #define HAVE_LCD                0
+// #endif
 
 #define SCREEN_TILT             0
 #define SCREEN_LOGO             1
@@ -91,7 +87,7 @@ private:
 
 #ifdef LCD_SSD1306
     SSD1306Wire *oled_display;
-#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI)
     TFT_eSPI *tft;
 #endif // LCD_SSD1306
 
