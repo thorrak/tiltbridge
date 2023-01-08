@@ -73,7 +73,7 @@ jobs:
       # if: startsWith(github.ref, 'refs/tags/')
       with:
         body: "Draft release"
-        name: ${GITHUB_REF##*/}
+        name: ${{ GITHUB_REF##*/ }}
         # note you'll typically need to create a personal access token
         # with permissions to create releases in the other repo
         token: ${{ secrets.GITHUB_TOKEN }}
