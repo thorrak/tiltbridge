@@ -3,9 +3,9 @@ name: Build
 on:
   push:
     branches:
-      - gh_actions
-    tags:
-      - "v*"
+      - master
+    # tags:
+    #   - "v*"
   # pull_request:
   #   types: [ open, synchronize, edited, reopened, closed ]
 
@@ -14,7 +14,7 @@ jobs:
     name: Build bins for ${{ matrix.pio_env }}
     strategy:
       # Ensure that a wheel builder finishes even if another fails
-      fail-fast: true
+      fail-fast: false
       matrix:
         pio_env: ['lcd_ssd1306', 'd32_pro_tft', 'tft_espi', 'm5stickc_plus']
 
