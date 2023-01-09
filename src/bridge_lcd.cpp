@@ -1,6 +1,7 @@
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
 #include <WiFi.h>
+#include <ArduinoLog.h>
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
@@ -8,10 +9,15 @@
 
 bridge_lcd lcd;
 
-#if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
 #include "img/oled_logo.h" // Small logo
-#elif defined LCD_TFT
+#elif defined(LCD_TFT)
 #include "img/tft_logo.h" // Large logo
+#endif
+
+#if defined(AXP192)
+#include <I2C_AXP192.h>  // This mostly applies to m5 Stick so we can control the TFT backlight
+I2C_AXP192 axp192(I2C_AXP192_DEFAULT_ADDRESS, Wire1);
 #endif
 
 
@@ -33,6 +39,27 @@ bridge_lcd::bridge_lcd() {
 #if HAVE_LCD
 
 void bridge_lcd::init() {
+#ifdef AXP192
+    // For m5 stick and whatnot, the LCD backlight AND the controller both are powered off the AXP192, so we need to initialize that first
+    Wire1.begin(21, 22);    
+
+    I2C_AXP192_InitDef initDef = {
+        .EXTEN  = true,
+        .BACKUP = true,
+        .DCDC1  = 3300,
+        .DCDC2  = 0,
+        .DCDC3  = 0,
+        .LDO2   = 3000,
+        .LDO3   = 3000,
+        .GPIO0  = 2800,
+        .GPIO1  = -1,
+        .GPIO2  = -1,
+        .GPIO3  = -1,
+        .GPIO4  = -1,
+    };
+    axp192.begin(initDef);
+#endif
+
 #ifdef LCD_SSD1306
     // We're currently supporting three sets of hardware - The ESP32 "OLED"
     // board, TTGO Boards, and the TiltBridge sleeve
@@ -52,7 +79,17 @@ void bridge_lcd::init() {
             oled_display = new SSD1306Wire(0x3c, 4, 15);
         } else {
             digitalWrite(16, LOW);                    // We weren't able to find the TTGO board, so reset the pin
-            oled_display = new SSD1306Wire(0x3c, 21, 22); // ... and just default to the "sleeve" configuration
+
+            pinMode(21, OUTPUT); 
+            digitalWrite(21, LOW); // Set GPIO16 low to reset OLED 
+            delay(50); 
+            digitalWrite(21, HIGH); // While OLED is running, must set GPIO16 in high 
+            if (i2c_device_at_address(0x3c, 17, 18)) {
+                oled_display = new SSD1306Wire(0x3c, 17, 18);
+            } else {
+                digitalWrite(21, LOW);                    // We weren't able to find the TTGO board, so reset the pin
+                oled_display = new SSD1306Wire(0x3c, 21, 22); // ... and just default to the "sleeve" configuration
+            }
         }
     }
 
@@ -66,59 +103,27 @@ void bridge_lcd::init() {
         oled_display->resetOrientation();
     }
     oled_display->setFont(ArialMT_Plain_10);
-#elif defined(LCD_TFT)
-    tft = new TFT_eSPI();
-    tft->begin();
+
+
+#elif defined(LCD_TFT_ESPI) || defined(LCD_TFT)
+    tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
+    tft->init();
+    reinit();
+
+#if defined(LCD_TFT)
     tft->setFreeFont(&FreeSans12pt7b);
-    tft->setSwapBytes(true);
-    tft->initDMA();
-
-#ifdef LCD_TFT_M5_STACK
-    // +4 "mirrors" the text (supposedly)
-    tft->setRotation(0);
-#else // ! LCD_TFT_M5_STACK
-    if (config.invertTFT)
-    {
-        tft->setRotation(1);
-    }
-    else
-    {
-        tft->setRotation(3);
-    }
-#endif // ! LCD_TFT_M5_STACK
-
-    tft->fillScreen(TFT_BLACK);
-    tft->setTextColor(TFT_WHITE, TFT_BLACK);
+#endif // LCD_TFT
 
 #ifdef TFT_BACKLIGHT
     pinMode(TFT_BACKLIGHT, OUTPUT);
     digitalWrite(TFT_BACKLIGHT, HIGH);
 #endif // TFT_BACKLIGHT
 
-#elif defined(LCD_TFT_ESPI)
-    tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
-    tft->init();
-    if (config.invertTFT) {
-        tft->setRotation(1);
-    } else {
-        tft->setRotation(3);
-    }
-    tft->fillScreen(TFT_BLACK);
-
-#elif defined(LCD_TFT_M5STICKC)
-    M5.begin();
-    tft = &M5.Lcd;
-    if (config.invertTFT) {
-        tft->setRotation(1);
-    } else {
-        tft->setRotation(3);
-    }
-    tft->fillScreen(TFT_BLACK);
 #endif // LCD_TFT_ESPI
 }
 
 void bridge_lcd::reinit() {
-#if defined (LCD_TFT) || defined (LCD_TFT_ESPI) || defined (LCD_TFT_M5STICKC)
+#if defined(LCD_TFT) || defined(LCD_TFT_ESPI)
     clear();
     if (config.invertTFT) {
         tft->setRotation(1);
@@ -161,7 +166,7 @@ void bridge_lcd::display_logo(bool fromReset) {
         gimp_image.width,
         gimp_image.height,
         gimp_image.pixel_data);
-#elif defined(LCD_TFT_ESPI) || defined (LCD_TFT_M5STICKC)
+#elif defined(LCD_TFT_ESPI)
     tft->drawXBitmap(
         (tft->width() - oled_logo_width) / 2,
         (tft->height() - oled_logo_height) / 2,
@@ -220,7 +225,7 @@ void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *i
     // Displayed at startup when the TiltBridge is configured to connect to WiFi
     clear();
 
-#if defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#if defined(LCD_TFT_ESPI)
     print_line("Access TiltBridge at:", "", 1);
 #else
     print_line("Access your TiltBridge at:", "", 1);
@@ -239,7 +244,7 @@ void bridge_lcd::display_wifi_reset_screen() {
     clear();
     onResetScreen = true;
 
-#if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
     print_line("Press the button again to", "", 1);
     print_line("disable autoconnection", "", 2);
     print_line("and start the WiFi ", "", 3);
@@ -271,7 +276,7 @@ void bridge_lcd::display_ota_update_screen()
 
 void bridge_lcd::print_line(const char *left_text, const char *right_text, uint8_t line)
 {
-#if defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#if defined(LCD_TFT_ESPI)
     print_line("", left_text, right_text, line);
 #else
     print_line(left_text, "", right_text, line);
@@ -324,11 +329,6 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     tft->setFreeFont(FF17);
     tft->drawString(middle_text, 0, starting_pixel_row, GFXFF);
     tft->drawString(right_text, tft->width() / 2, starting_pixel_row, GFXFF);
-#elif defined(LCD_TFT_M5STICKC)
-    int16_t starting_pixel_row = (TFT_M5STICKC_LINE_CLEARANCE + tft->fontHeight(GFXFF)) * (line - 1) + TFT_M5STICKC_LINE_CLEARANCE;
-
-    tft->drawString(middle_text, 0, starting_pixel_row, GFXFF);
-    tft->drawString(right_text, tft->width() / 2, starting_pixel_row, GFXFF);
 #endif
 }
 
@@ -342,7 +342,7 @@ void bridge_lcd::clear() {
 #ifdef LCD_SSD1306
     oled_display->clear();
     oled_display->setFont(SSD1306_FONT);
-#elif defined (LCD_TFT) || defined (LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI)
     tft->fillScreen(TFT_BLACK);
 #endif
 
@@ -491,7 +491,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
     sprintf(gravity, "%s", tilt->converted_gravity(false).c_str());
     sprintf(temp, "%s %s", tilt->converted_temp(false).c_str(), tilt->is_celsius() ? "C" : "F");
 
-#if defined (LCD_TFT_ESPI) || defined (LCD_TFT_M5STICKC)
+#if defined(LCD_TFT_ESPI)
     tft->setTextColor(tilt_text_colors[tilt->m_color]);
 #endif
 
@@ -522,7 +522,7 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
             fHeight - 8,
             tilt_text_colors[tilt->m_color]);
     }
-#elif defined(LCD_TFT_ESPI) || defined(LCD_TFT_M5STICKC)
+#elif defined(LCD_TFT_ESPI)
     tft->setTextColor(TFT_WHITE);
 #endif
 }
@@ -533,9 +533,13 @@ bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
     // multiple OLED ESP32 boards
     byte error;
 
-    Wire.begin(sda_pin, scl_pin);
+   if(!Wire.begin(sda_pin, scl_pin)) {
+        Log.error(F("Failed to initialize Wire on pin %d/%d\r\n"), sda_pin, scl_pin);
+        return false;  // Failed to initialize twowire on selected sda/scl
+   }
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
+    Wire.end();
 
     if (error == 0) // No error means that a device responded
         return true;

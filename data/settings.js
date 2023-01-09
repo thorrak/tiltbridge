@@ -182,6 +182,9 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 // Brewfather Tab
                 $('input[name="brewfatherKey"]').val(config.brewfatherKey);
 
+                // Brewfather Tab
+                $('input[name="userTargetURL"]').val(config.userTargetURL);
+
                 // Grainfather Tab
                 $('input[name="grainfatherURL_red"]').val(config.Red.grainfatherURL);
                 $('input[name="grainfatherURL_green"]').val(config.Green.grainfatherURL);
@@ -305,6 +308,9 @@ function processPost(obj) { // Disable buttons and call POST handler for form
             break;
         case "#brewfather":
             processBrewfatherPost(url, obj);
+            break;
+        case "#usertarget":
+            processUserTargetPost(url, obj);
             break;
         case "#grainfather":
             processGrainfatherPost(url, obj);
@@ -474,6 +480,19 @@ function processBrewfatherPost(url, obj) { // Handle Brewfather posts
     };
     postData(url, data);
 }
+
+function processUserTargetPost(url, obj) { // Handle User Target posts
+    // Get form data
+    var $form = $(obj.form),
+        userTargetKeyVal = $form.find("input[name='userTargetURL']").val();
+
+    // Process post
+    data = {
+        userTargetURL: userTargetKeyVal
+    };
+    postData(url, data);
+}
+
 
 function processGrainfatherPost(url, obj) { // Handle Grainfather posts
     // Get form data

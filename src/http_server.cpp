@@ -8,6 +8,7 @@ Ticker sendNowTicker;
 extern bool send_cloudTarget;
 extern bool send_brewersFriend;
 extern bool send_brewfather;
+extern bool send_userTarget;
 extern bool send_grainfather;
 extern bool send_localTarget;
 extern bool send_brewStatus;
@@ -462,6 +463,51 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
             return true;
         } else {
             Log.error(F("Error: Unable to save Brewfather configuration data.\r\n"));
+            return false;
+        }
+    }
+}
+
+bool processUserTargetSettings(AsyncWebServerRequest *request)
+{
+    int failCount = 0;
+    // Loop through all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter *p = request->getParam(i);
+        if (p->isPost()) {
+            // Process any p->name().c_str() / p->value().c_str() pairs
+            const char *name = p->name().c_str();
+            const char *value = p->value().c_str();
+            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+
+            // Brewfather settings
+            //
+            if (strcmp(name, "userTargetURL") == 0) {
+                // Set Brewfather Key
+                if (strlen(value) > USER_TARGET_MIN_URL_LENGTH && strlen(value) < 128 ) {
+                    strlcpy(config.userTargetURL, value, 65);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    // Trigger a send to the user target in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){send_userTarget = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.userTargetURL, value, 128);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+        }
+    }
+    if (failCount) {
+        Log.error(F("Error: Invalid User Target configuration.\r\n"));
+        return false;
+    } else {
+        if (config.save()) {
+            return true;
+        } else {
+            Log.error(F("Error: Unable to save User Target configuration data.\r\n"));
             return false;
         }
     }
@@ -980,6 +1026,14 @@ void setPostPages() {
     server.on("/settings/grainfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/grainfather/.\r\n"));
         if (processGrainfatherSettings(request)) {
+            request->send(200, F("text/plain"), F("Ok"));
+        } else {
+            request->send(500, F("text/plain"), F("Unable to process data"));
+        }
+    });
+    server.on("/settings/usertarget/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/usertarget/.\r\n"));
+        if (processUserTargetSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
         } else {
             request->send(500, F("text/plain"), F("Unable to process data"));

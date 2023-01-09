@@ -223,6 +223,7 @@ DynamicJsonDocument Config::to_json() {
     obj["scriptsEmail"] = scriptsEmail;
     obj["brewersFriendKey"] = brewersFriendKey;
     obj["brewfatherKey"] = brewfatherKey;
+    obj["userTargetURL"] = userTargetURL;
     obj["mqttBrokerHost"] = mqttBrokerHost;
     obj["mqttBrokerPort"] = mqttBrokerPort;
     obj["mqttUsername"] = mqttUsername;
@@ -373,6 +374,11 @@ void Config::load_from_json(DynamicJsonDocument obj) {
     if (!obj["brewfatherKey"].isNull()) {
         const char *bk = obj["brewfatherKey"];
         strlcpy(brewfatherKey, bk, 65);
+    }
+
+    if (!obj["userTargetURL"].isNull()) {
+        const char *uturl = obj["userTargetURL"];
+        strlcpy(userTargetURL, uturl, 128);
     }
 
     if (!obj["mqttBrokerHost"].isNull()) {
