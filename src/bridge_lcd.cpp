@@ -93,25 +93,22 @@ void bridge_lcd::init() {
         oled_display->resetOrientation();
     }
     oled_display->setFont(ArialMT_Plain_10);
-#elif defined(LCD_TFT)
-    tft = new TFT_eSPI();
+
+
+#elif defined(LCD_TFT_ESPI) || defined(LCD_TFT)
+    tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
     tft->init();
-    tft->setFreeFont(&FreeSans12pt7b);
-    tft->setSwapBytes(true);
-    tft->initDMA();
     reinit();
 
-    tft->setTextColor(TFT_WHITE, TFT_BLACK);  // Not sure if we need this, or if it defaults to white/black
+#if defined(LCD_TFT)
+    tft->setFreeFont(&FreeSans12pt7b);
+#endif // LCD_TFT
 
 #ifdef TFT_BACKLIGHT
     pinMode(TFT_BACKLIGHT, OUTPUT);
     digitalWrite(TFT_BACKLIGHT, HIGH);
 #endif // TFT_BACKLIGHT
 
-#elif defined(LCD_TFT_ESPI)
-    tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
-    tft->init();
-    reinit();
 #endif // LCD_TFT_ESPI
 }
 
