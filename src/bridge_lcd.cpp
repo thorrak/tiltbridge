@@ -79,7 +79,17 @@ void bridge_lcd::init() {
             oled_display = new SSD1306Wire(0x3c, 4, 15);
         } else {
             digitalWrite(16, LOW);                    // We weren't able to find the TTGO board, so reset the pin
-            oled_display = new SSD1306Wire(0x3c, 21, 22); // ... and just default to the "sleeve" configuration
+
+            pinMode(21, OUTPUT); 
+            digitalWrite(21, LOW); // Set GPIO16 low to reset OLED 
+            delay(50); 
+            digitalWrite(21, HIGH); // While OLED is running, must set GPIO16 in high 
+            if (i2c_device_at_address(0x3c, 17, 18)) {
+                oled_display = new SSD1306Wire(0x3c, 17, 18);
+            } else {
+                digitalWrite(21, LOW);                    // We weren't able to find the TTGO board, so reset the pin
+                oled_display = new SSD1306Wire(0x3c, 21, 22); // ... and just default to the "sleeve" configuration
+            }
         }
     }
 

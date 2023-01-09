@@ -10,6 +10,7 @@ v1.2.0 - Jan 9, 2023 - Fix OLED & Refactor LCD Code
 - Refactor LCD code to combine "D32 TFT" and "ESPI TFT" code
 - Replace existing M5 libraries with (existing) ESPI TFT library
 - Add new "User Target" data destination
+- Add support for OLED display at pins 17 & 18
 
 
 v1.1.3 - Aug 18, 2022 - Fix WiFi Manager
