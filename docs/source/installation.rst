@@ -17,7 +17,6 @@ It is free, easy to use, and is recommended for most users.
 To install using BrewFlasher simply connect your ESP32 to your computer, download and open BrewFlasher, and follow the prompts on
 screen.
 
-
 Note about MacOS
 ~~~~~~~~~~~~~~~~
 
@@ -43,21 +42,10 @@ Installation using esptool.py
 -----------------------------
 
 TiltBridge can also be installed using esptool.py. Although slightly more involved, this method does not require the use
-of a Raspberry Pi running `Fermentrack`_.
+of a Raspberry Pi running `Fermentrack`_, or the use of BrewFlasher.
 
-.. note:: The command below will automatically detect & flash any Espressif chips connected to the computer running esptool.py. Please leave only the device you are setting up connected to the computer to avoid the risk of misflashing.
+As this installation method is intended for advanced users, instructions are not provided here. You will need to ensure that all three images (the firmware, partitions, and spiffs files) are all flashed to the correct location. You can determine the correct location for the SPIFFS partition by looking at platformio.ini, determining the correct partition CSV, and then looking for the appropriate address in that CSV.
 
-
-#. Install esptool.py using the `instructions here <https://github.com/espressif/esptool#installation--dependencies>`_.
-#. Download all **five** of the appropriate TiltBridge firmware files for your controller from `GitHub`_ and rename them to the following - spiffs.bin, firmware.bin, partitions.bin, boot_app0.bin, and bootloader_dio_40m.bin
-#. Connect the ESP32 board to the computer you will be using to flash
-#. Open a command prompt and run the appropriate flash command
-
-
-The appropriate flash command for your build depends on the version firmware you are using. You may need to tweak the command, but sample flash commands are as follows:
-
-- **"TFT" Firmware:** ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0xe000 boot_app0.bin 0x1000 bootloader_dio_40m.bin 0x10000 firmware.bin 0x8000 partitions.bin 0x910000 spiffs.bin``
-- **"OLED" Firmware:** ``esptool.py --chip esp32 --before default_reset --after hard_reset write_flash 0xe000 boot_app0.bin 0x1000 bootloader_dio_40m.bin 0x10000 firmware.bin 0x8000 partitions.bin 0x310000 spiffs.bin``
 
 Next Steps
 ----------
