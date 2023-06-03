@@ -108,6 +108,7 @@ void bridge_lcd::init() {
 #elif defined(LCD_TFT_ESPI) || defined(LCD_TFT)
     tft = new TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
     tft->init();
+    tft->setSwapBytes(true);
     reinit();
 
 #if defined(LCD_TFT)
