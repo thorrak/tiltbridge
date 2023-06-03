@@ -1,12 +1,10 @@
 #ifndef TILTBRIDGE_BRIDGE_LCD_H
 #define TILTBRIDGE_BRIDGE_LCD_H
 
+#include "tilt/tiltScanner.h"
+
 #define LOGO_TIME 2     // Time (in seconds) to display the logo
 #define TILT_TIME 10    // Time (in seconds) to display the Tilt screen
-
-#include "tilt/tiltScanner.h"
-#include "jsonconfig.h"
-#include <Arduino.h>
 
 #ifdef LCD_SSD1306
 #include <SSD1306Wire.h>
@@ -16,38 +14,33 @@
 #define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
 #define HAVE_LCD                1
 
-#elif defined(LCD_TFT)
+#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI)
 
 // For the LCD_TFT displays, we're connecting via SPI
-#include <SPI.h>
 #include <TFT_eSPI.h>
+#include <SPI.h>
 
-#define TILTS_PER_PAGE          15 // The actual number is one fewer than this - the first row is used for headers
-#define TILT_FONT_SIZE          2
-#define MIN_PRESSURE            2000
+#define FF_NORMAL               &FreeSans9pt7b
+#define GFXFF                   1
 #define HAVE_LCD                1
 
-#elif defined(LCD_TFT_ESPI)
-
-#include <TFT_eSPI.h>
-#include <SPI.h>
-
+#if defined(LCD_TFT)
+// Big TFTs
+#define TILTS_PER_PAGE          15 // The actual number is one fewer than this - the first row is used for headers
+#define TILT_FONT_SIZE          2
+#define FF_BIG                  &FreeSans12pt7b
+#define MIN_PRESSURE            2000
+#else
+// Smaller TFTs
+#define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
+#define FF_BIG                  FF_NORMAL
 #define TFT_ESPI_FONT_SIZE      20
 #define TFT_ESPI_LINE_CLEARANCE 4
 #define TFT_ESPI_FONT_HEIGHT    2
-#define FF17                    &FreeSans9pt7b
-#define GFXFF                   1
-#define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
-#define HAVE_LCD                1
-
+#endif
 
 #endif // LCD_SSD1306
 
-// #ifdef TILTS_PER_PAGE
-// #define HAVE_LCD                1
-// #else
-// #define HAVE_LCD                0
-// #endif
 
 #define SCREEN_TILT             0
 #define SCREEN_LOGO             1
@@ -70,6 +63,7 @@ public:
     void display_wifi_disconnected_screen();
     void display_wifi_reconnect_failed();
 
+    void print_line(const char *left_text, uint8_t line);
     void print_line(const char *left_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line, bool add_gutter);
@@ -77,7 +71,10 @@ public:
     void check_screen();
     void clear();
 
+    bool displaying_ota_update_screen = false;
+
 private:
+    bool displaying_wifi_dc_screen = false;
 #if HAVE_LCD
     uint8_t display_next();
     void display_tilt_screen(uint8_t screen_number);
