@@ -44,106 +44,118 @@ void processCalibrationError(AsyncWebServerRequest *request) {
 }
 
 // Settings Page Handlers
-bool processTiltBridgeSettings(AsyncWebServerRequest *request) {
-    int failCount = 0;
+uint8_t processTiltBridgeSettingsJson(const JsonDocument& json) {
+    uint8_t failCount = 0;
     bool hostnamechanged = false;
-    // Loop through all parameters
-    int params = request->params();
-    for (int i = 0; i < params; i++) {
-        AsyncWebParameter *p = request->getParam(i);
-        if (p->isPost()) {
-            // Process any p->name().c_str() / p->value().c_str() pairs
-            const char *name = p->name().c_str();
-            const char *value = p->value().c_str();
-            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
 
-            // Controller settings
-            //
-            if (strcmp(name, "mdnsID") == 0) {
-                // Set hostname
-                LCBUrl url;
-                if (!url.isValidLabel(value)) {
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
-                    failCount++;
-                } else {
-                    if (strcmp(config.mdnsID, value) != 0) {
-                        hostnamechanged = true;
-                    }
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    strlcpy(config.mdnsID, value, 32);
-                }
-            }
-            if (strcmp(name, "tzOffset") == 0) {
-                // Set the timezone offset
-                const int val = atof(value);
-                if ((val <= -12) || (val >= 14)) {
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
-                    failCount++;
-                } else {
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    config.TZoffset = val;
-                }
-            }
-            if (strcmp(name, "tempUnit") == 0) {
-                // Set temp unit
-                if ((strcmp(value, "C") != 0) && (strcmp(value, "F") != 0)) {
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
-                    failCount++;
-                } else {
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    strlcpy(config.tempUnit, value, 2);
-                }
-            }
-            if (strcmp(name, "smoothFactor") == 0) {
-                // Set the smoothing factor
-                const int val = atof(value);
-                if ((val < 0) || (val > 99)) {
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
-                    failCount++;
-                } else {
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    config.smoothFactor = val;
-                }
-            }
-            if (strcmp(name, "invertTFT") == 0) {
-                // Invert TFT orientation
-                if (strcmp(value, "true") == 0) {
-                    if (!config.invertTFT) {
-                        config.invertTFT = true;
-                        http_server.lcd_reinit_rqd = true;
-                    }
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                } else if (strcmp(value, "false") == 0) {
-                    if (config.invertTFT) {
-                        config.invertTFT = false;
-                        http_server.lcd_reinit_rqd = true;
-                    }
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                } else {
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
-                    failCount++;
-                }
+
+    //////  Generic Settings
+    // mDNS ID
+    if(json.containsKey("mdnsID")) {
+        // Set hostname
+        LCBUrl url;
+        if (!url.isValidLabel(json["mdnsID"])) {
+            Log.warning(F("Settings update error, [mdnsID]:(%s) not valid.\r\n"), json["mdnsID"]);
+            failCount++;
+        } else {
+            if (strcmp(config.mdnsID, json["mdnsID"].as<const char*>()) != 0) {
+                hostnamechanged = true;
+                strlcpy(config.mdnsID, json["mdnsID"].as<const char*>(), 32);
+                Log.notice(F("Settings update, [mdnsID]:(%s) applied.\r\n"), json["mdnsID"].as<const char*>());
+            } else {
+                Log.notice(F("Settings update, [mdnsID]:(%s) NOT applied - no change.\r\n"), json["mdnsID"].as<const char*>());
             }
         }
     }
+
+    // tzOffset
+    if(json.containsKey("tzOffset")) {
+        if(json["tzOffset"].is<int8_t>()) {
+            if(json["tzOffset"].as<int8_t>() < -12 || json["tzOffset"].as<int8_t>() > 14) {
+                // Out of range
+                Log.warning(F("Settings update error, [tzOffset]:(%d) not valid.\r\n"), json["tzOffset"].as<int8_t>());
+            } else {
+                // In range
+                config.TZoffset = json["tzOffset"];
+                Log.notice(F("Settings update, [tzOffset]:(%d) applied.\r\n"), json["tzOffset"].as<int8_t>());
+            }
+        } else {
+            Log.warning(F("Settings update error, [tzOffset]:(%s) (as str) not valid.\r\n"), json["tzOffset"].as<const char*>());
+            failCount++;
+        }
+    }
+
+    // tempUnit
+    if(json.containsKey("tempUnit")) {
+        if(json["tempUnit"].is<const char*>()) {
+            if(strcmp(json["tempUnit"].as<const char*>(), "C") != 0 &&  strcmp(json["tempUnit"].as<const char*>(), "F") != 0) {
+                // Not C/F
+                Log.warning(F("Settings update error, [tempUnit]:(%s) not valid.\r\n"), json["tempUnit"].as<const char*>());
+            } else {
+                // Is C/F
+                strlcpy(config.tempUnit, json["tempUnit"].as<const char*>(), 2);
+                Log.notice(F("Settings update, [tempUnit]:(%s) applied.\r\n"), json["tempUnit"].as<const char*>());
+            }
+        } else {
+            Log.warning(F("Settings update error, [tempUnit]:(%s) not valid.\r\n"), json["tempUnit"].as<const char*>());
+            failCount++;
+        }
+    }
+
+    // smoothFactor
+    if(json.containsKey("smoothFactor")) {
+        if(json["smoothFactor"].is<uint8_t>()) {
+            if(json["smoothFactor"].as<uint8_t>() < 0 || json["smoothFactor"].as<uint8_t>() > 99) {
+                // Out of range
+                Log.warning(F("Settings update error, [smoothFactor]:(%d) not valid.\r\n"), json["smoothFactor"].as<uint8_t>());
+            } else {
+                // In range
+                config.smoothFactor = json["smoothFactor"];
+                Log.notice(F("Settings update, [smoothFactor]:(%d) applied.\r\n"), json["smoothFactor"].as<uint8_t>());
+            }
+        } else {
+            Log.warning(F("Settings update error, [smoothFactor]:(%s) not valid.\r\n"), json["smoothFactor"].as<const char*>());
+            failCount++;
+        }
+    }
+
+    // invertTFT
+    if(json.containsKey("invertTFT")) {
+        if(json["invertTFT"].is<bool>()) {
+            if(config.invertTFT != json["invertTFT"].as<bool>())
+                http_server.lcd_reinit_rqd = true;
+            config.invertTFT = json["invertTFT"];
+            if(json["invertTFT"].as<bool>())
+                Log.notice(F("Settings update, [invertTFT]:(True) applied.\r\n"));
+            else
+                Log.notice(F("Settings update, [invertTFT]:(False) applied.\r\n"));
+        } else {
+            Log.warning(F("Settings update error, [invertTFT]:(%s) not valid.\r\n"), json["invertTFT"].as<const char*>());
+            failCount++;
+        }
+    }
+
+
+    // Process everything we were passed
     if (failCount) {
         Log.error(F("Error: Invalid controller configuration.\r\n"));
-        return false;
     } else {
         if (config.save()) {
             if (hostnamechanged) {
                 // We reset hostname, process
                 hostnamechanged = false;
                 http_server.name_reset_requested = true;
-                Log.notice(F("POSTed new mDNSid, queued network reset.\r\n"));
+                Log.notice(F("Received new mDNSid, queued network reset.\r\n"));
             }
-            return true;
         } else {
             Log.error(F("Error: Unable to save controller configuration data.\r\n"));
-            return false;
+            failCount++;
         }
     }
+    return failCount;
+
 }
+
 
 bool processCalibrationSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
@@ -859,6 +871,33 @@ void processCalibration(AsyncWebServerRequest *request) {
     redirectToCalibration(request);
 }
 
+
+void processJsonRequest(const char* uri, AsyncWebServerRequest *request, JsonVariant const &json, uint8_t (*handler)(const JsonDocument& json)) {
+    // Handler for configuration options
+    char message[200] = "";
+    uint8_t errors = 0;
+    StaticJsonDocument<200> response;
+    Log.verbose(F("Processing %s\r\n"), uri);
+
+    StaticJsonDocument<200> data;
+    if (json.is<JsonArray>()) {
+        data = json.as<JsonArray>();
+    } else if (json.is<JsonObject>()) {
+        data = json.as<JsonObject>();
+    }
+
+    errors = handler(data);  // Apply the handler to the data
+
+    if(errors == 0) {
+        response["message"] = "Update processed successfully";
+    } else {
+        response["message"] = "Unable to process update";
+    }
+    
+    serializeJson(response, message);
+    request->send(200, "application/json", message);
+}
+
 //-----------------------------------------------------------------------------------------
 
 #ifndef DISABLE_OTA_UPDATES
@@ -980,15 +1019,14 @@ void setStaticPages() {
 
 void setPostPages() {
     // Settings Page Handlers
-    server.on("/settings/controller/", HTTP_POST, [](AsyncWebServerRequest *request) {
-        Log.verbose(F("Processing post to /settings/controller/.\r\n"));
-        if (processTiltBridgeSettings(request)) {
-            request->send(200, F("text/plain"), F("Ok"));
-        } else {
-            request->send(500, F("text/plain"), F("Unable to process data"));
-        }
+
+    AsyncCallbackJsonWebHandler* setConfig = new AsyncCallbackJsonWebHandler("/api/settings/controller/", [](AsyncWebServerRequest *request, JsonVariant const &json) {
+        processJsonRequest("/api/settings/controller/", request, json, &processTiltBridgeSettingsJson);
     });
-    server.on("/settings/calibration/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.addHandler(setConfig);
+
+
+    server.on("/api/settings/calibration/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/calibration/.\r\n"));
         if (processCalibrationSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -996,7 +1034,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/cloudtarget/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/cloudtarget/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/cloudtarget/.\r\n"));
         if (processCloudTargetSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1004,7 +1042,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/localtarget/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/localtarget/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/localtarget/.\r\n"));
         if (processLocalTargetSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1012,7 +1050,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/googlesheets/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/googlesheets/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/googlesheets/.\r\n"));
         if (processGoogleSheetsSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1020,7 +1058,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/brewersfriend/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/brewersfriend/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewersfriend/.\r\n"));
         if (processBrewersFriendSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1028,7 +1066,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/brewfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/brewfather/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewfather/.\r\n"));
         if (processBrewfatherSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1036,7 +1074,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/grainfather/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/grainfather/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/grainfather/.\r\n"));
         if (processGrainfatherSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1044,7 +1082,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/usertarget/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/usertarget/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/usertarget/.\r\n"));
         if (processUserTargetSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1052,7 +1090,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/brewstatus/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/brewstatus/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewstatus/.\r\n"));
         if (processBrewstatusSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1060,7 +1098,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/taplistio/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/taplistio/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/taplistio/.\r\n"));
         if (processTaplistioSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
@@ -1068,7 +1106,7 @@ void setPostPages() {
             request->send(500, F("text/plain"), F("Unable to process data"));
         }
     });
-    server.on("/settings/mqtt/", HTTP_POST, [](AsyncWebServerRequest *request) {
+    server.on("/api/settings/mqtt/", HTTP_PUT, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/mqtt/.\r\n"));
         if (processMqttSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
