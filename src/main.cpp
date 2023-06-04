@@ -4,6 +4,7 @@
 
 
 #include "main.h"
+#include "tilt/tiltScanner.h"
 
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
@@ -29,6 +30,11 @@ void setup() {
     serial();
 
     Log.verbose(F("Loading config.\r\n"));
+    // Initialize the filesystem 
+    // (reformat if unable to initialize, though this will present broader problems as we won't have the web interface)
+    if (!FILESYSTEM.begin(true)) {
+        Log.verbose(F("Unable to initialize filesystem.\r\n"));
+    }
     config.load();
 
     Log.verbose(F("Initializing LCD.\r\n"));

@@ -4,7 +4,6 @@
 #include "serialhandler.h"
 #include "wifi_setup.h"
 #include "jsonconfig.h"
-#include "tilt/tiltScanner.h"
 #include "main.h"   // DEBUG
 
 #include <ctime>

@@ -1,4 +1,5 @@
 #include "sendData.h"
+#include "tilt/tiltScanner.h"
 
 
 dataSendHandler data_sender; // Global data sender

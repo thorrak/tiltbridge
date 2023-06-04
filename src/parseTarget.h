@@ -4,7 +4,6 @@
 #include "version.h"
 #include "getGuid.h"
 #include "jsonconfig.h"
-#include "tilt/tiltScanner.h"
 #include "tilt/tiltHydrometer.h"
 #include <ArduinoLog.h>
 #include <WiFi.h>

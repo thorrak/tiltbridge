@@ -1,6 +1,19 @@
+
+#include <LCBUrl.h>
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncJson.h>
+
 #include "resetreasons.h"
+#include "uptime.h"
+#include "version.h"
 #include "http_server.h"
 #include "jsonconfig.h"
+#include "tilt/tiltScanner.h"
+
 
 httpServer http_server;
 Ticker sendNowTicker;
@@ -73,7 +86,7 @@ bool processTiltBridgeSettings(AsyncWebServerRequest *request) {
             }
             if (strcmp(name, "tempUnit") == 0) {
                 // Set temp unit
-                if ((strcmp(value, "F") == 1) && (strcmp(value, "F") == 1)) {
+                if ((strcmp(value, "C") != 0) && (strcmp(value, "F") != 0)) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
                     failCount++;
                 } else {
