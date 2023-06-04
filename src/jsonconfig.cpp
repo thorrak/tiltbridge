@@ -26,9 +26,6 @@ const size_t capacityDeserial = 8192;
 
 
 bool ConfigFile::loadFile(const char * filename) {
-    if (!FILESYSTEM.begin()) {
-        return false;
-    }
 
     // Loads the configuration from a file on FILESYSTEM
     if (!FILESYSTEM.exists(filename)) {
@@ -58,10 +55,6 @@ bool ConfigFile::loadFile(const char * filename) {
 
 bool ConfigFile::saveFile(const char * filename) {
     // Saves the configuration to a file on FILESYSTEM
-    if (!FILESYSTEM.begin()) {
-        return false;
-    }
-
     File file = FILESYSTEM.open(filename, "w");
     if (!file) {
         file.close();
@@ -123,9 +116,6 @@ bool ConfigFile::deleteFile() {
     char filename[MAX_FILENAME_LENGTH];
     if(!getFilename(filename))
         return false;
-    if (!FILESYSTEM.begin()) {
-        return false;
-    }
     return FILESYSTEM.remove(filename);
 }
 
