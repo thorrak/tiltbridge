@@ -1,5 +1,6 @@
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
+#include "tilt/tiltScanner.h"
 #include <WiFi.h>
 #include <ArduinoLog.h>
 
@@ -62,12 +63,12 @@ void bridge_lcd::init() {
 
 #ifdef LCD_SSD1306
     // We're currently supporting three sets of hardware - The ESP32 "OLED"
-    // board, TTGO Boards, and the TiltBridge sleeve
+    // board, TTGO Boards, and the sleeve (which I think nobody uses)
     if (i2c_device_at_address(0x3c, 5, 4)) {
         // This is the ESP32 "OLED" board
         oled_display = new SSD1306Wire(0x3c, 5, 4);
     } else if (i2c_device_at_address(0x3c, 21, 22)) {
-        // This is the TiltBridge "sleeve": address, SDA, SCK
+        // This is the "sleeve": address, SDA, SCK
         oled_display = new SSD1306Wire(0x3c, 21, 22);
     } else {
         // For the "TTGO" style OLED shields, you have to power a pin to run the backlight.
@@ -111,9 +112,7 @@ void bridge_lcd::init() {
     tft->setSwapBytes(true);
     reinit();
 
-#if defined(LCD_TFT)
-    tft->setFreeFont(&FreeSans12pt7b);
-#endif // LCD_TFT
+    tft->setFreeFont(FF_NORMAL);
 
 #ifdef TFT_BACKLIGHT
     pinMode(TFT_BACKLIGHT, OUTPUT);
@@ -139,8 +138,6 @@ void bridge_lcd::reinit() {
         oled_display->flipScreenVertically();
     }
 #endif
-
-
 }
 
 void bridge_lcd::display_logo(bool fromReset) {
@@ -204,58 +201,52 @@ void bridge_lcd::checkTouch()
 }
 
 void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap_pass) {
-    // Displayed when the user first plugs in an unconfigured TiltBridge
+    // Displayed when the user first plugs in an unconfigured device
     clear();
-    print_line("To configure, connect to", "", 1);
-    print_line("this AP via WiFi:", "", 2);
+    print_line("To configure, connect to", 1);
+    print_line("this AP via WiFi:", 2);
     print_line("Name:", ap_name, 3);
     print_line("Pass: ", ap_pass, 4);
 
 #ifdef LCD_TFT
-    tft->setFreeFont(&FreeSans9pt7b);
-    print_line("NOTE - If this appears upside-down,", "", 8);
-    print_line("this can be corrected via a setting in the", "", 9);
-    print_line("settings portal after connecting to WiFi", "", 10);
-//    print_line("", "", 11);
+    tft->setFreeFont(FF_NORMAL);
+    print_line("NOTE - If this appears upside-down,", 8);
+    print_line("this can be corrected via a setting in the", 9);
+    print_line("settings portal after connecting to WiFi", 10);
 #endif
 
     display();
 }
 
 void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *ip_address_url) {
-    // Displayed at startup when the TiltBridge is configured to connect to WiFi
+    // Displayed at startup when the device is configured to connect to WiFi
     clear();
 
-#if defined(LCD_TFT_ESPI)
-    print_line("Access TiltBridge at:", "", 1);
-#else
-    print_line("Access your TiltBridge at:", "", 1);
-#endif
-
-    print_line(mdns_url, "", 2);
-    print_line(ip_address_url, "", 3);
+    print_line("Access this device at:", 1);
+    print_line(mdns_url, 2);
+    print_line(ip_address_url, 3);
     display();
 }
 
 void bridge_lcd::display_wifi_reset_screen() {
     // When the user presses the "boot" switch, this screen appears. If the
     // user presses the boot button a second time while this screen is
-    // displayed, WiFi settings are cleared and the TiltBridge will return
+    // displayed, WiFi settings are cleared and the device will return
     // to displaying the configuration AP at startup
     clear();
     onResetScreen = true;
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
-    print_line("Press the button again to", "", 1);
-    print_line("disable autoconnection", "", 2);
-    print_line("and start the WiFi ", "", 3);
-    print_line("configuration AP.", "", 4);
+    print_line("Press the button again to", 1);
+    print_line("disable autoconnection", 2);
+    print_line("and start the WiFi ", 3);
+    print_line("configuration AP.", 4);
     display();
 #elif defined(LCD_TFT)
-    print_line("Tap the screen again to", "", 1);
-    print_line("delete any saved WiFi", "", 2);
-    print_line("credentials and restart", "", 3);
-    print_line("the WiFi configuration AP", "", 4);
+    print_line("Tap the screen again to", 1);
+    print_line("delete any saved WiFi", 2);
+    print_line("credentials and restart", 3);
+    print_line("the WiFi configuration AP", 4);
 #endif
 }
 
@@ -275,8 +266,17 @@ void bridge_lcd::display_ota_update_screen()
 #endif
 }
 
-void bridge_lcd::print_line(const char *left_text, const char *right_text, uint8_t line)
+
+void bridge_lcd::print_line(const char *left_text, uint8_t line)
 {
+#if defined(LCD_TFT_ESPI)
+    print_line("", left_text, "", line);
+#else
+    print_line(left_text, "", "", line);
+#endif
+}
+
+void bridge_lcd::print_line(const char *left_text, const char *right_text, uint8_t line) {
 #if defined(LCD_TFT_ESPI)
     print_line("", left_text, right_text, line);
 #else
@@ -288,8 +288,7 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     print_line(left_text, middle_text, right_text, line, false);
 }
 
-void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line, bool add_gutter)
-{
+void bridge_lcd::print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line, bool add_gutter) {
 #ifdef LCD_SSD1306
     int16_t starting_pixel_row = 0;
 
@@ -327,14 +326,14 @@ void bridge_lcd::print_line(const char *left_text, const char *middle_text, cons
     starting_pixel_row = (TFT_ESPI_LINE_CLEARANCE + TFT_ESPI_FONT_SIZE) * (line - 1) + TFT_ESPI_LINE_CLEARANCE;
 
     // TFT_eSPI::drawString(const char *string, int32_t poX, int32_t poY, uint8_t font_number)
-    tft->setFreeFont(FF17);
+    // TODO - Replace middle_text with left_text (and skip all middle text instead)
     tft->drawString(middle_text, 0, starting_pixel_row, GFXFF);
     tft->drawString(right_text, tft->width() / 2, starting_pixel_row, GFXFF);
 #endif
 }
 
 void bridge_lcd::check_screen() {
-    if (!onResetScreen && next_screen_at < millis()) {
+    if (!onResetScreen && !displaying_ota_update_screen && next_screen_at < millis()) {
         next_screen_at = display_next() * 1000 + millis();
     }
 }
@@ -385,6 +384,15 @@ uint8_t bridge_lcd::display_next() {
     // Returns the number of seconds to "hold" on this screen
     uint8_t active_tilts = 0;
 
+    if (WiFiClass::status() == WL_CONNECTED) {
+        displaying_wifi_dc_screen = false;
+    }
+
+    if (displaying_wifi_dc_screen) {
+        // If we're displaying the wifi dc screen, stay on it. 
+        return 1;
+    }
+
     if (on_screen == SCREEN_TILT) {
         if (tilt_pages_in_run == 0) {
             // This is the first time we're displaying a tilt screen in this round. Figure out how many pages we need
@@ -430,7 +438,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     uint8_t first_tilt_row_offset = 2;
 
 #ifdef LCD_TFT
-    tft->setFreeFont(&FreeSans9pt7b);
+    tft->setFreeFont(FF_NORMAL);
 
     // Display IP address or indicate if not connected
     if (WiFi.status() == WL_CONNECTED) {
@@ -468,10 +476,11 @@ void bridge_lcd::display_wifi_disconnected_screen() {
     // 20 seconds to reconnect. We'll print a message letting the user
     // know while we attempt to reconnect.
     clear();
-    print_line("The TiltBridge has lost", "", 1);
-    print_line("connection to your WiFi.", "", 2);
-    print_line("", "", 3);
-    print_line("Attempting to reconnect...", "", 4);
+    displaying_wifi_dc_screen = true;
+    print_line("This device has lost", 1);
+    print_line("connection to your WiFi.", 2);
+    print_line("", 3);
+    print_line("Attempting to reconnect...", 4);
     display();
 }
 
@@ -480,10 +489,11 @@ void bridge_lcd::display_wifi_reconnect_failed() {
     // 20 seconds to reconnect. We'll print a message letting the user
     // know while we attempt to reconnect.
     clear();
-    print_line("The TiltBridge has lost", "", 1);
-    print_line("connection to your WiFi.", "", 2);
-    print_line("", "", 3);
-    print_line("Attempting to reconnect...", "", 4);
+    displaying_wifi_dc_screen = true;
+    print_line("This device was unable to", 1);
+    print_line("reconnect to your WiFi.", 2);
+    print_line("", 3);
+    print_line("Restarting...", 4);
     display();
 }
 

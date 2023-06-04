@@ -4,6 +4,7 @@
 
 
 #include "main.h"
+#include "tilt/tiltScanner.h"
 
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
