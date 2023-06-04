@@ -1,4 +1,5 @@
 #include "parseTarget.h"
+#include "tilt/tiltScanner.h"
 
 #define SERVER_URL "http://tiltbridge.com/cloudkeys/keys.json"
 

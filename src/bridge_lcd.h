@@ -1,7 +1,7 @@
 #ifndef TILTBRIDGE_BRIDGE_LCD_H
 #define TILTBRIDGE_BRIDGE_LCD_H
 
-#include "tilt/tiltScanner.h"
+#include "tilt/tiltHydrometer.h"
 
 #define LOGO_TIME 2     // Time (in seconds) to display the logo
 #define TILT_TIME 10    // Time (in seconds) to display the Tilt screen

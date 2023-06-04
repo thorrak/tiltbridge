@@ -1,5 +1,6 @@
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
+#include "tilt/tiltScanner.h"
 #include <WiFi.h>
 #include <ArduinoLog.h>
 

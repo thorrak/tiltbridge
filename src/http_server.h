@@ -1,21 +1,12 @@
 #ifndef TILTBRIDGE_HTTP_SERVER_H
 #define TILTBRIDGE_HTTP_SERVER_H
 
-#include "uptime.h"
-#include "version.h"
 #include "wifi_setup.h"
-#include "tilt/tiltScanner.h"
 #include "OTAUpdate.h"
 #include "sendData.h"
 #include "jsonconfig.h"
 #include "parseTarget.h"
 
-#include <LCBUrl.h>
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
 #ifdef FSEDIT
 #include <SPIFFSEditor.h>
 #endif
