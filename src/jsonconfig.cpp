@@ -6,13 +6,10 @@
 #include <FS.h>
 #endif
 
-
-#include "main.h"
+#include "getGuid.h"
 #include "serialhandler.h"
 
-
 #include "jsonconfig.h"
-#include "bridge_lcd.h"
 
 
 #define MAX_FILENAME_LENGTH  32
