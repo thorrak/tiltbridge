@@ -2,10 +2,19 @@
 // Please note - This source code (along with other files) are provided under license.
 // More details (including license details) can be found in the files accompanying this source code.
 
+#include <ArduinoLog.h>
+
 #include "watchButtons.h"
-#include "main.h"
 #include "tilt/tiltScanner.h"
 #include "http_server.h"
+#include "wifi_setup.h"
+#include "sendData.h"
+#include "send_targets/parseTarget.h"
+#include "jsonconfig.h"
+#include "bridge_lcd.h"
+#include "serialhandler.h"
+#include "main.h"
+
 
 
 #if (ARDUINO_LOG_LEVEL >= 5)

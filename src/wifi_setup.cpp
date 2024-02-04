@@ -1,13 +1,11 @@
-#include <Arduino.h>
 #include <ArduinoLog.h>
 #include <ESPmDNS.h>
-#include <WiFiClient.h>
 #include <LCBUrl.h>
 #include <WiFiManager.h>
+
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
-#include "http_server.h" // Make sure this include is after WiFiManager
-#include "serialhandler.h"
+#include "http_server.h"
 
 #include "wifi_setup.h"
 

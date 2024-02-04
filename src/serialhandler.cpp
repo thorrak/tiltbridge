@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <ArduinoLog.h>
 
 #include "serialhandler.h"
