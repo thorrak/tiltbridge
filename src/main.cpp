@@ -9,7 +9,7 @@
 #include "http_server.h"
 #include "wifi_setup.h"
 #include "sendData.h"
-#include "send_targets/parseTarget.h"
+#include "parseTarget.h"
 #include "jsonconfig.h"
 #include "bridge_lcd.h"
 #include "serialhandler.h"

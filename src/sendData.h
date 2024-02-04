@@ -84,4 +84,7 @@ private:
 
 extern dataSendHandler data_sender;
 
+constexpr auto content_json = "application/json";
+constexpr auto content_x_www_form_urlencoded = "application/x-www-form-urlencoded";
+
 #endif //TILTBRIDGE_SENDDATA_H
