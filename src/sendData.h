@@ -45,22 +45,43 @@ public:
     bool send_to_mqtt();
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
     bool send_to_grainfather();
+    bool send_to_bf_and_bf();
+    void send_to_cloud();
 
 
+    // Send Timers
+    Ticker cloudTargetTicker;
+    Ticker localTargetTicker;
+    Ticker brewersFriendTicker;
+    Ticker brewfatherTicker;
+    Ticker userTargetTicker;
+    Ticker grainfatherTicker;
+    Ticker brewStatusTicker;
     Ticker taplistioTicker;
+    Ticker gSheetsTicker;
+    Ticker mqttTicker;
 
+    // Send Semaphores
+    bool send_cloudTarget = false;
+    bool send_localTarget = false;
+    bool send_brewersFriend = false;
+    bool send_brewfather = false;
+    bool send_userTarget = false;
+    bool send_grainfather = false;
+    bool send_brewStatus = false;
     bool send_taplistio = false;
+    bool send_gSheets = false;
+    bool send_mqtt = false;
 
 private:
+    bool send_lock = false;
+
     void connect_mqtt();
     bool send_to_url(const char *url, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
     WiFiClient mqClient;
 };
 
-bool send_to_bf_and_bf();
-void send_to_cloud();
 
 extern dataSendHandler data_sender;
-extern bool send_lock;
 
 #endif //TILTBRIDGE_SENDDATA_H

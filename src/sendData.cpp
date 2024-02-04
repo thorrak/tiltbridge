@@ -25,31 +25,6 @@ dataSendHandler data_sender; // Global data sender
 
 MQTTClient mqttClient(512);
 
-// POST Timers
-Ticker cloudTargetTicker;
-Ticker localTargetTicker;
-Ticker brewersFriendTicker;
-Ticker brewfatherTicker;
-Ticker userTargetTicker;
-Ticker grainfatherTicker;
-Ticker brewStatusTicker;
-//Ticker taplistioTicker;  // Now inside dataSendHandler object
-Ticker gSheetsTicker;
-Ticker mqttTicker;
-
-// POST Semaphores
-bool send_cloudTarget = false;
-bool send_localTarget = false;
-bool send_brewersFriend = false;
-bool send_brewfather = false;
-bool send_userTarget = false;
-bool send_grainfather = false;
-bool send_brewStatus = false;
-//bool send_taplistio = false;  // Now inside dataSendHandler object
-bool send_gSheets = false;
-bool send_mqtt = false;
-bool send_lock = false;
-
 dataSendHandler::dataSendHandler() {}
 
 void dataSendHandler::init()
@@ -58,25 +33,37 @@ void dataSendHandler::init()
 
     // Set up timers
     // DEBUG:
-    cloudTargetTicker.once(10, [](){send_cloudTarget = true;});      // Schedule first send to Cloud Target
-    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
-//    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
+    cloudTargetTicker.once(10, [](){data_sender.send_cloudTarget = true;});      // Schedule first send to Cloud Target
+    localTargetTicker.once(20, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
+//    localTargetTicker.once(5, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
     // DEBUG^
-    brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
-    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
-    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    userTargetTicker.once(60, [](){send_userTarget = true;});        // Schedule first send to User-defined JSON target
-    mqttTicker.once(65, [](){send_mqtt = true;});                    // Schedule first send to MQTT
-    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
-    grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
+    brewStatusTicker.once(30, [](){data_sender.send_brewStatus = true;});        // Schedule first send to Brew Status
+    brewfatherTicker.once(40, [](){data_sender.send_brewfather = true;});        // Schedule first send to Brewfather
+    brewersFriendTicker.once(50, [](){data_sender.send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
+    userTargetTicker.once(60, [](){data_sender.send_userTarget = true;});        // Schedule first send to User-defined JSON target
+    mqttTicker.once(65, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
+    gSheetsTicker.once(70, [](){data_sender.send_gSheets = true;});              // Schedule first send to Google Sheets
+    grainfatherTicker.once(80, [](){data_sender.send_grainfather = true;});      // Schedule first send to Grainfather
     taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
+}
+
+void dataSendHandler::process()
+{
+    send_to_cloud();
+    send_to_localTarget();
+    send_to_bf_and_bf();
+    send_to_grainfather();
+    send_to_brewstatus();
+    send_to_taplistio();
+    send_to_google();
+    send_to_mqtt();
 }
 
 bool dataSendHandler::send_to_localTarget()
 {
     bool result = true;
 
-    if (send_localTarget && ! send_lock)
+    if (data_sender.send_localTarget && !send_lock)
     {
         // Local Target
         send_localTarget = false;
@@ -106,21 +93,21 @@ bool dataSendHandler::send_to_localTarget()
                 Log.verbose(F("Error sending to Local Target.\r\n"));
             }
         }
-        localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
+        localTargetTicker.once(config.localTargetPushEvery, [](){data_sender.send_localTarget = true;}); // Set up subsequent send to localTarget
 //        tilt_scanner.init();
         send_lock = false;
     }
     return result;
 }
 
-bool send_to_bf_and_bf()
+bool dataSendHandler::send_to_bf_and_bf()
 {
     bool retval = false;
-    if (send_brewersFriend && ! send_lock)
+    if (data_sender.send_brewersFriend && !send_lock)
     {
         send_lock = true;
         // Brewer's Friend
-        send_brewersFriend = false;
+        data_sender.send_brewersFriend = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Calling send to Brewer's Friend.\r\n"));
@@ -134,15 +121,15 @@ bool send_to_bf_and_bf()
                 Log.verbose(F("Error sending to Brewer's Friend.\r\n"));
             }
         }
-        brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+        brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){data_sender.send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
         send_lock = false;
     }
 
-    if (send_brewfather && ! send_lock)
+    if (data_sender.send_brewfather && !send_lock)
     {
         send_lock = true;
         // Brewfather
-        send_brewfather = false;
+        data_sender.send_brewfather = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
         {
             Log.verbose(F("Calling send to Brewfather.\r\n"));
@@ -156,16 +143,16 @@ bool send_to_bf_and_bf()
                 Log.verbose(F("Error sending to Brewfather.\r\n"));
             }
         }
-        brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        brewfatherTicker.once(BREWFATHER_DELAY, [](){data_sender.send_brewfather = true;}); // Set up subsequent send to Brewfather
         send_lock = false;
     }
 
 
-    if (send_userTarget && ! send_lock)
+    if (data_sender.send_userTarget && !send_lock)
     {
         send_lock = true;
         // User Target
-        send_userTarget = false;
+        data_sender.send_userTarget = false;
         if (WiFiClass::status() == WL_CONNECTED && strlen(config.userTargetURL) > USER_TARGET_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to User Target.\r\n"));
@@ -179,19 +166,19 @@ bool send_to_bf_and_bf()
                 Log.verbose(F("Error sending to User Target.\r\n"));
             }
         }
-        userTargetTicker.once(USER_TARGET_DELAY, [](){send_userTarget = true;}); // Set up subsequent send to User Target
+        userTargetTicker.once(USER_TARGET_DELAY, [](){data_sender.send_userTarget = true;}); // Set up subsequent send to User Target
         send_lock = false;
     }
     return retval;
 }
 
-void send_to_cloud()
+void dataSendHandler::send_to_cloud()
 {
-    if (send_cloudTarget && ! send_lock) {
+    if (data_sender.send_cloudTarget && !send_lock) {
         send_lock = true;
         send_cloudTarget = false;
         addTiltToParse();
-        cloudTargetTicker.once(CLOUD_DELAY, [](){send_cloudTarget = true;}); // Set up subsequent send to localTarget
+        cloudTargetTicker.once(CLOUD_DELAY, [](){data_sender.send_cloudTarget = true;}); // Set up subsequent send to localTarget
     }
     send_lock = false;
 }
@@ -271,7 +258,7 @@ bool dataSendHandler::send_to_grainfather()
 {
     bool result = true;
 
-    if (send_grainfather && ! send_lock)
+    if (send_grainfather && !send_lock)
     {
         // Brew Status
         send_grainfather = false;
@@ -306,7 +293,7 @@ bool dataSendHandler::send_to_grainfather()
                 }
             }
         }
-        grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Grainfather
+        grainfatherTicker.once(GRAINFATHER_DELAY, [](){data_sender.send_grainfather = true;}); // Set up subsequent send to Grainfather
         send_lock = false;
     }
     return result;
@@ -358,7 +345,7 @@ bool dataSendHandler::send_to_brewstatus()
                 }
             }
         }
-        brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        brewStatusTicker.once(config.brewstatusPushEvery, [](){data_sender.send_brewStatus = true;}); // Set up subsequent send to Brew Status
         send_lock = false;
     }
     return result;
@@ -465,7 +452,7 @@ bool dataSendHandler::send_to_google()
             Log.notice(F("Submitted %l sheet%s to Google.\r\n"), numSent, (numSent== 1) ? "" : "s");
 
         }
-        gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+        gSheetsTicker.once(GSCRIPTS_DELAY, [](){data_sender.send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         //tilt_scanner.init();
         send_lock = false;
@@ -595,6 +582,17 @@ bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const
             // Set headers
             http.addHeader("Content-Type", contentType);
             http.addHeader("Accept", "application/json");
+
+            char userAgent[128];
+            snprintf(userAgent, sizeof(userAgent),
+                "tiltbridge/%s (branch %s; build %s)",
+                version(),
+                branch(),
+                build()
+            );
+            http.setUserAgent(userAgent);
+
+            yield();  // Yield before we lock up the radio
 
             // Send the request
             int httpResponseCode;
@@ -765,7 +763,7 @@ bool dataSendHandler::send_to_mqtt()
                 Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
             }
         }
-        mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+        mqttTicker.once(config.mqttPushEvery, [](){data_sender.send_mqtt = true;});   // Set up subsequent send to MQTT
         send_lock = false;
     }
 
