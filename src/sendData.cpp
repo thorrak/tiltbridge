@@ -1,5 +1,24 @@
+#include <ctime>
+#include <ArduinoJson.h>
+#include <Ticker.h>
+
+#include <WiFi.h>
+#include <MQTT.h>
+#include <WiFiMulti.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+
+#include <HTTPClient.h>
+#include <ArduinoLog.h>
+
+#include <LCBUrl.h>
 #include "sendData.h"
 #include "tilt/tiltScanner.h"
+#include "jsonconfig.h"
+#include "version.h"
+#include "parseTarget.h"
+#include "http_server.h"
+#include "main.h"  // for printMem()
 
 
 dataSendHandler data_sender; // Global data sender

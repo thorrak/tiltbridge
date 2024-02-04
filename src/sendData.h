@@ -1,24 +1,8 @@
 #ifndef TILTBRIDGE_SENDDATA_H
 #define TILTBRIDGE_SENDDATA_H
 
-#include "serialhandler.h"
-#include "wifi_setup.h"
-#include "jsonconfig.h"
-#include "main.h"   // DEBUG
-
-#include <ctime>
-#include <ArduinoJson.h>
-#include <Ticker.h>
-
-#include <WiFi.h>
-#include <MQTT.h>
-#include <WiFiMulti.h>
 #include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include <Arduino.h>
-#include <HTTPClient.h>
-#include <LCBUrl.h>
-#include <ArduinoLog.h>
+#include <Ticker.h>
 
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend

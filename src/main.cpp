@@ -2,9 +2,11 @@
 // Please note - This source code (along with other files) are provided under license.
 // More details (including license details) can be found in the files accompanying this source code.
 
-
+#include "watchButtons.h"
 #include "main.h"
 #include "tilt/tiltScanner.h"
+#include "http_server.h"
+
 
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
