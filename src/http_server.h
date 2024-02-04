@@ -5,7 +5,7 @@
 #include "OTAUpdate.h"
 #include "sendData.h"
 #include "jsonconfig.h"
-#include "parseTarget.h"
+#include "send_targets/parseTarget.h"
 
 #ifdef FSEDIT
 #include <SPIFFSEditor.h>
