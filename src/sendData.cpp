@@ -14,7 +14,7 @@
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include "version.h"
-#include "send_targets/parseTarget.h"
+#include "parseTarget.h"
 #include "http_server.h"
 #include "main.h"  // for printMem()
 
@@ -83,7 +83,7 @@ bool dataSendHandler::send_to_localTarget()
 
             serializeJson(doc, tilt_data);
 
-            if (send_to_url(config.localTargetURL, tilt_data, "application/json"))
+            if (send_to_url(config.localTargetURL, tilt_data, content_json))
             {
                 Log.notice(F("Completed send to Local Target.\r\n"));
             }
@@ -247,7 +247,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             char payload_string[BF_SIZE];
             serializeJson(j, payload_string);
 
-            if (!send_to_url(url, payload_string, "application/json"))
+            if (!send_to_url(url, payload_string, content_json))
                 result = false; // There was an error with the previous send
         }
     }
@@ -286,7 +286,7 @@ bool dataSendHandler::send_to_grainfather()
                     char payload_string[GF_SIZE];
                     serializeJson(j, payload_string);
 
-                    if (!send_to_url(config.grainfatherURL[i].link, payload_string, "application/json"))
+                    if (!send_to_url(config.grainfatherURL[i].link, payload_string, content_json))
                     {
                         result = false; // There was an error with the previous send
                     }
@@ -298,6 +298,61 @@ bool dataSendHandler::send_to_grainfather()
     }
     return result;
 }
+
+bool dataSendHandler::send_to_taplistio()
+{
+    bool result = true;
+
+    // See if it's our time to send.
+    if (!send_taplistio) {
+        return false;
+    } else if (send_lock) {
+        Log.verbose(F("taplist.io: send lock set.\r\n"));
+        return false;
+    }
+
+
+    // Since we're only using .once timers, we can just detach/recreate every time and be fine
+    taplistioTicker.detach();
+
+    // Attempt to send.
+    send_taplistio = false;
+    send_lock = true;
+
+    if (WiFiClass::status() != WL_CONNECTED) {
+        Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
+        taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
+        send_lock = false;
+        return false;
+    }
+
+    for (uint8_t i = 0; i < TILT_COLORS; i++) {
+        StaticJsonDocument<192> j;
+        char payload_string[192];
+
+
+        if (!tilt_scanner.tilt(i)->is_loaded()) {
+            continue;
+        }
+
+        j["Color"] = tilt_color_names[i];
+        j["Temp"] = tilt_scanner.tilt(i)->converted_temp(false);
+        j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+        j["temperature_unit"] = "F";
+        j["gravity_unit"] = "G";
+        
+        serializeJson(j, payload_string);
+
+        Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
+
+        result = send_to_url(config.taplistioURL, payload_string, content_json);
+    }
+
+    taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
+    send_lock = false;
+    return result;
+}
+
 
 bool dataSendHandler::send_to_brewstatus()
 {
@@ -333,7 +388,7 @@ bool dataSendHandler::send_to_brewstatus()
                             tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
                             tilt_color_names[i],
                             ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-                    if (send_to_url(config.brewstatusURL, payload, "application/x-www-form-urlencoded"))
+                    if (send_to_url(config.brewstatusURL, payload, content_x_www_form_urlencoded))
                     {
                         Log.notice(F("Completed send to Brew Status.\r\n"));
                     }
@@ -412,7 +467,7 @@ bool dataSendHandler::send_to_google()
                             Log.verbose(F("Created secure connection to %s.\r\n"), config.scriptsURL);
                             Log.verbose(F("Sending the following payload to Google Sheets (%s):\r\n\t\t%s\r\n"), tilt_color_names[i], payload_string);
 
-                            http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
+                            http.addHeader(F("Content-Type"), content_json);   // Specify content-type header
                             httpResponseCode = http.POST(payload_string);               // Send the payload
 
                             if (httpResponseCode == HTTP_CODE_OK) {  // HTTP_CODE_OK = 200
@@ -580,8 +635,8 @@ bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const
             }
 
             // Set headers
-            http.addHeader("Content-Type", contentType);
-            http.addHeader("Accept", "application/json");
+            http.addHeader(F("Content-Type"), contentType);
+            http.addHeader(F("Accept"), content_json);
 
             char userAgent[128];
             snprintf(userAgent, sizeof(userAgent),
