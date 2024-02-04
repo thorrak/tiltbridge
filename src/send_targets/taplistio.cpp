@@ -12,11 +12,6 @@
 
 bool dataSendHandler::send_to_taplistio()
 {
-    StaticJsonDocument<192> j;
-    char payload_string[192];
-    char taplistio_url[768];
-    char auth_header[64];
-    int httpResponseCode;
     bool result = true;
 
     // See if it's our time to send.
@@ -42,16 +37,10 @@ bool dataSendHandler::send_to_taplistio()
         return false;
     }
 
-    char userAgent[128];
-    snprintf(userAgent, sizeof(userAgent),
-        "tiltbridge/%s (branch %s; build %s)",
-        version(),
-        branch(),
-        build()
-    );
-
-
     for (uint8_t i = 0; i < TILT_COLORS; i++) {
+        StaticJsonDocument<192> j;
+        char payload_string[192];
+
 
         if (!tilt_scanner.tilt(i)->is_loaded()) {
             continue;
@@ -67,42 +56,7 @@ bool dataSendHandler::send_to_taplistio()
 
         Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
 
-        yield();  // Yield before we lock up the radio
-
-        WiFiClientSecure *client = new WiFiClientSecure;
-        if(client) {
-            client->setInsecure();
-            {
-                // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is 
-                HTTPClient http;
-
-                http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-                http.setConnectTimeout(6000);
-                http.setReuse(false);
-
-                if (http.begin(*client, config.taplistioURL)) {
-                    http.addHeader(F("Content-Type"), F("application/json"));
-                    http.setUserAgent(userAgent);
-                    httpResponseCode = http.POST(payload_string);
-
-                    if (httpResponseCode < HTTP_CODE_OK || httpResponseCode > HTTP_CODE_NO_CONTENT) {
-                        Log.error(F("taplist.io: send %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
-                            tilt_color_names[i],
-                            httpResponseCode,
-                            http.errorToString(httpResponseCode).c_str(),
-                            http.getString().c_str());
-                        result = false;
-                    } else {
-                        Log.verbose(F("taplist.io: %s Tilt: success!\r\n"), tilt_color_names[i]);
-                    }
-                    http.end();
-                } else {
-                    Log.error(F("taplist.io: Unable to create connection\r\n"));
-                    result = false;
-                }
-            }
-            delete client;
-        }
+        result = send_to_url(config.taplistioURL, payload_string, "application/json");
     }
 
     taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
