@@ -1,12 +1,6 @@
 #ifndef TILTBRIDGE_HTTP_SERVER_H
 #define TILTBRIDGE_HTTP_SERVER_H
 
-#include "wifi_setup.h"
-#include "OTAUpdate.h"
-#include "sendData.h"
-#include "jsonconfig.h"
-#include "send_targets/parseTarget.h"
-
 #ifdef FSEDIT
 #include <SPIFFSEditor.h>
 #endif

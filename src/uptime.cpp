@@ -2,6 +2,8 @@
 // Created by Lee Bussy on 12/31/20
 //
 
+#include <Arduino.h>
+
 #include "uptime.h"
 
 static int refresh = UPTIME_REFRESH * 1000;

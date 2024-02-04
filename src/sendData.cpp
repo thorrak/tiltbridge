@@ -4,21 +4,21 @@
 
 #include <WiFi.h>
 #include <MQTT.h>
-#include <WiFiMulti.h>
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
-
 #include <HTTPClient.h>
-#include <ArduinoLog.h>
 
+#include <ArduinoLog.h>
 #include <LCBUrl.h>
-#include "sendData.h"
+
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include "version.h"
 #include "send_targets/parseTarget.h"
 #include "http_server.h"
 #include "main.h"  // for printMem()
+
+#include "sendData.h"
 
 
 dataSendHandler data_sender; // Global data sender

@@ -1,19 +1,17 @@
 
 #include <LCBUrl.h>
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncJson.h>
 #include <ArduinoLog.h>
+#include <Ticker.h>
 
 #include "resetreasons.h"
 #include "uptime.h"
 #include "version.h"
-#include "http_server.h"
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
+#include "sendData.h"
+
+#include "http_server.h"
 
 
 httpServer http_server;

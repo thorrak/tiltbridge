@@ -2,8 +2,12 @@
 // Created by John Beeler on 5/12/18.
 //
 
-#include "tiltScanner.h"
 #include <ArduinoLog.h>
+#include <ArduinoJson.h>
+#include <NimBLEDevice.h>
+
+#include "tiltScanner.h"
+
 
 // Create the scanner
 BLEScan *pBLEScan;
