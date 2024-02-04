@@ -61,5 +61,6 @@ bool send_to_bf_and_bf();
 void send_to_cloud();
 
 extern dataSendHandler data_sender;
+extern bool send_lock;
 
 #endif //TILTBRIDGE_SENDDATA_H
