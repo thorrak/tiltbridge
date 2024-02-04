@@ -6,6 +6,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncJson.h>
+#include <ArduinoLog.h>
 
 #include "resetreasons.h"
 #include "uptime.h"

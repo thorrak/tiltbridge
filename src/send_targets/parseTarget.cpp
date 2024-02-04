@@ -1,4 +1,11 @@
+#include <Parse.h>
+#include <ArduinoLog.h>
+#include <HTTPClient.h>
+
 #include "parseTarget.h"
+
+#include "jsonconfig.h"
+#include "version.h"
 #include "sendData.h"
 #include "tilt/tiltScanner.h"
 

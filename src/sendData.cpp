@@ -16,7 +16,7 @@
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include "version.h"
-#include "parseTarget.h"
+#include "send_targets/parseTarget.h"
 #include "http_server.h"
 #include "main.h"  // for printMem()
 
