@@ -16,7 +16,7 @@ void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
+    Log.info(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
 }
 
 void reboot()
@@ -52,7 +52,8 @@ void setup() {
     initButtons();          // Initialize buttons
 
     // Start independent timers
-#if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
+    // ARDUINO_LOG_LOG_LEVEL_INFO is 4
+#if (ARDUINO_LOG_LEVEL >= ARDUINO_LOG_LOG_LEVEL_INFO) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
 
