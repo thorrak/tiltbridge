@@ -71,14 +71,7 @@ void loop() {
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
 
-    send_to_cloud();
-    data_sender.send_to_localTarget();
-    send_to_bf_and_bf();
-    data_sender.send_to_brewstatus();
-    data_sender.send_to_grainfather();
-    data_sender.send_to_taplistio();
-    data_sender.send_to_google();
-    data_sender.send_to_mqtt();
+    data_sender.process();
 
     if (tilt_scanner.scan()) {
         // The scans are done asynchronously, so we'll poke the scanner to see if
