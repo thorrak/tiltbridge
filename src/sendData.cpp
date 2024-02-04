@@ -251,7 +251,6 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 bool dataSendHandler::send_to_grainfather()
 {
     bool result = true;
-    StaticJsonDocument<GF_SIZE> j;
 
     if (send_grainfather && ! send_lock)
     {
@@ -272,6 +271,7 @@ bool dataSendHandler::send_to_grainfather()
 
                 if (tilt_scanner.tilt(i)->is_loaded())
                 {
+                    StaticJsonDocument<GF_SIZE> j;
                     Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
                     j["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
                     j["Unit"] = "F";
@@ -280,7 +280,7 @@ bool dataSendHandler::send_to_grainfather()
                     char payload_string[GF_SIZE];
                     serializeJson(j, payload_string);
 
-                    if (!http_send_json(config.grainfatherURL[i].link, payload_string))
+                    if (!send_to_url(config.grainfatherURL[i].link, payload_string, "application/json"))
                     {
                         result = false; // There was an error with the previous send
                     }
@@ -343,38 +343,6 @@ bool dataSendHandler::send_to_brewstatus()
         send_lock = false;
     }
     return result;
-}
-
-bool dataSendHandler::http_send_json(const char * url, const char * payload)
-{
-    int httpResponseCode;
-    StaticJsonDocument<GF_SIZE> retval;
-    http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-    http.setConnectTimeout(6000);
-    http.setReuse(false);
-
-    secureClient.setInsecure();
-
-    http.addHeader(F("Content-Type"), F("application/json"));
-    http.addHeader(F("Accept"), F("application/json"));
-    httpResponseCode = http.POST(payload);
-
-    if (httpResponseCode >= 400) {
-        Log.error(F("HTTP error %d: %s, %s.\r\n"), httpResponseCode, http.errorToString(httpResponseCode).c_str(), http.getString().c_str());
-        return false;
-    }
-
-    if (!http.begin(secureClient, url)) {
-        Log.error(F("Unable to create secure connection to %s.\r\n"), url);
-        return false;
-    }
-
-    deserializeJson(retval, http.getString().c_str());
-
-    http.end();
-    retval.clear();
-
-    return true;
 }
 
 
