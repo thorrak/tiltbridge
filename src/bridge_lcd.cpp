@@ -1,12 +1,13 @@
-#include "bridge_lcd.h"
-#include "jsonconfig.h"
-#include "tilt/tiltScanner.h"
-#include <WiFi.h>
 #include <ArduinoLog.h>
+#include <WiFi.h>
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
 #endif
+
+#include "jsonconfig.h"
+#include "tilt/tiltScanner.h"
+#include "bridge_lcd.h"
 
 bridge_lcd lcd;
 

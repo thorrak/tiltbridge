@@ -1,8 +1,6 @@
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
 
-//#include "jsonconfig.h"
-#include <ArduinoJson.h>
 #include <Arduino.h>
 
 #define TILT_DATA_SIZE 477 // JSON size of a Tilt

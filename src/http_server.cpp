@@ -1,32 +1,21 @@
 
 #include <LCBUrl.h>
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncJson.h>
+#include <ArduinoLog.h>
+#include <Ticker.h>
 
 #include "resetreasons.h"
 #include "uptime.h"
 #include "version.h"
-#include "http_server.h"
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
+#include "sendData.h"
+
+#include "http_server.h"
 
 
 httpServer http_server;
 Ticker sendNowTicker;
-
-extern bool send_cloudTarget;
-extern bool send_brewersFriend;
-extern bool send_brewfather;
-extern bool send_userTarget;
-extern bool send_grainfather;
-extern bool send_localTarget;
-extern bool send_brewStatus;
-extern bool send_gSheets;
-extern bool send_mqtt;
 
 AsyncWebServer server(WEBPORT);
 
@@ -232,7 +221,7 @@ bool processCloudTargetSettings(AsyncWebServerRequest *request) {
                     if (!config.cloudEnabled) {
                         config.cloudEnabled = true;
                         // Trigger a send to Cloud in 5 seconds
-                        sendNowTicker.once(5, [](){send_cloudTarget = true;});
+                        sendNowTicker.once(5, [](){data_sender.send_cloudTarget = true;});
                     }
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                 } else if (strcmp(value, "false") == 0) {
@@ -281,7 +270,7 @@ bool processLocalTargetSettings(AsyncWebServerRequest *request) {
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     strlcpy(config.localTargetURL, value, 256);
                     // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
-                    sendNowTicker.once(5, [](){send_localTarget = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_localTarget = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
                     strlcpy(config.localTargetURL, value, 256);
@@ -336,7 +325,7 @@ bool processGoogleSheetsSettings(AsyncWebServerRequest *request) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     // Trigger a send in 5 seconds using the updated GSheets URL
-                    sendNowTicker.once(5, [](){send_gSheets = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_gSheets = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.scriptsURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -424,7 +413,7 @@ bool processBrewersFriendSettings(AsyncWebServerRequest *request) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     // Trigger a send to Brewers Friend in 5 seconds using the updated key
-                    sendNowTicker.once(5, [](){send_brewersFriend = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_brewersFriend = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewersFriendKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -469,7 +458,7 @@ bool processBrewfatherSettings(AsyncWebServerRequest *request)
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     // Trigger a send to Brewfather in 5 seconds using the updated key
-                    sendNowTicker.once(5, [](){send_brewfather = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_brewfather = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewfatherKey, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -514,7 +503,7 @@ bool processUserTargetSettings(AsyncWebServerRequest *request)
                     strlcpy(config.userTargetURL, value, 65);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     // Trigger a send to the user target in 5 seconds using the updated key
-                    sendNowTicker.once(5, [](){send_userTarget = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_userTarget = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.userTargetURL, value, 128);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -569,7 +558,7 @@ bool processGrainfatherSettings(AsyncWebServerRequest *request)
                 if (GRAINFATHER_MIN_URL_LENGTH < strlen(value) && strlen(value) < 64) {
                     strlcpy(config.grainfatherURL[to_color].link, value, 64);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    sendNowTicker.once(5, [](){send_grainfather = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_grainfather = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.grainfatherURL[to_color].link, value, 64);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -613,7 +602,7 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
                     // Trigger a send to Brewstatus in 5 seconds using the updated key
-                    sendNowTicker.once(5, [](){send_brewStatus = true;});
+                    sendNowTicker.once(5, [](){data_sender.send_brewStatus = true;});
                 } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
                     strlcpy(config.brewstatusURL, value, 256);
                     Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
@@ -806,7 +795,7 @@ bool processMqttSettings(AsyncWebServerRequest *request) {
     } else {
         if (config.save()) {
             // Trigger a send via MQTT in 5 seconds using the updated data
-            sendNowTicker.once(5, [](){send_mqtt = true;});
+            sendNowTicker.once(5, [](){data_sender.send_mqtt = true;});
             return true;
         } else {
             Log.error(F("Error: Unable to save MQTT configuration data.\r\n"));

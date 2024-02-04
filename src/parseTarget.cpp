@@ -1,12 +1,18 @@
+#include <Parse.h>
+#include <ArduinoLog.h>
+#include <HTTPClient.h>
+
 #include "parseTarget.h"
+
+#include "jsonconfig.h"
+#include "version.h"
+#include "sendData.h"
 #include "tilt/tiltScanner.h"
 
 #define SERVER_URL "http://tiltbridge.com/cloudkeys/keys.json"
 
 static bool parseHasKeys = false;
 static bool parseIsSetup = false;
-
-extern bool send_cloudTarget;
 
 void doParsePoll() // Get Parse data from git repo
 {
@@ -177,6 +183,6 @@ void addTiltToParse() // Dispatch data to Parse
     else
     {
         doParseSetup();
-        send_cloudTarget = true;
+        data_sender.send_cloudTarget = true;
     }
 }

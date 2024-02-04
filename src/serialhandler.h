@@ -1,8 +1,6 @@
 #ifndef _SERIALLOG_H
 #define _SERIALLOG_H
 
-#include <Arduino.h>
-
 #if DOTELNET == true
 #include <WiFiUdp.h>
 #include <esptelnet.h>
