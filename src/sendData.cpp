@@ -77,7 +77,7 @@ bool dataSendHandler::send_to_localTarget()
 
             serializeJson(doc, tilt_data);
 
-            if (send_to_url(config.localTargetURL, "", tilt_data, "application/json"))
+            if (send_to_url(config.localTargetURL, tilt_data, "application/json"))
             {
                 Log.notice(F("Completed send to Local Target.\r\n"));
             }
@@ -241,7 +241,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             char payload_string[BF_SIZE];
             serializeJson(j, payload_string);
 
-            if (!send_to_url(url, "", payload_string, "application/json"))
+            if (!send_to_url(url, payload_string, "application/json"))
                 result = false; // There was an error with the previous send
         }
     }
@@ -327,7 +327,7 @@ bool dataSendHandler::send_to_brewstatus()
                             tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
                             tilt_color_names[i],
                             ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-                    if (send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
+                    if (send_to_url(config.brewstatusURL, payload, "application/x-www-form-urlencoded"))
                     {
                         Log.notice(F("Completed send to Brew Status.\r\n"));
                     }
@@ -421,6 +421,9 @@ bool dataSendHandler::send_to_google()
 
                         serializeJson(payload, payload_string);
                         payload.clear();
+
+                        HTTPClient http;
+                        WiFiClientSecure secureClient;
 
                         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
                         http.setConnectTimeout(6000);                           // Set 6 second timeout
@@ -547,7 +550,7 @@ String lcburl_getAfterPath(LCBUrl url) // Get anything after the path
     return afterpath;
 }
 
-bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
+bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
 {
     // This handles the generic act of sending data to an endpoint
     bool retVal = false;
@@ -558,6 +561,8 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         lcburl.setUrl(url);
 
         bool validTarget = false;
+        // There is an issue where the built-in HTTP client for some reason won't resolve mDNS addresses. Instead, we'll
+        // resolve the address first, and then pass that to the client if needed. 
         if (lcburl.isMDNS(lcburl.getHost().c_str()))
         {
             // Make sure we can resolve the address
@@ -570,12 +575,11 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         else
         {
             // If it's not mDNS all we care about is that it's http
-            if (lcburl.getScheme() == "http")
+            // if (lcburl.getScheme() == "http")
                 validTarget = true;
         }
 
-        if (validTarget)
-        {
+        if (validTarget) {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
                 // Use the IP address we resolved (necessary for mDNS)
                 Log.verbose(F("Connecting to: %s at %s on port %l\r\n"),
@@ -587,115 +591,62 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
-            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
-            {
-                Log.verbose(F("Connected to: %s.\r\n"), lcburl.getHost().c_str());
 
-                // Open POST connection
-                if (lcburl_getAfterPath(lcburl).length() > 0)
-                {
-                    Log.verbose(F("POST /%s%s HTTP/1.1\r\n"),
-                                lcburl.getPath().c_str(),
-                                lcburl_getAfterPath(lcburl).c_str());
-                }
-                else
-                {
-                    Log.verbose(F("POST /%s HTTP/1.1\r\n"), lcburl.getPath().c_str());
-                }
-                client.print(F("POST /"));
-                client.print(lcburl.getPath().c_str());
-                if (lcburl_getAfterPath(lcburl).length() > 0)
-                {
-                    client.print(lcburl_getAfterPath(lcburl).c_str());
-                }
-                client.println(F(" HTTP/1.1"));
+            // This may crash if we're allocating too much memory on the heap, but if I can get away with this
+            // it's the easiest solution.             
+            HTTPClient http;
+            WiFiClientSecure secureClient;
+            secureClient.setInsecure(); // Don't perform certificate validation. This opens up MITM attacks, but I don't have memory otherwise.
 
-                // Begin headers
-                //
-                // Host
-                Log.verbose(F("Host: %s:%l\r\n"), lcburl.getHost().c_str(), lcburl.getPort());
-                client.print(F("Host: "));
-                client.print(lcburl.getHost().c_str());
-                client.print(F(":"));
-                client.println(lcburl.getPort());
-                //
-                Log.verbose(F("Connection: close\r\n"));
-                client.println(F("Connection: close"));
-                // Content
-                Log.verbose(F("Content-Length: %l\r\n"), strlen(dataToSend));
-                client.print(F("Content-Length: "));
-                client.println(strlen(dataToSend));
-                // Content Type
-                Log.verbose(F("Content-Type: %s\r\n"), contentType);
-                client.print(F("Content-Type: "));
-                client.println(contentType);
-                // API Key
-                if (strlen(apiKey) > 2)
-                {
-                        Log.verbose(F("X-API-KEY: %s\r\n"), apiKey);
-                        client.print(F("X-API-KEY: "));
-                        client.println(apiKey);
-                }
-                // Terminate headers with a blank line
-                Log.verbose(F("End headers.\r\n"));
-                client.println();
-                //
-                // End Headers
-
-                // Post JSON
-                client.println(dataToSend);
-                // Check the HTTP status (should be "HTTP/1.1 200 OK")
-                char status[32] = {0};
-                client.readBytesUntil('\r', status, sizeof(status));
-                client.stop();
-                Log.verbose(F("Status: %s\r\n"), status);
-                if (strcmp(status + 9, "200 OK") == 0)
-                {
-                    if (checkBody == true) // We can do additional checks here
-                    {
-                        // Check body
-                        String response = String(status);
-                        if (response.indexOf(bodyCheck) >= 0)
-                        {
-                            Log.verbose(F("Response body ok.\r\n"));
-                            retVal = true;
-                        }
-                        else
-                        {
-                            Log.error(F("Unexpected body content: %s\r\n"), response.c_str());
-                            retVal = false;
-                        }
-                    }
-                    else
-                    {
-                        Log.verbose(F("Post to %s was successful.\r\n"), lcburl.getHost().c_str());
-                        retVal = true;
-                    }
-                }
-                else
-                {
-                    Log.error(F("Unexpected status: %s\r\n"), status);
-                    retVal = false;
-                }
+            // Determine if the URL is HTTP or HTTPS and initialize HTTPClient
+            if (lcburl.getScheme() == "https") {
+                http.begin(secureClient, url); // HTTPS
+            } else {
+                http.begin(url); // HTTP
             }
-            else
-            {
-                Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)\r\n"),
-                            lcburl.getHost().c_str(), lcburl.getPort(), client.connected());
-                retVal = false;
+
+            // Set headers
+            http.addHeader("Content-Type", contentType);
+            http.addHeader("Accept", "application/json");
+
+            // Send the request
+            int httpResponseCode;
+            httpResponseCode = http.POST(dataToSend);
+
+            // Optionally check the response
+            bool result = false;
+            if (httpResponseCode > 0) {
+                // HTTP header has been sent and Server response header has been handled
+                Log.verbose(F("HTTP Response code: %d\r\n"), httpResponseCode);
+
+                if (checkBody) {
+                    String response = http.getString();
+                    if (response.indexOf(bodyCheck) >= 0) {
+                        result = true;
+                    } else {
+                        Log.error(F("Body check failed. Body: %s\r\n"), response.c_str());
+                    }
+                } else {
+                    result = (httpResponseCode == HTTP_CODE_OK);
+                }
+            } else {
+                Log.error(F("Error on sending POST: %s\r\n"), http.errorToString(httpResponseCode).c_str());
+                Log.error(F("Connection failed, Host: %s, Port: %l\r\n"), lcburl.getHost().c_str(), lcburl.getPort());
             }
-        }
-        else
-        {
+
+            // Close connection
+            http.end();
+            delay(100);  // Give garbage collection time to run
+            return result;
+
+        } else {
             Log.error(F("Invalid target: %s.\r\n"), url);
         }
-    }
-    else
-    {
+    } else {
         Log.notice(F("No URL provided, or no data to send.\r\n"));
-        retVal = false;
     }
-    return retVal;
+    // If we reached here, the send was unsuccessful
+    return false;
 }
 
 bool dataSendHandler::send_to_mqtt()
