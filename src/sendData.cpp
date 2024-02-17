@@ -76,6 +76,7 @@ bool dataSendHandler::send_to_localTarget()
             DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
+            // TODO - Refactor out tilt_to_json_string as this is the only place it is now used
             tilt_scanner.tilt_to_json_string(tilt_data, true);
 
             doc["mdns_id"] = config.mdnsID;
