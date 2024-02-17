@@ -674,6 +674,8 @@ void reset_reason(DynamicJsonDocument &doc) {
 void httpServer::setStaticPages() {
 
     web_server->serveStatic("/", FILESYSTEM, "/index.htm", "max-age=600");
+    web_server->serveStatic("/index.htm", FILESYSTEM, "/index.htm", "max-age=600");
+    web_server->serveStatic("/index.html", FILESYSTEM, "/index.htm", "max-age=600");
 
     // Static page handlers
     web_server->serveStatic("/", FILESYSTEM, "/index.htm", "max-age=600");
@@ -801,6 +803,7 @@ void httpServer::setJsonPages() {
 // }
 
 void httpServer::init() {
+    web_server = new WebServer(WEBPORT);
     setStaticPages();
     setPutPages();
     setJsonPages();
