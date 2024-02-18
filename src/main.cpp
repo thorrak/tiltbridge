@@ -4,6 +4,10 @@
 
 #include <ArduinoLog.h>
 
+#if FILESYSTEM == SPIFFS
+#include <SPIFFS.h>
+#endif
+
 #include "watchButtons.h"
 #include "tilt/tiltScanner.h"
 #include "http_server.h"
@@ -80,6 +84,7 @@ void loop() {
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
 
+    http_server.web_server->handleClient();
     data_sender.process();
 
     if (tilt_scanner.scan()) {
