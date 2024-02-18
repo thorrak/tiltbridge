@@ -43,6 +43,7 @@ public:
     std::string converted_gravity(bool use_raw_gravity);
     void to_json_string(char *json_string, bool use_raw_gravity);
     std::string converted_temp(bool fahrenheit_only);
+    std::string get_weeks_battery();
     bool is_celsius() const;
     bool is_loaded();
 

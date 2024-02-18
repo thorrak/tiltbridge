@@ -707,7 +707,7 @@ bool dataSendHandler::send_to_mqtt()
             // Function sends three payloads with the first two designed to
             // support autodiscovery and configuration on Home Assistant.
             // General payload formatted as json when sent to mqTT:
-            //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
+            //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","WoB":"90","timeStamp":1608745710}
             //
             // Loop through each of the tilt colors cached by tilt_scanner,
             // sending data for each of the active tilts
@@ -720,7 +720,7 @@ bool dataSendHandler::send_to_mqtt()
                             config.mqttTopic,
                             tilt_color_names[i]);
 
-                    for (uint8_t j = 0; j < 3; j++)
+                    for (uint8_t j = 0; j < 4; j++)
                     {
                         char m_topic[90] = {'\0'};
                         char tilt_name[15] = {'\0'};
@@ -732,7 +732,7 @@ bool dataSendHandler::send_to_mqtt()
                         strcat(tilt_name, "Tilt ");
                         strcat(tilt_name, tilt_color_names[i]);
 
-                        if (j < 2 ) 
+                        if (j < 3 ) 
                         {
                             JsonObject device = payload.createNestedObject("device");
                             device["identifiers"] = tilt_color_names[i];
@@ -764,9 +764,9 @@ bool dataSendHandler::send_to_mqtt()
                             sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config",
                                     config.mqttTopic,
                                     tilt_color_names[i]);
-                            //payload["dev_cla"] = "None";
+//payload["dev_cla"] = "None";
                             payload["unit_of_meas"] = "SG";
-                            //payload["ic"] = "";
+//payload["ic"] = "";
                             payload["stat_t"] = tilt_topic;
                             strcat(tilt_sensor_name, "Tilt Specific Gravity - ");
                             strcat(tilt_sensor_name, tilt_color_names[i]);
@@ -777,18 +777,37 @@ bool dataSendHandler::send_to_mqtt()
                             payload["uniq_id"] = uniq_id;
                             retain = true;
                             break;
-                        case 2: //General payload with sensor data
+                        case 2: //Home Assistant Config Topic for Weeks On Battery
+                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sWoB/weeks_on_battery/config",
+                                    config.mqttTopic,
+                                    tilt_color_names[i]);
+                            payload["unit_of_meas"] = "weeks";
+                            payload["ic"] = "mdi:battery";
+                            payload["stat_t"] = tilt_topic;
+                            strcat(tilt_sensor_name, "Tilt Weeks On Battery - ");
+                            strcat(tilt_sensor_name, tilt_color_names[i]);
+                            payload["name"] = tilt_sensor_name;
+                            payload["val_tpl"] = "{{value_json.WoB}}";
+                            snprintf(uniq_id, 30, "tiltbridge_tilt%sWoB",
+                                tilt_color_names[i]);
+                            payload["uniq_id"] = uniq_id;
+                            retain = true;
+                            break;
+                        case 3: //General payload with sensor data
                             strcat(m_topic, tilt_topic);
                             char current_grav[8] = {'\0'};
                             char current_temp[5] = {'\0'};
+                            char current_wob[8] = {'\0'};
                             strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
                             strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
+                            strcpy(current_wob, tilt_scanner.tilt(i)->get_weeks_battery().c_str());
                             payload["Color"] = tilt_color_names[i];
                             payload["timeStamp"] = (int)std::time(0);
                             payload["fermunits"] = "SG";
                             payload["SG"] = current_grav;
                             payload["Temp"] = current_temp;
                             payload["tempunits"] = config.tempUnit;
+                            payload["WoB"] = current_wob;
                             retain = false;
                             break;
                         }
