@@ -744,6 +744,7 @@ void httpServer::setPutPages() {
 }
 
 void httpServer::setJsonPages() {
+    // TODO - Change these to /api/ endpoints
     // Tilt JSON
     web_server->on("/json/", HTTP_GET, [&]() {
         genericServeJson(&http_json);
