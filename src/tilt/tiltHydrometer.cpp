@@ -253,6 +253,12 @@ std::string tiltHydrometer::converted_temp(bool fahrenheit_only)
     return output;
 }
 
+std::string tiltHydrometer::get_weeks_battery()
+{
+    std::string stdString = std::to_string(weeks_since_last_battery_change);
+    return stdString;
+}
+
 bool tiltHydrometer::is_celsius() const
 {
     return strcmp(config.tempUnit, "C") == 0;

@@ -3,6 +3,7 @@
 
 #include <WiFiClient.h>
 #include <Ticker.h>
+#include <ArduinoJson.h>
 
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
@@ -36,7 +37,6 @@ public:
     void init();
     void init_mqtt();
     void process();
-    bool mqtt_alreadyinit = false;
 
     bool send_to_google();
     bool send_to_localTarget();
@@ -76,9 +76,21 @@ public:
 private:
     bool send_lock = false;
 
-    void connect_mqtt();
     bool send_to_url(const char *url, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
+
+    // MQTT Stuff
     WiFiClient mqClient;
+    bool mqtt_alreadyinit = false;
+
+    void connect_mqtt();
+    bool publish_to_mqtt(const char* topic, StaticJsonDocument<512>& payload, bool retain);
+    void prepare_and_send_payloads(uint8_t tilt_index);
+    void prepare_temperature_payload(const char* tilt_color, const char* tilt_topic);
+    void prepare_gravity_payload(const char* tilt_color, const char* tilt_topic);
+    void prepare_battery_payload(const char* tilt_color, const char* tilt_topic);
+    void prepare_general_payload(uint8_t tilt_index, const char* tilt_topic);
+    void enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload);
+
 };
 
 

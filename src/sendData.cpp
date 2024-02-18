@@ -690,138 +690,202 @@ bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const
     return false;
 }
 
-bool dataSendHandler::send_to_mqtt()
-{
-    // TODO: (JSON) Come back and tighten this up
+
+bool dataSendHandler::send_to_mqtt() {
     bool result = false;
-    StaticJsonDocument<512> payload;
     mqttClient.loop();
 
-    if (send_mqtt && ! send_lock)
-    {
-        // MQTT
+    if (send_mqtt && !send_lock) {
         send_mqtt = false;
         send_lock = true;
-        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-        {
+
+        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
             Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
-            // Function sends three payloads with the first two designed to
-            // support autodiscovery and configuration on Home Assistant.
-            // General payload formatted as json when sent to mqTT:
-            //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
-            //
-            // Loop through each of the tilt colors cached by tilt_scanner,
-            // sending data for each of the active tilts
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
-            {
-                if (tilt_scanner.tilt(i)->is_loaded())
-                {
-                    char tilt_topic[50] = {'\0'};
-                    snprintf(tilt_topic, 50, "%s/tilt_%s",
-                            config.mqttTopic,
-                            tilt_color_names[i]);
 
-                    for (uint8_t j = 0; j < 3; j++)
-                    {
-                        char m_topic[90] = {'\0'};
-                        char tilt_name[15] = {'\0'};
-                        char tilt_sensor_name[35] = {'\0'};
-                        char uniq_id[30] = {'\0'};
-                        char unit[10] = {'\0'};
-                        bool retain = false;
-
-                        strcat(tilt_name, "Tilt ");
-                        strcat(tilt_name, tilt_color_names[i]);
-
-                        if (j < 2 ) 
-                        {
-                            JsonObject device = payload.createNestedObject("device");
-                            device["identifiers"] = tilt_color_names[i];
-                            device["name"] = tilt_name;
-                        }
-
-                        switch (j)
-                        {
-                        case 0: //Home Assistant Config Topic for Temperature
-                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config",
-                                    config.mqttTopic,
-                                    tilt_color_names[i]);
-                            payload["dev_cla"] = "temperature";
-                            strcat(unit, "\u00b0");
-                            strcat(unit, config.tempUnit);
-                            payload["unit_of_meas"] = unit;
-                            payload["ic"] = "mdi:thermometer";
-                            payload["stat_t"] = tilt_topic;
-                            strcat(tilt_sensor_name, "Tilt Temperature - ");
-                            strcat(tilt_sensor_name, tilt_color_names[i]);
-                            payload["name"] = tilt_sensor_name;
-                            payload["val_tpl"] = "{{value_json.Temp}}";
-                            snprintf(uniq_id, 30, "tiltbridge_tilt%sT",
-                                tilt_color_names[i]);
-                            payload["uniq_id"] = uniq_id;
-                            retain = true;
-                            break;
-                        case 1: //Home Assistant Config Topic for Sp Gravity
-                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config",
-                                    config.mqttTopic,
-                                    tilt_color_names[i]);
-                            //payload["dev_cla"] = "None";
-                            payload["unit_of_meas"] = "SG";
-                            //payload["ic"] = "";
-                            payload["stat_t"] = tilt_topic;
-                            strcat(tilt_sensor_name, "Tilt Specific Gravity - ");
-                            strcat(tilt_sensor_name, tilt_color_names[i]);
-                            payload["name"] = tilt_sensor_name;
-                            payload["val_tpl"] = "{{value_json.SG}}";
-                            snprintf(uniq_id, 30, "tiltbridge_tilt%sG",
-                                tilt_color_names[i]);
-                            payload["uniq_id"] = uniq_id;
-                            retain = true;
-                            break;
-                        case 2: //General payload with sensor data
-                            strcat(m_topic, tilt_topic);
-                            char current_grav[8] = {'\0'};
-                            char current_temp[5] = {'\0'};
-                            strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
-                            strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
-                            payload["Color"] = tilt_color_names[i];
-                            payload["timeStamp"] = (int)std::time(0);
-                            payload["fermunits"] = "SG";
-                            payload["SG"] = current_grav;
-                            payload["Temp"] = current_temp;
-                            payload["tempunits"] = config.tempUnit;
-                            retain = false;
-                            break;
-                        }
-                        char payload_string[320] = {'\0'};
-                        serializeJson(payload, payload_string);
-
-                        Log.verbose(F("Topic: %s\r\n"), m_topic);
-                        Log.verbose(F("Message: %s\r\n"), payload_string);
-
-                        if (!mqttClient.connected() && j == 0)
-                        {
-                            Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker\r\n"));
-                            connect_mqtt();
-                        }
-
-                        result = mqttClient.publish(m_topic, payload_string, retain, 0);
-                        delay(10);
-
-                        payload.clear();
-                    }
+            for (uint8_t i = 0; i < TILT_COLORS; i++) {
+                if (tilt_scanner.tilt(i)->is_loaded()) {
+                    prepare_and_send_payloads(i);
                 }
             }
-            if (result) {
-                Log.notice(F("Completed publish to MQTT Broker.\r\n"));
-            } else {
-                result = false; // There was an error with the previous send
-                Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
-            }
+
+            mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
+            send_lock = false;
         }
-        mqttTicker.once(config.mqttPushEvery, [](){data_sender.send_mqtt = true;});   // Set up subsequent send to MQTT
-        send_lock = false;
     }
 
     return result;
 }
+
+void dataSendHandler::prepare_and_send_payloads(uint8_t tilt_index) {
+    char tilt_topic[50] = {'\0'};
+    snprintf(tilt_topic, 50, "%s/tilt_%s", config.mqttTopic, tilt_color_names[tilt_index]);
+
+    // Prepare and send each of the four payloads
+    prepare_temperature_payload(tilt_color_names[tilt_index], tilt_topic);
+    prepare_gravity_payload(tilt_color_names[tilt_index], tilt_topic);
+    prepare_battery_payload(tilt_color_names[tilt_index], tilt_topic);
+    prepare_general_payload(tilt_index, tilt_topic);
+}
+
+void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload) {
+    payload["stat_t"] = topic;
+
+    payload["dev"]["name"] = "Tilt Red";
+    payload["dev"]["ids"] = tilt_color;
+    payload["dev"]["mdl"] = "Tilt Hydrometer";
+    payload["dev"]["mf"] = "Baron Brew Equipment LLC";
+    payload["dev"]["sw"] = version();
+    payload["dev"]["sa"] = "Brewery";  // Suggested Area
+
+    char ip_address_url[25] = "http://";
+    {
+        char ip[16];
+        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        strncat(ip_address_url, ip, 16);
+        strcat(ip_address_url, "/");
+    }
+
+
+    payload["dev"]["cu"] = ip_address_url;
+    // model and hw_version could be added, but it would require the Tilt object to determine Tilt vs. Tilt Pro
+
+
+    payload["json_attr_t"] = topic;
+    payload["json_attr_tpl"] = "{ \"Uptime\": \"{{ value_json.timeStamp }}\" }\n";
+
+
+}
+
+
+void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const char* tilt_topic) {
+    //Home Assistant Config Topic for Temperature
+    char m_topic[90];
+    char tilt_sensor_name[35];
+    char uniq_id[30];
+    char unit[10] = "\u00b0"; // Unicode for degree symbol
+    StaticJsonDocument<512> payload;
+
+    // Construct the MQTT topic string for temperature
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config", config.mqttTopic, tilt_color);
+
+    // Set up payload fields
+    strcat(unit, config.tempUnit); // Append temperature unit after degree symbol
+    payload["dev_cla"] = "temperature";
+    payload["unit_of_meas"] = unit;
+    payload["ic"] = "mdi:thermometer-water";
+    
+    // Construct sensor name
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Temperature - %s", tilt_color);
+    payload["name"] = tilt_sensor_name;
+
+    // Value template
+    payload["val_tpl"] = "{{value_json.Temp}}";
+
+    // Unique ID
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sT", tilt_color);
+    payload["uniq_id"] = uniq_id;
+
+    enrich_announcement(tilt_topic, tilt_color, payload);
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
+}
+
+
+void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char* tilt_topic) {
+    //Home Assistant Config Topic for Sp Gravity
+    char m_topic[90];
+    char tilt_sensor_name[35];
+    char uniq_id[30];
+    StaticJsonDocument<512> payload;
+
+    // Construct the MQTT topic string for specific gravity
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config", config.mqttTopic, tilt_color);
+
+    // Set up payload fields
+    payload["unit_of_meas"] = "SG";
+    payload["ic"] = "mdi:slope-downhill";
+    
+    // Construct sensor name
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Specific Gravity - %s", tilt_color);
+    payload["name"] = tilt_sensor_name;
+
+    // Value template
+    payload["val_tpl"] = "{{value_json.SG}}";
+
+    // Unique ID
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sG", tilt_color);
+    payload["uniq_id"] = uniq_id;
+
+    enrich_announcement(tilt_topic, tilt_color, payload);
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
+}
+
+void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char* tilt_topic) {
+    //Home Assistant Config Topic for Weeks On Battery
+    char m_topic[90];
+    char tilt_sensor_name[35];
+    char uniq_id[30];
+    StaticJsonDocument<512> payload;
+
+    // Construct the MQTT topic string for weeks on battery
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sWoB/weeks_on_battery/config", config.mqttTopic, tilt_color);
+
+    // Set up payload fields
+    payload["unit_of_meas"] = "weeks";
+    payload["ic"] = "mdi:battery";
+    
+    // Construct sensor name
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Weeks On Battery - %s", tilt_color);
+    payload["name"] = tilt_sensor_name;
+
+    // Value template
+    payload["val_tpl"] = "{{value_json.WoB}}";
+
+    // Unique ID
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sWoB", tilt_color);
+    payload["uniq_id"] = uniq_id;
+
+    enrich_announcement(tilt_topic, tilt_color, payload);
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
+}
+
+void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* tilt_topic) {
+    //General payload with sensor data
+    char m_topic[90];
+    StaticJsonDocument<512> payload;
+    tiltHydrometer* current_tilt = tilt_scanner.tilt(tilt_index);
+
+    // Construct the MQTT topic string for general sensor data
+    strcpy(m_topic, tilt_topic);
+
+    // Populate payload with sensor data
+    payload["Color"] = tilt_color_names[tilt_index];
+    payload["timeStamp"] = (int)std::time(0);
+    payload["fermunits"] = "SG";
+    payload["SG"] = current_tilt->converted_gravity(false).c_str();
+    payload["Temp"] = current_tilt->converted_temp(false).c_str();
+    payload["tempunits"] = config.tempUnit;
+    payload["WoB"] = current_tilt->get_weeks_battery().c_str();
+
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, false); // Retain flag set to false for general data
+}
+
+
+bool dataSendHandler::publish_to_mqtt(const char* topic, StaticJsonDocument<512>& payload, bool retain) {
+    char payload_string[512];
+    serializeJson(payload, payload_string);
+
+    if (!mqttClient.connected()) {
+        Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker\r\n"));
+        connect_mqtt();
+    }
+
+    bool result = mqttClient.publish(topic, payload_string, retain, 0);
+    Log.verbose(F("Published to MQTT\r\n"));
+    delay(10);
+    return result;
+}
+
