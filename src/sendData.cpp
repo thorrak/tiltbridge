@@ -726,6 +726,36 @@ void dataSendHandler::prepare_and_send_payloads(uint8_t tilt_index) {
     prepare_general_payload(tilt_index, tilt_topic);
 }
 
+void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload) {
+    payload["stat_t"] = topic;
+
+    payload["dev"]["name"] = "Tilt Red";
+    payload["dev"]["ids"] = tilt_color;
+    payload["dev"]["mdl"] = "Tilt Hydrometer";
+    payload["dev"]["mf"] = "Baron Brew Equipment LLC";
+    payload["dev"]["sw"] = version();
+    payload["dev"]["sa"] = "Brewery";  // Suggested Area
+
+    char ip_address_url[25] = "http://";
+    {
+        char ip[16];
+        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        strncat(ip_address_url, ip, 16);
+        strcat(ip_address_url, "/");
+    }
+
+
+    payload["dev"]["cu"] = ip_address_url;
+    // model and hw_version could be added, but it would require the Tilt object to determine Tilt vs. Tilt Pro
+
+
+    payload["json_attr_t"] = topic;
+    payload["json_attr_tpl"] = "{ \"Uptime\": \"{{ value_json.timeStamp }}\" }\n";
+
+
+}
+
+
 void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const char* tilt_topic) {
     //Home Assistant Config Topic for Temperature
     char m_topic[90];
@@ -741,8 +771,7 @@ void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const 
     strcat(unit, config.tempUnit); // Append temperature unit after degree symbol
     payload["dev_cla"] = "temperature";
     payload["unit_of_meas"] = unit;
-    payload["ic"] = "mdi:thermometer";
-    payload["stat_t"] = tilt_topic;
+    payload["ic"] = "mdi:thermometer-water";
     
     // Construct sensor name
     snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Temperature - %s", tilt_color);
@@ -755,6 +784,7 @@ void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const 
     snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sT", tilt_color);
     payload["uniq_id"] = uniq_id;
 
+    enrich_announcement(tilt_topic, tilt_color, payload);
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
 }
@@ -772,7 +802,7 @@ void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char
 
     // Set up payload fields
     payload["unit_of_meas"] = "SG";
-    payload["stat_t"] = tilt_topic;
+    payload["ic"] = "mdi:slope-downhill";
     
     // Construct sensor name
     snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Specific Gravity - %s", tilt_color);
@@ -785,6 +815,7 @@ void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char
     snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sG", tilt_color);
     payload["uniq_id"] = uniq_id;
 
+    enrich_announcement(tilt_topic, tilt_color, payload);
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
 }
@@ -802,7 +833,6 @@ void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char
     // Set up payload fields
     payload["unit_of_meas"] = "weeks";
     payload["ic"] = "mdi:battery";
-    payload["stat_t"] = tilt_topic;
     
     // Construct sensor name
     snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Weeks On Battery - %s", tilt_color);
@@ -815,6 +845,7 @@ void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char
     snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sWoB", tilt_color);
     payload["uniq_id"] = uniq_id;
 
+    enrich_announcement(tilt_topic, tilt_color, payload);
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
 }

@@ -89,6 +89,7 @@ private:
     void prepare_gravity_payload(const char* tilt_color, const char* tilt_topic);
     void prepare_battery_payload(const char* tilt_color, const char* tilt_topic);
     void prepare_general_payload(uint8_t tilt_index, const char* tilt_topic);
+    void enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload);
 
 };
 
