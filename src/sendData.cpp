@@ -345,7 +345,7 @@ bool dataSendHandler::send_to_taplistio()
         }
 
         j["Color"] = tilt_color_names[i];
-        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), false);  // Always in Fahrenheit
+        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true);  // Always in Fahrenheit
         j["Temp"] = temp;
         tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
         j["SG"] = gravity;
