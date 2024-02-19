@@ -234,11 +234,16 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     {
         if (tilt_scanner.tilt(i)->is_loaded())
         {
+            char gravity[10];
+            char temp[6];
+
             Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
             j["name"] = tilt_color_names[i];
-            j["temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+            tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+            j["temp"] = temp;
             j["temp_unit"] = "F";
-            j["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false);
+            tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+            j["gravity"] = gravity;
             j["gravity_unit"] = "G";
             j["device_source"] = "TiltBridge";
 
@@ -275,11 +280,15 @@ bool dataSendHandler::send_to_grainfather()
 
                 if (tilt_scanner.tilt(i)->is_loaded())
                 {
+                    char gravity[10];
+                    char temp[6];
                     StaticJsonDocument<GF_SIZE> j;
                     Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
-                    j["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+                    tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+                    j["Temp"] = temp;
                     j["Unit"] = "F";
-                    j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+                    tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                    j["SG"] = gravity;
 
                     char payload_string[GF_SIZE];
                     serializeJson(j, payload_string);
@@ -327,6 +336,8 @@ bool dataSendHandler::send_to_taplistio()
     for (uint8_t i = 0; i < TILT_COLORS; i++) {
         StaticJsonDocument<192> j;
         char payload_string[192];
+        char gravity[10];
+        char temp[6];
 
 
         if (!tilt_scanner.tilt(i)->is_loaded()) {
@@ -334,8 +345,10 @@ bool dataSendHandler::send_to_taplistio()
         }
 
         j["Color"] = tilt_color_names[i];
-        j["Temp"] = tilt_scanner.tilt(i)->converted_temp(false);
-        j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), false);  // Always in Fahrenheit
+        j["Temp"] = temp;
+        tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+        j["SG"] = gravity;
         j["temperature_unit"] = "F";
         j["gravity_unit"] = "G";
         
@@ -381,17 +394,16 @@ bool dataSendHandler::send_to_brewstatus()
             {
                 if (tilt_scanner.tilt(i)->is_loaded())
                 {
+                    char gravity[10];
+                    char temp[6];
+                    tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                    tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit since we don't send units
                     snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
-                            tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
-                            tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
-                            tilt_color_names[i],
-                            ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-                    if (send_to_url(config.brewstatusURL, payload, content_x_www_form_urlencoded))
-                    {
+                            gravity, temp, tilt_color_names[i], ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
+                    
+                    if (send_to_url(config.brewstatusURL, payload, content_x_www_form_urlencoded)) {
                         Log.notice(F("Completed send to Brew Status.\r\n"));
-                    }
-                    else
-                    {
+                    } else {
                         result = false;
                         Log.verbose(F("Error sending to Brew Status.\r\n"));
                     }
@@ -435,12 +447,17 @@ bool dataSendHandler::send_to_google()
                 if (tilt_scanner.tilt(i)->is_loaded()) {
                     // Check if there is a google sheet name associated with the specific Tilt
                     if (strlen(config.gsheets_config[i].name) > 0) {
+                        char gravity[10];
+                        char temp[6];
+
                         // If there's a sheet name saved, then we should send the data
                         if (numSent == 0)
                             Log.notice(F("Beginning GSheets check-in.\r\n"));
                         payload["Beer"] = config.gsheets_config[i].name;
-                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always send in Fahrenheit
-                        payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+                        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+                        payload["Temp"] = temp;
+                        tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                        payload["SG"] = gravity;
                         payload["Color"] = tilt_color_names[i];
                         payload["Comment"] = "";
                         payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
@@ -851,6 +868,9 @@ void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char
 void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* tilt_topic) {
     //General payload with sensor data
     char m_topic[90];
+    char gravity[10];
+    char temp[6];
+    char battery_str[4]; // large enough for 0-255 and the null terminator
     StaticJsonDocument<512> payload;
     tiltHydrometer* current_tilt = tilt_scanner.tilt(tilt_index);
 
@@ -861,10 +881,13 @@ void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* ti
     payload["Color"] = tilt_color_names[tilt_index];
     payload["timeStamp"] = (int)std::time(0);
     payload["fermunits"] = "SG";
-    payload["SG"] = current_tilt->converted_gravity(false).c_str();
-    payload["Temp"] = current_tilt->converted_temp(false).c_str();
+    current_tilt->converted_gravity(gravity, 10, false);
+    payload["SG"] = gravity;
+    current_tilt->converted_temp(temp, 6, false);
+    payload["Temp"] = temp;
     payload["tempunits"] = config.tempUnit;
-    payload["WoB"] = current_tilt->get_weeks_battery().c_str();
+    current_tilt->get_weeks_battery(battery_str, 4);
+    payload["WoB"] = battery_str;
 
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, false); // Retain flag set to false for general data
