@@ -769,7 +769,7 @@ void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const 
     strcat(unit, config.tempUnit); // Append temperature unit after degree symbol
     payload["dev_cla"] = "temperature";
     payload["unit_of_meas"] = unit;
-    payload["ic"] = "mdi:thermometer-water";
+    payload["ic"] = "mdi:thermometer-lines";
     
     // Construct sensor name
     snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Temperature - %s", tilt_color);
@@ -800,7 +800,7 @@ void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char
 
     // Set up payload fields
     payload["unit_of_meas"] = "SG";
-    payload["ic"] = "mdi:slope-downhill";
+    payload["ic"] = "mdi:trending-down";
     
     // Construct sensor name
     snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Specific Gravity - %s", tilt_color);
