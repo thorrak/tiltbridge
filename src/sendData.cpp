@@ -32,19 +32,17 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    // DEBUG:
-    cloudTargetTicker.once(10, [](){data_sender.send_cloudTarget = true;});      // Schedule first send to Cloud Target
-    localTargetTicker.once(20, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
 //    localTargetTicker.once(5, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
-    // DEBUG^
+    localTargetTicker.once(10, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
+    mqttTicker.once(20, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
     brewStatusTicker.once(30, [](){data_sender.send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){data_sender.send_brewfather = true;});        // Schedule first send to Brewfather
     brewersFriendTicker.once(50, [](){data_sender.send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
     userTargetTicker.once(60, [](){data_sender.send_userTarget = true;});        // Schedule first send to User-defined JSON target
-    mqttTicker.once(65, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
     gSheetsTicker.once(70, [](){data_sender.send_gSheets = true;});              // Schedule first send to Google Sheets
     grainfatherTicker.once(80, [](){data_sender.send_grainfather = true;});      // Schedule first send to Grainfather
     taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
+    cloudTargetTicker.once(100, [](){data_sender.send_cloudTarget = true;});     // Schedule first send to Cloud Target
 }
 
 void dataSendHandler::process()
