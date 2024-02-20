@@ -743,8 +743,9 @@ void dataSendHandler::prepare_and_send_payloads(uint8_t tilt_index) {
 
 void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload) {
     payload["stat_t"] = topic;
-
-    payload["dev"]["name"] = "Tilt Red";
+    char deviceName[20];
+    snprintf(deviceName, sizeof(deviceName), "Tilt %s", tilt_color);
+    payload["dev"]["name"] = deviceName;
     payload["dev"]["ids"] = tilt_color;
     payload["dev"]["mdl"] = "Tilt Hydrometer";
     payload["dev"]["mf"] = "Baron Brew Equipment LLC";
