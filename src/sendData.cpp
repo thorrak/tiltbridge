@@ -310,6 +310,11 @@ bool dataSendHandler::send_to_taplistio()
 {
     bool result = true;
 
+    // Check if config.taplistioURL is set, and return if it's not
+    if (strlen(config.taplistioURL) <= 10) {
+        return false;
+    }
+
     // See if it's our time to send.
     if (!send_taplistio) {
         return false;
@@ -534,41 +539,48 @@ void dataSendHandler::init_mqtt()
 {
     LCBUrl url;
 
-    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-    {
+    if(mqtt_alreadyinit) {
+        Log.verbose(F("MQTT already initialized. Disconnecting.\r\n"));
+        mqttClient.disconnect();
+        delay(250);
+    }
+
+    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
         if (url.isMDNS(config.mqttBrokerHost)) {
             Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
-                config.mqttBrokerHost,
-                url.getIP(config.mqttBrokerHost).toString().c_str(),
-                config.mqttBrokerPort);
+                config.mqttBrokerHost, url.getIP(config.mqttBrokerHost).toString().c_str(), config.mqttBrokerPort);
         } else {
             Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
-                config.mqttBrokerHost,
-                config.mqttBrokerPort);
+                config.mqttBrokerHost, config.mqttBrokerPort);
         }
 
         if (mqtt_alreadyinit) {
-            mqttClient.disconnect();
-            delay(250);
+            // If we've already initialized, just reset the host/port & reconnect
             if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
             } else {
                 mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
             }
+            mqttClient.connect(config.mdnsID);
         } else {
             if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
             } else {
                 mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
             }
+            mqtt_alreadyinit = true;
         }
-        mqtt_alreadyinit = true;
         mqttClient.setKeepAlive(config.mqttPushEvery);
     }
 }
 
 void dataSendHandler::connect_mqtt()
 {
+    if(!mqtt_alreadyinit) {
+        // Since init is not called synchronously with the settings update when the user sets the MQTT broker, we need to
+        // wait until the MQTT client is initialized if it hasn't been done already.
+        return;
+    }
     if (strlen(config.mqttUsername) > 1)
     {
         mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
@@ -707,24 +719,33 @@ bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const
 
 bool dataSendHandler::send_to_mqtt() {
     bool result = false;
-    mqttClient.loop();
+
+    if (strcmp(config.mqttBrokerHost, "") == 0 || strlen(config.mqttBrokerHost) == 0) {
+        // No MQTT broker configured
+        return false;
+    }
+
+    if (!mqttClient.connected()) {
+        Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker in loop\r\n"));
+        connect_mqtt();
+    } else {
+        mqttClient.loop();
+    }
 
     if (send_mqtt && !send_lock) {
         send_mqtt = false;
         send_lock = true;
 
-        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
-            Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
+        Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
 
-            for (uint8_t i = 0; i < TILT_COLORS; i++) {
-                if (tilt_scanner.tilt(i)->is_loaded()) {
-                    prepare_and_send_payloads(i);
-                }
+        for (uint8_t i = 0; i < TILT_COLORS; i++) {
+            if (tilt_scanner.tilt(i)->is_loaded()) {
+                prepare_and_send_payloads(i);
             }
-
-            mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
-            send_lock = false;
         }
+
+        mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
+        send_lock = false;
     }
 
     return result;
@@ -905,7 +926,11 @@ bool dataSendHandler::publish_to_mqtt(const char* topic, StaticJsonDocument<512>
     }
 
     bool result = mqttClient.publish(topic, payload_string, retain, 0);
-    Log.verbose(F("Published to MQTT\r\n"));
+    if(result) {
+        Log.verbose(F("Published to MQTT\r\n"));
+    } else {
+        Log.error(F("Failed to publish to MQTT\r\n"));
+    }
     delay(10);
     return result;
 }
