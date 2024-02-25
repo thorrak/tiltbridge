@@ -539,35 +539,37 @@ void dataSendHandler::init_mqtt()
 {
     LCBUrl url;
 
-    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-    {
+    if(mqtt_alreadyinit) {
+        Log.verbose(F("MQTT already initialized. Disconnecting.\r\n"));
+        mqttClient.disconnect();
+        delay(250);
+    }
+
+    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
         if (url.isMDNS(config.mqttBrokerHost)) {
             Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
-                config.mqttBrokerHost,
-                url.getIP(config.mqttBrokerHost).toString().c_str(),
-                config.mqttBrokerPort);
+                config.mqttBrokerHost, url.getIP(config.mqttBrokerHost).toString().c_str(), config.mqttBrokerPort);
         } else {
             Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
-                config.mqttBrokerHost,
-                config.mqttBrokerPort);
+                config.mqttBrokerHost, config.mqttBrokerPort);
         }
 
         if (mqtt_alreadyinit) {
-            mqttClient.disconnect();
-            delay(250);
+            // If we've already initialized, just reset the host/port & reconnect
             if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
             } else {
                 mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
             }
+            mqttClient.connect(config.mdnsID);
         } else {
             if (url.isMDNS(config.mqttBrokerHost)) {
                 mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
             } else {
                 mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
             }
+            mqtt_alreadyinit = true;
         }
-        mqtt_alreadyinit = true;
         mqttClient.setKeepAlive(config.mqttPushEvery);
     }
 }
@@ -575,7 +577,8 @@ void dataSendHandler::init_mqtt()
 void dataSendHandler::connect_mqtt()
 {
     if(!mqtt_alreadyinit) {
-        Log.error("Call to connect_mqtt without init_mqtt being called first. This is a bug.\r\n");
+        // Since init is not called synchronously with the settings update when the user sets the MQTT broker, we need to
+        // wait until the MQTT client is initialized if it hasn't been done already.
         return;
     }
     if (strlen(config.mqttUsername) > 1)
