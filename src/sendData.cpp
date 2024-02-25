@@ -310,6 +310,11 @@ bool dataSendHandler::send_to_taplistio()
 {
     bool result = true;
 
+    // Check if config.taplistioURL is set, and return if it's not
+    if (strlen(config.taplistioURL) <= 10) {
+        return false;
+    }
+
     // See if it's our time to send.
     if (!send_taplistio) {
         return false;
