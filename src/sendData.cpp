@@ -574,6 +574,10 @@ void dataSendHandler::init_mqtt()
 
 void dataSendHandler::connect_mqtt()
 {
+    if(!mqtt_alreadyinit) {
+        Log.error("Call to connect_mqtt without init_mqtt being called first. This is a bug.\r\n");
+        return;
+    }
     if (strlen(config.mqttUsername) > 1)
     {
         mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
@@ -712,24 +716,33 @@ bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const
 
 bool dataSendHandler::send_to_mqtt() {
     bool result = false;
-    mqttClient.loop();
+
+    if (strcmp(config.mqttBrokerHost, "") == 0 || strlen(config.mqttBrokerHost) == 0) {
+        // No MQTT broker configured
+        return false;
+    }
+
+    if (!mqttClient.connected()) {
+        Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker in loop\r\n"));
+        connect_mqtt();
+    } else {
+        mqttClient.loop();
+    }
 
     if (send_mqtt && !send_lock) {
         send_mqtt = false;
         send_lock = true;
 
-        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
-            Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
+        Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
 
-            for (uint8_t i = 0; i < TILT_COLORS; i++) {
-                if (tilt_scanner.tilt(i)->is_loaded()) {
-                    prepare_and_send_payloads(i);
-                }
+        for (uint8_t i = 0; i < TILT_COLORS; i++) {
+            if (tilt_scanner.tilt(i)->is_loaded()) {
+                prepare_and_send_payloads(i);
             }
-
-            mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
-            send_lock = false;
         }
+
+        mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
+        send_lock = false;
     }
 
     return result;
@@ -910,7 +923,11 @@ bool dataSendHandler::publish_to_mqtt(const char* topic, StaticJsonDocument<512>
     }
 
     bool result = mqttClient.publish(topic, payload_string, retain, 0);
-    Log.verbose(F("Published to MQTT\r\n"));
+    if(result) {
+        Log.verbose(F("Published to MQTT\r\n"));
+    } else {
+        Log.error(F("Failed to publish to MQTT\r\n"));
+    }
     delay(10);
     return result;
 }
