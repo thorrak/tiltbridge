@@ -47,14 +47,16 @@ void dataSendHandler::init()
 
 void dataSendHandler::process()
 {
-    send_to_cloud();
-    send_to_localTarget();
-    send_to_bf_and_bf();
-    send_to_grainfather();
-    send_to_brewstatus();
-    send_to_taplistio();
-    send_to_google();
-    send_to_mqtt();
+    if (WiFiClass::status() == WL_CONNECTED) {
+        send_to_cloud();
+        send_to_localTarget();
+        send_to_bf_and_bf();
+        send_to_grainfather();
+        send_to_brewstatus();
+        send_to_taplistio();
+        send_to_google();
+        send_to_mqtt();
+    }
 }
 
 bool dataSendHandler::send_to_localTarget()
@@ -68,8 +70,7 @@ bool dataSendHandler::send_to_localTarget()
         send_lock = true;
 //        tilt_scanner.deinit();
 
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
-        {
+        if (strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH) {
             Log.verbose(F("Calling send to Local Target.\r\n"));
             DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
@@ -106,8 +107,7 @@ bool dataSendHandler::send_to_bf_and_bf()
         send_lock = true;
         // Brewer's Friend
         data_sender.send_brewersFriend = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
-        {
+        if (strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH) {
             Log.verbose(F("Calling send to Brewer's Friend.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
             if (retval)
@@ -128,8 +128,7 @@ bool dataSendHandler::send_to_bf_and_bf()
         send_lock = true;
         // Brewfather
         data_sender.send_brewfather = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
-        {
+        if (strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH) {
             Log.verbose(F("Calling send to Brewfather.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
             if (retval)
@@ -151,7 +150,7 @@ bool dataSendHandler::send_to_bf_and_bf()
         send_lock = true;
         // User Target
         data_sender.send_userTarget = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.userTargetURL) > USER_TARGET_MIN_URL_LENGTH)
+        if (strlen(config.userTargetURL) > USER_TARGET_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to User Target.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_USER_TARGET);
@@ -266,37 +265,35 @@ bool dataSendHandler::send_to_grainfather()
         // Brew Status
         send_grainfather = false;
         send_lock = true;
-        if (WiFiClass::status() == WL_CONNECTED)
+
+        Log.verbose(F("Calling send to Grainfather.\r\n"));
+
+        // Loop through each of the tilt colors cached by tilt_scanner, sending
+        // data for each of the active tilts
+        for (uint8_t i = 0; i < TILT_COLORS; i++)
         {
-            Log.verbose(F("Calling send to Grainfather.\r\n"));
+            if (strlen(config.grainfatherURL[i].link) == 0) {
+                continue;
+            }
 
-            // Loop through each of the tilt colors cached by tilt_scanner, sending
-            // data for each of the active tilts
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            if (tilt_scanner.tilt(i)->is_loaded())
             {
-                if (strlen(config.grainfatherURL[i].link) == 0) {
-                    continue;
-                }
+                char gravity[10];
+                char temp[6];
+                StaticJsonDocument<GF_SIZE> j;
+                Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
+                tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+                j["Temp"] = temp;
+                j["Unit"] = "F";
+                tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                j["SG"] = gravity;
 
-                if (tilt_scanner.tilt(i)->is_loaded())
+                char payload_string[GF_SIZE];
+                serializeJson(j, payload_string);
+
+                if (!send_to_url(config.grainfatherURL[i].link, payload_string, content_json))
                 {
-                    char gravity[10];
-                    char temp[6];
-                    StaticJsonDocument<GF_SIZE> j;
-                    Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
-                    tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
-                    j["Temp"] = temp;
-                    j["Unit"] = "F";
-                    tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
-                    j["SG"] = gravity;
-
-                    char payload_string[GF_SIZE];
-                    serializeJson(j, payload_string);
-
-                    if (!send_to_url(config.grainfatherURL[i].link, payload_string, content_json))
-                    {
-                        result = false; // There was an error with the previous send
-                    }
+                    result = false; // There was an error with the previous send
                 }
             }
         }
@@ -331,12 +328,13 @@ bool dataSendHandler::send_to_taplistio()
     send_taplistio = false;
     send_lock = true;
 
-    if (WiFiClass::status() != WL_CONNECTED) {
-        Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
-        taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
-        send_lock = false;
-        return false;
-    }
+    // This is now checked in the data sending loop
+    // if (WiFiClass::status() != WL_CONNECTED) {
+    //     Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
+    //     taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
+    //     send_lock = false;
+    //     return false;
+    // }
 
     for (uint8_t i = 0; i < TILT_COLORS; i++) {
         StaticJsonDocument<192> j;
@@ -381,8 +379,7 @@ bool dataSendHandler::send_to_brewstatus()
         // Brew Status
         send_brewStatus = false;
         send_lock = true;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
-        {
+        if (strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH) {
             Log.verbose(F("Calling send to Brew Status.\r\n"));
 
             // The payload should look like this when sent to Brewstatus:
@@ -539,55 +536,58 @@ void dataSendHandler::init_mqtt()
 {
     LCBUrl url;
 
-    if(mqtt_alreadyinit) {
-        Log.verbose(F("MQTT already initialized. Disconnecting.\r\n"));
-        mqttClient.disconnect();
-        delay(250);
-    }
-
-    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
-        if (url.isMDNS(config.mqttBrokerHost)) {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
-                config.mqttBrokerHost, url.getIP(config.mqttBrokerHost).toString().c_str(), config.mqttBrokerPort);
-        } else {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
-                config.mqttBrokerHost, config.mqttBrokerPort);
+    // Checking for the WiFi Status is done in the data sending loop, but we also need to be sure we are connected to WiFi when we initialize the MQTT client
+    if (WiFiClass::status() == WL_CONNECTED) {
+        if(mqtt_alreadyinit) {
+            Log.verbose(F("MQTT already initialized. Disconnecting.\r\n"));
+            mqttClient.disconnect();
+            delay(250);
         }
 
-        if (mqtt_alreadyinit) {
-            // If we've already initialized, just reset the host/port & reconnect
+        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
             if (url.isMDNS(config.mqttBrokerHost)) {
-                mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
+                Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
+                    config.mqttBrokerHost, url.getIP(config.mqttBrokerHost).toString().c_str(), config.mqttBrokerPort);
             } else {
-                mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+                Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
+                    config.mqttBrokerHost, config.mqttBrokerPort);
             }
-            mqttClient.connect(config.mdnsID);
-        } else {
-            if (url.isMDNS(config.mqttBrokerHost)) {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
+
+            if (mqtt_alreadyinit) {
+                mqttClient.disconnect();
+                delay(250);
+                if (url.isMDNS(config.mqttBrokerHost)) {
+                    mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
+                } else {
+                    mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+                }
             } else {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
+                if (url.isMDNS(config.mqttBrokerHost)) {
+                    mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
+                } else {
+                    mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
+                }
             }
             mqtt_alreadyinit = true;
+            mqttClient.setKeepAlive(config.mqttPushEvery);
         }
-        mqttClient.setKeepAlive(config.mqttPushEvery);
     }
 }
 
 void dataSendHandler::connect_mqtt()
 {
-    if(!mqtt_alreadyinit) {
-        // Since init is not called synchronously with the settings update when the user sets the MQTT broker, we need to
-        // wait until the MQTT client is initialized if it hasn't been done already.
-        return;
-    }
-    if (strlen(config.mqttUsername) > 1)
-    {
-        mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
-    }
-    else
-    {
-        mqttClient.connect(config.mdnsID);
+    // Checking for the WiFi Status is done in the data sending loop, but we also need to be sure we are connected to WiFi when we connect to the MQTT broker
+    if (WiFiClass::status() == WL_CONNECTED) {
+        if(!mqtt_alreadyinit) {
+            // Since init is not called synchronously with the settings update when the user sets the MQTT broker, we need to
+            // wait until the MQTT client is initialized if it hasn't been done already.
+            return;
+        }
+        if (strlen(config.mqttUsername) > 1) {
+            mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
+        } else {
+            mqttClient.connect(config.mdnsID);
+        }
     }
 }
 
