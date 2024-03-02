@@ -140,10 +140,8 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_
     }
 
     m_color = tiltHydrometer::uuid_to_color_no(m_color_arr);
-    if (m_color == TILT_NONE)
-    { // We didn't match the uuid to a color (should only happen if new colors are released)
+    if (m_color == TILT_NONE) // We didn't match the uuid to a color (should only happen if new colors are released)
         return TILT_NONE;
-    }
 
     uint16_t temp = std::strtoul(temp_arr, nullptr, 16);
     uint16_t gravity = std::strtoul(grav_arr, nullptr, 16);
