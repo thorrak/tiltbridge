@@ -82,6 +82,7 @@ OLED Cases
 - `TiltBridge Heltec/TTGO ESP32 OLED Enclosure by Thorrak <https://www.thingiverse.com/thing:3515836>`_
 - `Generic "OLED" Enclosure by Thorrak <https://www.thingiverse.com/thing:3604590>`_
 - `HiLetGo Wifi 32 Tiltbridge Case by calandryll <https://www.thingiverse.com/thing:4444391>`_
+- `Ideaspark OLED 0.96" ESP32 case <https://www.printables.com/model/773441-esp32-oled-box>`_
 
 
 
