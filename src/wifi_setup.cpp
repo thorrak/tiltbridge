@@ -53,6 +53,7 @@ void mdnsReset() {
 }
 
 void initWiFi() {
+    delay(250); // Seeing if this helps prevent a brownout with bad power supplies
 
     WiFi.mode(WIFI_STA); // Explicitly set mode, ESP defaults to STA+AP
 
