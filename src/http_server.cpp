@@ -258,8 +258,12 @@ bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUps
 
     if(!updateJsonSetting(json, FermentrackSettings::fermentrackPushEvery, config.fermentrackPushEvery))
         failCount++;
+    if(config.fermentrackPushEvery < 30 || config.fermentrackPushEvery > 43200) {
+        Log.warning(F("Settings update error, [fermentrackPushEvery]:(%d) not valid.\r\n"), config.fermentrackPushEvery);
+        config.fermentrackPushEvery = 30;
+        failCount++;
+    }
 
-    // TODO - Add a check for "push every" to make sure it isn't less than a reasonable value
 
 
     // Save
