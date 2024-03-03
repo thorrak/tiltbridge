@@ -1,24 +1,9 @@
 #ifndef TILTBRIDGE_SENDDATA_H
 #define TILTBRIDGE_SENDDATA_H
 
-#include "serialhandler.h"
-#include "wifi_setup.h"
-#include "jsonconfig.h"
-#include "main.h"   // DEBUG
-
-#include <ctime>
-#include <ArduinoJson.h>
-#include <Ticker.h>
-
-#include <WiFi.h>
-#include <MQTT.h>
-#include <WiFiMulti.h>
 #include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include <Arduino.h>
-#include <HTTPClient.h>
-#include <LCBUrl.h>
-#include <ArduinoLog.h>
+#include <Ticker.h>
+#include <ArduinoJson.h>
 
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
@@ -52,7 +37,6 @@ public:
     void init();
     void init_mqtt();
     void process();
-    bool mqtt_alreadyinit = false;
 
     bool send_to_google();
     bool send_to_localTarget();
@@ -61,25 +45,58 @@ public:
     bool send_to_mqtt();
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
     bool send_to_grainfather();
+    bool send_to_bf_and_bf();
+    void send_to_cloud();
 
 
+    // Send Timers
+    Ticker cloudTargetTicker;
+    Ticker localTargetTicker;
+    Ticker brewersFriendTicker;
+    Ticker brewfatherTicker;
+    Ticker userTargetTicker;
+    Ticker grainfatherTicker;
+    Ticker brewStatusTicker;
     Ticker taplistioTicker;
+    Ticker gSheetsTicker;
+    Ticker mqttTicker;
 
+    // Send Semaphores
+    bool send_cloudTarget = false;
+    bool send_localTarget = false;
+    bool send_brewersFriend = false;
+    bool send_brewfather = false;
+    bool send_userTarget = false;
+    bool send_grainfather = false;
+    bool send_brewStatus = false;
     bool send_taplistio = false;
+    bool send_gSheets = false;
+    bool send_mqtt = false;
 
 private:
-    void connect_mqtt();
-    bool send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
-    bool http_send_json(const char *url, const char * payload);
-    HTTPClient http;
-    WiFiClient client;
+    bool send_lock = false;
+
+    bool send_to_url(const char *url, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
+
+    // MQTT Stuff
     WiFiClient mqClient;
-    WiFiClientSecure secureClient;
+    bool mqtt_alreadyinit = false;
+
+    void connect_mqtt();
+    bool publish_to_mqtt(const char* topic, StaticJsonDocument<512>& payload, bool retain);
+    void prepare_and_send_payloads(uint8_t tilt_index);
+    void prepare_temperature_payload(const char* tilt_color, const char* tilt_topic);
+    void prepare_gravity_payload(const char* tilt_color, const char* tilt_topic);
+    void prepare_battery_payload(const char* tilt_color, const char* tilt_topic);
+    void prepare_general_payload(uint8_t tilt_index, const char* tilt_topic);
+    void enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload);
+
 };
 
-bool send_to_bf_and_bf();
-void send_to_cloud();
 
 extern dataSendHandler data_sender;
+
+constexpr auto content_json = "application/json";
+constexpr auto content_x_www_form_urlencoded = "application/x-www-form-urlencoded";
 
 #endif //TILTBRIDGE_SENDDATA_H

@@ -1,35 +1,29 @@
-#include "sendData.h"
+#include <ctime>
+#include <ArduinoJson.h>
+#include <Ticker.h>
+
+#include <WiFi.h>
+#include <MQTT.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+
+#include <ArduinoLog.h>
+#include <LCBUrl.h>
+
 #include "tilt/tiltScanner.h"
+#include "jsonconfig.h"
+#include "version.h"
+#include "parseTarget.h"
+#include "http_server.h"
+#include "main.h"  // for printMem()
+
+#include "sendData.h"
 
 
 dataSendHandler data_sender; // Global data sender
 
 MQTTClient mqttClient(512);
-
-// POST Timers
-Ticker cloudTargetTicker;
-Ticker localTargetTicker;
-Ticker brewersFriendTicker;
-Ticker brewfatherTicker;
-Ticker userTargetTicker;
-Ticker grainfatherTicker;
-Ticker brewStatusTicker;
-//Ticker taplistioTicker;  // Now inside dataSendHandler object
-Ticker gSheetsTicker;
-Ticker mqttTicker;
-
-// POST Semaphores
-bool send_cloudTarget = false;
-bool send_localTarget = false;
-bool send_brewersFriend = false;
-bool send_brewfather = false;
-bool send_userTarget = false;
-bool send_grainfather = false;
-bool send_brewStatus = false;
-//bool send_taplistio = false;  // Now inside dataSendHandler object
-bool send_gSheets = false;
-bool send_mqtt = false;
-bool send_lock = false;
 
 dataSendHandler::dataSendHandler() {}
 
@@ -38,34 +32,45 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    // DEBUG:
-    cloudTargetTicker.once(10, [](){send_cloudTarget = true;});      // Schedule first send to Cloud Target
-    localTargetTicker.once(20, [](){send_localTarget = true;});      // Schedule first send to Local Target
-//    localTargetTicker.once(5, [](){send_localTarget = true;});      // Schedule first send to Local Target
-    // DEBUG^
-    brewStatusTicker.once(30, [](){send_brewStatus = true;});        // Schedule first send to Brew Status
-    brewfatherTicker.once(40, [](){send_brewfather = true;});        // Schedule first send to Brewfather
-    brewersFriendTicker.once(50, [](){send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
-    userTargetTicker.once(60, [](){send_userTarget = true;});        // Schedule first send to User-defined JSON target
-    mqttTicker.once(65, [](){send_mqtt = true;});                    // Schedule first send to MQTT
-    gSheetsTicker.once(70, [](){send_gSheets = true;});              // Schedule first send to Google Sheets
-    grainfatherTicker.once(80, [](){send_grainfather = true;});      // Schedule first send to Grainfather
+//    localTargetTicker.once(5, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
+    localTargetTicker.once(10, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
+    mqttTicker.once(20, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
+    brewStatusTicker.once(30, [](){data_sender.send_brewStatus = true;});        // Schedule first send to Brew Status
+    brewfatherTicker.once(40, [](){data_sender.send_brewfather = true;});        // Schedule first send to Brewfather
+    brewersFriendTicker.once(50, [](){data_sender.send_brewersFriend = true;});  // Schedule first send to Brewer's Friend
+    userTargetTicker.once(60, [](){data_sender.send_userTarget = true;});        // Schedule first send to User-defined JSON target
+    gSheetsTicker.once(70, [](){data_sender.send_gSheets = true;});              // Schedule first send to Google Sheets
+    grainfatherTicker.once(80, [](){data_sender.send_grainfather = true;});      // Schedule first send to Grainfather
     taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
+    cloudTargetTicker.once(100, [](){data_sender.send_cloudTarget = true;});     // Schedule first send to Cloud Target
+}
+
+void dataSendHandler::process()
+{
+    if (WiFiClass::status() == WL_CONNECTED) {
+        send_to_cloud();
+        send_to_localTarget();
+        send_to_bf_and_bf();
+        send_to_grainfather();
+        send_to_brewstatus();
+        send_to_taplistio();
+        send_to_google();
+        send_to_mqtt();
+    }
 }
 
 bool dataSendHandler::send_to_localTarget()
 {
     bool result = true;
 
-    if (send_localTarget && ! send_lock)
+    if (data_sender.send_localTarget && !send_lock)
     {
         // Local Target
         send_localTarget = false;
         send_lock = true;
 //        tilt_scanner.deinit();
 
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH)
-        {
+        if (strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH) {
             Log.verbose(F("Calling send to Local Target.\r\n"));
             DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
@@ -77,7 +82,7 @@ bool dataSendHandler::send_to_localTarget()
 
             serializeJson(doc, tilt_data);
 
-            if (send_to_url(config.localTargetURL, "", tilt_data, "application/json"))
+            if (send_to_url(config.localTargetURL, tilt_data, content_json))
             {
                 Log.notice(F("Completed send to Local Target.\r\n"));
             }
@@ -87,23 +92,22 @@ bool dataSendHandler::send_to_localTarget()
                 Log.verbose(F("Error sending to Local Target.\r\n"));
             }
         }
-        localTargetTicker.once(config.localTargetPushEvery, [](){send_localTarget = true;}); // Set up subsequent send to localTarget
+        localTargetTicker.once(config.localTargetPushEvery, [](){data_sender.send_localTarget = true;}); // Set up subsequent send to localTarget
 //        tilt_scanner.init();
         send_lock = false;
     }
     return result;
 }
 
-bool send_to_bf_and_bf()
+bool dataSendHandler::send_to_bf_and_bf()
 {
     bool retval = false;
-    if (send_brewersFriend && ! send_lock)
+    if (data_sender.send_brewersFriend && !send_lock)
     {
         send_lock = true;
         // Brewer's Friend
-        send_brewersFriend = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH)
-        {
+        data_sender.send_brewersFriend = false;
+        if (strlen(config.brewersFriendKey) > BREWERS_FRIEND_MIN_KEY_LENGTH) {
             Log.verbose(F("Calling send to Brewer's Friend.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWERS_FRIEND);
             if (retval)
@@ -115,17 +119,16 @@ bool send_to_bf_and_bf()
                 Log.verbose(F("Error sending to Brewer's Friend.\r\n"));
             }
         }
-        brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
+        brewersFriendTicker.once(BREWERS_FRIEND_DELAY, [](){data_sender.send_brewersFriend = true;}); // Set up subsequent send to Brewer's Friend
         send_lock = false;
     }
 
-    if (send_brewfather && ! send_lock)
+    if (data_sender.send_brewfather && !send_lock)
     {
         send_lock = true;
         // Brewfather
-        send_brewfather = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH)
-        {
+        data_sender.send_brewfather = false;
+        if (strlen(config.brewfatherKey) > BREWFATHER_MIN_KEY_LENGTH) {
             Log.verbose(F("Calling send to Brewfather.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_BREWFATHER);
             if (retval)
@@ -137,17 +140,17 @@ bool send_to_bf_and_bf()
                 Log.verbose(F("Error sending to Brewfather.\r\n"));
             }
         }
-        brewfatherTicker.once(BREWFATHER_DELAY, [](){send_brewfather = true;}); // Set up subsequent send to Brewfather
+        brewfatherTicker.once(BREWFATHER_DELAY, [](){data_sender.send_brewfather = true;}); // Set up subsequent send to Brewfather
         send_lock = false;
     }
 
 
-    if (send_userTarget && ! send_lock)
+    if (data_sender.send_userTarget && !send_lock)
     {
         send_lock = true;
         // User Target
-        send_userTarget = false;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.userTargetURL) > USER_TARGET_MIN_URL_LENGTH)
+        data_sender.send_userTarget = false;
+        if (strlen(config.userTargetURL) > USER_TARGET_MIN_URL_LENGTH)
         {
             Log.verbose(F("Calling send to User Target.\r\n"));
             retval = data_sender.send_to_bf_and_bf(BF_MEANS_USER_TARGET);
@@ -160,19 +163,19 @@ bool send_to_bf_and_bf()
                 Log.verbose(F("Error sending to User Target.\r\n"));
             }
         }
-        userTargetTicker.once(USER_TARGET_DELAY, [](){send_userTarget = true;}); // Set up subsequent send to User Target
+        userTargetTicker.once(USER_TARGET_DELAY, [](){data_sender.send_userTarget = true;}); // Set up subsequent send to User Target
         send_lock = false;
     }
     return retval;
 }
 
-void send_to_cloud()
+void dataSendHandler::send_to_cloud()
 {
-    if (send_cloudTarget && ! send_lock) {
+    if (data_sender.send_cloudTarget && !send_lock) {
         send_lock = true;
         send_cloudTarget = false;
         addTiltToParse();
-        cloudTargetTicker.once(CLOUD_DELAY, [](){send_cloudTarget = true;}); // Set up subsequent send to localTarget
+        cloudTargetTicker.once(CLOUD_DELAY, [](){data_sender.send_cloudTarget = true;}); // Set up subsequent send to localTarget
     }
     send_lock = false;
 }
@@ -230,18 +233,23 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     {
         if (tilt_scanner.tilt(i)->is_loaded())
         {
+            char gravity[10];
+            char temp[6];
+
             Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
             j["name"] = tilt_color_names[i];
-            j["temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
+            tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+            j["temp"] = temp;
             j["temp_unit"] = "F";
-            j["gravity"] = tilt_scanner.tilt(i)->converted_gravity(false);
+            tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+            j["gravity"] = gravity;
             j["gravity_unit"] = "G";
             j["device_source"] = "TiltBridge";
 
             char payload_string[BF_SIZE];
             serializeJson(j, payload_string);
 
-            if (!send_to_url(url, "", payload_string, "application/json"))
+            if (!send_to_url(url, payload_string, content_json))
                 result = false; // There was an error with the previous send
         }
     }
@@ -251,47 +259,114 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 bool dataSendHandler::send_to_grainfather()
 {
     bool result = true;
-    StaticJsonDocument<GF_SIZE> j;
 
-    if (send_grainfather && ! send_lock)
+    if (send_grainfather && !send_lock)
     {
         // Brew Status
         send_grainfather = false;
         send_lock = true;
-        if (WiFiClass::status() == WL_CONNECTED)
+
+        Log.verbose(F("Calling send to Grainfather.\r\n"));
+
+        // Loop through each of the tilt colors cached by tilt_scanner, sending
+        // data for each of the active tilts
+        for (uint8_t i = 0; i < TILT_COLORS; i++)
         {
-            Log.verbose(F("Calling send to Grainfather.\r\n"));
+            if (strlen(config.grainfatherURL[i].link) == 0) {
+                continue;
+            }
 
-            // Loop through each of the tilt colors cached by tilt_scanner, sending
-            // data for each of the active tilts
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            if (tilt_scanner.tilt(i)->is_loaded())
             {
-                if (strlen(config.grainfatherURL[i].link) == 0) {
-                    continue;
-                }
+                char gravity[10];
+                char temp[6];
+                StaticJsonDocument<GF_SIZE> j;
+                Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
+                tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+                j["Temp"] = temp;
+                j["Unit"] = "F";
+                tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                j["SG"] = gravity;
 
-                if (tilt_scanner.tilt(i)->is_loaded())
+                char payload_string[GF_SIZE];
+                serializeJson(j, payload_string);
+
+                if (!send_to_url(config.grainfatherURL[i].link, payload_string, content_json))
                 {
-                    Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
-                    j["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always in Fahrenheit
-                    j["Unit"] = "F";
-                    j["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
-
-                    char payload_string[GF_SIZE];
-                    serializeJson(j, payload_string);
-
-                    if (!http_send_json(config.grainfatherURL[i].link, payload_string))
-                    {
-                        result = false; // There was an error with the previous send
-                    }
+                    result = false; // There was an error with the previous send
                 }
             }
         }
-        grainfatherTicker.once(GRAINFATHER_DELAY, [](){send_grainfather = true;}); // Set up subsequent send to Grainfather
+        grainfatherTicker.once(GRAINFATHER_DELAY, [](){data_sender.send_grainfather = true;}); // Set up subsequent send to Grainfather
         send_lock = false;
     }
     return result;
 }
+
+bool dataSendHandler::send_to_taplistio()
+{
+    bool result = true;
+
+    // Check if config.taplistioURL is set, and return if it's not
+    if (strlen(config.taplistioURL) <= 10) {
+        return false;
+    }
+
+    // See if it's our time to send.
+    if (!send_taplistio) {
+        return false;
+    } else if (send_lock) {
+        Log.verbose(F("taplist.io: send lock set.\r\n"));
+        return false;
+    }
+
+
+    // Since we're only using .once timers, we can just detach/recreate every time and be fine
+    taplistioTicker.detach();
+
+    // Attempt to send.
+    send_taplistio = false;
+    send_lock = true;
+
+    // This is now checked in the data sending loop
+    // if (WiFiClass::status() != WL_CONNECTED) {
+    //     Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
+    //     taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
+    //     send_lock = false;
+    //     return false;
+    // }
+
+    for (uint8_t i = 0; i < TILT_COLORS; i++) {
+        StaticJsonDocument<192> j;
+        char payload_string[192];
+        char gravity[10];
+        char temp[6];
+
+
+        if (!tilt_scanner.tilt(i)->is_loaded()) {
+            continue;
+        }
+
+        j["Color"] = tilt_color_names[i];
+        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true);  // Always in Fahrenheit
+        j["Temp"] = temp;
+        tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+        j["SG"] = gravity;
+        j["temperature_unit"] = "F";
+        j["gravity_unit"] = "G";
+        
+        serializeJson(j, payload_string);
+
+        Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
+
+        result = send_to_url(config.taplistioURL, payload_string, content_json);
+    }
+
+    taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
+    send_lock = false;
+    return result;
+}
+
 
 bool dataSendHandler::send_to_brewstatus()
 {
@@ -304,8 +379,7 @@ bool dataSendHandler::send_to_brewstatus()
         // Brew Status
         send_brewStatus = false;
         send_lock = true;
-        if (WiFiClass::status() == WL_CONNECTED && strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH)
-        {
+        if (strlen(config.brewstatusURL) > BREWSTATUS_MIN_URL_LENGTH) {
             Log.verbose(F("Calling send to Brew Status.\r\n"));
 
             // The payload should look like this when sent to Brewstatus:
@@ -322,59 +396,26 @@ bool dataSendHandler::send_to_brewstatus()
             {
                 if (tilt_scanner.tilt(i)->is_loaded())
                 {
+                    char gravity[10];
+                    char temp[6];
+                    tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                    tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit since we don't send units
                     snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
-                            tilt_scanner.tilt(i)->converted_gravity(false).c_str(),
-                            tilt_scanner.tilt(i)->converted_temp(true).c_str(), // Only sending Fahrenheit numbers since we don't send units
-                            tilt_color_names[i],
-                            ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-                    if (send_to_url(config.brewstatusURL, "", payload, "application/x-www-form-urlencoded"))
-                    {
+                            gravity, temp, tilt_color_names[i], ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
+                    
+                    if (send_to_url(config.brewstatusURL, payload, content_x_www_form_urlencoded)) {
                         Log.notice(F("Completed send to Brew Status.\r\n"));
-                    }
-                    else
-                    {
+                    } else {
                         result = false;
                         Log.verbose(F("Error sending to Brew Status.\r\n"));
                     }
                 }
             }
         }
-        brewStatusTicker.once(config.brewstatusPushEvery, [](){send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        brewStatusTicker.once(config.brewstatusPushEvery, [](){data_sender.send_brewStatus = true;}); // Set up subsequent send to Brew Status
         send_lock = false;
     }
     return result;
-}
-
-bool dataSendHandler::http_send_json(const char * url, const char * payload)
-{
-    int httpResponseCode;
-    StaticJsonDocument<GF_SIZE> retval;
-    http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-    http.setConnectTimeout(6000);
-    http.setReuse(false);
-
-    secureClient.setInsecure();
-
-    http.addHeader(F("Content-Type"), F("application/json"));
-    http.addHeader(F("Accept"), F("application/json"));
-    httpResponseCode = http.POST(payload);
-
-    if (httpResponseCode >= 400) {
-        Log.error(F("HTTP error %d: %s, %s.\r\n"), httpResponseCode, http.errorToString(httpResponseCode).c_str(), http.getString().c_str());
-        return false;
-    }
-
-    if (!http.begin(secureClient, url)) {
-        Log.error(F("Unable to create secure connection to %s.\r\n"), url);
-        return false;
-    }
-
-    deserializeJson(retval, http.getString().c_str());
-
-    http.end();
-    retval.clear();
-
-    return true;
 }
 
 
@@ -408,12 +449,17 @@ bool dataSendHandler::send_to_google()
                 if (tilt_scanner.tilt(i)->is_loaded()) {
                     // Check if there is a google sheet name associated with the specific Tilt
                     if (strlen(config.gsheets_config[i].name) > 0) {
+                        char gravity[10];
+                        char temp[6];
+
                         // If there's a sheet name saved, then we should send the data
                         if (numSent == 0)
                             Log.notice(F("Beginning GSheets check-in.\r\n"));
                         payload["Beer"] = config.gsheets_config[i].name;
-                        payload["Temp"] = tilt_scanner.tilt(i)->converted_temp(true); // Always send in Fahrenheit
-                        payload["SG"] = tilt_scanner.tilt(i)->converted_gravity(false);
+                        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+                        payload["Temp"] = temp;
+                        tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                        payload["SG"] = gravity;
                         payload["Color"] = tilt_color_names[i];
                         payload["Comment"] = "";
                         payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
@@ -421,6 +467,9 @@ bool dataSendHandler::send_to_google()
 
                         serializeJson(payload, payload_string);
                         payload.clear();
+
+                        HTTPClient http;
+                        WiFiClientSecure secureClient;
 
                         http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
                         http.setConnectTimeout(6000);                           // Set 6 second timeout
@@ -435,7 +484,7 @@ bool dataSendHandler::send_to_google()
                             Log.verbose(F("Created secure connection to %s.\r\n"), config.scriptsURL);
                             Log.verbose(F("Sending the following payload to Google Sheets (%s):\r\n\t\t%s\r\n"), tilt_color_names[i], payload_string);
 
-                            http.addHeader(F("Content-Type"), F("application/json"));   // Specify content-type header
+                            http.addHeader(F("Content-Type"), content_json);   // Specify content-type header
                             httpResponseCode = http.POST(payload_string);               // Send the payload
 
                             if (httpResponseCode == HTTP_CODE_OK) {  // HTTP_CODE_OK = 200
@@ -475,7 +524,7 @@ bool dataSendHandler::send_to_google()
             Log.notice(F("Submitted %l sheet%s to Google.\r\n"), numSent, (numSent== 1) ? "" : "s");
 
         }
-        gSheetsTicker.once(GSCRIPTS_DELAY, [](){send_gSheets = true;}); // Set up subsequent send to Google Sheets
+        gSheetsTicker.once(GSCRIPTS_DELAY, [](){data_sender.send_gSheets = true;}); // Set up subsequent send to Google Sheets
 
         //tilt_scanner.init();
         send_lock = false;
@@ -487,48 +536,58 @@ void dataSendHandler::init_mqtt()
 {
     LCBUrl url;
 
-    if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-    {
-        if (url.isMDNS(config.mqttBrokerHost)) {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
-                config.mqttBrokerHost,
-                url.getIP(config.mqttBrokerHost).toString().c_str(),
-                config.mqttBrokerPort);
-        } else {
-            Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
-                config.mqttBrokerHost,
-                config.mqttBrokerPort);
-        }
-
-        if (mqtt_alreadyinit) {
+    // Checking for the WiFi Status is done in the data sending loop, but we also need to be sure we are connected to WiFi when we initialize the MQTT client
+    if (WiFiClass::status() == WL_CONNECTED) {
+        if(mqtt_alreadyinit) {
+            Log.verbose(F("MQTT already initialized. Disconnecting.\r\n"));
             mqttClient.disconnect();
             delay(250);
-            if (url.isMDNS(config.mqttBrokerHost)) {
-                mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
-            } else {
-                mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
-            }
-        } else {
-            if (url.isMDNS(config.mqttBrokerHost)) {
-                mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
-            } else {
-                mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
-            }
         }
-        mqtt_alreadyinit = true;
-        mqttClient.setKeepAlive(config.mqttPushEvery);
+
+        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0) {
+            if (url.isMDNS(config.mqttBrokerHost)) {
+                Log.verbose(F("Initializing connection to MQTTBroker: %s (%s) on port: %d\r\n"),
+                    config.mqttBrokerHost, url.getIP(config.mqttBrokerHost).toString().c_str(), config.mqttBrokerPort);
+            } else {
+                Log.verbose(F("Initializing connection to MQTTBroker: %s on port: %d\r\n"),
+                    config.mqttBrokerHost, config.mqttBrokerPort);
+            }
+
+            if (mqtt_alreadyinit) {
+                mqttClient.disconnect();
+                delay(250);
+                if (url.isMDNS(config.mqttBrokerHost)) {
+                    mqttClient.setHost(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort);
+                } else {
+                    mqttClient.setHost(config.mqttBrokerHost, config.mqttBrokerPort);
+                }
+            } else {
+                if (url.isMDNS(config.mqttBrokerHost)) {
+                    mqttClient.begin(url.getIP(config.mqttBrokerHost), config.mqttBrokerPort, mqClient);
+                } else {
+                    mqttClient.begin(config.mqttBrokerHost, config.mqttBrokerPort, mqClient);
+                }
+            }
+            mqtt_alreadyinit = true;
+            mqttClient.setKeepAlive(config.mqttPushEvery);
+        }
     }
 }
 
 void dataSendHandler::connect_mqtt()
 {
-    if (strlen(config.mqttUsername) > 1)
-    {
-        mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
-    }
-    else
-    {
-        mqttClient.connect(config.mdnsID);
+    // Checking for the WiFi Status is done in the data sending loop, but we also need to be sure we are connected to WiFi when we connect to the MQTT broker
+    if (WiFiClass::status() == WL_CONNECTED) {
+        if(!mqtt_alreadyinit) {
+            // Since init is not called synchronously with the settings update when the user sets the MQTT broker, we need to
+            // wait until the MQTT client is initialized if it hasn't been done already.
+            return;
+        }
+        if (strlen(config.mqttUsername) > 1) {
+            mqttClient.connect(config.mdnsID, config.mqttUsername, config.mqttPassword);
+        } else {
+            mqttClient.connect(config.mdnsID);
+        }
     }
 }
 
@@ -547,7 +606,7 @@ String lcburl_getAfterPath(LCBUrl url) // Get anything after the path
     return afterpath;
 }
 
-bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
+bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const char *contentType, bool checkBody, const char* bodyCheck)
 {
     // This handles the generic act of sending data to an endpoint
     bool retVal = false;
@@ -558,6 +617,8 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         lcburl.setUrl(url);
 
         bool validTarget = false;
+        // There is an issue where the built-in HTTP client for some reason won't resolve mDNS addresses. Instead, we'll
+        // resolve the address first, and then pass that to the client if needed. 
         if (lcburl.isMDNS(lcburl.getHost().c_str()))
         {
             // Make sure we can resolve the address
@@ -570,12 +631,11 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
         else
         {
             // If it's not mDNS all we care about is that it's http
-            if (lcburl.getScheme() == "http")
+            // if (lcburl.getScheme() == "http")
                 validTarget = true;
         }
 
-        if (validTarget)
-        {
+        if (validTarget) {
             if (lcburl.isMDNS(lcburl.getHost().c_str()))
                 // Use the IP address we resolved (necessary for mDNS)
                 Log.verbose(F("Connecting to: %s at %s on port %l\r\n"),
@@ -587,249 +647,291 @@ bool dataSendHandler::send_to_url(const char *url, const char *apiKey, const cha
                             lcburl.getHost().c_str(),
                             lcburl.getPort());
 
-            if (client.connect(lcburl.getIP(lcburl.getHost().c_str()), lcburl.getPort()))
-            {
-                Log.verbose(F("Connected to: %s.\r\n"), lcburl.getHost().c_str());
 
-                // Open POST connection
-                if (lcburl_getAfterPath(lcburl).length() > 0)
-                {
-                    Log.verbose(F("POST /%s%s HTTP/1.1\r\n"),
-                                lcburl.getPath().c_str(),
-                                lcburl_getAfterPath(lcburl).c_str());
-                }
-                else
-                {
-                    Log.verbose(F("POST /%s HTTP/1.1\r\n"), lcburl.getPath().c_str());
-                }
-                client.print(F("POST /"));
-                client.print(lcburl.getPath().c_str());
-                if (lcburl_getAfterPath(lcburl).length() > 0)
-                {
-                    client.print(lcburl_getAfterPath(lcburl).c_str());
-                }
-                client.println(F(" HTTP/1.1"));
+            // This may crash if we're allocating too much memory on the heap, but if I can get away with this
+            // it's the easiest solution.             
+            HTTPClient http;
+            WiFiClientSecure secureClient;
+            secureClient.setInsecure(); // Don't perform certificate validation. This opens up MITM attacks, but I don't have memory otherwise.
 
-                // Begin headers
-                //
-                // Host
-                Log.verbose(F("Host: %s:%l\r\n"), lcburl.getHost().c_str(), lcburl.getPort());
-                client.print(F("Host: "));
-                client.print(lcburl.getHost().c_str());
-                client.print(F(":"));
-                client.println(lcburl.getPort());
-                //
-                Log.verbose(F("Connection: close\r\n"));
-                client.println(F("Connection: close"));
-                // Content
-                Log.verbose(F("Content-Length: %l\r\n"), strlen(dataToSend));
-                client.print(F("Content-Length: "));
-                client.println(strlen(dataToSend));
-                // Content Type
-                Log.verbose(F("Content-Type: %s\r\n"), contentType);
-                client.print(F("Content-Type: "));
-                client.println(contentType);
-                // API Key
-                if (strlen(apiKey) > 2)
-                {
-                        Log.verbose(F("X-API-KEY: %s\r\n"), apiKey);
-                        client.print(F("X-API-KEY: "));
-                        client.println(apiKey);
-                }
-                // Terminate headers with a blank line
-                Log.verbose(F("End headers.\r\n"));
-                client.println();
-                //
-                // End Headers
-
-                // Post JSON
-                client.println(dataToSend);
-                // Check the HTTP status (should be "HTTP/1.1 200 OK")
-                char status[32] = {0};
-                client.readBytesUntil('\r', status, sizeof(status));
-                client.stop();
-                Log.verbose(F("Status: %s\r\n"), status);
-                if (strcmp(status + 9, "200 OK") == 0)
-                {
-                    if (checkBody == true) // We can do additional checks here
-                    {
-                        // Check body
-                        String response = String(status);
-                        if (response.indexOf(bodyCheck) >= 0)
-                        {
-                            Log.verbose(F("Response body ok.\r\n"));
-                            retVal = true;
-                        }
-                        else
-                        {
-                            Log.error(F("Unexpected body content: %s\r\n"), response.c_str());
-                            retVal = false;
-                        }
-                    }
-                    else
-                    {
-                        Log.verbose(F("Post to %s was successful.\r\n"), lcburl.getHost().c_str());
-                        retVal = true;
-                    }
-                }
-                else
-                {
-                    Log.error(F("Unexpected status: %s\r\n"), status);
-                    retVal = false;
-                }
+            // Determine if the URL is HTTP or HTTPS and initialize HTTPClient
+            if (lcburl.getScheme() == "https") {
+                http.begin(secureClient, url); // HTTPS
+            } else {
+                http.begin(url); // HTTP
             }
-            else
-            {
-                Log.warning(F("Connection failed, Host: %s, Port: %l (Err: %d)\r\n"),
-                            lcburl.getHost().c_str(), lcburl.getPort(), client.connected());
-                retVal = false;
+
+            // Set headers
+            http.addHeader(F("Content-Type"), contentType);
+            http.addHeader(F("Accept"), content_json);
+
+            char userAgent[128];
+            snprintf(userAgent, sizeof(userAgent),
+                "tiltbridge/%s (branch %s; build %s)",
+                version(),
+                branch(),
+                build()
+            );
+            http.setUserAgent(userAgent);
+
+            yield();  // Yield before we lock up the radio
+
+            // Send the request
+            int httpResponseCode;
+            httpResponseCode = http.POST(dataToSend);
+
+            // Optionally check the response
+            bool result = false;
+            if (httpResponseCode > 0) {
+                // HTTP header has been sent and Server response header has been handled
+                Log.verbose(F("HTTP Response code: %d\r\n"), httpResponseCode);
+
+                if (checkBody) {
+                    String response = http.getString();
+                    if (response.indexOf(bodyCheck) >= 0) {
+                        result = true;
+                    } else {
+                        Log.error(F("Body check failed. Body: %s\r\n"), response.c_str());
+                    }
+                } else {
+                    result = (httpResponseCode == HTTP_CODE_OK);
+                }
+            } else {
+                Log.error(F("Error on sending POST: %s\r\n"), http.errorToString(httpResponseCode).c_str());
+                Log.error(F("Connection failed, Host: %s, Port: %l\r\n"), lcburl.getHost().c_str(), lcburl.getPort());
             }
-        }
-        else
-        {
+
+            // Close connection
+            http.end();
+            delay(100);  // Give garbage collection time to run
+            return result;
+
+        } else {
             Log.error(F("Invalid target: %s.\r\n"), url);
         }
-    }
-    else
-    {
+    } else {
         Log.notice(F("No URL provided, or no data to send.\r\n"));
-        retVal = false;
     }
-    return retVal;
+    // If we reached here, the send was unsuccessful
+    return false;
 }
 
-bool dataSendHandler::send_to_mqtt()
-{
-    // TODO: (JSON) Come back and tighten this up
-    bool result = false;
-    StaticJsonDocument<512> payload;
-    mqttClient.loop();
 
-    if (send_mqtt && ! send_lock)
-    {
-        // MQTT
+bool dataSendHandler::send_to_mqtt() {
+    bool result = false;
+
+    if (strcmp(config.mqttBrokerHost, "") == 0 || strlen(config.mqttBrokerHost) == 0) {
+        // No MQTT broker configured
+        return false;
+    }
+
+    if (!mqttClient.connected()) {
+        Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker in loop\r\n"));
+        connect_mqtt();
+    } else {
+        mqttClient.loop();
+    }
+
+    if (send_mqtt && !send_lock) {
         send_mqtt = false;
         send_lock = true;
-        if (strcmp(config.mqttBrokerHost, "") != 0 || strlen(config.mqttBrokerHost) != 0)
-        {
-            Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
-            // Function sends three payloads with the first two designed to
-            // support autodiscovery and configuration on Home Assistant.
-            // General payload formatted as json when sent to mqTT:
-            //{"Color":"Black","SG":"1.0180","Temp":"73.0","fermunits":"SG","tempunits":"F","timeStamp":1608745710}
-            //
-            // Loop through each of the tilt colors cached by tilt_scanner,
-            // sending data for each of the active tilts
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
-            {
-                if (tilt_scanner.tilt(i)->is_loaded())
-                {
-                    char tilt_topic[50] = {'\0'};
-                    snprintf(tilt_topic, 50, "%s/tilt_%s",
-                            config.mqttTopic,
-                            tilt_color_names[i]);
 
-                    for (uint8_t j = 0; j < 3; j++)
-                    {
-                        char m_topic[90] = {'\0'};
-                        char tilt_name[15] = {'\0'};
-                        char tilt_sensor_name[35] = {'\0'};
-                        char uniq_id[30] = {'\0'};
-                        char unit[10] = {'\0'};
-                        bool retain = false;
+        Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
 
-                        strcat(tilt_name, "Tilt ");
-                        strcat(tilt_name, tilt_color_names[i]);
-
-                        if (j < 2 ) 
-                        {
-                            JsonObject device = payload.createNestedObject("device");
-                            device["identifiers"] = tilt_color_names[i];
-                            device["name"] = tilt_name;
-                        }
-
-                        switch (j)
-                        {
-                        case 0: //Home Assistant Config Topic for Temperature
-                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config",
-                                    config.mqttTopic,
-                                    tilt_color_names[i]);
-                            payload["dev_cla"] = "temperature";
-                            strcat(unit, "\u00b0");
-                            strcat(unit, config.tempUnit);
-                            payload["unit_of_meas"] = unit;
-                            payload["ic"] = "mdi:thermometer";
-                            payload["stat_t"] = tilt_topic;
-                            strcat(tilt_sensor_name, "Tilt Temperature - ");
-                            strcat(tilt_sensor_name, tilt_color_names[i]);
-                            payload["name"] = tilt_sensor_name;
-                            payload["val_tpl"] = "{{value_json.Temp}}";
-                            snprintf(uniq_id, 30, "tiltbridge_tilt%sT",
-                                tilt_color_names[i]);
-                            payload["uniq_id"] = uniq_id;
-                            retain = true;
-                            break;
-                        case 1: //Home Assistant Config Topic for Sp Gravity
-                            sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config",
-                                    config.mqttTopic,
-                                    tilt_color_names[i]);
-                            //payload["dev_cla"] = "None";
-                            payload["unit_of_meas"] = "SG";
-                            //payload["ic"] = "";
-                            payload["stat_t"] = tilt_topic;
-                            strcat(tilt_sensor_name, "Tilt Specific Gravity - ");
-                            strcat(tilt_sensor_name, tilt_color_names[i]);
-                            payload["name"] = tilt_sensor_name;
-                            payload["val_tpl"] = "{{value_json.SG}}";
-                            snprintf(uniq_id, 30, "tiltbridge_tilt%sG",
-                                tilt_color_names[i]);
-                            payload["uniq_id"] = uniq_id;
-                            retain = true;
-                            break;
-                        case 2: //General payload with sensor data
-                            strcat(m_topic, tilt_topic);
-                            char current_grav[8] = {'\0'};
-                            char current_temp[5] = {'\0'};
-                            strcpy(current_grav, tilt_scanner.tilt(i)->converted_gravity(false).c_str());
-                            strcpy(current_temp, tilt_scanner.tilt(i)->converted_temp(false).c_str());
-                            payload["Color"] = tilt_color_names[i];
-                            payload["timeStamp"] = (int)std::time(0);
-                            payload["fermunits"] = "SG";
-                            payload["SG"] = current_grav;
-                            payload["Temp"] = current_temp;
-                            payload["tempunits"] = config.tempUnit;
-                            retain = false;
-                            break;
-                        }
-                        char payload_string[320] = {'\0'};
-                        serializeJson(payload, payload_string);
-
-                        Log.verbose(F("Topic: %s\r\n"), m_topic);
-                        Log.verbose(F("Message: %s\r\n"), payload_string);
-
-                        if (!mqttClient.connected() && j == 0)
-                        {
-                            Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker\r\n"));
-                            connect_mqtt();
-                        }
-
-                        result = mqttClient.publish(m_topic, payload_string, retain, 0);
-                        delay(10);
-
-                        payload.clear();
-                    }
-                }
-            }
-            if (result) {
-                Log.notice(F("Completed publish to MQTT Broker.\r\n"));
-            } else {
-                result = false; // There was an error with the previous send
-                Log.verbose(F("Error publishing to MQTT Broker.\r\n"));
+        for (uint8_t i = 0; i < TILT_COLORS; i++) {
+            if (tilt_scanner.tilt(i)->is_loaded()) {
+                prepare_and_send_payloads(i);
             }
         }
-        mqttTicker.once(config.mqttPushEvery, [](){send_mqtt = true;});   // Set up subsequent send to MQTT
+
+        mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
         send_lock = false;
     }
 
     return result;
 }
+
+void dataSendHandler::prepare_and_send_payloads(uint8_t tilt_index) {
+    char tilt_topic[50] = {'\0'};
+    snprintf(tilt_topic, 50, "%s/tilt_%s", config.mqttTopic, tilt_color_names[tilt_index]);
+
+    // Prepare and send each of the four payloads
+    prepare_temperature_payload(tilt_color_names[tilt_index], tilt_topic);
+    prepare_gravity_payload(tilt_color_names[tilt_index], tilt_topic);
+    prepare_battery_payload(tilt_color_names[tilt_index], tilt_topic);
+    prepare_general_payload(tilt_index, tilt_topic);
+}
+
+void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload) {
+    payload["stat_t"] = topic;
+    char deviceName[20];
+    snprintf(deviceName, sizeof(deviceName), "Tilt %s", tilt_color);
+    payload["dev"]["name"] = deviceName;
+    payload["dev"]["ids"] = tilt_color;
+    payload["dev"]["mdl"] = "Tilt Hydrometer";
+    payload["dev"]["mf"] = "Baron Brew Equipment LLC";
+    payload["dev"]["sw"] = version();
+    payload["dev"]["sa"] = "Brewery";  // Suggested Area
+
+    char ip_address_url[25] = "http://";
+    {
+        char ip[16];
+        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        strncat(ip_address_url, ip, 16);
+        strcat(ip_address_url, "/");
+    }
+
+
+    payload["dev"]["cu"] = ip_address_url;
+    // model and hw_version could be added, but it would require the Tilt object to determine Tilt vs. Tilt Pro
+
+
+    payload["json_attr_t"] = topic;
+    payload["json_attr_tpl"] = "{ \"Uptime\": \"{{ value_json.timeStamp }}\" }\n";
+
+
+}
+
+
+void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const char* tilt_topic) {
+    //Home Assistant Config Topic for Temperature
+    char m_topic[90];
+    char tilt_sensor_name[35];
+    char uniq_id[30];
+    char unit[10] = "\u00b0"; // Unicode for degree symbol
+    StaticJsonDocument<512> payload;
+
+    // Construct the MQTT topic string for temperature
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config", config.mqttTopic, tilt_color);
+
+    // Set up payload fields
+    strcat(unit, config.tempUnit); // Append temperature unit after degree symbol
+    payload["dev_cla"] = "temperature";
+    payload["unit_of_meas"] = unit;
+    payload["ic"] = "mdi:thermometer-lines";
+    
+    // Construct sensor name
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Temperature - %s", tilt_color);
+    payload["name"] = tilt_sensor_name;
+
+    // Value template
+    payload["val_tpl"] = "{{value_json.Temp}}";
+
+    // Unique ID
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sT", tilt_color);
+    payload["uniq_id"] = uniq_id;
+
+    enrich_announcement(tilt_topic, tilt_color, payload);
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
+}
+
+
+void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char* tilt_topic) {
+    //Home Assistant Config Topic for Sp Gravity
+    char m_topic[90];
+    char tilt_sensor_name[35];
+    char uniq_id[30];
+    StaticJsonDocument<512> payload;
+
+    // Construct the MQTT topic string for specific gravity
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config", config.mqttTopic, tilt_color);
+
+    // Set up payload fields
+    payload["unit_of_meas"] = "SG";
+    payload["ic"] = "mdi:trending-down";
+    
+    // Construct sensor name
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Specific Gravity - %s", tilt_color);
+    payload["name"] = tilt_sensor_name;
+
+    // Value template
+    payload["val_tpl"] = "{{value_json.SG}}";
+
+    // Unique ID
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sG", tilt_color);
+    payload["uniq_id"] = uniq_id;
+
+    enrich_announcement(tilt_topic, tilt_color, payload);
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
+}
+
+void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char* tilt_topic) {
+    //Home Assistant Config Topic for Weeks On Battery
+    char m_topic[90];
+    char tilt_sensor_name[35];
+    char uniq_id[30];
+    StaticJsonDocument<512> payload;
+
+    // Construct the MQTT topic string for weeks on battery
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sWoB/weeks_on_battery/config", config.mqttTopic, tilt_color);
+
+    // Set up payload fields
+    payload["unit_of_meas"] = "weeks";
+    payload["ic"] = "mdi:battery";
+    
+    // Construct sensor name
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Weeks On Battery - %s", tilt_color);
+    payload["name"] = tilt_sensor_name;
+
+    // Value template
+    payload["val_tpl"] = "{{value_json.WoB}}";
+
+    // Unique ID
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sWoB", tilt_color);
+    payload["uniq_id"] = uniq_id;
+
+    enrich_announcement(tilt_topic, tilt_color, payload);
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
+}
+
+void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* tilt_topic) {
+    //General payload with sensor data
+    char m_topic[90];
+    char gravity[10];
+    char temp[6];
+    char battery_str[4]; // large enough for 0-255 and the null terminator
+    StaticJsonDocument<512> payload;
+    tiltHydrometer* current_tilt = tilt_scanner.tilt(tilt_index);
+
+    // Construct the MQTT topic string for general sensor data
+    strcpy(m_topic, tilt_topic);
+
+    // Populate payload with sensor data
+    payload["Color"] = tilt_color_names[tilt_index];
+    payload["timeStamp"] = (int)std::time(0);
+    payload["fermunits"] = "SG";
+    current_tilt->converted_gravity(gravity, 10, false);
+    payload["SG"] = gravity;
+    current_tilt->converted_temp(temp, 6, false);
+    payload["Temp"] = temp;
+    payload["tempunits"] = config.tempUnit;
+    current_tilt->get_weeks_battery(battery_str, 4);
+    payload["WoB"] = battery_str;
+
+    // Serialize and publish
+    publish_to_mqtt(m_topic, payload, false); // Retain flag set to false for general data
+}
+
+
+bool dataSendHandler::publish_to_mqtt(const char* topic, StaticJsonDocument<512>& payload, bool retain) {
+    char payload_string[512];
+    serializeJson(payload, payload_string);
+
+    if (!mqttClient.connected()) {
+        Log.warning(F("MQTT disconnected. Attempting to reconnect to MQTT Broker\r\n"));
+        connect_mqtt();
+    }
+
+    bool result = mqttClient.publish(topic, payload_string, retain, 0);
+    if(result) {
+        Log.verbose(F("Published to MQTT\r\n"));
+    } else {
+        Log.error(F("Failed to publish to MQTT\r\n"));
+    }
+    delay(10);
+    return result;
+}
+

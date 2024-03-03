@@ -5,16 +5,10 @@
 #ifndef TILTBRIDGE_TILTSCANNER_H
 #define TILTBRIDGE_TILTSCANNER_H
 
-#include "tiltHydrometer.h"
-#include "serialhandler.h"
+#include <NimBLEAdvertisedDevice.h>
+
 #include "tiltHydrometer.h"
 
-#include <Ticker.h>
-#include <ArduinoJson.h>
-#include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEScan.h>
-#include <NimBLEAdvertisedDevice.h>
 
 #define BLE_SCAN_TIME 3 // Seconds to scan
 

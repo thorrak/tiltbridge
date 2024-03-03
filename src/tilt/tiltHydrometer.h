@@ -1,8 +1,6 @@
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
 
-//#include "jsonconfig.h"
-#include <ArduinoJson.h>
 #include <Arduino.h>
 
 #define TILT_DATA_SIZE 477 // JSON size of a Tilt
@@ -42,13 +40,14 @@ public:
     explicit tiltHydrometer(uint8_t color);
 
     bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
-    std::string converted_gravity(bool use_raw_gravity);
+    void converted_gravity(char* output, size_t output_size, bool use_raw_gravity);
     void to_json_string(char *json_string, bool use_raw_gravity);
-    std::string converted_temp(bool fahrenheit_only);
+    void converted_temp(char* output, size_t output_size, bool fahrenheit_only);
+    void get_weeks_battery(char* output, size_t output_size);
     bool is_celsius() const;
     bool is_loaded();
 
-    static uint8_t uuid_to_color_no(std::string data);
+    static uint8_t uuid_to_color_no(const char* uuid);
 
     uint16_t temp;
     uint16_t gravity;

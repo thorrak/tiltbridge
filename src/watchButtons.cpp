@@ -1,3 +1,4 @@
+#include "bridge_lcd.h"
 #include "watchButtons.h"
 
 static unsigned long wifiButtonTime = 0;    // Button press timer

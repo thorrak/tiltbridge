@@ -5,7 +5,7 @@
 #ifndef _UPTIME_H
 #define _UPTIME_H
 
-#include <Arduino.h>
+// #include <Arduino.h>
 
 #define UPTIME_REFRESH 1
 

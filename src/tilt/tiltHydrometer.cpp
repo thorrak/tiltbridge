@@ -45,46 +45,33 @@ tiltHydrometer::tiltHydrometer(uint8_t color)
 
 } // tiltHydrometer
 
-uint8_t tiltHydrometer::uuid_to_color_no(std::string uuid)
+uint8_t tiltHydrometer::uuid_to_color_no(const char* uuid)
 {
-
-    if (uuid == TILT_COLOR_RED_UUID)
-    {
-        return TILT_COLOR_RED;
-    }
-    else if (uuid == TILT_COLOR_GREEN_UUID)
-    {
-        return TILT_COLOR_GREEN;
-    }
-    else if (uuid == TILT_COLOR_BLACK_UUID)
-    {
-        return TILT_COLOR_BLACK;
-    }
-    else if (uuid == TILT_COLOR_PURPLE_UUID)
-    {
-        return TILT_COLOR_PURPLE;
-    }
-    else if (uuid == TILT_COLOR_ORANGE_UUID)
-    {
-        return TILT_COLOR_ORANGE;
-    }
-    else if (uuid == TILT_COLOR_BLUE_UUID)
-    {
-        return TILT_COLOR_BLUE;
-    }
-    else if (uuid == TILT_COLOR_YELLOW_UUID)
-    {
-        return TILT_COLOR_YELLOW;
-    }
-    else if (uuid == TILT_COLOR_PINK_UUID)
-    {
-        return TILT_COLOR_PINK;
-    }
-    else
-    {
+    if (uuid == nullptr) {
         return TILT_NONE;
     }
+
+    if (strcmp(uuid, TILT_COLOR_RED_UUID) == 0)
+        return TILT_COLOR_RED;
+    else if (strcmp(uuid, TILT_COLOR_GREEN_UUID) == 0)
+        return TILT_COLOR_GREEN;
+    else if (strcmp(uuid, TILT_COLOR_BLACK_UUID) == 0)
+        return TILT_COLOR_BLACK;
+    else if (strcmp(uuid, TILT_COLOR_PURPLE_UUID) == 0)
+        return TILT_COLOR_PURPLE;
+    else if (strcmp(uuid, TILT_COLOR_ORANGE_UUID) == 0)
+        return TILT_COLOR_ORANGE;
+    else if (strcmp(uuid, TILT_COLOR_BLUE_UUID) == 0)
+        return TILT_COLOR_BLUE;
+    else if (strcmp(uuid, TILT_COLOR_YELLOW_UUID) == 0)
+        return TILT_COLOR_YELLOW;
+    else if (strcmp(uuid, TILT_COLOR_PINK_UUID) == 0)
+        return TILT_COLOR_PINK;
+    else
+        return TILT_NONE;
+    
 }
+
 
 
 bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
@@ -203,27 +190,33 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
     return true;
 }
 
-std::string tiltHydrometer::converted_gravity(bool use_raw_gravity)
+void tiltHydrometer::converted_gravity(char* output, size_t output_size, bool use_raw_gravity)
 {
-    char rnd_gravity[7];
-    const uint16_t grav_scalar = (tilt_pro) ? 10000 : 1000;
+    if (output == nullptr || output_size < 7) {
+        // Handle error: output is null or not large enough
+        return;
+    }
 
-    if (use_raw_gravity)
-        snprintf(rnd_gravity, 7, "%.4f", (float)gravity / grav_scalar);
-    else
-        snprintf(rnd_gravity, 7, "%.4f", (float)gravity_smoothed / grav_scalar);
-    std::string output = rnd_gravity;
-    return output;
+    const uint16_t grav_scalar = (tilt_pro) ? 10000 : 1000;
+    float gravity_value = use_raw_gravity ? gravity : gravity_smoothed;
+    float converted_value = static_cast<float>(gravity_value) / grav_scalar;
+
+    // Using snprintf to format the string and handle buffer overflow
+    snprintf(output, output_size, "%.4f", converted_value);
 }
 
 void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
     StaticJsonDocument<TILT_DATA_SIZE> j;
+    char gravity_str[10];
+    char temp_str[6];
 
     j["color"] = tilt_color_names[m_color];
-    j["temp"] = converted_temp(false);
+    converted_temp(temp_str, sizeof(temp_str), false);
+    j["temp"] = temp_str;
     j["tempUnit"] = is_celsius() ? "C" : "F";
-    j["gravity"] = converted_gravity(use_raw_gravity);
+    converted_gravity(gravity_str, sizeof(gravity_str), use_raw_gravity);
+    j["gravity"] = gravity_str;
     j["weeks_on_battery"] = weeks_since_last_battery_change;
     j["sends_battery"] = receives_battery;
     j["high_resolution"] = tilt_pro;
@@ -239,19 +232,34 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     serializeJson(j, json_string, TILT_DATA_SIZE);
 }
 
-std::string tiltHydrometer::converted_temp(bool fahrenheit_only)
+void tiltHydrometer::converted_temp(char* output, size_t output_size, bool fahrenheit_only)
 {
-    char rnd_temp[5];
+    if (output == nullptr || output_size < 6) { // 6 to accommodate '-0.0\0' or similar
+        // Handle error: output is null or not large enough
+        return;
+    }
+
     const float temp_scalar = (tilt_pro) ? 10.0f : 1.0f;
-    double d_temp = (double)temp / temp_scalar;
+    double d_temp = static_cast<double>(temp) / temp_scalar;
 
-    if (is_celsius() && !fahrenheit_only)
+    if (is_celsius() && !fahrenheit_only) {
         d_temp = (d_temp - 32) * 5 / 9;
+    }
 
-    snprintf(rnd_temp, 5, "%.1f", d_temp);
-    std::string output = rnd_temp;
-    return output;
+    snprintf(output, output_size, "%.1f", d_temp);
 }
+
+void tiltHydrometer::get_weeks_battery(char* output, size_t output_size)
+{
+    if (output == nullptr || output_size == 0) {
+        // Handle error: output is null or size is zero
+        return;
+    }
+
+    // Using snprintf to safely convert weeks_since_last_battery_change to a string
+    snprintf(output, output_size, "%u", static_cast<unsigned>(weeks_since_last_battery_change));
+}
+
 
 bool tiltHydrometer::is_celsius() const
 {

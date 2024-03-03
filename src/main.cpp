@@ -2,9 +2,20 @@
 // Please note - This source code (along with other files) are provided under license.
 // More details (including license details) can be found in the files accompanying this source code.
 
+#include <ArduinoLog.h>
 
-#include "main.h"
+#include "watchButtons.h"
 #include "tilt/tiltScanner.h"
+#include "http_server.h"
+#include "wifi_setup.h"
+#include "sendData.h"
+#include "parseTarget.h"
+#include "jsonconfig.h"
+#include "bridge_lcd.h"
+#include "serialhandler.h"
+#include "main.h"
+
+
 
 #if (ARDUINO_LOG_LEVEL >= 5)
 Ticker memCheck;
@@ -16,7 +27,7 @@ void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.verbose(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
+    Log.info(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
 }
 
 void reboot()
@@ -52,7 +63,8 @@ void setup() {
     initButtons();          // Initialize buttons
 
     // Start independent timers
-#if (ARDUINO_LOG_LEVEL >= 5) && !defined(DISABLE_LOGGING)
+    // ARDUINO_LOG_LOG_LEVEL_INFO is 4
+#if (ARDUINO_LOG_LEVEL >= ARDUINO_LOG_LOG_LEVEL_INFO) && !defined(DISABLE_LOGGING)
     memCheck.attach(30, printMem);              // Memory debug print on timer
 #endif
 
@@ -68,14 +80,7 @@ void loop() {
     serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
 
-    send_to_cloud();
-    data_sender.send_to_localTarget();
-    send_to_bf_and_bf();
-    data_sender.send_to_brewstatus();
-    data_sender.send_to_grainfather();
-    data_sender.send_to_taplistio();
-    data_sender.send_to_google();
-    data_sender.send_to_mqtt();
+    data_sender.process();
 
     if (tilt_scanner.scan()) {
         // The scans are done asynchronously, so we'll poke the scanner to see if
