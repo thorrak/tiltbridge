@@ -69,8 +69,8 @@ public:
     GsheetsConfig gsheets_config[TILT_COLORS];
     GrainfatherURL grainfatherURL[TILT_COLORS];
 
-    char localTargetURL[256] = "";
-    uint16_t localTargetPushEvery = 30;
+    char fermentrackURL[256] = "";
+    uint16_t fermentrackPushEvery = 30; 
     char brewstatusURL[256] = "";
     uint16_t brewstatusPushEvery = 30;
     char taplistioURL[256] = "";

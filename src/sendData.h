@@ -16,7 +16,7 @@
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
 #define BF_SIZE 192
 #define GF_SIZE 256
-#define LOCALTARGET_MIN_URL_LENGTH 9
+#define FERMENTRACK_MIN_URL_LENGTH 9
 #define BREWSTATUS_MIN_URL_LENGTH 12
 #define GSCRIPTS_MIN_URL_LENGTH 24
 #define GSCRIPTS_MIN_EMAIL_LENGTH 7
@@ -39,7 +39,7 @@ public:
     void process();
 
     bool send_to_google();
-    bool send_to_localTarget();
+    bool send_to_fermentrack();
     bool send_to_brewstatus();
     bool send_to_taplistio();
     bool send_to_mqtt();
@@ -51,7 +51,7 @@ public:
 
     // Send Timers
     Ticker cloudTargetTicker;
-    Ticker localTargetTicker;
+    Ticker fermentrackTicker;
     Ticker brewersFriendTicker;
     Ticker brewfatherTicker;
     Ticker userTargetTicker;
@@ -63,7 +63,7 @@ public:
 
     // Send Semaphores
     bool send_cloudTarget = false;
-    bool send_localTarget = false;
+    bool send_fermentrack = false;
     bool send_brewersFriend = false;
     bool send_brewfather = false;
     bool send_userTarget = false;

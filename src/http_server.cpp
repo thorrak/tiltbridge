@@ -246,17 +246,17 @@ bool processCloudTargetSettings(const DynamicJsonDocument& json, bool triggerUps
 }
 
 
-bool processLocalTargetSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
 
-    if(!updateJsonSetting(json, LocalTargetSettings::localTargetURL, config.localTargetURL, 256))
+    if(!updateJsonSetting(json, FermentrackSettings::fermentrackURL, config.fermentrackURL, 256))
         failCount++;
-    if(strlen(config.localTargetURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
-        sendNowTicker.once(5, [](){data_sender.send_localTarget = true;});
+    if(strlen(config.fermentrackURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
+        sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
 
-    if(!updateJsonSetting(json, LocalTargetSettings::localTargetPushEvery, config.localTargetPushEvery))
+    if(!updateJsonSetting(json, FermentrackSettings::fermentrackPushEvery, config.fermentrackPushEvery))
         failCount++;
 
     // TODO - Add a check for "push every" to make sure it isn't less than a reasonable value
@@ -264,10 +264,10 @@ bool processLocalTargetSettings(const DynamicJsonDocument& json, bool triggerUps
 
     // Save
     if(failCount>0) {
-        Log.error(F("Error: Invalid local target configuration.\r\n"));
+        Log.error(F("Error: Invalid Fermentrack target configuration.\r\n"));
     } else if (saveSettings) {
         if (!config.save()) {
-            Log.error(F("Error: Unable to save local target configuration data.\r\n"));
+            Log.error(F("Error: Unable to save Fermentrack target configuration data.\r\n"));
             failCount++;
         }
     }
@@ -706,8 +706,9 @@ void httpServer::setPutPages() {
         processJsonRequest("/api/settings/cloudtarget/", &processCloudTargetSettings);
     });
 
+    // TODO - Rename these paths
     web_server->on("/api/settings/localtarget/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/localtarget/", &processLocalTargetSettings);
+        processJsonRequest("/api/settings/localtarget/", &processFermentrackSettings);
     });
 
     web_server->on("/api/settings/googlesheets/", HTTP_PUT, [&]() {

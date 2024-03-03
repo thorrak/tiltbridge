@@ -200,8 +200,8 @@ DynamicJsonDocument Config::to_json() {
         obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
-    obj["localTargetURL"] = localTargetURL;
-    obj["localTargetPushEvery"] = localTargetPushEvery;
+    obj["fermentrackURL"] = fermentrackURL;
+    obj["fermentrackPushEvery"] = fermentrackPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
     obj["taplistioURL"] = taplistioURL;
@@ -315,13 +315,13 @@ void Config::load_from_json(DynamicJsonDocument obj) {
 
 
     // Target URLs
-    if (!obj["localTargetURL"].isNull()) {
-        const char *tu = obj["localTargetURL"];
-        strlcpy(localTargetURL, tu, 256);
+    if (!obj["fermentrackURL"].isNull()) {
+        const char *tu = obj["fermentrackURL"];
+        strlcpy(fermentrackURL, tu, 256);
     }
 
-    if (!obj["localTargetPushEvery"].isNull()) {
-        localTargetPushEvery = int(obj["localTargetPushEvery"]);
+    if (!obj["fermentrackPushEvery"].isNull()) {
+        fermentrackPushEvery = int(obj["fermentrackPushEvery"]);
     }
 
     if (!obj["brewstatusURL"].isNull()) {

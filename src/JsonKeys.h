@@ -21,9 +21,10 @@ namespace CloudTargetSettings {
 constexpr auto cloudTarget = "cloudTarget";
 }
 
-namespace LocalTargetSettings {
-constexpr auto localTargetURL = "localTargetURL";
-constexpr auto localTargetPushEvery = "localTargetPushEvery";
+namespace FermentrackSettings {
+    // TODO - Update these
+constexpr auto fermentrackURL = "localTargetURL";
+constexpr auto fermentrackPushEvery = "localTargetPushEvery";
 }
 
 namespace GoogleSheetsSettings {

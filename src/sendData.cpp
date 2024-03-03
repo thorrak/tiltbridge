@@ -32,8 +32,8 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-//    localTargetTicker.once(5, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
-    localTargetTicker.once(10, [](){data_sender.send_localTarget = true;});      // Schedule first send to Local Target
+//    fermentrackTicker.once(5, [](){data_sender.send_fermentrack = true;});      // Schedule first send to Fermentrack
+    fermentrackTicker.once(10, [](){data_sender.send_fermentrack = true;});      // Schedule first send to Fermentrack
     mqttTicker.once(20, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
     brewStatusTicker.once(30, [](){data_sender.send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){data_sender.send_brewfather = true;});        // Schedule first send to Brewfather
@@ -49,7 +49,7 @@ void dataSendHandler::process()
 {
     if (WiFiClass::status() == WL_CONNECTED) {
         send_to_cloud();
-        send_to_localTarget();
+        send_to_fermentrack();
         send_to_bf_and_bf();
         send_to_grainfather();
         send_to_brewstatus();
@@ -59,19 +59,19 @@ void dataSendHandler::process()
     }
 }
 
-bool dataSendHandler::send_to_localTarget()
+bool dataSendHandler::send_to_fermentrack()
 {
     bool result = true;
 
-    if (data_sender.send_localTarget && !send_lock)
+    if (data_sender.send_fermentrack && !send_lock)
     {
-        // Local Target
-        send_localTarget = false;
+        // Fermentrack
+        send_fermentrack = false;
         send_lock = true;
 //        tilt_scanner.deinit();
 
-        if (strlen(config.localTargetURL) >= LOCALTARGET_MIN_URL_LENGTH) {
-            Log.verbose(F("Calling send to Local Target.\r\n"));
+        if (strlen(config.fermentrackURL) >= FERMENTRACK_MIN_URL_LENGTH) {
+            Log.verbose(F("Calling send to Fermentrack.\r\n"));
             DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
@@ -83,17 +83,17 @@ bool dataSendHandler::send_to_localTarget()
 
             serializeJson(doc, tilt_data);
 
-            if (send_to_url(config.localTargetURL, tilt_data, content_json))
+            if (send_to_url(config.fermentrackURL, tilt_data, content_json))
             {
-                Log.notice(F("Completed send to Local Target.\r\n"));
+                Log.notice(F("Completed send to Fermentrack.\r\n"));
             }
             else
             {
                 result = false; // There was an error with the previous send
-                Log.verbose(F("Error sending to Local Target.\r\n"));
+                Log.verbose(F("Error sending to Fermentrack.\r\n"));
             }
         }
-        localTargetTicker.once(config.localTargetPushEvery, [](){data_sender.send_localTarget = true;}); // Set up subsequent send to localTarget
+        fermentrackTicker.once(config.fermentrackPushEvery, [](){data_sender.send_fermentrack = true;}); // Set up subsequent send to Fermentrack
 //        tilt_scanner.init();
         send_lock = false;
     }
@@ -176,7 +176,7 @@ void dataSendHandler::send_to_cloud()
         send_lock = true;
         send_cloudTarget = false;
         addTiltToParse();
-        cloudTargetTicker.once(CLOUD_DELAY, [](){data_sender.send_cloudTarget = true;}); // Set up subsequent send to localTarget
+        cloudTargetTicker.once(CLOUD_DELAY, [](){data_sender.send_cloudTarget = true;}); // Set up subsequent send to Cloud Target
     }
     send_lock = false;
 }
