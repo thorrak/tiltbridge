@@ -21,7 +21,7 @@
 
 
 
-#if (ARDUINO_LOG_LEVEL >= 5)
+#if (ARDUINO_LOG_LEVEL >= ARDUINO_LOG_LOG_LEVEL_INFO) && !defined(DISABLE_LOGGING)
 Ticker memCheck;
 #endif
 

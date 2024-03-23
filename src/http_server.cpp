@@ -710,7 +710,7 @@ void httpServer::setPutPages() {
         processJsonRequest("/api/settings/cloudtarget/", &processCloudTargetSettings);
     });
 
-    // TODO - Rename these paths
+    // TODO - Rename/combine these paths
     web_server->on("/api/settings/localtarget/", HTTP_PUT, [&]() {
         processJsonRequest("/api/settings/localtarget/", &processFermentrackSettings);
     });
