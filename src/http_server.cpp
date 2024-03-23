@@ -188,6 +188,7 @@ bool updateJsonSetting(const DynamicJsonDocument& json, const char* key, uint16_
     if(json.containsKey(key)) {
         if (json[key].is<uint16_t>()) {
             configVar = json[key].as<uint16_t>();
+            return true;
         } else {
             // Not a valid uint16_t
             Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
