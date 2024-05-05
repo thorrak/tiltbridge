@@ -17,10 +17,6 @@ constexpr auto tempCorrect = "tempCorrect";
 }; // namespace CalibrationKeys
 
 
-namespace CloudTargetSettings {
-constexpr auto cloudTarget = "cloudTarget";
-}
-
 namespace FermentrackSettings {
     // TODO - Update these
 constexpr auto fermentrackURL = "localTargetURL";

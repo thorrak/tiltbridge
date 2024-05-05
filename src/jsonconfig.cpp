@@ -176,10 +176,6 @@ DynamicJsonDocument Config::to_json() {
     obj["mdnsID"] = mdnsID;
     obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
-    obj["cloudEnabled"] = cloudEnabled;
-    obj["cloudUrl"] = cloudUrl;
-    obj["cloudAppID"] = cloudAppID;
-    obj["cloudClientKey"] = cloudAppID;
     obj["update_spiffs"] = update_spiffs;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
@@ -241,10 +237,6 @@ void Config::load_from_json(DynamicJsonDocument obj) {
 
     if (!obj["invertTFT"].isNull()) {
         invertTFT = obj["invertTFT"];
-    }
-
-    if (!obj["cloudEnabled"].isNull()) {
-        cloudEnabled = obj["cloudEnabled"];
     }
 
     if (!obj["update_spiffs"].isNull()) {

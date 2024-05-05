@@ -13,7 +13,6 @@
 #include "http_server.h"
 #include "wifi_setup.h"
 #include "sendData.h"
-#include "parseTarget.h"
 #include "jsonconfig.h"
 #include "bridge_lcd.h"
 #include "serialhandler.h"
@@ -75,8 +74,6 @@ void setup() {
     // Set a reboot timer for 24 hours
     reboot24.once(86400, reboot);
 
-    // Set up Parse
-    doParsePoll();
 }
 
 void loop() {

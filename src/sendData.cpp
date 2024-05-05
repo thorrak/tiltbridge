@@ -14,7 +14,6 @@
 #include "tilt/tiltScanner.h"
 #include "jsonconfig.h"
 #include "version.h"
-#include "parseTarget.h"
 #include "http_server.h"
 #include "main.h"  // for printMem()
 
@@ -42,13 +41,11 @@ void dataSendHandler::init()
     gSheetsTicker.once(70, [](){data_sender.send_gSheets = true;});              // Schedule first send to Google Sheets
     grainfatherTicker.once(80, [](){data_sender.send_grainfather = true;});      // Schedule first send to Grainfather
     taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
-    cloudTargetTicker.once(100, [](){data_sender.send_cloudTarget = true;});     // Schedule first send to Cloud Target
 }
 
 void dataSendHandler::process()
 {
     if (WiFiClass::status() == WL_CONNECTED) {
-        send_to_cloud();
         send_to_fermentrack();
         send_to_bf_and_bf();
         send_to_grainfather();
@@ -169,17 +166,6 @@ bool dataSendHandler::send_to_bf_and_bf()
         send_lock = false;
     }
     return retval;
-}
-
-void dataSendHandler::send_to_cloud()
-{
-    if (data_sender.send_cloudTarget && !send_lock) {
-        send_lock = true;
-        send_cloudTarget = false;
-        addTiltToParse();
-        cloudTargetTicker.once(CLOUD_DELAY, [](){data_sender.send_cloudTarget = true;}); // Set up subsequent send to Cloud Target
-    }
-    send_lock = false;
 }
 
 bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)

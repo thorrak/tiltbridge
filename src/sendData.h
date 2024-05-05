@@ -9,7 +9,6 @@
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
 #define BREWFATHER_DELAY (15 * 60)     // 15 minute delay between pushes to Brewfather
 #define GRAINFATHER_DELAY (15 * 60)    // 15 minute delay between pushes to Grainfather
-#define CLOUD_DELAY (30 * 60)          // 30 minute delay between pushes to Parse Cloud
 #define USER_TARGET_DELAY (10 * 60)    // 10 minute delay between pushes to user specified send target
 
 #define BREWFATHER_MIN_KEY_LENGTH 5
@@ -46,11 +45,9 @@ public:
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
     bool send_to_grainfather();
     bool send_to_bf_and_bf();
-    void send_to_cloud();
 
 
     // Send Timers
-    Ticker cloudTargetTicker;
     Ticker fermentrackTicker;
     Ticker brewersFriendTicker;
     Ticker brewfatherTicker;
@@ -62,7 +59,6 @@ public:
     Ticker mqttTicker;
 
     // Send Semaphores
-    bool send_cloudTarget = false;
     bool send_fermentrack = false;
     bool send_brewersFriend = false;
     bool send_brewfather = false;

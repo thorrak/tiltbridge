@@ -54,10 +54,6 @@ public:
     char mdnsID[32] = "tiltbridge";
     char guid[17] = "";
     bool invertTFT = false;
-    bool cloudEnabled = false;
-    char cloudUrl[129] = "";
-    char cloudAppID[41] = "";
-    char cloudClientKey[41] = "";
     bool update_spiffs = false;
     int8_t TZoffset = -5;
     char tempUnit[2] = "F";

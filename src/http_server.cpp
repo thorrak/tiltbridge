@@ -221,31 +221,6 @@ bool processCalibrationSettings(const DynamicJsonDocument& json, bool triggerUps
     return failCount == 0;
 }
 
-bool processCloudTargetSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
-    uint8_t failCount = 0;
-    bool saveSettings = false;
-
-    // Cloud target settings
-    if(!updateJsonSettingBool(json, CloudTargetSettings::cloudTarget, config.cloudEnabled))
-        failCount++;
-
-    if(config.cloudEnabled)  // If the cloud target is (now) enabled, force trigger a send to Cloud in 5 seconds
-        sendNowTicker.once(5, [](){data_sender.send_cloudTarget = true;});
-        
-
-    // Save
-    if(failCount>0) {
-        Log.error(F("Error: Invalid cloud target (enabled) configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save cloud target (enabled) configuration data.\r\n"));
-            failCount++;
-        }
-    }
-
-    return failCount == 0;
-}
-
 
 bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
@@ -705,10 +680,6 @@ void httpServer::setPutPages() {
 
     web_server->on("/api/settings/calibration/", HTTP_PUT, [&]() {
         processJsonRequest("/api/settings/calibration/", &processCalibrationSettings);
-    });
-
-    web_server->on("/api/settings/cloudtarget/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/cloudtarget/", &processCloudTargetSettings);
     });
 
     // TODO - Rename/combine these paths
