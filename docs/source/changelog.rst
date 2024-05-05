@@ -3,6 +3,22 @@ Changelog
 
 
 
+v1.2.2 - Mar 3, 2024 - New Data Senders
+---------------------------------------
+
+- New unified data sender for non-MQTT endpoints
+- Rewrote MQTT data sender to be more efficient
+- Add additional information to MQTT autodiscovery messages for Home Assistant
+- Add 'Weeks on Battery' to MQTT messages
+
+
+v1.2.1 - Jun 4, 2023 - Minor Bugfixes
+-------------------------------------
+
+- Fix toggling between Celsius and Fahrenheit
+- Fix logo color on TFT
+
+
 v1.2.0 - Jan 9, 2023 - Fix OLED & Refactor LCD Code
 ---------------------------------------------------
 
