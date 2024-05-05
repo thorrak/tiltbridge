@@ -378,7 +378,7 @@ bool processUserTargetSettings(const DynamicJsonDocument& json, bool triggerUpst
         failCount++;
     if(strlen(config.userTargetURL) > 1)  // Trigger a send to the user target
         sendNowTicker.once(5, [](){data_sender.send_userTarget = true;});
-
+ 
     
     // Save
     if(failCount>0) {
@@ -732,6 +732,7 @@ void httpServer::setPutPages() {
         processJsonRequest("/api/settings/grainfather/", &processGrainfatherSettings);
     });
 
+    
     web_server->on("/api/settings/usertarget/", HTTP_PUT, [&]() {
         processJsonRequest("/api/settings/usertarget/", &processUserTargetSettings);
     });
@@ -762,16 +763,16 @@ void httpServer::setJsonPages() {
     });
 
     // About Page JSON
-    web_server->on("/thisVersion/", HTTP_GET, [&]() {
+    web_server->on("/api/version/", HTTP_GET, [&]() {
         genericServeJson(&this_version);
     });
-    web_server->on("/uptime/", HTTP_GET, [&]() {
+    web_server->on("/api/uptime/", HTTP_GET, [&]() {
         genericServeJson(&uptime);
     });
-    web_server->on("/heap/", HTTP_GET, [&]() {
+    web_server->on("/api/heap/", HTTP_GET, [&]() {
         genericServeJson(&heap);
     });
-    web_server->on("/resetreason/", HTTP_GET, [&]() {
+    web_server->on("/api/resetreason/", HTTP_GET, [&]() {
         genericServeJson(&reset_reason);
     });
 }

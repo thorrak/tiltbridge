@@ -62,7 +62,7 @@ function heapToolTip() {
 }
 
 function loadThisVersion() { // Get current parameters
-    var thisVersionJson = "/thisVersion/";
+    var thisVersionJson = "/api/version/";
     var thisVersion = $.getJSON(thisVersionJson, function () {
     })
         .done(function (thisVersion) {
@@ -88,7 +88,7 @@ function loadThisVersion() { // Get current parameters
 }
 
 function loadUptime(callback = null) { // Get uptime information
-    var uptimeJson = "/uptime/";
+    var uptimeJson = "/api/uptime/";
     var uptime = $.getJSON(uptimeJson, function () {
     })
         .done(function (uptime) {
@@ -120,7 +120,7 @@ function loadUptime(callback = null) { // Get uptime information
 }
 
 function loadHeap(callback = null) { // Get heap information
-    var heapJson = "/heap/";
+    var heapJson = "/api/heap/";
     var heap = $.getJSON(heapJson, function () {
     })
         .done(function (heap) {
@@ -151,7 +151,7 @@ function loadHeap(callback = null) { // Get heap information
 }
 
 function loadResetReason(callback = null) { // Get last reset reason
-    var resetJson = "/resetreason/";
+    var resetJson = "/api/resetreason/";
     var reset = $.getJSON(resetJson, function () {
     })
         .done(function (reset) {
