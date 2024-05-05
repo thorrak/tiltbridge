@@ -2,6 +2,15 @@ Changelog
 #########
 
 
+Unreleased - New UI & Fermentrack 2 Support
+-------------------------------------------
+
+- New Vue-based UI with improved performance and responsiveness
+- Support for Fermentrack 2 and Fermentrack.net
+- Removed support for Parse ("TiltBridge Cloud")
+- Migrate from asynchronous to synchronous HTTP server
+
+
 
 v1.2.2 - Mar 3, 2024 - New Data Senders
 ---------------------------------------
