@@ -75,15 +75,12 @@ bool dataSendHandler::send_to_fermentrack()
             DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
-            {
-                // Serialize the Tilt data to a string
-                DynamicJsonDocument doc(TILT_ALL_DATA_SIZE);
-                tilt_scanner.tilt_to_json(doc, true);
-                serializeJson(doc, tilt_data, TILT_ALL_DATA_SIZE);
-            }
+            // Load the Tilt data from the scanner
+            DynamicJsonDocument tilt_doc(TILT_ALL_DATA_SIZE);
+            tilt_scanner.tilt_to_json(tilt_doc, true);
 
             doc["mdns_id"] = config.mdnsID;
-            doc["tilts"] = serialized(tilt_data);
+            doc["tilts"] = tilt_doc;
 
             serializeJson(doc, tilt_data);
 
