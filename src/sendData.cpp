@@ -598,100 +598,110 @@ bool dataSendHandler::send_to_url(const char *url, const char *dataToSend, const
 {
     // This handles the generic act of sending data to an endpoint
     bool retVal = false;
+    bool result = false;
+    bool https = false;
 
     if (strlen(dataToSend) > 5 && strlen(url) > 8)
     {
-        LCBUrl lcburl;
-        lcburl.setUrl(url);
-
         bool validTarget = false;
-        // There is an issue where the built-in HTTP client for some reason won't resolve mDNS addresses. Instead, we'll
-        // resolve the address first, and then pass that to the client if needed. 
-        if (lcburl.isMDNS(lcburl.getHost().c_str()))
         {
-            // Make sure we can resolve the address
-            if (lcburl.getIP(lcburl.getHost().c_str()) != INADDR_NONE)
+            // Placing LCBUrl in its own scoping block, as something about it is causing issues with stack memory
+            LCBUrl lcburl;
+            lcburl.setUrl(url);
+
+            // There is an issue where the built-in HTTP client for some reason won't resolve mDNS addresses. Instead, we'll
+            // resolve the address first, and then pass that to the client if needed. 
+            if (lcburl.isMDNS(lcburl.getHost().c_str()))
+            {
+                // Make sure we can resolve the address
+                if (lcburl.getIP(lcburl.getHost().c_str()) != INADDR_NONE)
+                    validTarget = true;
+            }
+            else if (lcburl.isValidIP(lcburl.getIP(lcburl.getHost().c_str()).toString().c_str()))
+                // We were passed an IP Address
                 validTarget = true;
-        }
-        else if (lcburl.isValidIP(lcburl.getIP(lcburl.getHost().c_str()).toString().c_str()))
-            // We were passed an IP Address
-            validTarget = true;
-        else
-        {
-            // If it's not mDNS all we care about is that it's http
-            // if (lcburl.getScheme() == "http")
-                validTarget = true;
+            else
+            {
+                // If it's not mDNS all we care about is that it's http
+                // if (lcburl.getScheme() == "http")
+                    validTarget = true;
+            }
+            if (validTarget) {
+                if (lcburl.isMDNS(lcburl.getHost().c_str()))
+                    // Use the IP address we resolved (necessary for mDNS)
+                    Log.verbose(F("Connecting to: %s at %s on port %l\r\n"),
+                                lcburl.getHost().c_str(),
+                                lcburl.getIP(lcburl.getHost().c_str() ).toString().c_str(),
+                                lcburl.getPort());
+                else
+                    Log.verbose(F("Connecting to: %s on port %l\r\n"),
+                                lcburl.getHost().c_str(),
+                                lcburl.getPort());
+            }
+            if (lcburl.getScheme() == "https")
+                https=true;
         }
 
         if (validTarget) {
-            if (lcburl.isMDNS(lcburl.getHost().c_str()))
-                // Use the IP address we resolved (necessary for mDNS)
-                Log.verbose(F("Connecting to: %s at %s on port %l\r\n"),
-                            lcburl.getHost().c_str(),
-                            lcburl.getIP(lcburl.getHost().c_str() ).toString().c_str(),
-                            lcburl.getPort());
-            else
-                Log.verbose(F("Connecting to: %s on port %l\r\n"),
-                            lcburl.getHost().c_str(),
-                            lcburl.getPort());
+            WiFiClientSecure *secureClient;
+            secureClient = new WiFiClientSecure();
+            {
+                // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is 
+                HTTPClient *http;
+                http = new HTTPClient();
+                secureClient->setInsecure(); // Don't perform certificate validation. This opens up MITM attacks, but I don't have memory otherwise.
 
+                // Determine if the URL is HTTP or HTTPS and initialize HTTPClient
+                if (https) {
+                    http->begin(*secureClient, url); // HTTPS
+                } else {
+                    http->begin(url); // HTTP
+                }
 
-            // This may crash if we're allocating too much memory on the heap, but if I can get away with this
-            // it's the easiest solution.             
-            HTTPClient http;
-            WiFiClientSecure secureClient;
-            secureClient.setInsecure(); // Don't perform certificate validation. This opens up MITM attacks, but I don't have memory otherwise.
+                // Set headers
+                http->addHeader(F("Content-Type"), contentType);
+                http->addHeader(F("Accept"), content_json);
 
-            // Determine if the URL is HTTP or HTTPS and initialize HTTPClient
-            if (lcburl.getScheme() == "https") {
-                http.begin(secureClient, url); // HTTPS
-            } else {
-                http.begin(url); // HTTP
-            }
+                char userAgent[128];
+                snprintf(userAgent, sizeof(userAgent), "tiltbridge/%s (branch %s; build %s)", version(), branch(), build());
+                http->setUserAgent(userAgent);
 
-            // Set headers
-            http.addHeader(F("Content-Type"), contentType);
-            http.addHeader(F("Accept"), content_json);
+                yield();  // Yield before we lock up the radio
 
-            char userAgent[128];
-            snprintf(userAgent, sizeof(userAgent),
-                "tiltbridge/%s (branch %s; build %s)",
-                version(),
-                branch(),
-                build()
-            );
-            http.setUserAgent(userAgent);
+                // Send the request
+                Log.verbose(F("Sent data: %s\r\n"), dataToSend);
+                int httpResponseCode;
+                // httpResponseCode = http->sendRequest("POST", dataToSend);
+                httpResponseCode = http->POST(dataToSend);
 
-            yield();  // Yield before we lock up the radio
+                // Optionally check the response
+                if (httpResponseCode > 0) {
+                    // HTTP header has been sent and Server response header has been handled
+                    Log.verbose(F("HTTP Response code: %d\r\n"), httpResponseCode);
 
-            // Send the request
-            int httpResponseCode;
-            httpResponseCode = http.POST(dataToSend);
-
-            // Optionally check the response
-            bool result = false;
-            if (httpResponseCode > 0) {
-                // HTTP header has been sent and Server response header has been handled
-                Log.verbose(F("HTTP Response code: %d\r\n"), httpResponseCode);
-
-                if (checkBody) {
-                    String response = http.getString();
-                    if (response.indexOf(bodyCheck) >= 0) {
-                        result = true;
+                    if (checkBody) {
+                        String response = http->getString();
+                        if (response.indexOf(bodyCheck) >= 0) {
+                            result = true;
+                        } else {
+                            Log.error(F("Body check failed. Body: %s\r\n"), response.c_str());
+                        }
                     } else {
-                        Log.error(F("Body check failed. Body: %s\r\n"), response.c_str());
+                        result = (httpResponseCode == HTTP_CODE_OK);
                     }
                 } else {
-                    result = (httpResponseCode == HTTP_CODE_OK);
+                    Log.error(F("Error on sending POST: %s\r\n"), http->errorToString(httpResponseCode).c_str());
+                    Log.error(F("Connection failed\r\n"));
                 }
-            } else {
-                Log.error(F("Error on sending POST: %s\r\n"), http.errorToString(httpResponseCode).c_str());
-                Log.error(F("Connection failed, Host: %s, Port: %l\r\n"), lcburl.getHost().c_str(), lcburl.getPort());
-            }
 
-            // Close connection
-            http.end();
-            delay(100);  // Give garbage collection time to run
+                // Close connection
+                http->end();
+                delay(100);  // Give garbage collection time to run
+                delete http;
+            }
+            secureClient->stop();
+            delete secureClient;
+
             return result;
 
         } else {
