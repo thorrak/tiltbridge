@@ -229,8 +229,6 @@ bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUps
 
     if(!updateJsonSetting(json, FermentrackSettings::fermentrackURL, config.fermentrackURL, 256))
         failCount++;
-    if(strlen(config.fermentrackURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
-        sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
 
     if(!updateJsonSetting(json, FermentrackSettings::fermentrackPushEvery, config.fermentrackPushEvery))
         failCount++;
@@ -249,6 +247,10 @@ bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUps
         if (!config.save()) {
             Log.error(F("Error: Unable to save Fermentrack target configuration data.\r\n"));
             failCount++;
+        } else {
+            // Now that we've saved, trigger the send
+            if(strlen(config.fermentrackURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
+                sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
         }
     }
 
