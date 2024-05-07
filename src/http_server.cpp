@@ -683,8 +683,8 @@ void httpServer::setPutPages() {
     });
 
     // TODO - Rename/combine these paths
-    web_server->on("/api/settings/localtarget/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/localtarget/", &processFermentrackSettings);
+    web_server->on("/api/settings/fermentrack/", HTTP_PUT, [&]() {
+        processJsonRequest("/api/settings/fermentrack/", &processFermentrackSettings);
     });
 
     web_server->on("/api/settings/googlesheets/", HTTP_PUT, [&]() {

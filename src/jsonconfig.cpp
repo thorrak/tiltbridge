@@ -10,6 +10,7 @@
 #include "serialhandler.h"
 
 #include "jsonconfig.h"
+#include "JsonKeys.h"
 
 
 #define MAX_FILENAME_LENGTH  32
@@ -196,8 +197,8 @@ DynamicJsonDocument Config::to_json() {
         obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
-    obj["fermentrackURL"] = fermentrackURL;
-    obj["fermentrackPushEvery"] = fermentrackPushEvery;
+    obj[FermentrackSettings::fermentrackURL] = fermentrackURL;
+    obj[FermentrackSettings::fermentrackPushEvery] = fermentrackPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
     obj["taplistioURL"] = taplistioURL;
@@ -307,13 +308,17 @@ void Config::load_from_json(DynamicJsonDocument obj) {
 
 
     // Target URLs
-    if (!obj["fermentrackURL"].isNull()) {
-        const char *tu = obj["fermentrackURL"];
+    if (!obj[FermentrackSettings::fermentrackURL].isNull()) {
+        const char *tu = obj[FermentrackSettings::fermentrackURL];
         strlcpy(fermentrackURL, tu, 256);
     }
 
-    if (!obj["fermentrackPushEvery"].isNull()) {
-        fermentrackPushEvery = int(obj["fermentrackPushEvery"]);
+    if (!obj[FermentrackSettings::fermentrackPushEvery].isNull()) {
+        fermentrackPushEvery = int(obj[FermentrackSettings::fermentrackPushEvery]);
+
+        if (fermentrackPushEvery < 30 || fermentrackPushEvery > 43200) {
+            fermentrackPushEvery = 60;
+        }
     }
 
     if (!obj["brewstatusURL"].isNull()) {

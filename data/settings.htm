@@ -314,26 +314,26 @@
                                     href="https://www.brewpiremix.com/">BrewPi Remix</a>.
                                 To disable the push, delete the URL.
                             </p>
-                            <form action="/settings/localtarget/" method="POST" enctype="multipart/form-data">
+                            <form action="/settings/fermentrack/" method="POST" enctype="multipart/form-data">
                                 <div class="form-group row">
-                                    <label for="localTargetURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
+                                    <label for="fermentrackURL" class="col-sm-3 col-form-label" data-toggle="tooltip"
                                         title="Target URL. Delete to disable the push">Target URL</label>
                                     <div class="col-sm-8">
-                                        <input type="url" class="form-control" name="localTargetURL"
-                                            id="localTargetURL" placeholder="http://127.0.0.1/tiltbridge/"
-                                            :value="settings.localTargetURL">
+                                        <input type="url" class="form-control" name="fermentrackURL"
+                                            id="fermentrackURL" placeholder="http://127.0.0.1/tiltbridge/"
+                                            :value="settings.fermentrackURL">
                                     </div>
                                 </div>
         
                                 <div class="form-group row">
-                                    <label for="localTargetPushEvery" class="col-sm-3 col-form-label"
+                                    <label for="fermentrackPushEvery" class="col-sm-3 col-form-label"
                                         data-toggle="tooltip"
                                         title="How often to push data (Range: 15 - 3600 seconds)">Push Frequency
                                         (s)</label>
                                     <div class="col-sm-8">
-                                        <input type="number" class="form-control" name="localTargetPushEvery"
-                                            id="localTargetPushEvery" placeholder="30" min="15" max="3600" 
-                                            :value="settings.localTargetPushEvery">
+                                        <input type="number" class="form-control" name="fermentrackPushEvery"
+                                            id="fermentrackPushEvery" placeholder="30" min="15" max="3600" 
+                                            :value="settings.fermentrackPushEvery">
                                     </div>
         
                                 </div>

@@ -161,8 +161,8 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 }
 
                 // Local Target Tab
-                $('input[name="localTargetURL"]').val(config.localTargetURL);
-                $('input[name="localTargetPushEvery"]').val(config.localTargetPushEvery);
+                $('input[name="fermentrackURL"]').val(config.fermentrackURL);
+                $('input[name="fermentrackPushEvery"]').val(config.fermentrackPushEvery);
 
                 // Google Sheets Tab
                 $('input[name="scriptsURL"]').val(config.scriptsURL);
@@ -416,13 +416,13 @@ function processCloudTargetPost(url, obj) { // Handle Cloud Target posts
 function processLocalTargetPost(url, obj) { // Handle Target URL posts
     // Get form data
     var $form = $(obj.form),
-        localTargetURLVal = $form.find("input[name='localTargetURL']").val(),
-        localTargetPushEveryVal = $form.find("input[name='localTargetPushEvery']").val();
+        fermentrackURLVal = $form.find("input[name='fermentrackURL']").val(),
+        fermentrackPushEveryVal = $form.find("input[name='fermentrackPushEvery']").val();
 
     // Process post
     data = {
-        localTargetURL: localTargetURLVal,
-        localTargetPushEvery: localTargetPushEveryVal
+        fermentrackURL: fermentrackURLVal,
+        fermentrackPushEvery: fermentrackPushEveryVal
     };
     postData(url, data);
 }

@@ -60,7 +60,7 @@ bool dataSendHandler::send_to_fermentrack()
 {
     bool result = true;
 
-    if (data_sender.send_fermentrack && !send_lock)
+    if (send_fermentrack && !send_lock)
     {
         // Fermentrack
         send_fermentrack = false;

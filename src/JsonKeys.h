@@ -18,9 +18,8 @@ constexpr auto tempCorrect = "tempCorrect";
 
 
 namespace FermentrackSettings {
-    // TODO - Update these
-constexpr auto fermentrackURL = "localTargetURL";
-constexpr auto fermentrackPushEvery = "localTargetPushEvery";
+constexpr auto fermentrackURL = "fermentrackURL";
+constexpr auto fermentrackPushEvery = "fermentrackPushEvery";
 }
 
 namespace GoogleSheetsSettings {
