@@ -13,6 +13,7 @@ relay their gravity readings to the cloud. At the moment, TiltBridge supports a 
 * `Brewfather`_
 * `Grainfather`_
 * `BrewStatus`_
+* `Bierbot`_
 * `Taplist.io`_
 * TiltBridge Cloud
 * Home Assistant/MQTT
@@ -268,6 +269,20 @@ contributors to the project on `GitHub`_ and has not yet been documented.
 .. note:: If you use `Brewstatus`_ and would like to help write this documentation, please reach out!
 
 .. todo:: Document Brewstatus configuration
+
+
+
+Setting up TiltBridge for Bierbot
+------------------------------------
+
+TiltBridge is designed to allow for data to be pushed to `Bierbot`_. This functionality was helpfully added by
+contributors to the project on `GitHub`_ and has not yet been documented.
+
+.. note:: If you use `Bierbot`_ and would like to help write this documentation, please reach out!
+
+.. todo:: Document Bierbot configuration
+
+
 
 
 Setting up TiltBridge for Taplist.io

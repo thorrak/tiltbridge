@@ -199,6 +199,12 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="brewstatusURL"]').val(config.brewstatusURL);
                 $('input[name="brewstatusPushEvery"]').val(config.brewstatusPushEvery);
 
+                // Bierbot Tab
+                $('input[name="bierbotURL"]').val(config.bierbotURL);
+                $('input[name="bierbotPushEvery"]').val(config.bierbotPushEvery);
+                $('input[name="bierbotKey"]').val(config.bierbotKey);
+                $('select[name="bierbotTiltColor"] option[value=' + config.bierbotTiltColor + ']').attr('selected', 'selected');
+                
                 // Taplist.io Tab
                 $('input[name="taplistioURL"]').val(config.taplistioURL);
                 $('input[name="taplistioPushEvery"]').val(config.taplistioPushEvery);
@@ -317,6 +323,9 @@ function processPost(obj) { // Disable buttons and call POST handler for form
             break;
         case "#brewstatus":
             processBrewstatusPost(url, obj);
+            break;
+        case "#bierbot":
+            processBierbotPost(url, obj);
             break;
         case "#taplistio":
             processTaplistioPost(url, obj);
@@ -534,6 +543,24 @@ function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
     postData(url, data);
 }
 
+function processBierbotPost(url, obj) { // Handle Bierbot posts
+    // Get form data
+    var $form = $(obj.form),
+        bierbotTiltColorVal = $form.find("select[name='bierbotTiltColor']").val(),
+        bierbotURLVal = $form.find("input[name='bierbotURL']").val(),
+        bierbotPushEveryVal = $form.find("input[name='bierbotPushEvery']").val(),
+        bierbotKeyVal = $form.find("input[name='bierbotKey']").val();
+
+    // Process post
+    data = {
+        bierbotTiltColor: bierbotTiltColorVal,
+        bierbotURL: bierbotURLVal,
+        bierbotPushEvery: bierbotPushEveryVal,
+        bierbotKey: bierbotKeyVal
+    };
+    postData(url, data);
+}
+
 function processTaplistioPost(url, obj) {
     // Get form data
     var $form = $(obj.form),
@@ -644,6 +671,9 @@ function updateHelp(hashLoc) {
             break;
         case "#brewstatus":
             url = url + "brewstatus/";
+            break;
+        case "#bierbot":
+            url = url + "bierbot/";
             break;
         case "#taplistio":
             url = url + "";
