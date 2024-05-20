@@ -99,7 +99,7 @@
 Serialize JSON
 
 ```
-DynamicJsonDocument doc(6528);
+DynamicJsonDocument doc(6144);
 
 doc["mdnsID"] = "'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 doc["guid"] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
@@ -199,7 +199,7 @@ serializeJson(doc, output);
 ```
 // Stream& input;
 
-DynamicJsonDocument doc(8224);
+DynamicJsonDocument doc(8192);
 
 DeserializationError error = deserializeJson(doc, input);
 
