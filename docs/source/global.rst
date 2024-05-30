@@ -11,8 +11,8 @@
 .. _BrewPi Remix: https://www.brewpiremix.com/
 .. _GitHub: https://github.com/thorrak/tiltbridge/
 .. _BrewFlasher: https://www.brewflasher.com/
-.. _Brewstatus: https://bricks.bierbot.com/
-.. _Bierbot: http://www.brewstat.us/
+.. _Brewstatus: http://www.brewstat.us/
+.. _Bierbot: https://bricks.bierbot.com/
 .. _PlatformIO: https://platformio.org/
 .. _Taplist.io: https://taplist.io/
 .. _TiltBridge Cloud Android App: https://play.google.com/store/apps/details?id=com.jed.tiltbridge
