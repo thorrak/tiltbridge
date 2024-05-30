@@ -18,6 +18,8 @@
 #define GF_SIZE 256
 #define LOCALTARGET_MIN_URL_LENGTH 9
 #define BREWSTATUS_MIN_URL_LENGTH 12
+#define BIERBOT_MIN_URL_LENGTH 12
+#define BIERBOT_MIN_KEY_LENGTH 12
 #define GSCRIPTS_MIN_URL_LENGTH 24
 #define GSCRIPTS_MIN_EMAIL_LENGTH 7
 #define GSHEETS_JSON 512
@@ -41,6 +43,7 @@ public:
     bool send_to_google();
     bool send_to_localTarget();
     bool send_to_brewstatus();
+    bool send_to_bierbot();
     bool send_to_taplistio();
     bool send_to_mqtt();
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
@@ -57,6 +60,7 @@ public:
     Ticker userTargetTicker;
     Ticker grainfatherTicker;
     Ticker brewStatusTicker;
+    Ticker bierbotTicker;
     Ticker taplistioTicker;
     Ticker gSheetsTicker;
     Ticker mqttTicker;
@@ -69,6 +73,7 @@ public:
     bool send_userTarget = false;
     bool send_grainfather = false;
     bool send_brewStatus = false;
+    bool send_bierbot = false;
     bool send_taplistio = false;
     bool send_gSheets = false;
     bool send_mqtt = false;

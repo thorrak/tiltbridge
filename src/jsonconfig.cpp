@@ -204,6 +204,9 @@ DynamicJsonDocument Config::to_json() {
     obj["localTargetPushEvery"] = localTargetPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
+    obj["bierbotURL"] = bierbotURL;
+    obj["bierbotPushEvery"] = bierbotPushEvery;
+    obj["bierbotKey"] = bierbotKey;
     obj["taplistioURL"] = taplistioURL;
     obj["taplistioPushEvery"] = taplistioPushEvery;
     obj["scriptsURL"] = scriptsURL;
@@ -332,6 +335,21 @@ void Config::load_from_json(DynamicJsonDocument obj) {
     if (!obj["brewstatusPushEvery"].isNull()) {
         int pe = obj["brewstatusPushEvery"];
         brewstatusPushEvery = pe;
+    }
+
+    if (!obj["bierbotURL"].isNull()) {
+        const char *bb = obj["bierbotURL"];
+        strlcpy(bierbotURL, bb, 256);
+    }
+
+    if (!obj["bierbotPushEvery"].isNull()) {
+        int be = obj["bierbotPushEvery"];
+        bierbotPushEvery = be;
+    }
+
+    if (!obj["bierbotKey"].isNull()) {
+        const char *bk = obj["bierbotKey"];
+        strlcpy(bierbotKey, bk, 256);
     }
 
     if (!obj["taplistioURL"].isNull()) {

@@ -625,6 +625,78 @@ bool processBrewstatusSettings(AsyncWebServerRequest *request) {
     }
 }
 
+bool processBierbotSettings(AsyncWebServerRequest *request) {
+    int failCount = 0;
+    // Loop through all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++) {
+        AsyncWebParameter *p = request->getParam(i);
+        if (p->isPost()) {
+            // Process any p->name().c_str() / p->value().c_str() pairs
+            const char *name = p->name().c_str();
+            const char *value = p->value().c_str();
+            Log.verbose(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+            // try this to see where we are breaking
+            Log.info(F("Processing [%s]:(%s) pair.\r\n"), name, value);
+
+            // Bierbot settings
+            //
+            if (strcmp(name, "bierbotURL") == 0) {
+                // Set Bierbot URL
+                if (strlen(value) > BIERBOT_MIN_URL_LENGTH && strlen(value) < 255) {
+                    strlcpy(config.bierbotURL, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    // Trigger a send to Bierbot in 5 seconds using the updated url
+                    sendNowTicker.once(5, [](){data_sender.send_bierbot = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.bierbotURL, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+            if (strcmp(name, "bierbotKey") == 0) {
+                // Set Bierbot URL
+                if (strlen(value) > BIERBOT_MIN_KEY_LENGTH && strlen(value) < 255) {
+                    strlcpy(config.bierbotKey, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    // Trigger a send to Bierbot in 5 seconds using the updated key
+                    sendNowTicker.once(5, [](){data_sender.send_bierbot = true;});
+                } else if (strcmp(value, "") == 0 || strlen(value) == 0) {
+                    strlcpy(config.bierbotKey, value, 256);
+                    Log.notice(F("Settings update, [%s]:(%s) cleared.\r\n"), name, value);
+                } else {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                }
+            }
+            if (strcmp(name, "bierbotPushEvery") == 0) {
+                // Set the push frequency in seconds
+                const double val = atof(value);
+                if ((val < 30) || (val > 3600)) {
+                    failCount++;
+                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
+                } else {
+                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
+                    config.bierbotPushEvery = val;
+                }
+            }
+        }
+    }
+    if (failCount) {
+        Log.error(F("Error: Invalid Bierbot configuration.\r\n"));
+        return false;
+    } else {
+        if (config.save()) {
+            return true;
+        } else {
+            Log.error(F("Error: Unable to save Bierbot configuration data.\r\n"));
+            return false;
+        }
+    }
+}
+
 bool processTaplistioSettings(AsyncWebServerRequest *request) {
     int failCount = 0;
     // Loop through all parameters
@@ -1044,6 +1116,14 @@ void setPostPages() {
     server.on("/settings/brewstatus/", HTTP_POST, [](AsyncWebServerRequest *request) {
         Log.verbose(F("Processing post to /settings/brewstatus/.\r\n"));
         if (processBrewstatusSettings(request)) {
+            request->send(200, F("text/plain"), F("Ok"));
+        } else {
+            request->send(500, F("text/plain"), F("Unable to process data"));
+        }
+    });
+    server.on("/settings/bierbot/", HTTP_POST, [](AsyncWebServerRequest *request) {
+        Log.verbose(F("Processing post to /settings/bierbot/.\r\n"));
+        if (processBierbotSettings(request)) {
             request->send(200, F("text/plain"), F("Ok"));
         } else {
             request->send(500, F("text/plain"), F("Unable to process data"));

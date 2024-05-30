@@ -73,6 +73,9 @@ public:
     uint16_t localTargetPushEvery = 30;
     char brewstatusURL[256] = "";
     uint16_t brewstatusPushEvery = 30;
+    char bierbotURL[256] = "";
+    uint16_t bierbotPushEvery = 900;
+    char bierbotKey[256] = "";
     char taplistioURL[256] = "";
     uint16_t taplistioPushEvery = 300;
     char scriptsURL[256] = "";

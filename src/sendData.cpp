@@ -43,6 +43,7 @@ void dataSendHandler::init()
     grainfatherTicker.once(80, [](){data_sender.send_grainfather = true;});      // Schedule first send to Grainfather
     taplistioTicker.once(90, [](){data_sender.send_taplistio = true;});          // Schedule first send to Taplist.io
     cloudTargetTicker.once(100, [](){data_sender.send_cloudTarget = true;});     // Schedule first send to Cloud Target
+    bierbotTicker.once(110, [](){data_sender.send_bierbot = true;});              // Schedule first send to Bierbot
 }
 
 void dataSendHandler::process()
@@ -53,6 +54,7 @@ void dataSendHandler::process()
         send_to_bf_and_bf();
         send_to_grainfather();
         send_to_brewstatus();
+        send_to_bierbot();
         send_to_taplistio();
         send_to_google();
         send_to_mqtt();
@@ -413,6 +415,62 @@ bool dataSendHandler::send_to_brewstatus()
             }
         }
         brewStatusTicker.once(config.brewstatusPushEvery, [](){data_sender.send_brewStatus = true;}); // Set up subsequent send to Brew Status
+        send_lock = false;
+    }
+    return result;
+}
+
+
+bool dataSendHandler::send_to_bierbot()
+{
+    bool result = true;
+    //const int payload_size = 512;
+    const int payload_size = 1024;
+    char payload[payload_size];
+
+    if (send_bierbot && ! send_lock)
+    {
+        // Bierbot
+        send_bierbot = false;
+        send_lock = true;
+        if (strlen(config.bierbotURL) > BIERBOT_MIN_URL_LENGTH) {
+            Log.verbose(F("Calling send to Bierbot.\r\n"));
+
+            // Bierbot and Brewstatus are almost the same. Bierbot uses the Beer attribute as a stand in
+            // for API key. This makes it difficult to differentiate between multiple Tilts. For now, we just
+            // allow a single tilt and put the Bierbot key into the Beer attribute. 
+            // The payload should look like this when sent to Bierbot:
+            // ('Request payload:', 'SG=1.019&Temp=71.0&Color=ORANGE&Timepoint=43984.33630927084&Beer=<BIERBOT KEY>&Comment=Comment')
+            // Bierbot will ignore Comment if it set, just leave it blank.
+            // The Timepoint is Google Sheets time, which is fractional days since 12/30/1899
+            // Using https://www.timeanddate.com/date/durationresult.html?m1=12&d1=30&y1=1899&m2=1&d2=1&y2=1970 gives
+            // us 25,569 days from the start of Google Sheets time to the start of the Unix epoch.
+            // Bierbot is like Bierstatus and wants local time, so we allow the user to specify a time offset.
+
+            // Loop through each of the tilt colors cached by tilt_scanner, sending data for the configured tilt
+            for (uint8_t i = 0; i < TILT_COLORS; i++)
+            {
+                if (tilt_scanner.tilt(i)->is_loaded())
+                {
+                    Log.verbose(F("Starting Bierbot send.\r\n"));                    
+                    char gravity[10];
+                    char temp[6];
+                    tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+                    tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit since we don't send units
+                    snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=%s&Comment=",
+                            gravity, temp, tilt_color_names[i], ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0, config.bierbotKey);
+                    
+                    if (send_to_url(config.bierbotURL, payload, content_x_www_form_urlencoded)) {
+                        Log.verbose(F("Sending Bierbot payload=%s\r\n"), payload);
+                        Log.notice(F("Completed send to Bierbot.\r\n"));
+                    } else {
+                        result = false;
+                        Log.verbose(F("Error sending to Bierbot.\r\n"));
+                    }
+                }
+            }
+        }
+        bierbotTicker.once(config.bierbotPushEvery, [](){data_sender.send_bierbot = true;}); // Set up subsequent send to Bierbot
         send_lock = false;
     }
     return result;
