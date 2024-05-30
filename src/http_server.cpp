@@ -671,17 +671,6 @@ bool processBierbotSettings(AsyncWebServerRequest *request) {
                     Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
                 }
             }
-            if (strcmp(name, "bierbotTiltColor") == 0) {
-                // Set the tilt color
-                int val = atof(value);
-                if (val > 7) {
-                    failCount++;
-                    Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), name, value);
-                } else {
-                    Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), name, value);
-                    config.bierbotTiltColor = val;
-                }
-            }
             if (strcmp(name, "bierbotPushEvery") == 0) {
                 // Set the push frequency in seconds
                 const double val = atof(value);

@@ -76,7 +76,6 @@ public:
     char bierbotURL[256] = "";
     uint16_t bierbotPushEvery = 900;
     char bierbotKey[256] = "";
-    uint16_t bierbotTiltColor = 2;
     char taplistioURL[256] = "";
     uint16_t taplistioPushEvery = 300;
     char scriptsURL[256] = "";

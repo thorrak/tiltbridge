@@ -450,7 +450,7 @@ bool dataSendHandler::send_to_bierbot()
             // Loop through each of the tilt colors cached by tilt_scanner, sending data for the configured tilt
             for (uint8_t i = 0; i < TILT_COLORS; i++)
             {
-                if (tilt_scanner.tilt(i)->is_loaded() && config.bierbotTiltColor == i)
+                if (tilt_scanner.tilt(i)->is_loaded())
                 {
                     Log.verbose(F("Starting Bierbot send.\r\n"));                    
                     char gravity[10];

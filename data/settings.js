@@ -203,8 +203,7 @@ function populateConfig(callback = null) { // Get configuration settings, popula
                 $('input[name="bierbotURL"]').val(config.bierbotURL);
                 $('input[name="bierbotPushEvery"]').val(config.bierbotPushEvery);
                 $('input[name="bierbotKey"]').val(config.bierbotKey);
-                $('select[name="bierbotTiltColor"] option[value=' + config.bierbotTiltColor + ']').attr('selected', 'selected');
-                
+
                 // Taplist.io Tab
                 $('input[name="taplistioURL"]').val(config.taplistioURL);
                 $('input[name="taplistioPushEvery"]').val(config.taplistioPushEvery);
@@ -546,14 +545,12 @@ function processBrewstatusPost(url, obj) { // Handle Brewstatus posts
 function processBierbotPost(url, obj) { // Handle Bierbot posts
     // Get form data
     var $form = $(obj.form),
-        bierbotTiltColorVal = $form.find("select[name='bierbotTiltColor']").val(),
         bierbotURLVal = $form.find("input[name='bierbotURL']").val(),
         bierbotPushEveryVal = $form.find("input[name='bierbotPushEvery']").val(),
         bierbotKeyVal = $form.find("input[name='bierbotKey']").val();
 
     // Process post
     data = {
-        bierbotTiltColor: bierbotTiltColorVal,
         bierbotURL: bierbotURLVal,
         bierbotPushEvery: bierbotPushEveryVal,
         bierbotKey: bierbotKeyVal

@@ -207,7 +207,6 @@ DynamicJsonDocument Config::to_json() {
     obj["bierbotURL"] = bierbotURL;
     obj["bierbotPushEvery"] = bierbotPushEvery;
     obj["bierbotKey"] = bierbotKey;
-    obj["bierbotTiltColor"] = bierbotTiltColor;
     obj["taplistioURL"] = taplistioURL;
     obj["taplistioPushEvery"] = taplistioPushEvery;
     obj["scriptsURL"] = scriptsURL;
@@ -351,12 +350,6 @@ void Config::load_from_json(DynamicJsonDocument obj) {
     if (!obj["bierbotKey"].isNull()) {
         const char *bk = obj["bierbotKey"];
         strlcpy(bierbotKey, bk, 256);
-    }
-
-    if (!obj["bierbotTiltColor"].isNull()) {
-        Log.info(F("Loading bierBotTiltColor\r\n"));
-        int bt = obj["bierbotTiltColor"];
-        bierbotTiltColor = bt;
     }
 
     if (!obj["taplistioURL"].isNull()) {
