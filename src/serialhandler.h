@@ -1,13 +1,6 @@
 #ifndef _SERIALLOG_H
 #define _SERIALLOG_H
 
-#if DOTELNET == true
-#include <WiFiUdp.h>
-#include <esptelnet.h>
-#undef CR
-#define CR "\r\n"
-#endif
-
 void serial();
 void toggleSerialCompat(bool);
 void printPrefix(Print* _logOutput, int logLevel);

@@ -2,26 +2,13 @@
 
 #include "serialhandler.h"
 
-#undef SERIAL
-#if DOTELNET == true
-ESPTelnet SerialAndTelnet;
-#define SERIAL SerialAndTelnet // Use Telnet
-#else
-#define SERIAL Serial // Use hardware serial
-#endif
-
 void serial()
 {
-#if DOTELNET == true
-    char buffer[32];
-    strcpy(buffer, (const char *)"Connected to TiltBridge\n");
-    SERIAL.setWelcomeMsg(buffer);
-#endif
-    SERIAL.begin(BAUD);
-    SERIAL.setDebugOutput(true);
-    SERIAL.println();
-    SERIAL.flush();
-    Log.begin(ARDUINO_LOG_LEVEL, &SERIAL, true);
+    Serial.begin(BAUD);
+    Serial.setDebugOutput(true);
+    Serial.println();
+    Serial.flush();
+    Log.begin(ARDUINO_LOG_LEVEL, &Serial, true);
     Log.setPrefix(printPrefix);
     Log.notice(F("Serial logging started at %l.\r\n"), BAUD);
 
@@ -81,7 +68,7 @@ size_t printDot()
 size_t printDot(bool safe)
 {
 #ifdef ARDUINO_LOG_LEVEL
-    return SERIAL.print(F("."));
+    return Serial.print(F("."));
 #else
     return 0;
 #endif
@@ -95,7 +82,7 @@ size_t printChar(const char *chr)
 size_t printChar(bool safe, const char *chr)
 {
 #ifdef ARDUINO_LOG_LEVEL
-    return SERIAL.println(chr);
+    return Serial.println(chr);
 #else
     return 0;
 #endif
@@ -109,7 +96,7 @@ size_t printCR()
 size_t printCR(bool safe)
 {
 #ifdef ARDUINO_LOG_LEVEL
-    return SERIAL.println();
+    return Serial.println();
 #else
     return 0;
 #endif
@@ -122,19 +109,5 @@ void flush()
 
 void flush(bool safe)
 {
-    SERIAL.flush();
-}
-
-void serialLoop()
-{
-#if DOTELNET == true
-    SerialAndTelnet.handle();
-    if (SerialAndTelnet.available() > 0)
-    {
-#else
-    if (Serial.available() > 0)
-    {
-#endif
-        // TODO:  Can put a serial handler in here
-    }
+    Serial.flush();
 }
