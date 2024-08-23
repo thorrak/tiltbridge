@@ -17,7 +17,9 @@
 #elif defined(LCD_TFT) || defined(LCD_TFT_ESPI)
 
 // For the LCD_TFT displays, we're connecting via SPI
+#define DISABLE_ALL_LIBRARY_WARNINGS
 #include <TFT_eSPI.h>
+#undef DISABLE_ALL_LIBRARY_WARNINGS
 #include <SPI.h>
 
 #define FF_NORMAL               &FreeSans9pt7b
