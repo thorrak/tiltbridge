@@ -138,7 +138,7 @@ uint8_t WLcount = 0;
 unsigned long WLNextAt = 0;
 
 void reconnectWiFi() {
-    if (WiFiClass::status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED) {
         // WiFi is down - Reconnect
         if(WLcount == 0) {
             // First time we noticed the WiFi is out
@@ -156,7 +156,7 @@ void reconnectWiFi() {
         WLNextAt = millis() + TIME_BETWEEN_ATTEMPTS;
 
         // Check if we reconnected
-        if (WiFiClass::status() != WL_CONNECTED) {
+        if (WiFi.status() != WL_CONNECTED) {
             if (WLcount < MAX_CONNECT_ATTEMPTS) {
                 // Not reconnected, but still have attempts left to reconnect
                 // printDot(true);
@@ -172,7 +172,7 @@ void reconnectWiFi() {
         }
     }
 
-    if (WiFiClass::status() == WL_CONNECTED && WLcount > 0) {
+    if (WiFi.status() == WL_CONNECTED && WLcount > 0) {
         // We reconnected successfully
         Log.error(F("Reconnected to WiFi" CR));
         mdnsReset();  // Make sure that we reconnect mDNS

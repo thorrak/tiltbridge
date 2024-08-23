@@ -45,7 +45,7 @@ void dataSendHandler::init()
 
 void dataSendHandler::process()
 {
-    if (WiFiClass::status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
         send_to_fermentrack();
         send_to_bf_and_bf();
         send_to_grainfather();
@@ -525,7 +525,7 @@ void dataSendHandler::init_mqtt()
     LCBUrl url;
 
     // Checking for the WiFi Status is done in the data sending loop, but we also need to be sure we are connected to WiFi when we initialize the MQTT client
-    if (WiFiClass::status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
         if(mqtt_alreadyinit) {
             Log.verbose(F("MQTT already initialized. Disconnecting.\r\n"));
             mqttClient.disconnect();
@@ -565,7 +565,7 @@ void dataSendHandler::init_mqtt()
 void dataSendHandler::connect_mqtt()
 {
     // Checking for the WiFi Status is done in the data sending loop, but we also need to be sure we are connected to WiFi when we connect to the MQTT broker
-    if (WiFiClass::status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
         if(!mqtt_alreadyinit) {
             // Since init is not called synchronously with the settings update when the user sets the MQTT broker, we need to
             // wait until the MQTT client is initialized if it hasn't been done already.
