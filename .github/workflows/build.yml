@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - no_std_strings
+      - no_parse
     # tags:
     #   - "v*"
   # pull_request:
