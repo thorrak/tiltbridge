@@ -46,9 +46,6 @@ void mdnsReset() {
         Log.notice(F("mDNS responder restarted, hostname: %s.local.\r\n"), WiFi.getHostname());
         MDNS.addService("http", "tcp", WEB_SERVER_PORT);
         MDNS.addService("tiltbridge", "tcp", WEB_SERVER_PORT);
-#if DOTELNET == true
-        MDNS.addService("telnet", "tcp", TELNETPORT);
-#endif
     }
 }
 
@@ -114,9 +111,6 @@ void initWiFi() {
 
     MDNS.addService("http", "tcp", WEB_SERVER_PORT);       // technically we should wait on this, but I'm impatient.
     MDNS.addService("tiltbridge", "tcp", WEB_SERVER_PORT); // for lookups
-#if DOTELNET == true
-    MDNS.addService("telnet", "tcp", TELNETPORT);
-#endif
 
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
@@ -138,7 +132,7 @@ uint8_t WLcount = 0;
 unsigned long WLNextAt = 0;
 
 void reconnectWiFi() {
-    if (WiFiClass::status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED) {
         // WiFi is down - Reconnect
         if(WLcount == 0) {
             // First time we noticed the WiFi is out
@@ -156,7 +150,7 @@ void reconnectWiFi() {
         WLNextAt = millis() + TIME_BETWEEN_ATTEMPTS;
 
         // Check if we reconnected
-        if (WiFiClass::status() != WL_CONNECTED) {
+        if (WiFi.status() != WL_CONNECTED) {
             if (WLcount < MAX_CONNECT_ATTEMPTS) {
                 // Not reconnected, but still have attempts left to reconnect
                 // printDot(true);
@@ -172,7 +166,7 @@ void reconnectWiFi() {
         }
     }
 
-    if (WiFiClass::status() == WL_CONNECTED && WLcount > 0) {
+    if (WiFi.status() == WL_CONNECTED && WLcount > 0) {
         // We reconnected successfully
         Log.error(F("Reconnected to WiFi" CR));
         mdnsReset();  // Make sure that we reconnect mDNS

@@ -78,7 +78,6 @@ void setup() {
 
 void loop() {
     // These processes take precedence
-    serialLoop();       // Service telnet and console commands
     checkButtons();     // Check for reset calls
 
     http_server.web_server->handleClient();

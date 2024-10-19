@@ -3,7 +3,9 @@
 
 // We use these for LCD_TFT_ESPI or LCD_SSD1306
 #define BOARD_RESET_BUTTON_GPIO     35  // (Soft) Reset button
+#ifndef WIFI_RESET_BUTTON_GPIO
 #define WIFI_RESET_BUTTON_GPIO      0    // Boot button
+#endif
 #define WIFIRESET_DEBOUNCE          100
 #define BOARDRESET_DEBOUNCE         100
 

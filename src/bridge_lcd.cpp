@@ -385,7 +385,7 @@ uint8_t bridge_lcd::display_next() {
     // Returns the number of seconds to "hold" on this screen
     uint8_t active_tilts = 0;
 
-    if (WiFiClass::status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
         displaying_wifi_dc_screen = false;
     }
 
