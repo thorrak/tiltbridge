@@ -62,7 +62,23 @@ void bridge_lcd::init() {
     axp192.begin(initDef);
 #endif
 
+#ifdef PIN_POWER_ON
+    pinMode(PIN_POWER_ON, OUTPUT);
+    digitalWrite(PIN_POWER_ON, HIGH);
+#endif
+
 #ifdef LCD_SSD1306
+
+
+#ifdef I2C_SDA_PIN
+    // The user is explicitly supplying the SDA and SCL pins
+#ifndef I2C_SCL_PIN
+#error "If you define I2C_SDA_PIN, you must also define I2C_SCL_PIN"
+#endif
+    // If the user explicitly supplies an SDA/SCL pin, we'll use that
+    oled_display = new SSD1306Wire(0x3c, I2C_SDA_PIN, I2C_SCL_PIN);
+#else
+
     // We're currently supporting three sets of hardware - The ESP32 "OLED"
     // board, TTGO Boards, and the sleeve (which I think nobody uses)
     if (i2c_device_at_address(0x3c, 5, 4)) {
@@ -94,6 +110,7 @@ void bridge_lcd::init() {
             }
         }
     }
+#endif
 
     oled_display->init();
     if(!config.invertTFT) {
