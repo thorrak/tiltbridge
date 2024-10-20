@@ -17,7 +17,7 @@ jobs:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-        pio_env: ['lcd_ssd1306', 'd32_pro_tft', 'tft_espi', 'm5stickc_plus']
+        pio_env: ['lcd_ssd1306', 'd32_pro_tft', 'tft_espi', 'm5stickc_plus', 'esp32_s3_oled']
 
     runs-on: ubuntu-latest
 
