@@ -1,8 +1,11 @@
+#include <ArduinoJson.h>
+#include <AsyncJson.h>
+#include <ESPAsyncWebServer.h>
+
 
 #include <LCBUrl.h>
 #include <ArduinoLog.h>
 #include <Ticker.h>
-#include <WebServer.h>
 
 #if FILESYSTEM == SPIFFS
 #include <SPIFFS.h>
@@ -19,19 +22,13 @@
 
 #include "http_server.h"
 
+#include "extended_async_json_handler.h"
+
 
 httpServer http_server;
 Ticker sendNowTicker;
+AsyncWebServer asyncWebServer(WEBPORT);
 
-
-void httpServer::genericServeJson(void(*jsonFunc)(DynamicJsonDocument&)) {
-    String serializedJson;  // Use String here to prevent stack overflow
-    DynamicJsonDocument doc(8192);
-    jsonFunc(doc);
-    serializeJson(doc, serializedJson);
-    doc.clear();
-    web_server->send(200, "application/json", serializedJson);
-}
 
 
 // Settings Page Handlers
@@ -564,32 +561,6 @@ bool processMqttSettings(const DynamicJsonDocument& json, bool triggerUpstreamUp
 // }
 
 
-void httpServer::processJsonRequest(const char* uri, bool (*handler)(const DynamicJsonDocument& json, bool triggerUpstreamUpdate)) {
-    // Handler for configuration options
-    char message[200] = "";
-    uint16_t status_code = 200;
-    StaticJsonDocument<200> response;
-    Log.verbose(F("Processing %s\r\n"), uri);
-
-    DynamicJsonDocument json(8096);
-    DeserializationError error = deserializeJson(json, web_server->arg("plain"));
-    if (error) {
-        Log.error(F("Error parsing JSON: %s\r\n"), error.c_str());
-        response["message"] = "Unable to parse JSON";
-        status_code = 400;
-    } else {
-        if(handler(json, true)) {  // Apply the handler to the data (and trigger an upstream update)
-            response["message"] = "Update processed successfully";
-        } else {
-            response["message"] = "Unable to process update";
-            status_code = 400;
-        }    
-    }
-
-    serializeJson(response, message);
-    web_server->send(status_code, "application/json", message);
-    
-}
 
 
 //-----------------------------------------------------------------------------------------
@@ -655,50 +626,37 @@ void reset_reason(DynamicJsonDocument &doc) {
 
 void httpServer::setStaticPages() {
 
-    // Static page handlers - Vue
-    web_server->serveStatic("/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/index.html", FILESYSTEM, "/index.html", "max-age=600");
+    // Define the base static page handlers
+    asyncWebServer.serveStatic("/", FILESYSTEM, "/index.html").setCacheControl("max-age=600");
+    asyncWebServer.serveStatic("/index.html", FILESYSTEM, "/index.html").setCacheControl("max-age=600");
 
-    // Vue routes
-    web_server->serveStatic("/config", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/config/tiltbridge", FILESYSTEM, "/index.html", "max-age=600");
+    // Define Vue routes
+    const char* vueRoutes[] = {
+        "/config", 
+        "/config/tiltbridge",
+        "/target", 
+        "/target/fermentrack", 
+        "/target/gsheets", 
+        "/target/brewersfriend",
+        "/target/brewfather", 
+        "/target/grainfather", 
+        "/target/brewstatus", 
+        "/target/taplistio",
+        "/target/mqtt", 
+        "/target/generic",
+        "/help", 
+        "/about"
+    };
 
-    web_server->serveStatic("/target", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/fermentrack", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/gsheets", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/brewersfriend", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/brewfather", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/grainfather", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/brewstatus", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/taplistio", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/mqtt", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/generic", FILESYSTEM, "/index.html", "max-age=600");
 
-    web_server->serveStatic("/help", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/about", FILESYSTEM, "/index.html", "max-age=600");
+    // Serve static pages for Vue routes and their trailing-slash versions
+    for (const char* route : vueRoutes) {
+        asyncWebServer.serveStatic(route, FILESYSTEM, "/index.html").setCacheControl("max-age=600");
 
-
-    // Vue routes
-    web_server->serveStatic("/config/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/config/tiltbridge/", FILESYSTEM, "/index.html", "max-age=600");
-
-    web_server->serveStatic("/target/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/fermentrack/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/gsheets/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/brewersfriend/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/brewfather/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/grainfather/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/brewstatus/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/taplistio/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/mqtt/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/target/generic/", FILESYSTEM, "/index.html", "max-age=600");
-
-    web_server->serveStatic("/help/", FILESYSTEM, "/index.html", "max-age=600");
-    web_server->serveStatic("/about/", FILESYSTEM, "/index.html", "max-age=600");
-
-    // web_server->serveStatic("/", FILESYSTEM, "/index.htm", "max-age=600");
-    // web_server->serveStatic("/index.htm", FILESYSTEM, "/index.html", "max-age=600");
-    // web_server->serveStatic("/index.html", FILESYSTEM, "/index.html", "max-age=600");
+        // Serve the same route with a trailing slash
+        String routeWithSlash = String(route) + "/";
+        asyncWebServer.serveStatic(routeWithSlash.c_str(), FILESYSTEM, "/index.html").setCacheControl("max-age=600");
+    }
 
     // // Static page handlers
     // web_server->serveStatic("/", FILESYSTEM, "/index.htm", "max-age=600");
@@ -711,83 +669,61 @@ void httpServer::setStaticPages() {
     // web_server->serveStatic("/wifireset/", FILESYSTEM, "/wifireset.htm", "max-age=600");
     // web_server->serveStatic("/factoryreset/", FILESYSTEM, "/factoryreset.htm", "max-age=600");
     // web_server->serveStatic("/gsheets/", FILESYSTEM, "/gsheets.htm", "max-age=600");
-    web_server->serveStatic("/404/", FILESYSTEM, "/404.htm", "max-age=600");
+    asyncWebServer.serveStatic("/404/", FILESYSTEM, "/404.htm").setCacheControl("max-age=600");
 }
 
 void httpServer::setPutPages() {
-    // Settings Page Handlers
+    struct Endpoint {
+        const char* path;
+        bool (*handler)(const DynamicJsonDocument&, bool);
+    };
 
-    web_server->on("/api/settings/controller/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/controller/", &processTiltBridgeSettingsJson);
-    });
+    const Endpoint endpoints[] = {
+        {"/api/settings/controller/", processTiltBridgeSettingsJson},
+        {"/api/settings/calibration/", processCalibrationSettings},
+        {"/api/settings/fermentrack/", processFermentrackSettings},
+        {"/api/settings/googlesheets/", processGoogleSheetsSettings},
+        {"/api/settings/brewersfriend/", processBrewersFriendSettings},
+        {"/api/settings/brewfather/", processBrewfatherSettings},
+        {"/api/settings/grainfather/", processGrainfatherSettings},
+        {"/api/settings/usertarget/", processUserTargetSettings},
+        {"/api/settings/brewstatus/", processBrewstatusSettings},
+        {"/api/settings/taplistio/", processTaplistioSettings},
+        {"/api/settings/mqtt/", processMqttSettings},
+    };
 
-    web_server->on("/api/settings/calibration/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/calibration/", &processCalibrationSettings);
-    });
-
-    // TODO - Rename/combine these paths
-    web_server->on("/api/settings/fermentrack/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/fermentrack/", &processFermentrackSettings);
-    });
-
-    web_server->on("/api/settings/googlesheets/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/googlesheets/", &processGoogleSheetsSettings);
-    });
-
-    web_server->on("/api/settings/brewersfriend/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/brewersfriend/", &processBrewersFriendSettings);
-    });
-
-    web_server->on("/api/settings/brewfather/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/brewfather/", &processBrewfatherSettings);
-    });
-
-    web_server->on("/api/settings/grainfather/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/grainfather/", &processGrainfatherSettings);
-    });
-
-    
-    web_server->on("/api/settings/usertarget/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/usertarget/", &processUserTargetSettings);
-    });
-
-    web_server->on("/api/settings/brewstatus/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/brewstatus/", &processBrewstatusSettings);
-    });
-
-    web_server->on("/api/settings/taplistio/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/taplistio/", &processTaplistioSettings);
-    });
-
-    web_server->on("/api/settings/mqtt/", HTTP_PUT, [&]() {
-        processJsonRequest("/api/settings/mqtt/", &processMqttSettings);
-    });
+    for (const auto& endpoint : endpoints) {
+        asyncWebServer.addHandler(new ExtendedAsyncCallbackJsonWebHandler(endpoint.path, DYNAMIC_JSON_DOCUMENT_SIZE, endpoint.handler));
+    }
 }
 
 void httpServer::setJsonPages() {
     // TODO - Change these to /api/ endpoints
     // Tilt JSON
-    web_server->on("/json/", HTTP_GET, [&]() {
-        genericServeJson(&http_json);
+    asyncWebServer.on("/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        http_server.genericServeJson(request, http_json);
     });
 
     // Settings JSON
-    web_server->on("/settings/json/", HTTP_GET, [&]() {
-        genericServeJson(&settings_json);
+    asyncWebServer.on("/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        http_server.genericServeJson(request, settings_json);
     });
 
     // About Page JSON
-    web_server->on("/api/version/", HTTP_GET, [&]() {
-        genericServeJson(&this_version);
+    asyncWebServer.on("/api/version/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        http_server.genericServeJson(request, this_version);
     });
-    web_server->on("/api/uptime/", HTTP_GET, [&]() {
-        genericServeJson(&uptime);
+
+    asyncWebServer.on("/api/uptime/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        http_server.genericServeJson(request, uptime);
     });
-    web_server->on("/api/heap/", HTTP_GET, [&]() {
-        genericServeJson(&heap);
+
+    asyncWebServer.on("/api/heap/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        http_server.genericServeJson(request, heap);
     });
-    web_server->on("/api/resetreason/", HTTP_GET, [&]() {
-        genericServeJson(&reset_reason);
+
+    asyncWebServer.on("/api/resetreason/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        http_server.genericServeJson(request, reset_reason);
     });
 }
 
@@ -825,7 +761,6 @@ void httpServer::setJsonPages() {
 // }
 
 void httpServer::init() {
-    web_server = new WebServer(WEBPORT);
     setStaticPages();
     setPutPages();
     setJsonPages();
@@ -839,22 +774,14 @@ void httpServer::init() {
 
 
     // File not found handler
-    web_server->onNotFound([&]() {
-        String pathWithGz = web_server->uri() + ".gz";
-        if (web_server->method() == HTTP_OPTIONS) {
-            web_server->send(200);
-        } else if(FILESYSTEM.exists(web_server->uri()) || FILESYSTEM.exists(pathWithGz)) {
-            // WebServer doesn't automatically serve files, so we need to do that here unless we want to
-            // manually add every single file to setStaticPages(). 
-            handleFileRead(web_server->uri());
-        } else {
-            // Log.verbose(F("Serving 404 for request to %s.\r\n"), web_server->uri().c_str());
-            // redirect("/404/");
+    asyncWebServer.onNotFound([](AsyncWebServerRequest *request) {
+        if (!http_server.handleFileRead(request, request->url())) {
+            request->send(404, "text/plain", "Not Found");
         }
     });
 
     // DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
 
-    web_server->begin();
+    asyncWebServer.begin();
     Log.notice(F("HTTP server started. Open: http://%s.local/ to view application.\r\n"), WiFi.getHostname());
 }

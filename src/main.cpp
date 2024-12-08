@@ -80,7 +80,6 @@ void loop() {
     // These processes take precedence
     checkButtons();     // Check for reset calls
 
-    http_server.web_server->handleClient();
     data_sender.process();
 
     if (tilt_scanner.scan()) {
