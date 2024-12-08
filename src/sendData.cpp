@@ -197,7 +197,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
             Log.verbose(F("Brewer's Friend key not populated. Returning.\r\n"));
             return false;
         }
-        strcpy(url, "http://log.brewersfriend.com/stream/");
+        strcpy(url, "https://log.brewersfriend.com/stream/");
         strcat(url, config.brewersFriendKey);
     }
     else if (which_bf == BF_MEANS_USER_TARGET)
