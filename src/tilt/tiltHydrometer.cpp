@@ -207,7 +207,7 @@ void tiltHydrometer::converted_gravity(char* output, size_t output_size, bool us
 
 void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
 {
-    StaticJsonDocument<TILT_DATA_SIZE> j;
+    JsonDocument j;
     char gravity_str[10];
     char temp_str[6];
 

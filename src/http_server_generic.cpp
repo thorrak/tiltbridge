@@ -50,10 +50,10 @@ void httpServer::redirect(AsyncWebServerRequest *request, const String &url) {
     request->redirect(url);
 }
 
-void httpServer::genericServeJson(AsyncWebServerRequest *request, void (*jsonFunc)(DynamicJsonDocument &)) {
+void httpServer::genericServeJson(AsyncWebServerRequest *request, void (*jsonFunc)(JsonDocument &)) {
     AsyncJsonResponse *response = new AsyncJsonResponse();
     {
-      DynamicJsonDocument doc(8192);
+      JsonDocument doc;
       jsonFunc(doc);
 
       // // Print the contents of doc to the serial console

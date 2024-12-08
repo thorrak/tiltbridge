@@ -26,7 +26,7 @@ class ExtendedAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler {
      * The custom handler function processes the JSON payload and determines whether the
      * request should be considered successful or not.
      */
-    bool (*_customHandler)(const DynamicJsonDocument&, bool);
+    bool (*_customHandler)(const JsonDocument&, bool);
 
   public:
     /**
@@ -35,15 +35,14 @@ class ExtendedAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler {
      * @param uri The URI to handle.
      * @param maxJsonBufferSize Maximum size of the JSON buffer (defaults to DYNAMIC_JSON_DOCUMENT_SIZE).
      * @param customHandler A pointer to the custom handler function. The function must accept
-     *        a `DynamicJsonDocument` and a `bool`, and return a `bool` indicating success.
+     *        a `JsonDocument` and a `bool`, and return a `bool` indicating success.
      *
      * The custom handler function will be invoked for each request to the specified URI. If
      * the handler is not provided or fails, an appropriate HTTP response will be sent to the client.
      */
     ExtendedAsyncCallbackJsonWebHandler(
         const char* uri,
-        size_t maxJsonBufferSize = DYNAMIC_JSON_DOCUMENT_SIZE,
-        bool (*customHandler)(const DynamicJsonDocument&, bool) = nullptr)
+        bool (*customHandler)(const JsonDocument&, bool) = nullptr)
       : AsyncCallbackJsonWebHandler(
             uri,
             [customHandler](AsyncWebServerRequest* request, JsonVariant& json) {
@@ -53,7 +52,7 @@ class ExtendedAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler {
                 }
 
                 // Parse the JSON payload
-                DynamicJsonDocument doc(8096);
+                JsonDocument doc;
                 doc = json.as<JsonObject>();
 
                 // Call the handler
@@ -62,8 +61,7 @@ class ExtendedAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler {
                 } else {
                     request->send(400, "application/json", "{\"status\":\"error\"}");
                 }
-            },
-            maxJsonBufferSize),
+            }),
         _customHandler(customHandler) {}
 };
 

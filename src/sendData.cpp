@@ -69,11 +69,11 @@ bool dataSendHandler::send_to_fermentrack()
 
         if (strlen(config.fermentrackURL) >= FERMENTRACK_MIN_URL_LENGTH) {
             Log.verbose(F("Calling send to Fermentrack.\r\n"));
-            DynamicJsonDocument doc(TILT_ALL_DATA_SIZE + 128);
+            JsonDocument doc;
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
             // Load the Tilt data from the scanner
-            DynamicJsonDocument tilt_doc(TILT_ALL_DATA_SIZE);
+            JsonDocument tilt_doc;
             tilt_scanner.tilt_to_json(tilt_doc, true);
 
             doc["mdns_id"] = config.mdnsID;
@@ -175,7 +175,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
     // to send_to_url to be sent out.
 
     bool result = true;
-    StaticJsonDocument<BF_SIZE> j;
+    JsonDocument j;
     char url[128];
 
     // As this function is being used for both Brewer's Friend and Brewfather,
@@ -268,7 +268,7 @@ bool dataSendHandler::send_to_grainfather()
             {
                 char gravity[10];
                 char temp[6];
-                StaticJsonDocument<GF_SIZE> j;
+                JsonDocument j;
                 Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
                 tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
                 j["Temp"] = temp;
@@ -325,7 +325,7 @@ bool dataSendHandler::send_to_taplistio()
     // }
 
     for (uint8_t i = 0; i < TILT_COLORS; i++) {
-        StaticJsonDocument<192> j;
+        JsonDocument j;
         char payload_string[192];
         char gravity[10];
         char temp[6];
@@ -417,9 +417,9 @@ bool dataSendHandler::send_to_google()
         send_lock = true;
 
         //tilt_scanner.deinit();
-        StaticJsonDocument<GSHEETS_JSON> payload;
+        JsonDocument payload;
         char payload_string[GSHEETS_JSON];
-        StaticJsonDocument<GSHEETS_JSON> retval;
+        JsonDocument retval;
         int httpResponseCode;
         int numSent = 0;
 #if (ARDUINO_LOG_LEVEL == 6)
@@ -760,7 +760,7 @@ void dataSendHandler::prepare_and_send_payloads(uint8_t tilt_index) {
     prepare_general_payload(tilt_index, tilt_topic);
 }
 
-void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload) {
+void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, JsonDocument& payload) {
     payload["stat_t"] = topic;
     char deviceName[20];
     snprintf(deviceName, sizeof(deviceName), "Tilt %s", tilt_color);
@@ -797,7 +797,7 @@ void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const 
     char tilt_sensor_name[35];
     char uniq_id[30];
     char unit[10] = "\u00b0"; // Unicode for degree symbol
-    StaticJsonDocument<512> payload;
+    JsonDocument payload;
 
     // Construct the MQTT topic string for temperature
     sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config", config.mqttTopic, tilt_color);
@@ -830,7 +830,7 @@ void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char
     char m_topic[90];
     char tilt_sensor_name[35];
     char uniq_id[30];
-    StaticJsonDocument<512> payload;
+    JsonDocument payload;
 
     // Construct the MQTT topic string for specific gravity
     sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config", config.mqttTopic, tilt_color);
@@ -860,7 +860,7 @@ void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char
     char m_topic[90];
     char tilt_sensor_name[35];
     char uniq_id[30];
-    StaticJsonDocument<512> payload;
+    JsonDocument payload;
 
     // Construct the MQTT topic string for weeks on battery
     sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sWoB/weeks_on_battery/config", config.mqttTopic, tilt_color);
@@ -891,7 +891,7 @@ void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* ti
     char gravity[10];
     char temp[6];
     char battery_str[4]; // large enough for 0-255 and the null terminator
-    StaticJsonDocument<512> payload;
+    JsonDocument payload;
     tiltHydrometer* current_tilt = tilt_scanner.tilt(tilt_index);
 
     // Construct the MQTT topic string for general sensor data
@@ -914,7 +914,7 @@ void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* ti
 }
 
 
-bool dataSendHandler::publish_to_mqtt(const char* topic, StaticJsonDocument<512>& payload, bool retain) {
+bool dataSendHandler::publish_to_mqtt(const char* topic, JsonDocument& payload, bool retain) {
     char payload_string[512];
     serializeJson(payload, payload_string);
 

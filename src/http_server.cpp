@@ -32,14 +32,14 @@ AsyncWebServer asyncWebServer(WEBPORT);
 
 
 // Settings Page Handlers
-bool processTiltBridgeSettingsJson(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processTiltBridgeSettingsJson(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool hostnamechanged = false;
 
 
     //////  Generic Settings
     // mDNS ID
-    if(json.containsKey("mdnsID")) {
+    if(json["mdnsID"].is<const char*>()) {
         // Set hostname
         LCBUrl url;
         if (!url.isValidLabel(json["mdnsID"])) {
@@ -57,70 +57,63 @@ bool processTiltBridgeSettingsJson(const DynamicJsonDocument& json, bool trigger
     }
 
     // tzOffset
-    if(json.containsKey("tzOffset")) {
-        if(json["tzOffset"].is<int8_t>()) {
-            if(json["tzOffset"].as<int8_t>() < -12 || json["tzOffset"].as<int8_t>() > 14) {
-                // Out of range
-                Log.warning(F("Settings update error, [tzOffset]:(%d) not valid.\r\n"), json["tzOffset"].as<int8_t>());
-            } else {
-                // In range
-                config.TZoffset = json["tzOffset"];
-                Log.notice(F("Settings update, [tzOffset]:(%d) applied.\r\n"), json["tzOffset"].as<int8_t>());
-            }
+    if(json["tzOffset"].is<int8_t>()) {
+        if(json["tzOffset"].as<int8_t>() < -12 || json["tzOffset"].as<int8_t>() > 14) {
+            // Out of range
+            Log.warning(F("Settings update error, [tzOffset]:(%d) not valid.\r\n"), json["tzOffset"].as<int8_t>());
         } else {
-            Log.warning(F("Settings update error, [tzOffset]:(%s) (as str) not valid.\r\n"), json["tzOffset"].as<const char*>());
-            failCount++;
+            // In range
+            config.TZoffset = json["tzOffset"];
+            Log.notice(F("Settings update, [tzOffset]:(%d) applied.\r\n"), json["tzOffset"].as<int8_t>());
         }
+    } else {
+        // Log.warning(F("Settings update error, [tzOffset]:(%s) (as str) not valid.\r\n"), json["tzOffset"].as<const char*>());
+        // failCount++;
     }
 
+
     // tempUnit
-    if(json.containsKey("tempUnit")) {
-        if(json["tempUnit"].is<const char*>()) {
-            if(strcmp(json["tempUnit"].as<const char*>(), "C") != 0 &&  strcmp(json["tempUnit"].as<const char*>(), "F") != 0) {
-                // Not C/F
-                Log.warning(F("Settings update error, [tempUnit]:(%s) not valid.\r\n"), json["tempUnit"].as<const char*>());
-            } else {
-                // Is C/F
-                strlcpy(config.tempUnit, json["tempUnit"].as<const char*>(), 2);
-                Log.notice(F("Settings update, [tempUnit]:(%s) applied.\r\n"), json["tempUnit"].as<const char*>());
-            }
-        } else {
+    if(json["tempUnit"].is<const char*>()) {
+        if(strcmp(json["tempUnit"].as<const char*>(), "C") != 0 &&  strcmp(json["tempUnit"].as<const char*>(), "F") != 0) {
+            // Not C/F
             Log.warning(F("Settings update error, [tempUnit]:(%s) not valid.\r\n"), json["tempUnit"].as<const char*>());
-            failCount++;
+        } else {
+            // Is C/F
+            strlcpy(config.tempUnit, json["tempUnit"].as<const char*>(), 2);
+            Log.notice(F("Settings update, [tempUnit]:(%s) applied.\r\n"), json["tempUnit"].as<const char*>());
         }
+    } else {
+        // Log.warning(F("Settings update error, [tempUnit]:(%s) not valid.\r\n"), json["tempUnit"].as<const char*>());
+        // failCount++;
     }
 
     // smoothFactor
-    if(json.containsKey("smoothFactor")) {
-        if(json["smoothFactor"].is<uint8_t>()) {
-            if(json["smoothFactor"].as<uint8_t>() < 0 || json["smoothFactor"].as<uint8_t>() > 99) {
-                // Out of range
-                Log.warning(F("Settings update error, [smoothFactor]:(%d) not valid.\r\n"), json["smoothFactor"].as<uint8_t>());
-            } else {
-                // In range
-                config.smoothFactor = json["smoothFactor"];
-                Log.notice(F("Settings update, [smoothFactor]:(%d) applied.\r\n"), json["smoothFactor"].as<uint8_t>());
-            }
+    if(json["smoothFactor"].is<uint8_t>()) {
+        if(json["smoothFactor"].as<uint8_t>() < 0 || json["smoothFactor"].as<uint8_t>() > 99) {
+            // Out of range
+            Log.warning(F("Settings update error, [smoothFactor]:(%d) not valid.\r\n"), json["smoothFactor"].as<uint8_t>());
         } else {
-            Log.warning(F("Settings update error, [smoothFactor]:(%s) not valid.\r\n"), json["smoothFactor"].as<const char*>());
-            failCount++;
+            // In range
+            config.smoothFactor = json["smoothFactor"];
+            Log.notice(F("Settings update, [smoothFactor]:(%d) applied.\r\n"), json["smoothFactor"].as<uint8_t>());
         }
+    } else {
+        // Log.warning(F("Settings update error, [smoothFactor]:(%s) not valid.\r\n"), json["smoothFactor"].as<const char*>());
+        // failCount++;
     }
 
     // invertTFT
-    if(json.containsKey("invertTFT")) {
-        if(json["invertTFT"].is<bool>()) {
-            if(config.invertTFT != json["invertTFT"].as<bool>())
-                http_server.lcd_reinit_rqd = true;
-            config.invertTFT = json["invertTFT"];
-            if(json["invertTFT"].as<bool>())
-                Log.notice(F("Settings update, [invertTFT]:(True) applied.\r\n"));
-            else
-                Log.notice(F("Settings update, [invertTFT]:(False) applied.\r\n"));
-        } else {
-            Log.warning(F("Settings update error, [invertTFT]:(%s) not valid.\r\n"), json["invertTFT"].as<const char*>());
-            failCount++;
-        }
+    if(json["invertTFT"].is<bool>()) {
+        if(config.invertTFT != json["invertTFT"].as<bool>())
+            http_server.lcd_reinit_rqd = true;
+        config.invertTFT = json["invertTFT"];
+        if(json["invertTFT"].as<bool>())
+            Log.notice(F("Settings update, [invertTFT]:(True) applied.\r\n"));
+        else
+            Log.notice(F("Settings update, [invertTFT]:(False) applied.\r\n"));
+    } else {
+        // Log.warning(F("Settings update error, [invertTFT]:(%s) not valid.\r\n"), json["invertTFT"].as<const char*>());
+        // failCount++;
     }
 
 
@@ -144,57 +137,52 @@ bool processTiltBridgeSettingsJson(const DynamicJsonDocument& json, bool trigger
 }
 
 
-bool updateJsonSettingBool(const DynamicJsonDocument& json, const char* key, bool& configVar) {
-    if(json.containsKey(key)) {
-        if (json[key].is<bool>()) {
-            configVar = json[key].as<bool>();
-            if(json[key].as<bool>())
-                Log.notice(F("Settings update, [%s]:(True) applied.\r\n"), key);
-            else
-                Log.notice(F("Settings update, [%s]:(False) applied.\r\n"), key);
+bool updateJsonSettingBool(const JsonDocument& json, const char* key, bool& configVar) {
+    if (json[key].is<bool>()) {
+        configVar = json[key].as<bool>();
+        if(json[key].as<bool>())
+            Log.notice(F("Settings update, [%s]:(True) applied.\r\n"), key);
+        else
+            Log.notice(F("Settings update, [%s]:(False) applied.\r\n"), key);
+        return true;
+    } else {
+        // Not a valid bool
+        // Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
+    }
+    return false;
+}
+
+bool updateJsonSetting(const JsonDocument& json, const char* key, char* configVar, uint16_t maxLen) {
+    if (json[key].is<const char*>()) {
+        if(strlen(json[key].as<const char*>()) > maxLen) {
+            // Too long
+            Log.warning(F("Settings update error, [%s]:(%s) too long.\r\n"), key, json[key].as<const char*>());
+        } else {
+            // Valid string
+            strlcpy(configVar, json[key].as<const char*>(), maxLen);
+            Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), key, json[key].as<const char*>());
             return true;
-        } else {
-            // Not a valid bool
-            Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
         }
+    } else {
+        // Not a valid string
+        // Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
+    }
+    
+    return false;
+}
+
+bool updateJsonSetting(const JsonDocument& json, const char* key, uint16_t& configVar) {
+    if (json[key].is<uint16_t>()) {
+        configVar = json[key].as<uint16_t>();
+        return true;
+    } else {
+        // Not a valid uint16_t
+        // Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
     }
     return false;
 }
 
-bool updateJsonSetting(const DynamicJsonDocument& json, const char* key, char* configVar, uint16_t maxLen) {
-    if(json.containsKey(key)) {
-        if (json[key].is<const char*>()) {
-            if(strlen(json[key].as<const char*>()) > maxLen) {
-                // Too long
-                Log.warning(F("Settings update error, [%s]:(%s) too long.\r\n"), key, json[key].as<const char*>());
-            } else {
-                // Valid string
-                strlcpy(configVar, json[key].as<const char*>(), maxLen);
-                Log.notice(F("Settings update, [%s]:(%s) applied.\r\n"), key, json[key].as<const char*>());
-                return true;
-            }
-        } else {
-            // Not a valid string
-            Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
-        }
-    }
-    return false;
-}
-
-bool updateJsonSetting(const DynamicJsonDocument& json, const char* key, uint16_t& configVar) {
-    if(json.containsKey(key)) {
-        if (json[key].is<uint16_t>()) {
-            configVar = json[key].as<uint16_t>();
-            return true;
-        } else {
-            // Not a valid uint16_t
-            Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
-        }
-    }
-    return false;
-}
-
-bool processCalibrationSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processCalibrationSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -219,7 +207,7 @@ bool processCalibrationSettings(const DynamicJsonDocument& json, bool triggerUps
 }
 
 
-bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -255,7 +243,7 @@ bool processFermentrackSettings(const DynamicJsonDocument& json, bool triggerUps
 }
 
 
-bool processGoogleSheetsSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processGoogleSheetsSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -293,7 +281,7 @@ bool processGoogleSheetsSettings(const DynamicJsonDocument& json, bool triggerUp
 }
 
 
-bool processBrewersFriendSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processBrewersFriendSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -318,7 +306,7 @@ bool processBrewersFriendSettings(const DynamicJsonDocument& json, bool triggerU
 }
 
 
-bool processBrewfatherSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processBrewfatherSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -343,7 +331,7 @@ bool processBrewfatherSettings(const DynamicJsonDocument& json, bool triggerUpst
 }
 
 
-bool processUserTargetSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processUserTargetSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -368,7 +356,7 @@ bool processUserTargetSettings(const DynamicJsonDocument& json, bool triggerUpst
 }
 
 
-bool processGrainfatherSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processGrainfatherSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -401,7 +389,7 @@ bool processGrainfatherSettings(const DynamicJsonDocument& json, bool triggerUps
 }
 
 
-bool processBrewstatusSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processBrewstatusSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -431,7 +419,7 @@ bool processBrewstatusSettings(const DynamicJsonDocument& json, bool triggerUpst
 }
 
 
-bool processTaplistioSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processTaplistioSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -459,7 +447,7 @@ bool processTaplistioSettings(const DynamicJsonDocument& json, bool triggerUpstr
     return failCount == 0;
 }
 
-bool processMqttSettings(const DynamicJsonDocument& json, bool triggerUpstreamUpdate) {
+bool processMqttSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
     bool saveSettings = false;
 
@@ -576,24 +564,24 @@ void trigger_OTA(AsyncWebServerRequest *request) {
 }
 #endif
 
-void http_json(DynamicJsonDocument &doc) {
+void http_json(JsonDocument &doc) {
     tilt_scanner.tilt_to_json(doc, false);
 }
 
-void settings_json(DynamicJsonDocument &doc) {
+void settings_json(JsonDocument &doc) {
     doc = config.to_json_external();
 }
 
 // About.htm page Handlers
 //
 
-void this_version(DynamicJsonDocument &doc) {
+void this_version(JsonDocument &doc) {
     doc["version"] = version();
     doc["branch"] = branch();
     doc["build"] = build();
 }
 
-void uptime(DynamicJsonDocument &doc) {
+void uptime(JsonDocument &doc) {
     const int days = uptimeDays();
     const int hours = uptimeHours();
     const int minutes = uptimeMinutes();
@@ -607,7 +595,7 @@ void uptime(DynamicJsonDocument &doc) {
     doc["millis"] = millis;
 }
 
-void heap(DynamicJsonDocument &doc) {
+void heap(JsonDocument &doc) {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
@@ -617,7 +605,7 @@ void heap(DynamicJsonDocument &doc) {
     doc["frag"] = frag;
 }
 
-void reset_reason(DynamicJsonDocument &doc) {
+void reset_reason(JsonDocument &doc) {
     const int reset = (int)esp_reset_reason();
 
     doc["reason"] = resetReason[reset];
@@ -675,7 +663,7 @@ void httpServer::setStaticPages() {
 void httpServer::setPutPages() {
     struct Endpoint {
         const char* path;
-        bool (*handler)(const DynamicJsonDocument&, bool);
+        bool (*handler)(const JsonDocument&, bool);
     };
 
     const Endpoint endpoints[] = {
@@ -693,7 +681,7 @@ void httpServer::setPutPages() {
     };
 
     for (const auto& endpoint : endpoints) {
-        asyncWebServer.addHandler(new ExtendedAsyncCallbackJsonWebHandler(endpoint.path, DYNAMIC_JSON_DOCUMENT_SIZE, endpoint.handler));
+        asyncWebServer.addHandler(new ExtendedAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
     }
 }
 

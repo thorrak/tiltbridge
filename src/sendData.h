@@ -79,13 +79,13 @@ private:
     bool mqtt_alreadyinit = false;
 
     void connect_mqtt();
-    bool publish_to_mqtt(const char* topic, StaticJsonDocument<512>& payload, bool retain);
+    bool publish_to_mqtt(const char* topic, JsonDocument& payload, bool retain);
     void prepare_and_send_payloads(uint8_t tilt_index);
     void prepare_temperature_payload(const char* tilt_color, const char* tilt_topic);
     void prepare_gravity_payload(const char* tilt_color, const char* tilt_topic);
     void prepare_battery_payload(const char* tilt_color, const char* tilt_topic);
     void prepare_general_payload(uint8_t tilt_index, const char* tilt_topic);
-    void enrich_announcement(const char* topic, const char* tilt_color, StaticJsonDocument<512>& payload);
+    void enrich_announcement(const char* topic, const char* tilt_color, JsonDocument& payload);
 
 };
 

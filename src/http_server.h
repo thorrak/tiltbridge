@@ -24,7 +24,7 @@ public:
 
 
 private:
-    void genericServeJson(AsyncWebServerRequest *request, void (*jsonFunc)(DynamicJsonDocument &));
+    void genericServeJson(AsyncWebServerRequest *request, void (*jsonFunc)(JsonDocument &));
     void setJsonPages();
     void setStaticPages();
     void setPutPages();

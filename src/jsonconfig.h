@@ -33,14 +33,14 @@ public:
     bool deleteFile();
 
     // The following function can optionally be implemented to serve external json
-    DynamicJsonDocument to_json_external();
+    JsonDocument to_json_external();
     bool printConfig();
     bool printConfigFile();
 
 protected:
     // The following two functions must be defined in inheriting classes
-    virtual void load_from_json(DynamicJsonDocument obj);
-    virtual DynamicJsonDocument to_json();
+    virtual void load_from_json(JsonDocument obj);
+    virtual JsonDocument to_json();
 
     bool deserializeConfig(Stream &);
     bool serializeConfig(Print &);
@@ -84,10 +84,10 @@ public:
     uint16_t mqttPushEvery = 30;
 
 
-    DynamicJsonDocument to_json_external();
+    JsonDocument to_json_external();
 private:
-    void load_from_json(DynamicJsonDocument obj);
-    DynamicJsonDocument to_json();
+    void load_from_json(JsonDocument obj);
+    JsonDocument to_json();
     bool getFilename(char *filename);
 };
 

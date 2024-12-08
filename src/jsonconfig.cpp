@@ -70,7 +70,7 @@ bool ConfigFile::saveFile(const char * filename) {
 
 bool ConfigFile::deserializeConfig(Stream &src) {
     // Deserialize configuration
-    DynamicJsonDocument doc(capacityDeserial);
+    JsonDocument doc;
 
     // Parse the JSON object in the file
     DeserializationError err = deserializeJson(doc, src);
@@ -86,13 +86,13 @@ bool ConfigFile::deserializeConfig(Stream &src) {
 
 bool ConfigFile::serializeConfig(Print &dst) {
     // Serialize configuration
-    DynamicJsonDocument doc = to_json();
+    JsonDocument doc = to_json();
 
     // Serialize JSON to file
     return serializeJson(doc, dst) > 0;
 }
 
-DynamicJsonDocument ConfigFile::to_json_external() {
+JsonDocument ConfigFile::to_json_external() {
     return to_json();
 }
 
@@ -119,7 +119,7 @@ bool ConfigFile::deleteFile() {
 
 bool ConfigFile::printConfig() {
     // Serialize configuration
-    DynamicJsonDocument doc = to_json();
+    JsonDocument doc = to_json();
 
     bool retval = true;
     // Serialize JSON to file
@@ -151,10 +151,10 @@ bool Config::getFilename(char *filename) {
     return true;
 }
 
-DynamicJsonDocument Config::to_json_external() {
+JsonDocument Config::to_json_external() {
     // This function generates the JSON document that gets served externally. Can add keys here that we don't
     // save as part of the configuration.
-    DynamicJsonDocument obj = to_json();
+    JsonDocument obj = to_json();
 
 #ifdef HAVE_LCD
     obj["have_lcd"] = true;
@@ -171,8 +171,8 @@ DynamicJsonDocument Config::to_json_external() {
     return obj;
 }
 
-DynamicJsonDocument Config::to_json() {
-    DynamicJsonDocument obj(capacityDeserial); // TODO - Fix the capacity here 
+JsonDocument Config::to_json() {
+    JsonDocument obj;
 
     obj["mdnsID"] = mdnsID;
     obj["guid"] = guid;
@@ -218,7 +218,7 @@ DynamicJsonDocument Config::to_json() {
     return obj;
 }
 
-void Config::load_from_json(DynamicJsonDocument obj) {
+void Config::load_from_json(JsonDocument obj) {
     // Load all config objects
     //
     if (!obj["mdnsID"].isNull()) {

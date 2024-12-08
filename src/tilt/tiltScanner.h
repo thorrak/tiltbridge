@@ -28,7 +28,7 @@ public:
 
     bool wait_until_scan_complete();
     uint8_t load_tilt_from_advert_hex(const std::string &advert_string_hex, const int8_t &current_rssi);
-    void tilt_to_json(DynamicJsonDocument &doc, bool use_raw_gravity);
+    void tilt_to_json(JsonDocument &doc, bool use_raw_gravity);
 
     tiltHydrometer *tilt(uint8_t color);
 

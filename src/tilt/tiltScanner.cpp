@@ -158,7 +158,7 @@ tiltHydrometer *tiltScanner::tilt(uint8_t color)
 }
 
 
-void tiltScanner::tilt_to_json(DynamicJsonDocument &doc, bool use_raw_gravity)
+void tiltScanner::tilt_to_json(JsonDocument &doc, bool use_raw_gravity)
 {
     char tilt_data[TILT_DATA_SIZE];
     for(uint8_t i = 0; i < TILT_COLORS; i++)
