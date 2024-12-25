@@ -67,8 +67,8 @@ bool dataSendHandler::send_to_fermentrack()
         send_lock = true;
 //        tilt_scanner.deinit();
 
-        if (strlen(config.fermentrackURL) >= FERMENTRACK_MIN_URL_LENGTH) {
-            Log.verbose(F("Calling send to Fermentrack.\r\n"));
+        if (strlen(config.legacyFermentrackURL) >= FERMENTRACK_MIN_URL_LENGTH) {
+            Log.verbose(F("Calling send to Legacy Fermentrack.\r\n"));
             JsonDocument doc;
             char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
@@ -81,17 +81,17 @@ bool dataSendHandler::send_to_fermentrack()
 
             serializeJson(doc, tilt_data);
 
-            if (send_to_url(config.fermentrackURL, tilt_data, content_json))
+            if (send_to_url(config.legacyFermentrackURL, tilt_data, content_json))
             {
-                Log.notice(F("Completed send to Fermentrack.\r\n"));
+                Log.notice(F("Completed send to Legacy Fermentrack.\r\n"));
             }
             else
             {
                 result = false; // There was an error with the previous send
-                Log.verbose(F("Error sending to Fermentrack.\r\n"));
+                Log.verbose(F("Error sending to Legacy Fermentrack.\r\n"));
             }
         }
-        fermentrackTicker.once(config.fermentrackPushEvery, [](){data_sender.send_fermentrack = true;}); // Set up subsequent send to Fermentrack
+        fermentrackTicker.once(config.legacyFermentrackPushEvery, [](){data_sender.send_fermentrack = true;}); // Set up subsequent send to Fermentrack
 //        tilt_scanner.init();
         send_lock = false;
     }

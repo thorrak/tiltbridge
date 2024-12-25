@@ -197,8 +197,8 @@ JsonDocument Config::to_json() {
         obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
-    obj[FermentrackSettings::fermentrackURL] = fermentrackURL;
-    obj[FermentrackSettings::fermentrackPushEvery] = fermentrackPushEvery;
+    obj[FermentrackSettings::legacyFermentrackURL] = legacyFermentrackURL;
+    obj[FermentrackSettings::legacyFermentrackPushEvery] = legacyFermentrackPushEvery;
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
     obj["taplistioURL"] = taplistioURL;
@@ -307,20 +307,22 @@ void Config::load_from_json(JsonDocument obj) {
     } // End Tilt-specific config loop
 
 
-    // Target URLs
-    if (!obj[FermentrackSettings::fermentrackURL].isNull()) {
-        const char *tu = obj[FermentrackSettings::fermentrackURL];
-        strlcpy(fermentrackURL, tu, 256);
+    // Legacy Fermentrack Settings
+    if (!obj[FermentrackSettings::legacyFermentrackURL].isNull()) {
+        const char *tu = obj[FermentrackSettings::legacyFermentrackURL];
+        strlcpy(legacyFermentrackURL, tu, 256);
     }
 
-    if (!obj[FermentrackSettings::fermentrackPushEvery].isNull()) {
-        fermentrackPushEvery = int(obj[FermentrackSettings::fermentrackPushEvery]);
+    if (!obj[FermentrackSettings::legacyFermentrackPushEvery].isNull()) {
+        legacyFermentrackPushEvery = int(obj[FermentrackSettings::legacyFermentrackPushEvery]);
 
-        if (fermentrackPushEvery < 30 || fermentrackPushEvery > 43200) {
-            fermentrackPushEvery = 60;
+        if (legacyFermentrackPushEvery < 30 || legacyFermentrackPushEvery > 43200) {
+            legacyFermentrackPushEvery = 60;
         }
     }
 
+
+    // BrewStatus Settings
     if (!obj["brewstatusURL"].isNull()) {
         const char *bu = obj["brewstatusURL"];
         strlcpy(brewstatusURL, bu, 256);
@@ -331,6 +333,7 @@ void Config::load_from_json(JsonDocument obj) {
         brewstatusPushEvery = pe;
     }
 
+    // TaplistIO Settings
     if (!obj["taplistioURL"].isNull()) {
         const char *tu = obj["taplistioURL"];
         strlcpy(taplistioURL, tu, 256);
@@ -340,6 +343,7 @@ void Config::load_from_json(JsonDocument obj) {
         taplistioPushEvery = obj["taplistioPushEvery"];
     }
 
+    // Google Scripts Settings
     if (!obj["scriptsURL"].isNull()) {
         const char *su = obj["scriptsURL"];
         strlcpy(scriptsURL, su, 256);
@@ -350,21 +354,25 @@ void Config::load_from_json(JsonDocument obj) {
         strlcpy(scriptsEmail, se, 256);
     }
 
+    // Brewers Friend
     if (!obj["brewersFriendKey"].isNull()) {
         const char *bf = obj["brewersFriendKey"];
         strlcpy(brewersFriendKey, bf, 65);
     }
 
+    // Brewfather
     if (!obj["brewfatherKey"].isNull()) {
         const char *bk = obj["brewfatherKey"];
         strlcpy(brewfatherKey, bk, 65);
     }
 
+    // User-defined Target Settings
     if (!obj["userTargetURL"].isNull()) {
         const char *uturl = obj["userTargetURL"];
         strlcpy(userTargetURL, uturl, 128);
     }
 
+    // MQTT Settings
     if (!obj["mqttBrokerHost"].isNull()) {
         const char *mi = obj["mqttBrokerHost"];
         strlcpy(mqttBrokerHost, mi, 256);

@@ -212,14 +212,14 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
     bool saveSettings = false;
 
 
-    if(!updateJsonSetting(json, FermentrackSettings::fermentrackURL, config.fermentrackURL, 256))
+    if(!updateJsonSetting(json, FermentrackSettings::legacyFermentrackURL, config.legacyFermentrackURL, 256))
         failCount++;
 
-    if(!updateJsonSetting(json, FermentrackSettings::fermentrackPushEvery, config.fermentrackPushEvery))
+    if(!updateJsonSetting(json, FermentrackSettings::legacyFermentrackPushEvery, config.legacyFermentrackPushEvery))
         failCount++;
-    if(config.fermentrackPushEvery < 30 || config.fermentrackPushEvery > 43200) {
-        Log.warning(F("Settings update error, [fermentrackPushEvery]:(%d) not valid.\r\n"), config.fermentrackPushEvery);
-        config.fermentrackPushEvery = 30;
+    if(config.legacyFermentrackPushEvery < 30 || config.legacyFermentrackPushEvery > 43200) {
+        Log.warning(F("Settings update error, [legacyFermentrackPushEvery]:(%d) not valid.\r\n"), config.legacyFermentrackPushEvery);
+        config.legacyFermentrackPushEvery = 30;
         failCount++;
     }
 
@@ -234,7 +234,7 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
             failCount++;
         } else {
             // Now that we've saved, trigger the send
-            if(strlen(config.fermentrackURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
+            if(strlen(config.legacyFermentrackURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
                 sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
         }
     }

@@ -18,9 +18,9 @@ constexpr auto tempCorrect = "tempCorrect";
 
 
 namespace FermentrackSettings {
-constexpr auto fermentrackURL = "fermentrackURL";
-constexpr auto fermentrackPushEvery = "fermentrackPushEvery";
-}
+constexpr auto legacyFermentrackURL = "legacyFermentrackURL";
+constexpr auto legacyFermentrackPushEvery = "legacyFermentrackPushEvery";
+}; // namespace FermentrackSettings
 
 namespace GoogleSheetsSettings {
 constexpr auto scriptsURL = "scriptsURL";
