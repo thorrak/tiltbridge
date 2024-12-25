@@ -11,11 +11,11 @@
 #include "tiltHydrometer.h"
 
 
-#define BLE_SCAN_TIME 3 // Seconds to scan
+#define BLE_SCAN_TIME 3 * 1000  // Milliseconds to scan
 
-class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
+class ScanCallbacks: public NimBLEScanCallbacks
 {
-    void onResult(NimBLEAdvertisedDevice *advertisedDevice) override;
+    void onResult(const NimBLEAdvertisedDevice *advertisedDevice) override;
 };
 
 class tiltScanner
@@ -34,7 +34,7 @@ public:
 
 private:
     tiltHydrometer *m_tilt_devices[TILT_COLORS]{};
-    MyAdvertisedDeviceCallbacks *callbacks;
+    ScanCallbacks *callbacks;
     bool shouldRun;
 };
 

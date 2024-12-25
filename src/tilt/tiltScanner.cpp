@@ -17,7 +17,7 @@ tiltScanner tilt_scanner;
 // BLE Scanner Callbacks/Code
 ////////////////////////////
 
-void MyAdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice *advertisedDevice)
+void ScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice)
 {
     if (advertisedDevice->getManufacturerData().length() >= 24)
     {
@@ -43,7 +43,7 @@ tiltScanner::tiltScanner()
         m_tilt_devices[i] = new tiltHydrometer(i);
 
     // Also initialize the callbacks
-    callbacks = new MyAdvertisedDeviceCallbacks();
+    callbacks = new ScanCallbacks();
 }
 
 void tiltScanner::init()
@@ -51,12 +51,12 @@ void tiltScanner::init()
     shouldRun = true;
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan(); // Create new scan
-    pBLEScan->setAdvertisedDeviceCallbacks(callbacks);
+    pBLEScan->setScanCallbacks(callbacks);
     pBLEScan->setMaxResults(0);
     // Active scan actively queries devices for more info following detection.
     pBLEScan->setActiveScan(false);
-    pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
-    pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
+    // pBLEScan->setInterval(97); // Select prime numbers to reduce risk of frequency beat pattern with ibeacon advertisement interval
+    // pBLEScan->setWindow(37);   // Set to less or equal setInterval value. Leave reasonable gap to allow WiFi some time.
 
     tilt_scanner.scan();
 }
@@ -74,7 +74,7 @@ bool tiltScanner::scan()
         if (!pBLEScan->isScanning()) { // Check if scan already in progress
             //Try to start a new scan
             pBLEScan->clearResults();
-            if (pBLEScan->start(BLE_SCAN_TIME, nullptr, true)) {
+            if (pBLEScan->start(BLE_SCAN_TIME, false, true)) {
                 retval = true; //Scan successfully started.
             } else {
                 Log.verbose(F("Scan failed to start.\r\n"));
