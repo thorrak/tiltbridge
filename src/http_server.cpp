@@ -234,8 +234,8 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
             failCount++;
         } else {
             // Now that we've saved, trigger the send
-            if(strlen(config.legacyFermentrackURL) > 11)  // Trigger a send to Fermentrack/BPR in 5 seconds using the updated URL
-                sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
+            if(strlen(config.legacyFermentrackURL) > 11)  // Trigger a send to Legacy Fermentrack/BPR in 5 seconds using the updated URL
+                sendNowTicker.once(5, [](){data_sender.send_legacy_fermentrack = true;});
         }
     }
 

@@ -31,8 +31,7 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-//    fermentrackTicker.once(5, [](){data_sender.send_fermentrack = true;});      // Schedule first send to Fermentrack
-    fermentrackTicker.once(10, [](){data_sender.send_fermentrack = true;});      // Schedule first send to Fermentrack
+    legacyFermentrackTicker.once(10, [](){data_sender.send_legacy_fermentrack = true;});      // Schedule first send to Legacy Fermentrack
     mqttTicker.once(20, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
     brewStatusTicker.once(30, [](){data_sender.send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){data_sender.send_brewfather = true;});        // Schedule first send to Brewfather
@@ -46,7 +45,7 @@ void dataSendHandler::init()
 void dataSendHandler::process()
 {
     if (WiFi.status() == WL_CONNECTED) {
-        send_to_fermentrack();
+        send_to_legacy_fermentrack();
         send_to_bf_and_bf();
         send_to_grainfather();
         send_to_brewstatus();
@@ -56,14 +55,14 @@ void dataSendHandler::process()
     }
 }
 
-bool dataSendHandler::send_to_fermentrack()
+bool dataSendHandler::send_to_legacy_fermentrack()
 {
     bool result = true;
 
-    if (send_fermentrack && !send_lock)
+    if (send_legacy_fermentrack && !send_lock)
     {
         // Fermentrack
-        send_fermentrack = false;
+        send_legacy_fermentrack = false;
         send_lock = true;
 //        tilt_scanner.deinit();
 
@@ -91,7 +90,7 @@ bool dataSendHandler::send_to_fermentrack()
                 Log.verbose(F("Error sending to Legacy Fermentrack.\r\n"));
             }
         }
-        fermentrackTicker.once(config.legacyFermentrackPushEvery, [](){data_sender.send_fermentrack = true;}); // Set up subsequent send to Fermentrack
+        legacyFermentrackTicker.once(config.legacyFermentrackPushEvery, [](){data_sender.send_legacy_fermentrack = true;}); // Set up subsequent send to Fermentrack
 //        tilt_scanner.init();
         send_lock = false;
     }

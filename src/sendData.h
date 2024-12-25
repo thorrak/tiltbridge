@@ -38,7 +38,7 @@ public:
     void process();
 
     bool send_to_google();
-    bool send_to_fermentrack();
+    bool send_to_legacy_fermentrack();
     bool send_to_brewstatus();
     bool send_to_taplistio();
     bool send_to_mqtt();
@@ -48,7 +48,7 @@ public:
 
 
     // Send Timers
-    Ticker fermentrackTicker;
+    Ticker legacyFermentrackTicker;
     Ticker brewersFriendTicker;
     Ticker brewfatherTicker;
     Ticker userTargetTicker;
@@ -59,7 +59,7 @@ public:
     Ticker mqttTicker;
 
     // Send Semaphores
-    bool send_fermentrack = false;
+    bool send_legacy_fermentrack = false;
     bool send_brewersFriend = false;
     bool send_brewfather = false;
     bool send_userTarget = false;
