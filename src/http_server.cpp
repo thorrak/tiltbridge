@@ -579,6 +579,7 @@ void this_version(JsonDocument &doc) {
     doc["version"] = version();
     doc["branch"] = branch();
     doc["build"] = build();
+    doc["hardware"] = hardware();
 }
 
 void uptime(JsonDocument &doc) {

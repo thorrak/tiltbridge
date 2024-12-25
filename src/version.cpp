@@ -1,8 +1,5 @@
 #include "version.h"
 
-const char *build() { return stringify(PIO_SRC_REV); }
-const char *branch() { return stringify(PIO_SRC_BRH); }
-const char *version() { return stringify(PIO_SRC_TAG); }
 
 /*
  * versionCompare: Compares two strings representing a semantic version
