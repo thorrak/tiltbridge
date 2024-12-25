@@ -6,10 +6,10 @@
 #define stringify(s) _stringifyDo(s)
 #define _stringifyDo(s) #s
 
-const char *build() { return stringify(PIO_SRC_REV); }
-const char *branch() { return stringify(PIO_SRC_BRH); }
-const char *version() { return stringify(PIO_SRC_TAG); }
-const char *hardware() { return stringify(HARDWARE_VERSION); }
+const char *build();
+const char *branch();
+const char *version();
+const char *hardware();
 
 int versionCompare(String, String);
 
