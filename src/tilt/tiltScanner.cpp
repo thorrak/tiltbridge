@@ -73,7 +73,8 @@ bool tiltScanner::scan()
     if (shouldRun) {
         if (!pBLEScan->isScanning()) { // Check if scan already in progress
             //Try to start a new scan
-            pBLEScan->clearResults();
+            yield();
+            // pBLEScan->clearResults();
             if (pBLEScan->start(BLE_SCAN_TIME, false, true)) {
                 retval = true; //Scan successfully started.
             } else {
