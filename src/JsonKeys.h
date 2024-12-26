@@ -18,8 +18,16 @@ constexpr auto tempCorrect = "tempCorrect";
 
 
 namespace FermentrackSettings {
+// Legacy Fermentrack Keys
 constexpr auto legacyFermentrackURL = "legacyFermentrackURL";
 constexpr auto legacyFermentrackPushEvery = "legacyFermentrackPushEvery";
+
+// Fermentrack 2 Keys
+constexpr auto fermentrackHostname = "fermentrackHostname";
+constexpr auto fermentrackPort = "fermentrackPort";
+constexpr auto fermentrackUsername = "fermentrackUsername";
+constexpr auto fermentrackDeviceID = "fermentrackDeviceID";
+constexpr auto fermentrackAPIKey = "fermentrackAPIKey";
 }; // namespace FermentrackSettings
 
 namespace GoogleSheetsSettings {

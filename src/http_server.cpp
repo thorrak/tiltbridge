@@ -23,6 +23,7 @@
 #include "http_server.h"
 
 #include "extended_async_json_handler.h"
+#include "targets/fermentrack_2.h"
 
 
 httpServer http_server;
@@ -165,7 +166,7 @@ bool updateJsonSetting(const JsonDocument& json, const char* key, char* configVa
         }
     } else {
         // Not a valid string
-        // Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
+        Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
     }
     
     return false;
@@ -174,10 +175,11 @@ bool updateJsonSetting(const JsonDocument& json, const char* key, char* configVa
 bool updateJsonSetting(const JsonDocument& json, const char* key, uint16_t& configVar) {
     if (json[key].is<uint16_t>()) {
         configVar = json[key].as<uint16_t>();
+        Log.notice(F("Settings update, [%s]:(%d) applied.\r\n"), key, json[key].as<uint16_t>());
         return true;
     } else {
         // Not a valid uint16_t
-        // Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
+        Log.warning(F("Settings update error, [%s]:(%s) not valid.\r\n"), key, json[key].as<const char*>());
     }
     return false;
 }
@@ -211,16 +213,44 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
     uint8_t failCount = 0;
     bool saveSettings = false;
 
+    bool update_legacy = false;
+    bool update_ft2 = false;
 
-    if(!updateJsonSetting(json, FermentrackSettings::legacyFermentrackURL, config.legacyFermentrackURL, 256))
-        failCount++;
 
-    if(!updateJsonSetting(json, FermentrackSettings::legacyFermentrackPushEvery, config.legacyFermentrackPushEvery))
-        failCount++;
-    if(config.legacyFermentrackPushEvery < 30 || config.legacyFermentrackPushEvery > 43200) {
-        Log.warning(F("Settings update error, [legacyFermentrackPushEvery]:(%d) not valid.\r\n"), config.legacyFermentrackPushEvery);
-        config.legacyFermentrackPushEvery = 30;
-        failCount++;
+    if (json[FermentrackSettings::legacyFermentrackPushEvery].is<uint16_t>()) {
+        Log.info("Received legacy fermentrack settings.\r\n");
+        update_legacy = true;
+        // Legacy Fermentrack settings
+        if(!updateJsonSetting(json, FermentrackSettings::legacyFermentrackURL, config.legacyFermentrackURL, 256))
+            failCount++;
+
+        if(!updateJsonSetting(json, FermentrackSettings::legacyFermentrackPushEvery, config.legacyFermentrackPushEvery))
+            failCount++;
+        if(config.legacyFermentrackPushEvery < 30 || config.legacyFermentrackPushEvery > 43200) {
+            Log.warning(F("Settings update error, [legacyFermentrackPushEvery]:(%d) not valid.\r\n"), config.legacyFermentrackPushEvery);
+            config.legacyFermentrackPushEvery = 30;
+            failCount++;
+        }
+    } else {
+        Log.info("Received FT2 settings.\r\n");
+        update_ft2 = true;
+        // The only settings that could trigger this relate to how to reach Fermentrack 2
+        // In every case, trigger a re-registration
+        config.fermentrackDeviceID[0] = '\0';
+        fermentrackRegistrationError = fermentrackRegErrorT::NOT_ATTEMPTED_REGISTRATION;
+
+        if(!updateJsonSetting(json, FermentrackSettings::fermentrackHostname, config.fermentrackHostname, sizeof(config.fermentrackHostname)))
+            failCount++;
+        if(!updateJsonSetting(json, FermentrackSettings::fermentrackPort, config.fermentrackPort))
+            failCount++;
+        if(config.fermentrackPort < 10 || config.fermentrackPort > 65535) {
+            Log.warning(F("Settings update error, [fermentrackPort]:(%d) not valid.\r\n"), config.fermentrackPort);
+            config.fermentrackPort = 80;
+            failCount++;
+        }
+        if(!updateJsonSetting(json, FermentrackSettings::fermentrackUsername, config.fermentrackUsername, sizeof(config.fermentrackUsername)))
+            failCount++;
+        // DeviceID and API Key are set when registering with Fermentrack 2 and cannot be edited by the user
     }
 
 
@@ -228,14 +258,16 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Fermentrack target configuration.\r\n"));
-    } else if (saveSettings) {
+    } else {
         if (!config.save()) {
             Log.error(F("Error: Unable to save Fermentrack target configuration data.\r\n"));
             failCount++;
         } else {
             // Now that we've saved, trigger the send
-            if(strlen(config.legacyFermentrackURL) > 11)  // Trigger a send to Legacy Fermentrack/BPR in 5 seconds using the updated URL
-                sendNowTicker.once(5, [](){data_sender.send_legacy_fermentrack = true;});
+            if(update_legacy)  // Trigger a send to Legacy Fermentrack/BPR in 3 seconds using the updated URL
+                sendNowTicker.once(3, [](){data_sender.send_legacy_fermentrack = true;});
+            if(update_ft2)  // Trigger a send to Fermentrack 2 in 5 seconds using the updated URL
+                sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
         }
     }
 

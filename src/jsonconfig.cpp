@@ -11,6 +11,7 @@
 
 #include "jsonconfig.h"
 #include "JsonKeys.h"
+#include "targets/fermentrack_2.h"  // For fermentrackRegistrationError
 
 
 #define MAX_FILENAME_LENGTH  32
@@ -168,6 +169,9 @@ JsonDocument Config::to_json_external() {
     obj["have_led"] = false;
 #endif
 
+    // Fermentrack 2 registration status
+    obj[Fermentrack2SettingsKeys::fermentrackRegistrationError] = (uint8_t) fermentrackRegistrationError;
+
     return obj;
 }
 
@@ -197,8 +201,17 @@ JsonDocument Config::to_json() {
         obj[tilt_color_names[x]]["grainfatherURL"] = grainfatherURL[x].link;
     }
 
+    // Legacy Fermentrack Settings
     obj[FermentrackSettings::legacyFermentrackURL] = legacyFermentrackURL;
     obj[FermentrackSettings::legacyFermentrackPushEvery] = legacyFermentrackPushEvery;
+
+    // Fermentrack 2 Settings
+    obj[FermentrackSettings::fermentrackHostname] = fermentrackHostname;
+    obj[FermentrackSettings::fermentrackPort] = fermentrackPort;
+    obj[FermentrackSettings::fermentrackUsername] = fermentrackUsername;
+    obj[FermentrackSettings::fermentrackDeviceID] = fermentrackDeviceID;
+    obj[FermentrackSettings::fermentrackAPIKey] = fermentrackAPIKey;
+
     obj["brewstatusURL"] = brewstatusURL;
     obj["brewstatusPushEvery"] = brewstatusPushEvery;
     obj["taplistioURL"] = taplistioURL;
@@ -223,7 +236,7 @@ void Config::load_from_json(JsonDocument obj) {
     //
     if (!obj["mdnsID"].isNull()) {
         const char *md = obj["mdnsID"];
-        strlcpy(mdnsID, md, 32);
+        strlcpy(mdnsID, md, 32);  // TODO - Change all of these to use 'sizeof' instead of hard-coded lengths
     }
 
 //    if (!obj["guid"].isNull()) {
@@ -320,6 +333,36 @@ void Config::load_from_json(JsonDocument obj) {
             legacyFermentrackPushEvery = 60;
         }
     }
+
+    // Fermentrack 2 Settings
+    if (!obj[FermentrackSettings::fermentrackHostname].isNull()) {
+        const char *tu = obj[FermentrackSettings::fermentrackHostname];
+        strlcpy(fermentrackHostname, tu, sizeof(fermentrackHostname));
+    }
+
+    if (!obj[FermentrackSettings::fermentrackPort].isNull()) {
+        fermentrackPort = int(obj[FermentrackSettings::fermentrackPort]);
+
+        if (fermentrackPort < 0 || fermentrackPort > 65535) {
+            fermentrackPort = 80;
+        }
+    }
+
+    if (!obj[FermentrackSettings::fermentrackUsername].isNull()) {
+        const char *tu = obj[FermentrackSettings::fermentrackUsername];
+        strlcpy(fermentrackUsername, tu, sizeof(fermentrackUsername));
+    }
+
+    if (!obj[FermentrackSettings::fermentrackDeviceID].isNull()) {
+        const char *tu = obj[FermentrackSettings::fermentrackDeviceID];
+        strlcpy(fermentrackDeviceID, tu, sizeof(fermentrackDeviceID));
+    }
+
+    if (!obj[FermentrackSettings::fermentrackAPIKey].isNull()) {
+        const char *tu = obj[FermentrackSettings::fermentrackAPIKey];
+        strlcpy(fermentrackAPIKey, tu, sizeof(fermentrackAPIKey));
+    }
+
 
 
     // BrewStatus Settings

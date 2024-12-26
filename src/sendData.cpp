@@ -31,7 +31,8 @@ void dataSendHandler::init()
     init_mqtt();
 
     // Set up timers
-    legacyFermentrackTicker.once(10, [](){data_sender.send_legacy_fermentrack = true;});      // Schedule first send to Legacy Fermentrack
+    legacyFermentrackTicker.once(12, [](){data_sender.send_legacy_fermentrack = true;});      // Schedule first send to Legacy Fermentrack
+    fermentrackTicker.once(10, [](){data_sender.send_fermentrack = true;});      // Schedule first send to Fermentrack
     mqttTicker.once(20, [](){data_sender.send_mqtt = true;});                    // Schedule first send to MQTT
     brewStatusTicker.once(30, [](){data_sender.send_brewStatus = true;});        // Schedule first send to Brew Status
     brewfatherTicker.once(40, [](){data_sender.send_brewfather = true;});        // Schedule first send to Brewfather
@@ -46,6 +47,7 @@ void dataSendHandler::process()
 {
     if (WiFi.status() == WL_CONNECTED) {
         send_to_legacy_fermentrack();
+        send_to_fermentrack();
         send_to_bf_and_bf();
         send_to_grainfather();
         send_to_brewstatus();

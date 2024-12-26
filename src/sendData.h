@@ -11,6 +11,8 @@
 #define GRAINFATHER_DELAY (15 * 60)    // 15 minute delay between pushes to Grainfather
 #define USER_TARGET_DELAY (10 * 60)    // 10 minute delay between pushes to user specified send target
 
+#define FERMENTRACK_DELAY (5 * 60)    // 5 minute delay between pushes to Fermentrack
+
 #define BREWFATHER_MIN_KEY_LENGTH 5
 #define BREWERS_FRIEND_MIN_KEY_LENGTH 12
 #define BF_SIZE 192
@@ -39,6 +41,7 @@ public:
 
     bool send_to_google();
     bool send_to_legacy_fermentrack();
+    bool send_to_fermentrack();
     bool send_to_brewstatus();
     bool send_to_taplistio();
     bool send_to_mqtt();
@@ -49,6 +52,7 @@ public:
 
     // Send Timers
     Ticker legacyFermentrackTicker;
+    Ticker fermentrackTicker;
     Ticker brewersFriendTicker;
     Ticker brewfatherTicker;
     Ticker userTargetTicker;
@@ -60,6 +64,7 @@ public:
 
     // Send Semaphores
     bool send_legacy_fermentrack = false;
+    bool send_fermentrack = false;
     bool send_brewersFriend = false;
     bool send_brewfather = false;
     bool send_userTarget = false;

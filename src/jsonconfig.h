@@ -65,8 +65,18 @@ public:
     GsheetsConfig gsheets_config[TILT_COLORS];
     GrainfatherURL grainfatherURL[TILT_COLORS];
 
+    // Legacy Fermentrack Settings
     char legacyFermentrackURL[256] = "";
     uint16_t legacyFermentrackPushEvery = 30; 
+
+    // Fermentrack 2 Settings
+    char fermentrackHostname[128] = "";  // Hostname (or IP address) of the upstream server
+    uint16_t fermentrackPort = 80;       // Port of the upstream server (defaults to 80)
+    char fermentrackUsername[128] = "";  // Username for the upstream server. Deleted after registration.
+    char fermentrackDeviceID[40] = "";   // UUID of this device, as assigned by upstream server
+    char fermentrackAPIKey[40] = "";     // API key (uuid4 format) for the brewhouse this device is assigned to, as assigned by upstream server 
+
+
     char brewstatusURL[256] = "";
     uint16_t brewstatusPushEvery = 30;
     char taplistioURL[256] = "";
