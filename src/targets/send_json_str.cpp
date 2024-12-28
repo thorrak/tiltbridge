@@ -4,21 +4,23 @@
 #include "send_json_str.h"
 #include "version.h"
 
-
-constexpr const char* httpMethodToString(httpMethod method) {
-    switch (method) {
-        case httpMethod::HTTP_PUT:
-            return "PUT";
-        case httpMethod::HTTP_POST:
-            return "POST";
-        case httpMethod::HTTP_PATCH:
-            return "PATCH";
-        case httpMethod::HTTP_DELETE:
-            return "DELETE";
-        case httpMethod::HTTP_GET:
-        default:
-            return "GET";
-    }
+// I would love this to be constexpr, but that fails to compile for some reason on recent builds for the S3.
+// Thanks, Espressif.
+#ifndef ESP32S3
+constexpr 
+#endif
+const char* httpMethodToString(httpMethod method) {
+    if (method == httpMethod::HTTP_PUT)
+        return "PUT";
+    else if (method == httpMethod::HTTP_POST)
+        return "POST";
+    else if (method == httpMethod::HTTP_PATCH)
+        return "PATCH";
+    else if (method == httpMethod::HTTP_DELETE)
+        return "DELETE";
+    else if (method == httpMethod::HTTP_GET)
+        return "GET";
+    return "GET";
 }
 
 void get_useragent(char *ua, size_t size) {
