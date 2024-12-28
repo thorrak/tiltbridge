@@ -719,14 +719,13 @@ void httpServer::setPutPages() {
 }
 
 void httpServer::setJsonPages() {
-    // TODO - Change these to /api/ endpoints
     // Tilt JSON
-    asyncWebServer.on("/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    asyncWebServer.on("/api/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         http_server.genericServeJson(request, http_json);
     });
 
     // Settings JSON
-    asyncWebServer.on("/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    asyncWebServer.on("/api/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
         http_server.genericServeJson(request, settings_json);
     });
 
