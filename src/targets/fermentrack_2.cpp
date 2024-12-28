@@ -26,16 +26,16 @@
 #include "targets/fermentrack_2.h"
 #include "getGuid.h"
 
-#ifdef HAS_BLUETOOTH
-#include "wireless/BTScanner.h"
-#endif
-
+#include "tilt/tiltScanner.h"
 
 
 
 fermentrackRegErrorT fermentrackRegistrationError;  //<! Error code from last upstream registration attempt
+fermentrackStatusErrorT fermentrackStatusError;  //<! Error code from last status attempt
 
 bool register_with_fermentrack_2();
+bool send_status_to_fermentrack_2();
+
 
 bool ft2_get_url(char *url, size_t size, const char *path) {
     if(strlen(config.fermentrackHostname) <= 3) {
@@ -97,6 +97,7 @@ bool dataSendHandler::send_to_fermentrack()
 
         // Fermentrack uses a number of functions to process each step of registration/data sending
         register_with_fermentrack_2();
+        send_status_to_fermentrack_2();
 
 
         // Set up for the next send
@@ -164,45 +165,116 @@ bool register_with_fermentrack_2() {
         serializeJson(doc, payload);
     }
 
-    send_json_str(payload, url, response, httpMethod::HTTP_PUT);
+    sendResult result = send_json_str(payload, url, response, httpMethod::HTTP_PUT);
 
+    if(result != sendResult::success) {
+        fermentrackRegistrationError = fermentrackRegErrorT::REGISTRATION_ENDPOINT_ERR;
+        Log.error("Error registering with Fermentrack 2\r\n");
+        return false;
+    }
+
+    JsonDocument doc;
+    deserializeJson(doc, response);
+    Log.verbose("Fermentrack 2 registration response: %s\r\n", response.c_str());
+
+
+    // response = {'success': True, 
+    // 'message': 'Device registered', 
+    // 'msg_code': 0, 
+    // 'device_id': device.id, 
+    // 'created': created}
+    if(doc["success"].is<bool>()) {
+        bool success = doc["success"].as<bool>();
+
+        if(success) {
+            // We successfully set the device ID & API key
+            fermentrackRegistrationError = fermentrackRegErrorT::NO_ERROR;
+            strlcpy(config.fermentrackDeviceID, doc[Fermentrack2SettingsKeys::deviceID].as<const char *>(), sizeof(config.fermentrackDeviceID));
+            strlcpy(config.fermentrackAPIKey, doc[Fermentrack2SettingsKeys::apiKey].as<const char *>(), sizeof(config.fermentrackAPIKey));
+            config.fermentrackUsername[0] = '\0';  // Clear the username since we now have the apiKey
+
+            // Store the updated settings
+            config.save();
+
+            Log.notice("Fermentrack 2 registration successful. Device ID: %s\r\n", config.fermentrackDeviceID);
+
+        } else {
+            // We didn't set the device ID (we were unable to register). Set an error code.
+            fermentrackRegistrationError = (fermentrackRegErrorT) doc["msg_code"].as<uint8_t>();
+            Log.warning("Fermentrack 2 registration failed with error code %d\r\n", fermentrackRegistrationError);
+        }
+    } else {
+        // Invalid response
+        fermentrackRegistrationError = fermentrackRegErrorT::REGISTRATION_ENDPOINT_ERR;
+    } 
+
+    return true;
+}
+
+
+
+bool send_status_to_fermentrack_2() {
+    char url[256] = "";
+    String payload;
+    String response;
+
+    // If we aren't registered, we can't send data
+    if(!ft2_is_registered())
+        return false;
+    if(!ft2_get_url(url, sizeof(url), FermentrackAPIEndpoints::status))
+        return false;   // Skip send if the URL is not set
+
+    Log.verbose("Sending status to Fermentrack 2 at %s\r\n", url);
+
+    // Construct the JSON payload
     {
         JsonDocument doc;
-        deserializeJson(doc, response);
-        Log.verbose("Fermentrack 2 registration response: %s\r\n", response.c_str());
+        char tilt_data[TILT_ALL_DATA_SIZE + 128];
 
+        // Load the Tilt data from the scanner
+        JsonDocument tilt_doc;
+        tilt_scanner.tilt_to_json(tilt_doc, true);
 
-        // response = {'success': True, 
-        // 'message': 'Device registered', 
-        // 'msg_code': 0, 
-        // 'device_id': device.id, 
-        // 'created': created}
-        if(doc["success"].is<bool>()) {
-            bool success = doc["success"].as<bool>();
+        // The API key and Device ID identify this device
+        doc[Fermentrack2SettingsKeys::apiKey] = config.fermentrackAPIKey;
+        doc[Fermentrack2SettingsKeys::deviceID] = config.fermentrackDeviceID;
+        doc["tilts"] = tilt_doc;
+        doc[Fermentrack2SettingsKeys::version] = version();
 
-            if(success) {
-                // We successfully set the device ID & API key
-                fermentrackRegistrationError = fermentrackRegErrorT::NO_ERROR;
-                strlcpy(config.fermentrackDeviceID, doc[Fermentrack2SettingsKeys::deviceID].as<const char *>(), sizeof(config.fermentrackDeviceID));
-                strlcpy(config.fermentrackAPIKey, doc[Fermentrack2SettingsKeys::apiKey].as<const char *>(), sizeof(config.fermentrackAPIKey));
-                config.fermentrackUsername[0] = '\0';  // Clear the username since we now have the apiKey
-
-                // Store the updated settings
-                config.save();
-
-                Log.notice("Fermentrack 2 registration successful. Device ID: %s\r\n", config.fermentrackDeviceID);
-
-            } else {
-                // We didn't set the device ID (we were unable to register). Set an error code.
-                fermentrackRegistrationError = (fermentrackRegErrorT) doc["msg_code"].as<uint8_t>();
-                Log.warning("Fermentrack 2 registration failed with error code %d\r\n", fermentrackRegistrationError);
-            }
-	    } else {
-            // Invalid response
-            fermentrackRegistrationError = fermentrackRegErrorT::REGISTRATION_ENDPOINT_ERR;
-        } 
-
+        // Serialize the JSON document
+        serializeJson(doc, payload);
     }
+
+    Log.info("Sending payload to Fermentrack 2: %s\r\n", payload.c_str());
+
+    sendResult result = send_json_str(payload, url, response, httpMethod::HTTP_PUT);
+
+    // If we failed to send the data, set an error code
+    if(result != sendResult::success) {
+        fermentrackStatusError = fermentrackStatusErrorT::STATUS_ENDPOINT_ERR;
+        Log.error("Error sending status to Fermentrack 2\r\n");
+        return false;
+    }
+
+    JsonDocument doc;
+    deserializeJson(doc, response);
+    Log.verbose("Fermentrack 2 status response: %s\r\n", response.c_str());
+
+    if(doc["success"].is<bool>()) {
+        bool success = doc["success"].as<bool>();
+
+        if(success) {
+            // We successfully sent the device status
+            Log.verbose("Fermentrack 2 registration successful. Device ID: %s\r\n", config.fermentrackDeviceID);
+        } else {
+            // We didn't succeed (something happened on Fermentrack's end)
+            fermentrackRegistrationError = (fermentrackRegErrorT) doc["msg_code"].as<uint8_t>();
+            Log.warning("Fermentrack 2 registration failed with error code %d\r\n", fermentrackRegistrationError);
+        }
+    } else {
+        // Invalid response
+        fermentrackStatusError = fermentrackStatusErrorT::STATUS_ENDPOINT_ERR;
+    } 
 
     return true;
 }
