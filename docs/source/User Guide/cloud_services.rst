@@ -6,28 +6,51 @@ Cloud Service Setup
 Once your Tiltbridge has completed the :doc:`initial_setup` process it is ready to begin scanning for `Tilt Hydrometers`_ and
 relay their gravity readings to the cloud. At the moment, TiltBridge supports a number of cloud service targets for this data:
 
+
+Endpoints
+---------
+
+
+Officially Supported Endpoints
+==============================
+
+Officially supported endpoints are officially tested and supported by the author of TiltBridge. These endpoints are known to
+work with the latest version of TiltBridge as of the last major release.
+
 * `Fermentrack`_
 * `BrewPi Remix`_
+* Fermentrack 2 / Fermentrack.net
 * `Brewers Friend`_
 * Google Sheets
 * `Brewfather`_
+* `Taplist.io`_
+
+
+Community Supported Endpoints
+=============================
+
+Community supported endpoints are endpoints that have been added by contributors to the project. These endpoints are not
+officially tested, documented, or supported by the author of TiltBridge, but have not been reported as broken by the 
+community.
+
 * `Grainfather`_
 * `BrewStatus`_
 * `Taplist.io`_
-* TiltBridge Cloud
 * Home Assistant/MQTT
 
+.. note:: If you use one of these endpoints, please let me know if the documentation here is incorrect, or if you encounter any issues. Although I cannot guarantee support for these, I will do my best to help you get them working.
 
-Setting up TiltBridge for Fermentrack
--------------------------------------
+
+Setting up TiltBridge for Legacy Fermentrack
+--------------------------------------------
 
 The TiltBridge was designed by the primary author of `Fermentrack`_ and is designed with Fermentrack support in mind.
 In most cases, your TiltBridge can be linked to a single Fermentrack installation from directly within the Fermentrack
 app as part of the "Add Gravity Sensor" workflow. The configuration can also be re-sent to TiltBridge by clicking the
 "Update TiltBridge Automatically" button from the "Manage Sensor" page for the Tilt Hydrometer linked to the TiltBridge.
 
-Adding the TiltBridge to Fermentrack
-************************************
+Adding the TiltBridge to Legacy Fermentrack
+*******************************************
 
 #. Connect to your Fermentrack installation and log in (if necessary)
 #. From the Device menu choose ``Add Gravity Sensor``
@@ -151,7 +174,9 @@ Setting up TiltBridge for Google Sheets
 ---------------------------------------
 
 Similar to TiltPi or the Tilt Hydrometer app, TiltBridge supports logging to Google Sheets. Setting up Google Sheets is
-more involved than either `Fermentrack`_ or `Brewers Friend`_, but provides a free, easily accessible cloud data service.
+more involved than other services, but provides a free, easily accessible cloud data service.
+
+.. note:: If you are looking for an easier way to log TiltBridge data to the cloud, I recommend checking out `Fermentrack.net`_.
 
 
 
@@ -191,13 +216,12 @@ Once you have prepared Google Sheets to receive data pushed by the TiltBridge, y
 settings on the TiltBridge itself so that it knows where to send the data.
 
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
-#. Click the ``Settings`` link at the top of the dashboard
-#. Choose the ``Target Settings`` tab and then select ``Google Sheets``
+#. Click ``Configure`` from the menu on the left and look for the ``Time Zone Offset`` option
+#. Ensure the correct time zone offset is entered, and click ``Update`` if needed.
+#. Click ``Cloud Targets`` from the menu on the left and choose ``Google Sheets``
 #. In the ``Google Script URL`` field paste the Google Script URL you made note of during the preparation step above
 #. Enter your Gmail (or Google Apps) email address in the ``Google Script Email`` field
 #. Click ``Update``
-#. Click the ``General Settings`` tab
-#. Ensure the correct time zone offset is entered, and click ``Update`` if needed.
 
 Your TiltBridge should now be configured to send data to Google Sheets. To begin logging a Tilt you will need to enter a
 sheet name for the data to be logged to.
@@ -211,9 +235,8 @@ Sheets. To enable logging, you will need to specify a sheet name in TiltBridge. 
 Sheets it will be created. If the sheet does exist, new data points will be appended to it.
 
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
-#. Click the ``Settings`` link at the top of the dashboard
-#. Choose the ``Target Settings`` tab and then select ``Google Sheets``
-#. Type a name for the Google Sheet to which you want to log data points in the appropriate ``Tilt Sheet Name`` field and click ``Update``
+#. Click ``Cloud Targets`` from the menu on the left and choose ``Google Sheets``
+#. Type a name for the Google Sheet to which you want to log data points in the appropriate Tilt color's ``Tilt Sheet Name`` field and click ``Update``
 
 Once this is complete, your Tilt will begin logging data points to the sheet name you specified. If the sheet does not
 exist, it will automatically be created.
@@ -238,9 +261,8 @@ TiltBridge will need your Brewfather stream ID in order to post to your Brewfath
 #. Under "Power-ups" in the lower left corner, click the "switch" next to "Custom Stream" if it is not already toggled
 #. Copy just the string of letters/numbers that appears after the start of the URL (http://log.brewfather.net/stream?id=) to your clipboard
 #. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
-#. Click the ``Settings`` link at the top of the dashboard
-#. Choose the ``Target Settings`` tab and then select ``Brewfather``
-#. In the ``Brewfather Stream key`` field paste the string you copied earlier and click ``Update``
+#. Click ``Cloud Targets`` from the menu on the left and choose ``Brewfather``
+#. In the ``Stream Key`` field paste the string you copied earlier and click ``Update``
 
 .. note:: The first data "push" will be attempted within 10 seconds of the key first being entered, but due to rate limits it may take up to 15 minutes for data to first appear in Brewfather.
 
@@ -256,6 +278,28 @@ Following the first data transmission, you can easily check in Brewfather to see
 #. All Tilt devices should appear in the list as ``Custom Stream`` devices and will be identified by their color
 
 .. note:: Per Brewfather's guidelines, data is only pushed once every 15 minutes.
+
+
+Setting up TiltBridge for Grainfather
+-------------------------------------
+
+TiltBridge is designed to allow for data to be pushed to `Grainfather`_. This functionality was helpfully added by
+contributors to the project on `GitHub`_ and - while not officially supported by the TiltBridge author -- has been
+reported to work as of the latest release.
+
+
+#. Go to `Grainfather`_ and log in to your account
+#. Click the ``Equipment`` option in the menu on the left
+#. Under the ``Fermentation Tracking`` section, click the ``Add Fermentation Device`` button
+#. Choose the color of the Tilt you want to track and click ``Save``
+#. On the next screen - ``Using your Fermentation Device`` -- click the ``View Setup Instructions`` button
+#. Look for the URL highlighted in the setup instructions, and copy it
+#. On a device connected to the same network as the TiltBridge, navigate to http://tiltbridge.local/ (replace tiltbridge in this URL with the mDNS name you set during initial setup)
+#. Click ``Cloud Targets`` from the menu on the left and choose ``Grainfather``
+#. Paste the URL into the appropriate Tilt's input field, and click ``Update`` 
+
+
+.. note:: Per Grainfather's guidelines, data is only pushed once every 15 minutes.
 
 
 
@@ -280,19 +324,6 @@ TiltBridge has built-in support for `Taplist.io`_. To use, follow these steps:
 #. Create a new Tilt integration and copy the webhook URL.
 #. Paste the URL into TiltBridge settings.
 
-
-
-Setting up TiltBridge for TiltBridge Cloud
-------------------------------------------
-
-A TiltBridge-specific app for phones has been released to allow users to view the gravity of their brews remotely. This app 
-and the cloud behind it are specific to the TiltBridge and are designed to target the device. To begin using the TiltBridge
-Cloud, download the relevant phone app to begin setup:
-
-* Android support: `TiltBridge Cloud Android App`_
-* iPhone App: (Coming Soon)
-
-.. todo:: Document TiltBridge Cloud setup
 
 
 Setting up TiltBridge for Home Assistant/MQTT
