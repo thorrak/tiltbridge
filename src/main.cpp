@@ -59,6 +59,7 @@ void setup() {
 
     Log.verbose(F("Initializing scanner.\r\n"));
     tilt_scanner.init();                        // Initialize the BLE scanner
+    delay(3000);
     tilt_scanner.wait_until_scan_complete();    // Wait until the initial scan completes
 
     data_sender.init();     // Initialize the data sender
