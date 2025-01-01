@@ -37,10 +37,12 @@ bool httpServer::handleFileRead(AsyncWebServerRequest *request, String path) {
     String contentType = getContentType(path);
     String pathWithGz = path + ".gz";
     if (FILESYSTEM.exists(pathWithGz) || FILESYSTEM.exists(path)) {
+        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, path, contentType);
         if (FILESYSTEM.exists(pathWithGz)) {
             path += ".gz";
+            response->addHeader("Content-Encoding", "gzip");
         }
-        request->send(SPIFFS, path, contentType);
+        request->send(response);
         return true;
     }
     return false;
