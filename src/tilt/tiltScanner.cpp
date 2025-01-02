@@ -51,8 +51,7 @@ void tiltScanner::init()
     shouldRun = true;
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan(); // Create new scan
-    pBLEScan->setScanCallbacks(callbacks, true);
-    pBLEScan->setDuplicateFilter(0);
+    pBLEScan->setScanCallbacks(callbacks);
     pBLEScan->setMaxResults(0);
     // Active scan actively queries devices for more info following detection.
     pBLEScan->setActiveScan(false);
@@ -74,13 +73,10 @@ bool tiltScanner::scan()
     if (shouldRun) {
         if (!pBLEScan->isScanning()) { // Check if scan already in progress
             //Try to start a new scan
-            // yield();
-            delay(250);
-            // pBLEScan->clearResults();
+            pBLEScan->clearResults();
             if (pBLEScan->start(BLE_SCAN_TIME, false, true)) {
                 retval = true; //Scan successfully started.
-            } 
-            else {
+            } else {
                 Log.verbose(F("Scan failed to start.\r\n"));
             }
         }
@@ -90,11 +86,11 @@ bool tiltScanner::scan()
 
 bool tiltScanner::wait_until_scan_complete()
 {
-    // if (!pBLEScan->isScanning())
-    //     return false; // Return false if there wasn't a scan active when this was called
+    if (!pBLEScan->isScanning())
+        return false; // Return false if there wasn't a scan active when this was called
 
-    // while (pBLEScan->isScanning())
-    //     delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
+    while (pBLEScan->isScanning())
+        delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
 
     return true;
 }
