@@ -73,7 +73,7 @@ void setup() {
 #endif
 
     // Set a reboot timer for 24 hours
-    reboot24.once(86400, reboot);
+    // reboot24.once(86400, reboot);
 
 }
 
