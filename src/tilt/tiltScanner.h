@@ -11,9 +11,7 @@
 #include "tiltHydrometer.h"
 
 
-// Due to a crash that I've seen when restarting scans, I'm going to switch to using a long-lived
-// scan rather than restarting every few seconds. 
-#define BLE_SCAN_TIME 12 * 60 * 60 * 1000  // Milliseconds to scan
+#define BLE_SCAN_TIME 3 * 1000  // Milliseconds to scan
 
 class ScanCallbacks: public NimBLEScanCallbacks
 {
