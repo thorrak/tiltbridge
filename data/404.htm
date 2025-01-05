@@ -1,114 +1,73 @@
 <!doctype html>
-<html lang="en" class="h-100">
+<html class="h-full">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <meta name="description" content="TiltBridge is designed to allow your Tilt Hydrometer to connect directly to WiFi.">
+    <meta name="description" content="TiltBridge is designed to allow your Tilt Hydrometer's readings to be sent via WiFi.">
     <meta name="author" content="John Beeler">
 
     <title>TiltBridge</title>
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <meta name="apple-mobile-web-app-title" content="TiltBridge">
-    <meta name="application-name" content="TiltBridge">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
-    <meta name="theme-color" content="#ffffff">
-
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/sandstone/bootstrap.min.css"
-        integrity="sha384-zEpdAL7W11eTKeoBJK1g79kgl9qjP7g84KfK3AZsuonx38n8ad+f5ZgXtoSDxPOh" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
-        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="/common.css">
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
 
 </head>
 
-<body class="d-flex flex-column h-100">
+<body class="h-full">
+    <div class="min-h-full pt-16 pb-12 flex flex-col bg-white">
+        <main class="flex-grow flex flex-col justify-center max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex-shrink-0 flex justify-center">
+                <a href="/" class="inline-flex">
+                    <span class="sr-only">TiltBridge</span>
 
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                    <svg class="h-24 w-auto" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 105.81 77.09">
+                        <defs>
+                            <style>
+                                .cls-1 {
+                                    fill: #0f123d;
+                                }
+                            </style>
+                        </defs>
+                        <g>
+                            <g>
+                                <path class="cls-1" d="M31.77,13.6A29.88,29.88,0,0,1,74,13.6a2.42,2.42,0,0,0,3.42-3.43,34.73,34.73,0,0,0-49.11,0,2.42,2.42,0,0,0,3.42,3.43Z"/>
+                                <path class="cls-1" d="M67.93,22.13A2.42,2.42,0,0,0,69.64,18a23.65,23.65,0,0,0-33.47,0,2.42,2.42,0,0,0,3.42,3.42,18.84,18.84,0,0,1,26.63,0A2.42,2.42,0,0,0,67.93,22.13Z"/>
+                                <path class="cls-1" d="M43.91,25.73a2.42,2.42,0,0,0,3.42,3.43,7.88,7.88,0,0,1,11.15,0,2.43,2.43,0,0,0,3.43-3.43A12.75,12.75,0,0,0,43.91,25.73Z"/>
+                            </g>
+                            <path class="cls-1" d="M103.39,61.76H91.7C80,61.76,70.34,57.24,63,48.32a45.48,45.48,0,0,1-7.38-12.7,3.85,3.85,0,0,1-5.36,0A45.31,45.31,0,0,1,43,48.19,35.71,35.71,0,0,1,14.12,61.76H2.42a2.42,2.42,0,0,0,0,4.84h101a2.42,2.42,0,0,0,0-4.84Zm-52.9,0H34.08A42.36,42.36,0,0,0,46.7,51.26,52,52,0,0,0,50.49,46Zm4.84,0V46a50.35,50.35,0,0,0,3.78,5.3,42.49,42.49,0,0,0,12.62,10.5Z"/>
+                            <circle class="cls-1" cx="52.91" cy="32.86" r="2.81"/>
+                            <g>
+                                <path class="cls-1" d="M22.39,77.09A2.44,2.44,0,0,1,20,74.65V64.52a2.45,2.45,0,0,1,4.89,0V74.65A2.45,2.45,0,0,1,22.39,77.09Z"/>
+                                <path class="cls-1" d="M83.42,77.09A2.45,2.45,0,0,1,81,74.65V64.52a2.45,2.45,0,0,1,4.89,0V74.65A2.45,2.45,0,0,1,83.42,77.09Z"/>
+                            </g>
+                        </g>
+                    </svg>
 
-            <a class="navbar-brand" href="/">
-                <img src="/logo.png" width:34px;height:25px;>TiltBridge
-            </a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
-                aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarColor01">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">Home <span class="sr-only">(current)</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/settings/">Settings</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/calibration/">Calibration</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/help/">Help</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/about/">About</a>
-                    </li>
-                </ul>
+                </a>
             </div>
-        </nav>
-    </header>
-
-    <main role="main" class="flex-shrink-0">
-
-        <div class="container" id="404app"><!-- Container -->
-
-            <div class="card border-dark mb-3"><!-- TiltBridge 404 Card -->
-
-                <div class="card-header bg-light border-primary">
-                    <h5 class="card-title">404: Not Found</h5>
+            <div class="py-16">
+                <div class="text-center">
+                    <p class="text-sm font-semibold text-indigo-600 uppercase tracking-wide">404 error</p>
+                    <h1 class="mt-2 text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">Page not found.</h1>
+                    <p class="mt-2 text-base text-gray-500">Sorry, we couldn’t find the page you’re looking for.</p>
+                    <div class="mt-6">
+                        <a href="/" class="text-base font-medium text-indigo-600 hover:text-indigo-500">Go back home<span aria-hidden="true"> &rarr;</span></a>
+                    </div>
                 </div>
-
-                <div class="card-body">
-
-                    <p>
-                        Well that's embarrassing, I can't find that page.
-                    </p>
-
-                </div>
-            </div> <!-- TiltBridge 404 Card -->
-
-        </div> <!-- Container -->
-
-    </main>
-
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">Copyright © 2018-2021, John Beeler</span>
-        </div>
-    </footer>
-
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous">
-    </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
-    </script>
-
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
-    </script>
-
+            </div>
+        </main>
+        <footer class="flex-shrink-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex justify-center space-x-4">
+<!--                <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-600">Contact Support</a>-->
+<!--                <span class="inline-block border-l border-gray-300" aria-hidden="true"></span>-->
+<!--                <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-600">Status</a>-->
+<!--                <span class="inline-block border-l border-gray-300" aria-hidden="true"></span>-->
+<!--                <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-600">Twitter</a>-->
+            </nav>
+        </footer>
+    </div>
 </body>
 
 </html>
