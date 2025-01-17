@@ -102,3 +102,5 @@ managed_components/
 cmake-build-*
 
 .DS_Store
+
+dependencies.lock
