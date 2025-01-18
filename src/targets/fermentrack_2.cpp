@@ -233,7 +233,7 @@ bool send_status_to_fermentrack_2() {
 
         // Load the Tilt data from the scanner
         JsonDocument tilt_doc;
-        tilt_scanner.tilt_to_json(tilt_doc, true);
+        tilt_doc = tilt_scanner.tilt_to_json(true);
 
         // The API key and Device ID identify this device
         doc[Fermentrack2SettingsKeys::apiKey] = config.fermentrackAPIKey;

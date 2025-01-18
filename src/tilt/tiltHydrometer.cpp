@@ -200,7 +200,7 @@ void tiltHydrometer::converted_gravity(char* output, size_t output_size, bool us
     snprintf(output, output_size, "%.4f", converted_value);
 }
 
-void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
+JsonDocument tiltHydrometer::to_json(bool use_raw_gravity)
 {
     JsonDocument j;
     char gravity_str[10];
@@ -224,8 +224,7 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["gsheets_name"] = config.gsheets_config[m_color].name;
     j["gsheets_link"] = config.gsheets_config[m_color].link;
 
-
-    serializeJson(j, json_string, TILT_DATA_SIZE);
+    return j;
 }
 
 void tiltHydrometer::converted_temp(char* output, size_t output_size, bool fahrenheit_only)
