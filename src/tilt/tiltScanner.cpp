@@ -27,7 +27,7 @@ void ScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice)
 #ifdef BLE_PRINT_ALL_DEVICES
             Log.verbose(F("Advertised iBeacon Device: %s \r\n"), advertisedDevice->toString().c_str());
 #endif
-            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice->getManufacturerData(), advertisedDevice->getRSSI());
+            tilt_scanner.load_tilt_from_advert_hex(advertisedDevice);
         }
     }
 }
@@ -38,11 +38,7 @@ void ScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice)
 
 tiltScanner::tiltScanner()
 {
-    // Initialize by setting "m_scan_active" false
-    for (uint8_t i = 0; i < TILT_COLORS; i++)
-        m_tilt_devices[i] = new tiltHydrometer(i);
-
-    // Also initialize the callbacks
+    // Initialize the callbacks
     callbacks = new ScanCallbacks();
 }
 
@@ -95,9 +91,11 @@ bool tiltScanner::wait_until_scan_complete()
     return true;
 }
 
-uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_hex, const int8_t &current_rssi)
+uint8_t tiltScanner::load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* advertisedDevice)
 {
     uint8_t m_color;
+    const std::string advert_string_hex = advertisedDevice->getManufacturerData();
+    const int8_t current_rssi = advertisedDevice->getRSSI();
 
     // Check that this is an iBeacon packet
     if (advert_string_hex[0] != 0x4c || advert_string_hex[1] != 0x00 || advert_string_hex[2] != 0x02 || advert_string_hex[3] != 0x15)
@@ -119,24 +117,20 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_
         sprintf(hex_code, "%.2x", advert_string_hex[i]);
         //Indices 4 - 19 each generate two characters of the color array
         if ((i > 3) && (i < 20))
-        {
             strncat(m_color_arr, hex_code, 2);
-        }
+        
         //Indices 20-21 each generate two characters of the temperature array
         if (i == 20 || i == 21)
-        {
             strncat(temp_arr, hex_code, 2);
-        }
+        
         //Indices 22-23 each generate two characters of the sp_gravity array
         if (i == 22 || i == 23)
-        {
             strncat(grav_arr, hex_code, 2);
-        }
+        
         //Index 24 contains the tx_pwr (which is used by recent tilts to indicate battery age)
         if (i == 24)
-        {
             strncat(tx_pwr_arr, hex_code, 2);
-        }
+        
     }
 
     m_color = tiltHydrometer::uuid_to_color_no(m_color_arr);
@@ -147,27 +141,51 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const std::string &advert_string_
     uint16_t gravity = std::strtoul(grav_arr, nullptr, 16);
     uint8_t tx_pwr = std::strtoul(tx_pwr_arr, nullptr, 16);
 
-    m_tilt_devices[m_color]->set_values(temp, gravity, tx_pwr, current_rssi);
+    tiltHydrometer *th = get_or_create_tilt(advertisedDevice->getAddress());
+    th->set_values(m_color, temp, gravity, tx_pwr, current_rssi);
+    th->m_address = advertisedDevice->getAddress();
 
     return m_color;
 }
 
-tiltHydrometer *tiltScanner::tilt(uint8_t color)
-{
-    return m_tilt_devices[color];
-}
 
 
 void tiltScanner::tilt_to_json(JsonDocument &doc, bool use_raw_gravity)
 {
     char tilt_data[TILT_DATA_SIZE];
-    for(uint8_t i = 0; i < TILT_COLORS; i++)
-    {
-        if (m_tilt_devices[i]->is_loaded())
-        {
-            tilt_data[0] = {'\0'};
-            m_tilt_devices[i]->to_json_string(tilt_data, use_raw_gravity);
-            doc[tilt_color_names[i]] = serialized(tilt_data);
+
+    for(tiltHydrometer & th : m_tilt_devices) {
+        tilt_data[0] = {'\0'};
+        th.to_json_string(tilt_data, use_raw_gravity);
+        doc[tilt_color_names[th.m_color]] = serialized(tilt_data);
+    }
+}
+
+std::size_t tiltScanner::tilt_count() {
+    return m_tilt_devices.size();
+}
+
+
+tiltHydrometer* tiltScanner::get_tilt(const NimBLEAddress devAddress) {
+    for(tiltHydrometer & th : m_tilt_devices) {
+        if(th.m_address == devAddress) {
+            // Access the object through the iterator
+            return &th;
         }
     }
+    return nullptr;
+}
+
+
+tiltHydrometer* tiltScanner::get_or_create_tilt(const NimBLEAddress devAddress) {
+    tiltHydrometer *found_th = get_tilt(devAddress);
+
+    if(found_th)
+        return found_th;
+
+    // No matching device was found
+    tiltHydrometer newTilt(devAddress);
+    m_tilt_devices.push_front(newTilt);
+
+    return get_tilt(devAddress);  // We specifically want to access the object as referenced in the list
 }

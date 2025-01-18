@@ -414,10 +414,7 @@ uint8_t bridge_lcd::display_next() {
     if (on_screen == SCREEN_TILT) {
         if (tilt_pages_in_run == 0) {
             // This is the first time we're displaying a tilt screen in this round. Figure out how many pages we need
-            for (uint8_t i = 0; i < TILT_COLORS; i++) {
-                if (tilt_scanner.tilt(i)->is_loaded())
-                    active_tilts++;
-            }
+            active_tilts = tilt_scanner.tilt_count();
 
             // We'll always have at least one page, but we can have more
             tilt_pages_in_run = (active_tilts / TILTS_PER_PAGE) + 1;
@@ -473,16 +470,14 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     // Display the header row
     print_line("Color", "Temp", "Gravity", header_row, true);
 
-    // Loop through each of the tilt colors cached by tilt_scanner, searching for active tilts
-    for (uint8_t i = 0; i < TILT_COLORS; i++) {
-        if (tilt_scanner.tilt(i)->is_loaded()) {
+    // Loop through each of the tilts cached by tilt_scanner
+    for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
             active_tilts++;
             // This check has the added bonus of limiting the # of displayed tilts to TILTS_PER_PAGE
             if ((active_tilts / TILTS_PER_PAGE) == screen_number) {
-                print_tilt_to_line(tilt_scanner.tilt(i), displayed_tilts + first_tilt_row_offset);
+                print_tilt_to_line(&th, displayed_tilts + first_tilt_row_offset);
                 displayed_tilts++;
             }
-        }
     }
 
     // Toggle the actual display

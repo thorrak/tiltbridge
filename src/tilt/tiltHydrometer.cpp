@@ -29,10 +29,10 @@ const uint32_t tilt_text_colors[] = {
         0xFE19  // Pink
 };
 
-tiltHydrometer::tiltHydrometer(uint8_t color)
+tiltHydrometer::tiltHydrometer(NimBLEAddress address)
 {
     m_loaded = false;
-    m_color = color;
+    m_color = 0;  // Temporarily set to red
     temp = 0;
     gravity = 0;
     m_lastUpdate = 0;
@@ -42,6 +42,7 @@ tiltHydrometer::tiltHydrometer(uint8_t color)
     tilt_pro = false;
     receives_battery = false;
     m_has_sent_197 = false;
+    m_address = address;
 
 } // tiltHydrometer
 
@@ -74,13 +75,15 @@ uint8_t tiltHydrometer::uuid_to_color_no(const char* uuid)
 
 
 
-bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
+bool tiltHydrometer::set_values(uint8_t color, uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
     double d_temp;
     double d_grav;
     double smoothed_d_grav;
     uint32_t smoothed_i_grav_1000;
     bool is_pro = tilt_pro; //Temporarily store whether the model is Pro so we can reset smoothing filter if changed.
+
+    m_color = color; // Set the color of the Tilt
 
     if (i_temp == 999)
     { // If the temp is 999, the SG actually represents the firmware version of the Tilt.
@@ -222,6 +225,7 @@ void tiltHydrometer::to_json_string(char *json_string, bool use_raw_gravity)
     j["high_resolution"] = tilt_pro;
     j["fwVersion"] = version_code;
     j["rssi"] = rssi;
+    j["mac"] = m_address.toString();
 
     // These are loaded from config, but are included in the JSON for simplicity in generating the dashboard without
     // an additional API call
