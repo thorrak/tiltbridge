@@ -7,6 +7,7 @@
 
 #include <NimBLEAdvertisedDevice.h>
 #include <ArduinoJson.h>
+#include <list>
 
 #include "tiltHydrometer.h"
 
@@ -27,13 +28,16 @@ public:
     bool scan();
 
     bool wait_until_scan_complete();
-    uint8_t load_tilt_from_advert_hex(const std::string &advert_string_hex, const int8_t &current_rssi);
+    uint8_t load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* advertisedDevice);
     void tilt_to_json(JsonDocument &doc, bool use_raw_gravity);
 
-    tiltHydrometer *tilt(uint8_t color);
+    std::size_t tilt_count();
+    std::list<tiltHydrometer> m_tilt_devices;
+
+    tiltHydrometer* get_tilt(const NimBLEAddress devAddress);
+    tiltHydrometer* get_or_create_tilt(const NimBLEAddress devAddress);
 
 private:
-    tiltHydrometer *m_tilt_devices[TILT_COLORS]{};
     ScanCallbacks *callbacks;
     bool shouldRun;
 };

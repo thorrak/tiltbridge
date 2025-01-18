@@ -218,29 +218,25 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending
     // data for each of the active tilts
-    for (uint8_t i = 0; i < TILT_COLORS; i++)
-    {
-        if (tilt_scanner.tilt(i)->is_loaded())
-        {
-            char gravity[10];
-            char temp[6];
+    for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
+        char gravity[10];
+        char temp[6];
 
-            Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
-            j["name"] = tilt_color_names[i];
-            tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
-            j["temp"] = temp;
-            j["temp_unit"] = "F";
-            tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
-            j["gravity"] = gravity;
-            j["gravity_unit"] = "G";
-            j["device_source"] = "TiltBridge";
+        Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[th.m_color]);
+        j["name"] = tilt_color_names[th.m_color];
+        th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+        j["temp"] = temp;
+        j["temp_unit"] = "F";
+        th.converted_gravity(gravity, sizeof(gravity), false);
+        j["gravity"] = gravity;
+        j["gravity_unit"] = "G";
+        j["device_source"] = "TiltBridge";
 
-            char payload_string[BF_SIZE];
-            serializeJson(j, payload_string);
+        char payload_string[BF_SIZE];
+        serializeJson(j, payload_string);
 
-            if (!send_to_url(url, payload_string, content_json))
-                result = false; // There was an error with the previous send
-        }
+        if (!send_to_url(url, payload_string, content_json))
+            result = false; // There was an error with the previous send
     }
     return result;
 }
@@ -259,32 +255,27 @@ bool dataSendHandler::send_to_grainfather()
 
         // Loop through each of the tilt colors cached by tilt_scanner, sending
         // data for each of the active tilts
-        for (uint8_t i = 0; i < TILT_COLORS; i++)
-        {
-            if (strlen(config.grainfatherURL[i].link) == 0) {
+        for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
+
+            // If there's no Grainfather URL for this color, just continue
+            if (strlen(config.grainfatherURL[th.m_color].link) == 0)
                 continue;
-            }
 
-            if (tilt_scanner.tilt(i)->is_loaded())
-            {
-                char gravity[10];
-                char temp[6];
-                JsonDocument j;
-                Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[i]);
-                tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
-                j["Temp"] = temp;
-                j["Unit"] = "F";
-                tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
-                j["SG"] = gravity;
+            char gravity[10];
+            char temp[6];
+            JsonDocument j;
+            Log.verbose(F("Tilt loaded with color name: %s\r\n"), tilt_color_names[th.m_color]);
+            th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+            j["Temp"] = temp;
+            j["Unit"] = "F";
+            th.converted_gravity(gravity, sizeof(gravity), false);
+            j["SG"] = gravity;
 
-                char payload_string[GF_SIZE];
-                serializeJson(j, payload_string);
+            char payload_string[GF_SIZE];
+            serializeJson(j, payload_string);
 
-                if (!send_to_url(config.grainfatherURL[i].link, payload_string, content_json))
-                {
-                    result = false; // There was an error with the previous send
-                }
-            }
+            if (!send_to_url(config.grainfatherURL[th.m_color].link, payload_string, content_json))
+                result = false; // There was an error with the previous send
         }
         grainfatherTicker.once(GRAINFATHER_DELAY, [](){data_sender.send_grainfather = true;}); // Set up subsequent send to Grainfather
         send_lock = false;
@@ -325,28 +316,23 @@ bool dataSendHandler::send_to_taplistio()
     //     return false;
     // }
 
-    for (uint8_t i = 0; i < TILT_COLORS; i++) {
+    for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
         JsonDocument j;
         char payload_string[192];
         char gravity[10];
         char temp[6];
 
-
-        if (!tilt_scanner.tilt(i)->is_loaded()) {
-            continue;
-        }
-
-        j["Color"] = tilt_color_names[i];
-        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true);  // Always in Fahrenheit
+        j["Color"] = tilt_color_names[th.m_color];
+        th.converted_temp(temp, sizeof(temp), true);  // Always in Fahrenheit
         j["Temp"] = temp;
-        tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
+        th.converted_gravity(gravity, sizeof(gravity), false);
         j["SG"] = gravity;
         j["temperature_unit"] = "F";
         j["gravity_unit"] = "G";
         
         serializeJson(j, payload_string);
 
-        Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[i], config.taplistioURL);
+        Log.verbose(F("taplist.io: Sending %s Tilt to %s\r\n"), tilt_color_names[th.m_color], config.taplistioURL);
 
         result = send_to_url(config.taplistioURL, payload_string, content_json);
     }
@@ -381,23 +367,19 @@ bool dataSendHandler::send_to_brewstatus()
             // BrewStatus wants local time, so we allow the user to specify a time offset.
 
             // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
-            for (uint8_t i = 0; i < TILT_COLORS; i++)
-            {
-                if (tilt_scanner.tilt(i)->is_loaded())
-                {
-                    char gravity[10];
-                    char temp[6];
-                    tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
-                    tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit since we don't send units
-                    snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
-                            gravity, temp, tilt_color_names[i], ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
-                    
-                    if (send_to_url(config.brewstatusURL, payload, content_x_www_form_urlencoded)) {
-                        Log.notice(F("Completed send to Brew Status.\r\n"));
-                    } else {
-                        result = false;
-                        Log.verbose(F("Error sending to Brew Status.\r\n"));
-                    }
+            for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
+                char gravity[10];
+                char temp[6];
+                th.converted_gravity(gravity, sizeof(gravity), false);
+                th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit since we don't send units
+                snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
+                        gravity, temp, tilt_color_names[th.m_color], ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
+                
+                if (send_to_url(config.brewstatusURL, payload, content_x_www_form_urlencoded)) {
+                    Log.notice(F("Completed send to Brew Status.\r\n"));
+                } else {
+                    result = false;
+                    Log.verbose(F("Error sending to Brew Status.\r\n"));
                 }
             }
         }
@@ -433,83 +415,82 @@ bool dataSendHandler::send_to_google()
 //            Log.verbose(F("Executing on core %i.\r\n"), xPortGetCoreID());
             printMem();
 
-            for (uint8_t i = 0; i < TILT_COLORS; i++) {
-                // Loop through each of the tilt colors and check if it is both available and has active data
-                if (tilt_scanner.tilt(i)->is_loaded()) {
-                    // Check if there is a google sheet name associated with the specific Tilt
-                    if (strlen(config.gsheets_config[i].name) > 0) {
-                        char gravity[10];
-                        char temp[6];
 
-                        // If there's a sheet name saved, then we should send the data
-                        if (numSent == 0)
-                            Log.notice(F("Beginning GSheets check-in.\r\n"));
-                        payload["Beer"] = config.gsheets_config[i].name;
-                        tilt_scanner.tilt(i)->converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
-                        payload["Temp"] = temp;
-                        tilt_scanner.tilt(i)->converted_gravity(gravity, sizeof(gravity), false);
-                        payload["SG"] = gravity;
-                        payload["Color"] = tilt_color_names[i];
-                        payload["Comment"] = "";
-                        payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
-                        payload["tzOffset"] = config.TZoffset;
+            for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
+                // Check if there is a google sheet name associated with the specific Tilt
+                if (strlen(config.gsheets_config[th.m_color].name) > 0) {
+                    char gravity[10];
+                    char temp[6];
 
-                        serializeJson(payload, payload_string);
-                        payload.clear();
+                    // If there's a sheet name saved, then we should send the data
+                    if (numSent == 0)
+                        Log.notice(F("Beginning GSheets check-in.\r\n"));
+                    payload["Beer"] = config.gsheets_config[th.m_color].name;
+                    th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
+                    payload["Temp"] = temp;
+                    th.converted_gravity(gravity, sizeof(gravity), false);
+                    payload["SG"] = gravity;
+                    payload["Color"] = tilt_color_names[th.m_color];
+                    payload["Comment"] = "";
+                    payload["Email"] = config.scriptsEmail; // The gmail email address associated with the script on google
+                    payload["tzOffset"] = config.TZoffset;
 
-                        HTTPClient http;
-                        WiFiClientSecure secureClient;
+                    serializeJson(payload, payload_string);
+                    payload.clear();
 
-                        http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
-                        http.setConnectTimeout(6000);                           // Set 6 second timeout
-                        http.setReuse(false);
-                        secureClient.setInsecure();                             // Ignore SHA fingerprint
+                    HTTPClient http;
+                    WiFiClientSecure secureClient;
 
-                        if (!http.begin(secureClient, config.scriptsURL)) {      // Connect secure
-                            Log.error(F("Unable to create secure connection to %s.\r\n"), config.scriptsURL);
-                            result = false;
-                        } else {
-                            // Failed to open a connection
-                            Log.verbose(F("Created secure connection to %s.\r\n"), config.scriptsURL);
-                            Log.verbose(F("Sending the following payload to Google Sheets (%s):\r\n\t\t%s\r\n"), tilt_color_names[i], payload_string);
+                    http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
+                    http.setConnectTimeout(6000);                           // Set 6 second timeout
+                    http.setReuse(false);
+                    secureClient.setInsecure();                             // Ignore SHA fingerprint
 
-                            http.addHeader(F("Content-Type"), content_json);   // Specify content-type header
-                            httpResponseCode = http.POST(payload_string);               // Send the payload
+                    if (!http.begin(secureClient, config.scriptsURL)) {      // Connect secure
+                        Log.error(F("Unable to create secure connection to %s.\r\n"), config.scriptsURL);
+                        result = false;
+                    } else {
+                        // Failed to open a connection
+                        Log.verbose(F("Created secure connection to %s.\r\n"), config.scriptsURL);
+                        Log.verbose(F("Sending the following payload to Google Sheets (%s):\r\n\t\t%s\r\n"), tilt_color_names[th.m_color], payload_string);
 
-                            if (httpResponseCode == HTTP_CODE_OK) {  // HTTP_CODE_OK = 200
-                                // POST success
+                        http.addHeader(F("Content-Type"), content_json);   // Specify content-type header
+                        httpResponseCode = http.POST(payload_string);               // Send the payload
+
+                        if (httpResponseCode == HTTP_CODE_OK) {  // HTTP_CODE_OK = 200
+                            // POST success
 #if (ARDUINO_LOG_LEVEL == 6)
-                                // We need to use a buffer in order to be able to use the response twice
-                                strlcpy(buff, http.getString().c_str(), 1024);
-                                Log.verbose(F("HTTP Response: 200\r\nFull Response:\r\n\t%s\r\n"), buff);
-                                deserializeJson(retval, buff);
+                            // We need to use a buffer in order to be able to use the response twice
+                            strlcpy(buff, http.getString().c_str(), 1024);
+                            Log.verbose(F("HTTP Response: 200\r\nFull Response:\r\n\t%s\r\n"), buff);
+                            deserializeJson(retval, buff);
 //                                deserializeJson(retval, http.getString().c_str());
 #else
-                                deserializeJson(retval, http.getString().c_str());
+                            deserializeJson(retval, http.getString().c_str());
 #endif
 
-                                if(strcmp(config.gsheets_config[i].link, retval["doclongurl"].as<const char *>()) != 0) {
-                                    Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<const char *>());
-                                    strlcpy(config.gsheets_config[i].link, retval["doclongurl"].as<const char *>(), 255);
-                                    config.save();
-                                }
-                                retval.clear();
-                                numSent++;
-                            } else {
-                                // Post generated an error (response code != 200)
-                                Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
-                                    tilt_color_names[i],
-                                    httpResponseCode,
-                                    http.errorToString(httpResponseCode).c_str(),
-                                    http.getString().c_str());
-                                result = false;
-                            } // Response code != 200
-                        } // Good connection
-                        http.end();
-                        delay(100);  // Give garbage collection time to run
-                    } // Check we have a sheet name for the color
-                } // Check scanner is loaded for color
-            } // Loop through colors
+                            if(strcmp(config.gsheets_config[th.m_color].link, retval["doclongurl"].as<const char *>()) != 0) {
+                                Log.verbose(F("Storing new doclongurl: %s.\r\n"), retval["doclongurl"].as<const char *>());
+                                strlcpy(config.gsheets_config[th.m_color].link, retval["doclongurl"].as<const char *>(), 255);
+                                config.save();
+                            }
+                            retval.clear();
+                            numSent++;
+                        } else {
+                            // Post generated an error (response code != 200)
+                            Log.error(F("Google send to %s Tilt failed (%d): %s. Response:\r\n%s\r\n"),
+                                tilt_color_names[th.m_color],
+                                httpResponseCode,
+                                http.errorToString(httpResponseCode).c_str(),
+                                http.getString().c_str());
+                            result = false;
+                        } // Response code != 200
+                    } // Good connection
+                    http.end();
+                    delay(100);  // Give garbage collection time to run
+                } // Check we have a sheet name for the color
+            }
+
             Log.notice(F("Submitted %l sheet%s to Google.\r\n"), numSent, (numSent== 1) ? "" : "s");
 
         }
@@ -737,10 +718,15 @@ bool dataSendHandler::send_to_mqtt() {
 
         Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
 
-        for (uint8_t i = 0; i < TILT_COLORS; i++) {
-            if (tilt_scanner.tilt(i)->is_loaded()) {
-                prepare_and_send_payloads(i);
-            }
+        for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
+            char tilt_topic[50] = {'\0'};
+            snprintf(tilt_topic, 50, "%s/tilt_%s", config.mqttTopic, tilt_color_names[th.m_color]);
+
+            // Prepare and send each of the four payloads
+            prepare_temperature_payload(&th, tilt_topic);
+            prepare_gravity_payload(&th, tilt_topic);
+            prepare_battery_payload(&th, tilt_topic);
+            prepare_general_payload(&th, tilt_topic);
         }
 
         mqttTicker.once(config.mqttPushEvery, [](){ data_sender.send_mqtt = true; });
@@ -750,16 +736,6 @@ bool dataSendHandler::send_to_mqtt() {
     return result;
 }
 
-void dataSendHandler::prepare_and_send_payloads(uint8_t tilt_index) {
-    char tilt_topic[50] = {'\0'};
-    snprintf(tilt_topic, 50, "%s/tilt_%s", config.mqttTopic, tilt_color_names[tilt_index]);
-
-    // Prepare and send each of the four payloads
-    prepare_temperature_payload(tilt_color_names[tilt_index], tilt_topic);
-    prepare_gravity_payload(tilt_color_names[tilt_index], tilt_topic);
-    prepare_battery_payload(tilt_color_names[tilt_index], tilt_topic);
-    prepare_general_payload(tilt_index, tilt_topic);
-}
 
 void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_color, JsonDocument& payload) {
     payload["stat_t"] = topic;
@@ -792,7 +768,7 @@ void dataSendHandler::enrich_announcement(const char* topic, const char* tilt_co
 }
 
 
-void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const char* tilt_topic) {
+void dataSendHandler::prepare_temperature_payload(tiltHydrometer *th, const char* tilt_topic) {
     //Home Assistant Config Topic for Temperature
     char m_topic[90];
     char tilt_sensor_name[35];
@@ -801,7 +777,7 @@ void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const 
     JsonDocument payload;
 
     // Construct the MQTT topic string for temperature
-    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config", config.mqttTopic, tilt_color);
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%s/temperature/config", config.mqttTopic, tilt_color_names[th->m_color]);
 
     // Set up payload fields
     strcat(unit, config.tempUnit); // Append temperature unit after degree symbol
@@ -810,23 +786,23 @@ void dataSendHandler::prepare_temperature_payload(const char* tilt_color, const 
     payload["ic"] = "mdi:thermometer-lines";
     
     // Construct sensor name
-    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Temperature - %s", tilt_color);
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Temperature - %s", tilt_color_names[th->m_color]);
     payload["name"] = tilt_sensor_name;
 
     // Value template
     payload["val_tpl"] = "{{value_json.Temp}}";
 
     // Unique ID
-    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sT", tilt_color);
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sT", tilt_color_names[th->m_color]);
     payload["uniq_id"] = uniq_id;
 
-    enrich_announcement(tilt_topic, tilt_color, payload);
+    enrich_announcement(tilt_topic, tilt_color_names[th->m_color], payload);
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
 }
 
 
-void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char* tilt_topic) {
+void dataSendHandler::prepare_gravity_payload(tiltHydrometer *th, const char* tilt_topic) {
     //Home Assistant Config Topic for Sp Gravity
     char m_topic[90];
     char tilt_sensor_name[35];
@@ -834,29 +810,29 @@ void dataSendHandler::prepare_gravity_payload(const char* tilt_color, const char
     JsonDocument payload;
 
     // Construct the MQTT topic string for specific gravity
-    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config", config.mqttTopic, tilt_color);
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sG/sp_gravity/config", config.mqttTopic, tilt_color_names[th->m_color]);
 
     // Set up payload fields
     payload["unit_of_meas"] = "SG";
     payload["ic"] = "mdi:trending-down";
     
     // Construct sensor name
-    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Specific Gravity - %s", tilt_color);
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Specific Gravity - %s", tilt_color_names[th->m_color]);
     payload["name"] = tilt_sensor_name;
 
     // Value template
     payload["val_tpl"] = "{{value_json.SG}}";
 
     // Unique ID
-    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sG", tilt_color);
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sG", tilt_color_names[th->m_color]);
     payload["uniq_id"] = uniq_id;
 
-    enrich_announcement(tilt_topic, tilt_color, payload);
+    enrich_announcement(tilt_topic, tilt_color_names[th->m_color], payload);
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
 }
 
-void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char* tilt_topic) {
+void dataSendHandler::prepare_battery_payload(tiltHydrometer *th, const char* tilt_topic) {
     //Home Assistant Config Topic for Weeks On Battery
     char m_topic[90];
     char tilt_sensor_name[35];
@@ -864,50 +840,49 @@ void dataSendHandler::prepare_battery_payload(const char* tilt_color, const char
     JsonDocument payload;
 
     // Construct the MQTT topic string for weeks on battery
-    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sWoB/weeks_on_battery/config", config.mqttTopic, tilt_color);
+    sprintf(m_topic, "homeassistant/sensor/%s_tilt_%sWoB/weeks_on_battery/config", config.mqttTopic, tilt_color_names[th->m_color]);
 
     // Set up payload fields
     payload["unit_of_meas"] = "weeks";
     payload["ic"] = "mdi:battery";
     
     // Construct sensor name
-    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Weeks On Battery - %s", tilt_color);
+    snprintf(tilt_sensor_name, sizeof(tilt_sensor_name), "Tilt Weeks On Battery - %s", tilt_color_names[th->m_color]);
     payload["name"] = tilt_sensor_name;
 
     // Value template
     payload["val_tpl"] = "{{value_json.WoB}}";
 
     // Unique ID
-    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sWoB", tilt_color);
+    snprintf(uniq_id, sizeof(uniq_id), "tiltbridge_tilt%sWoB", tilt_color_names[th->m_color]);
     payload["uniq_id"] = uniq_id;
 
-    enrich_announcement(tilt_topic, tilt_color, payload);
+    enrich_announcement(tilt_topic, tilt_color_names[th->m_color], payload);
     // Serialize and publish
     publish_to_mqtt(m_topic, payload, true); // Retain flag set to true
 }
 
-void dataSendHandler::prepare_general_payload(uint8_t tilt_index, const char* tilt_topic) {
+void dataSendHandler::prepare_general_payload(tiltHydrometer *th, const char* tilt_topic) {
     //General payload with sensor data
     char m_topic[90];
     char gravity[10];
     char temp[6];
     char battery_str[4]; // large enough for 0-255 and the null terminator
     JsonDocument payload;
-    tiltHydrometer* current_tilt = tilt_scanner.tilt(tilt_index);
 
     // Construct the MQTT topic string for general sensor data
     strcpy(m_topic, tilt_topic);
 
     // Populate payload with sensor data
-    payload["Color"] = tilt_color_names[tilt_index];
+    payload["Color"] = tilt_color_names[th->m_color];
     payload["timeStamp"] = (int)std::time(0);
     payload["fermunits"] = "SG";
-    current_tilt->converted_gravity(gravity, 10, false);
+    th->converted_gravity(gravity, 10, false);
     payload["SG"] = gravity;
-    current_tilt->converted_temp(temp, 6, false);
+    th->converted_temp(temp, 6, false);
     payload["Temp"] = temp;
     payload["tempunits"] = config.tempUnit;
-    current_tilt->get_weeks_battery(battery_str, 4);
+    th->get_weeks_battery(battery_str, 4);
     payload["WoB"] = battery_str;
 
     // Serialize and publish

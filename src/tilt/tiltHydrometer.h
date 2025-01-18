@@ -2,6 +2,7 @@
 #define TILTBRIDGE_TILTHYDROMETER_H
 
 #include <Arduino.h>
+#include <NimBLEAddress.h>
 
 #define TILT_DATA_SIZE 477 // JSON size of a Tilt
 #define TILT_ALL_DATA_SIZE (TILT_DATA_SIZE * TILT_COLORS + 71) // JSON size of 8 Tilts
@@ -37,9 +38,9 @@
 class tiltHydrometer
 {
 public:
-    explicit tiltHydrometer(uint8_t color);
+    explicit tiltHydrometer(NimBLEAddress address);
 
-    bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
+    bool set_values(uint8_t color, uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
     void converted_gravity(char* output, size_t output_size, bool use_raw_gravity);
     void to_json_string(char *json_string, bool use_raw_gravity);
     void converted_temp(char* output, size_t output_size, bool fahrenheit_only);
@@ -61,6 +62,8 @@ public:
     bool receives_battery;  // Tracks if this tilt sends battery life
     bool tilt_pro;  // Tracks if this tilt is "high resolution" or not (ie. is a Tilt Pro)
     uint8_t m_color;  // Color number (0-7) for lookups
+
+    NimBLEAddress m_address;
 
 private:
     bool m_loaded;              // Has data been loaded from an ad string

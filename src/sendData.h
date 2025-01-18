@@ -4,6 +4,7 @@
 #include <WiFiClient.h>
 #include <Ticker.h>
 #include <ArduinoJson.h>
+#include "tilt/tiltHydrometer.h"
 
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
@@ -85,11 +86,12 @@ private:
 
     void connect_mqtt();
     bool publish_to_mqtt(const char* topic, JsonDocument& payload, bool retain);
-    void prepare_and_send_payloads(uint8_t tilt_index);
-    void prepare_temperature_payload(const char* tilt_color, const char* tilt_topic);
-    void prepare_gravity_payload(const char* tilt_color, const char* tilt_topic);
-    void prepare_battery_payload(const char* tilt_color, const char* tilt_topic);
-    void prepare_general_payload(uint8_t tilt_index, const char* tilt_topic);
+
+
+    void prepare_temperature_payload(tiltHydrometer *th, const char* tilt_topic);
+    void prepare_gravity_payload(tiltHydrometer *th, const char* tilt_topic);
+    void prepare_battery_payload(tiltHydrometer *th, const char* tilt_topic);
+    void prepare_general_payload(tiltHydrometer *th, const char* tilt_topic);
     void enrich_announcement(const char* topic, const char* tilt_color, JsonDocument& payload);
 
 };
