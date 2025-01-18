@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <NimBLEAddress.h>
+#include <ArduinoJson.h>
 
 #define TILT_DATA_SIZE 477 // JSON size of a Tilt
 #define TILT_ALL_DATA_SIZE (TILT_DATA_SIZE * TILT_COLORS + 71) // JSON size of 8 Tilts
@@ -42,7 +43,7 @@ public:
 
     bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
     void converted_gravity(char* output, size_t output_size, bool use_raw_gravity);
-    void to_json_string(char *json_string, bool use_raw_gravity);
+    JsonDocument to_json(bool use_raw_gravity);
     void converted_temp(char* output, size_t output_size, bool fahrenheit_only);
     void get_weeks_battery(char* output, size_t output_size);
     bool is_celsius() const;

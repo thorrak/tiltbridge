@@ -29,7 +29,8 @@ public:
 
     bool wait_until_scan_complete();
     uint8_t load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* advertisedDevice);
-    void tilt_to_json(JsonDocument &doc, bool use_raw_gravity);
+    JsonDocument tilt_to_json(bool use_raw_gravity);
+    void tilt_to_json_legacy(JsonDocument &doc);
 
     std::size_t tilt_count();
     std::list<tiltHydrometer> m_tilt_devices;

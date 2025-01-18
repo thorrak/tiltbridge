@@ -75,7 +75,11 @@ bool dataSendHandler::send_to_legacy_fermentrack()
 
             // Load the Tilt data from the scanner
             JsonDocument tilt_doc;
-            tilt_scanner.tilt_to_json(tilt_doc, true);
+            // This is the only call to tilt_to_json_legacy
+            // The main difference vs tilt_to_json is that it sends a dict with the color as the key rather than an array.
+            // When we discontinue Legacy Fermentrack support this can also be discontinued
+            // This also only ever sends raw gravity
+            tilt_scanner.tilt_to_json_legacy(tilt_doc);
 
             doc["mdns_id"] = config.mdnsID;
             doc["tilts"] = tilt_doc;

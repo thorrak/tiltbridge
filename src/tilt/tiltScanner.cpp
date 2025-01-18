@@ -150,18 +150,34 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* adv
 
 
 
-void tiltScanner::tilt_to_json(JsonDocument &doc, bool use_raw_gravity)
+JsonDocument tiltScanner::tilt_to_json(bool use_raw_gravity)
 {
-    char tilt_data[TILT_DATA_SIZE];
+    tilt_scanner.drop_expired_tilts();
+    
+    JsonDocument doc;
+    JsonArray array = doc.to<JsonArray>();
 
+    for(tiltHydrometer & th : m_tilt_devices) {
+        array.add(th.to_json(use_raw_gravity));
+    }
+
+    return doc;
+}
+
+
+void tiltScanner::tilt_to_json_legacy(JsonDocument &doc)
+{
+    // This is only used for sending to Legacy Fermentrack
+    // The difference is that we don't return an array, but instead return a dict with the tilt color as the key
     tilt_scanner.drop_expired_tilts();
 
     for(tiltHydrometer & th : m_tilt_devices) {
-        tilt_data[0] = {'\0'};
-        th.to_json_string(tilt_data, use_raw_gravity);
-        doc[tilt_color_names[th.m_color]] = serialized(tilt_data);
+        // tilt_data[0] = {'\0'};
+        JsonDocument tilt_data = th.to_json(true);
+        doc[tilt_color_names[th.m_color]] = tilt_data;
     }
 }
+
 
 std::size_t tiltScanner::tilt_count() {
     return m_tilt_devices.size();

@@ -64,7 +64,8 @@ void httpServer::genericServeJson(AsyncWebServerRequest *request, void (*jsonFun
       // Serial.println(); // Add a newline for better formatting
 
       // Copy the contents of `doc` to the response
-      response->getRoot().set(doc.as<JsonObject>());
+    //   response->getRoot().set(doc.as<JsonObject>());
+      response->getRoot().set(doc);
     }
 
     response->setLength();
