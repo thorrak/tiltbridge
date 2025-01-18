@@ -218,6 +218,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
 
     // Loop through each of the tilt colors cached by tilt_scanner, sending
     // data for each of the active tilts
+    tilt_scanner.drop_expired_tilts();
     for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
         char gravity[10];
         char temp[6];
@@ -255,8 +256,8 @@ bool dataSendHandler::send_to_grainfather()
 
         // Loop through each of the tilt colors cached by tilt_scanner, sending
         // data for each of the active tilts
+        tilt_scanner.drop_expired_tilts();
         for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
-
             // If there's no Grainfather URL for this color, just continue
             if (strlen(config.grainfatherURL[th.m_color].link) == 0)
                 continue;
@@ -308,13 +309,8 @@ bool dataSendHandler::send_to_taplistio()
     send_taplistio = false;
     send_lock = true;
 
-    // This is now checked in the data sending loop
-    // if (WiFiClass::status() != WL_CONNECTED) {
-    //     Log.verbose(F("taplist.io: Wifi not connected, skipping send.\r\n"));
-    //     taplistioTicker.once(config.taplistioPushEvery, [](){data_sender.send_taplistio = true;});
-    //     send_lock = false;
-    //     return false;
-    // }
+
+    tilt_scanner.drop_expired_tilts();
 
     for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
         JsonDocument j;
@@ -367,6 +363,7 @@ bool dataSendHandler::send_to_brewstatus()
             // BrewStatus wants local time, so we allow the user to specify a time offset.
 
             // Loop through each of the tilt colors cached by tilt_scanner, sending data for each of the active tilts
+            tilt_scanner.drop_expired_tilts();
             for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
                 char gravity[10];
                 char temp[6];
@@ -415,6 +412,7 @@ bool dataSendHandler::send_to_google()
 //            Log.verbose(F("Executing on core %i.\r\n"), xPortGetCoreID());
             printMem();
 
+            tilt_scanner.drop_expired_tilts();
 
             for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
                 // Check if there is a google sheet name associated with the specific Tilt
@@ -717,6 +715,8 @@ bool dataSendHandler::send_to_mqtt() {
         send_lock = true;
 
         Log.verbose(F("Publishing available results to MQTT Broker.\r\n"));
+
+        tilt_scanner.drop_expired_tilts();
 
         for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
             char tilt_topic[50] = {'\0'};
