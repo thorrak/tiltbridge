@@ -29,10 +29,9 @@ const uint32_t tilt_text_colors[] = {
         0xFE19  // Pink
 };
 
-tiltHydrometer::tiltHydrometer(NimBLEAddress address)
+tiltHydrometer::tiltHydrometer(NimBLEAddress address, uint8_t color)
 {
-    m_loaded = false;
-    m_color = 0;  // Temporarily set to red
+    m_color = color;
     temp = 0;
     gravity = 0;
     m_lastUpdate = 0;
@@ -74,16 +73,13 @@ uint8_t tiltHydrometer::uuid_to_color_no(const char* uuid)
 }
 
 
-
-bool tiltHydrometer::set_values(uint8_t color, uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
+bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi)
 {
     double d_temp;
     double d_grav;
     double smoothed_d_grav;
     uint32_t smoothed_i_grav_1000;
     bool is_pro = tilt_pro; //Temporarily store whether the model is Pro so we can reset smoothing filter if changed.
-
-    m_color = color; // Set the color of the Tilt
 
     if (i_temp == 999)
     { // If the temp is 999, the SG actually represents the firmware version of the Tilt.
@@ -109,14 +105,11 @@ bool tiltHydrometer::set_values(uint8_t color, uint16_t i_temp, uint16_t i_grav,
     // value by 1000 to keep precision.
     // filtered output = (alpha * sensor_value + (alphaScale - alpha) * lastOutput) / alphaScale
 
-    if (!m_loaded || is_pro != tilt_pro)
-    {
+    if (gravity == 0 || is_pro != tilt_pro) {
         //First pass through after loading tilt, last_grav_value value must be initalized.
         last_grav_value_1000 = i_grav * 1000;
         smoothed_i_grav_1000 = i_grav * 1000;
-    }
-    else
-    {
+    } else {
         // Effective smoothing filter constant is alpha / 100
         // Ratio must be between 0 - 1.
         int alpha = (100 - config.smoothFactor);
@@ -188,7 +181,6 @@ bool tiltHydrometer::set_values(uint8_t color, uint16_t i_temp, uint16_t i_grav,
 
     rssi = current_rssi;
 
-    m_loaded = true; // Setting loaded true now that we have gravity/temp values
     m_lastUpdate = millis();
     return true;
 }
@@ -270,15 +262,10 @@ bool tiltHydrometer::is_celsius() const
     return strcmp(config.tempUnit, "C") == 0;
 }
 
-bool tiltHydrometer::is_loaded()
+
+bool tiltHydrometer::expired()
 {
-    // Expire loading after 5 minutes
-    if (m_loaded)
-    {
-        if ((millis() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION)
-        {
-            m_loaded = false;
-        }
-    }
-    return m_loaded;
+    if ((millis() - m_lastUpdate) >= TILT_NO_DATA_RECEIVED_EXPIRATION)
+        return true;
+    return false;
 }

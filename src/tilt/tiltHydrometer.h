@@ -38,15 +38,14 @@
 class tiltHydrometer
 {
 public:
-    explicit tiltHydrometer(NimBLEAddress address);
+    explicit tiltHydrometer(NimBLEAddress address, uint8_t color);
 
-    bool set_values(uint8_t color, uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
+    bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
     void converted_gravity(char* output, size_t output_size, bool use_raw_gravity);
     void to_json_string(char *json_string, bool use_raw_gravity);
     void converted_temp(char* output, size_t output_size, bool fahrenheit_only);
     void get_weeks_battery(char* output, size_t output_size);
     bool is_celsius() const;
-    bool is_loaded();
 
     static uint8_t uuid_to_color_no(const char* uuid);
 
@@ -65,8 +64,9 @@ public:
 
     NimBLEAddress m_address;
 
+    bool expired();
+
 private:
-    bool m_loaded;              // Has data been loaded from an ad string
     unsigned long m_lastUpdate; // Keep track of when we last updated and stop propagating out stale information
     bool m_has_sent_197;        // Used to determine if the tilt sends battery life (a 197 tx_pwr followed by a non-197 tx_pwr)
 };

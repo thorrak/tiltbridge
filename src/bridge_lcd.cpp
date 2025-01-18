@@ -471,6 +471,7 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
     print_line("Color", "Temp", "Gravity", header_row, true);
 
     // Loop through each of the tilts cached by tilt_scanner
+    tilt_scanner.drop_expired_tilts();
     for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
             active_tilts++;
             // This check has the added bonus of limiting the # of displayed tilts to TILTS_PER_PAGE

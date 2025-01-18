@@ -34,8 +34,10 @@ public:
     std::size_t tilt_count();
     std::list<tiltHydrometer> m_tilt_devices;
 
-    tiltHydrometer* get_tilt(const NimBLEAddress devAddress);
-    tiltHydrometer* get_or_create_tilt(const NimBLEAddress devAddress);
+    tiltHydrometer* get_tilt(const NimBLEAddress devAddress, uint8_t color);
+    tiltHydrometer* get_or_create_tilt(const NimBLEAddress devAddress, uint8_t color);
+
+    void drop_expired_tilts();
 
 private:
     ScanCallbacks *callbacks;

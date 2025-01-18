@@ -141,8 +141,8 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* adv
     uint16_t gravity = std::strtoul(grav_arr, nullptr, 16);
     uint8_t tx_pwr = std::strtoul(tx_pwr_arr, nullptr, 16);
 
-    tiltHydrometer *th = get_or_create_tilt(advertisedDevice->getAddress());
-    th->set_values(m_color, temp, gravity, tx_pwr, current_rssi);
+    tiltHydrometer *th = get_or_create_tilt(advertisedDevice->getAddress(), m_color);
+    th->set_values(temp, gravity, tx_pwr, current_rssi);
     th->m_address = advertisedDevice->getAddress();
 
     return m_color;
@@ -153,6 +153,8 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* adv
 void tiltScanner::tilt_to_json(JsonDocument &doc, bool use_raw_gravity)
 {
     char tilt_data[TILT_DATA_SIZE];
+
+    tilt_scanner.drop_expired_tilts();
 
     for(tiltHydrometer & th : m_tilt_devices) {
         tilt_data[0] = {'\0'};
@@ -166,9 +168,9 @@ std::size_t tiltScanner::tilt_count() {
 }
 
 
-tiltHydrometer* tiltScanner::get_tilt(const NimBLEAddress devAddress) {
+tiltHydrometer* tiltScanner::get_tilt(const NimBLEAddress devAddress, uint8_t color) {
     for(tiltHydrometer & th : m_tilt_devices) {
-        if(th.m_address == devAddress) {
+        if(th.m_address == devAddress && th.m_color == color) {
             // Access the object through the iterator
             return &th;
         }
@@ -177,15 +179,27 @@ tiltHydrometer* tiltScanner::get_tilt(const NimBLEAddress devAddress) {
 }
 
 
-tiltHydrometer* tiltScanner::get_or_create_tilt(const NimBLEAddress devAddress) {
-    tiltHydrometer *found_th = get_tilt(devAddress);
+tiltHydrometer* tiltScanner::get_or_create_tilt(const NimBLEAddress devAddress, uint8_t color) {
+    tiltHydrometer *found_th = get_tilt(devAddress, color);
 
     if(found_th)
         return found_th;
 
     // No matching device was found
-    tiltHydrometer newTilt(devAddress);
+    tiltHydrometer newTilt(devAddress, color);
     m_tilt_devices.push_front(newTilt);
 
-    return get_tilt(devAddress);  // We specifically want to access the object as referenced in the list
+    return get_tilt(devAddress, color);  // We specifically want to access the object as referenced in the list
+}
+
+
+void tiltScanner::drop_expired_tilts() {
+    for (auto it = m_tilt_devices.begin(); it != m_tilt_devices.end(); ) {
+        if (it->expired()) {
+            Log.verbose(F("Dropping Tilt %s due to inactivity.\r\n"), tilt_color_names[it->m_color]);
+            it = m_tilt_devices.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
