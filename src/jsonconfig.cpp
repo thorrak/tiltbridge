@@ -1,10 +1,8 @@
 #include <ArduinoLog.h>
 #include <ArduinoJson.h>
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#include <FS.h>
-#endif
+#include "filesystem.h"  // Selects SPIFFS or LittleFS as necessary
+
 
 #include "getGuid.h"
 #include "serialhandler.h"
@@ -183,7 +181,7 @@ JsonDocument Config::to_json() {
     obj["mdnsID"] = mdnsID;
     obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
-    obj["update_spiffs"] = update_spiffs;
+    obj["update_filesystem"] = update_filesystem;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
     obj["smoothFactor"] = smoothFactor;
@@ -255,8 +253,8 @@ void Config::load_from_json(JsonDocument obj) {
         invertTFT = obj["invertTFT"];
     }
 
-    if (!obj["update_spiffs"].isNull()) {
-        update_spiffs = obj["update_spiffs"];
+    if (!obj["update_filesystem"].isNull()) {
+        update_filesystem = obj["update_filesystem"];
     }
 
     if (!obj["TZoffset"].isNull()) {

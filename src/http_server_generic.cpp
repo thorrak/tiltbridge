@@ -3,9 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoLog.h>
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#endif
+#include "filesystem.h"
 
 
 #include "http_server.h"
@@ -37,7 +35,7 @@ bool httpServer::handleFileRead(AsyncWebServerRequest *request, String path) {
     String contentType = getContentType(path);
     String pathWithGz = path + ".gz";
     if (FILESYSTEM.exists(pathWithGz) || FILESYSTEM.exists(path)) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, path, contentType);
+        AsyncWebServerResponse* response = request->beginResponse(FILESYSTEM, path, contentType);
         if (FILESYSTEM.exists(pathWithGz)) {
             path += ".gz";
             response->addHeader("Content-Encoding", "gzip");

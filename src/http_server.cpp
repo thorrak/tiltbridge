@@ -7,9 +7,7 @@
 #include <ArduinoLog.h>
 #include <Ticker.h>
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#endif
+#include "filesystem.h"
 
 
 #include "resetreasons.h"
@@ -588,7 +586,7 @@ bool processMqttSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
 #ifndef DISABLE_OTA_UPDATES
 void trigger_OTA(AsyncWebServerRequest *request) {
     server.serveStatic("/updating.htm", FILESYSTEM, "/").setDefaultFile("updating.htm");
-    config.update_spiffs = true;
+    config.update_filesystem = true;
     lcd.display_ota_update_screen();         // Trigger this here while everything else is waiting.
     delay(1000);                             // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)

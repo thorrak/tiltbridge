@@ -4,9 +4,8 @@
 
 #include <ArduinoLog.h>
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#endif
+#include "filesystem.h"
+
 
 #include "watchButtons.h"
 #include "tilt/tiltScanner.h"
@@ -118,7 +117,7 @@ void loop() {
         Log.verbose(F("Resetting to original settings.\r\n"));
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
-        config.deleteFile();                        // Delete the config file in SPIFFS
+        config.deleteFile();                        // Delete the config file in the filesystem
         disconnectWiFi();                           // Clear wifi config and restart
     }
 

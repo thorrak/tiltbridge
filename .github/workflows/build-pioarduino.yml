@@ -76,7 +76,10 @@ jobs:
         if [ -f .pio/build/${{ matrix.pio_env }}/spiffs.bin ]; then
         cp .pio/build/${{ matrix.pio_env }}/spiffs.bin bin/${{ matrix.pio_env }}_spiffs.bin
         fi
-
+        if [ -f .pio/build/${{ matrix.pio_env }}/littlefs.bin ]; then
+        cp .pio/build/${{ matrix.pio_env }}/littlefs.bin bin/${{ matrix.pio_env }}_spiffs.bin
+        fi
+        # TODO - Change the above from _spiffs to _filesystem
 
     # - name: "Create Prerelease"
     #   uses: "marvinpinto/action-automatic-releases@latest"
