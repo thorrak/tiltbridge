@@ -30,7 +30,6 @@ private:
     void setPutPages();
 
     String getContentType(String filename);
-    // bool exists(String path);
     bool handleFileRead(AsyncWebServerRequest *request, String path);
     void redirect(AsyncWebServerRequest *request, const String &url);
 

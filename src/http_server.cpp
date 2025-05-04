@@ -713,7 +713,7 @@ void httpServer::setPutPages() {
     };
 
     for (const auto& endpoint : endpoints) {
-        asyncWebServer.addHandler(new ExtendedAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
+        asyncWebServer.addHandler(new PutAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
     }
 }
 
