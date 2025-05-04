@@ -718,32 +718,24 @@ void httpServer::setPutPages() {
 }
 
 void httpServer::setJsonPages() {
-    // Tilt JSON
-    asyncWebServer.on("/api/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, http_json);
-    });
+    struct Endpoint {
+        const char* path;
+        void (*handler)(JsonDocument&);
+    };
+    
+    const Endpoint endpoints[] = {
+        {"/api/json/", http_json},
+        {"/api/settings/json/", settings_json},
+        {"/api/version/", this_version},
+        {"/api/uptime/", uptime},
+        {"/api/heap/", heap},
+        {"/api/resetreason/", reset_reason},
+    };
 
-    // Settings JSON
-    asyncWebServer.on("/api/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, settings_json);
-    });
+    for (const auto& endpoint : endpoints) {
+        asyncWebServer.addHandler(new GetAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
+    }
 
-    // About Page JSON
-    asyncWebServer.on("/api/version/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, this_version);
-    });
-
-    asyncWebServer.on("/api/uptime/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, uptime);
-    });
-
-    asyncWebServer.on("/api/heap/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, heap);
-    });
-
-    asyncWebServer.on("/api/resetreason/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, reset_reason);
-    });
 }
 
 // TODO - Reenable/rebuild setActionPages

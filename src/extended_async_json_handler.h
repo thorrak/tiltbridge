@@ -68,6 +68,70 @@ public:
     }
 };
 
+
+/**
+ * @class GetAsyncCallbackJsonWebHandler
+ * @brief Extends AsyncCallbackJsonWebHandler to support custom JSON response handling for HTTP GET.
+ *
+ * This class provides the ability to process incoming GET requests in an `AsyncWebServer`
+ * using a user-defined handler function that generates and returns JSON data.
+ */
+class GetAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler
+{
+protected:
+    /**
+     * @brief Pointer to the custom handler function.
+     *
+     * The custom handler function generates JSON data to be sent in the response.
+     * It accepts a `JsonDocument` reference which it populates with the response data.
+     */
+    void (*_customHandler)(JsonDocument &);
+
+public:
+    /**
+     * @brief Constructor for GetAsyncCallbackJsonWebHandler.
+     *
+     * @param uri The URI to handle.
+     * @param customHandler A pointer to the custom handler function. The function must accept
+     *        a `JsonDocument` reference and populate it with the response data.
+     *
+     * The custom handler function will be invoked for each GET request to the specified URI.
+     * If the handler is not provided, an appropriate HTTP response will be sent to the client.
+     */
+    GetAsyncCallbackJsonWebHandler(
+        const char *uri,
+        void (*customHandler)(JsonDocument &) = nullptr)
+        : AsyncCallbackJsonWebHandler(
+              uri,
+              [customHandler](AsyncWebServerRequest *request, JsonVariant &json)
+              {
+                  if (!customHandler) {
+                      request->send(500, "application/json", "{\"error\":\"No handler provided\"}");
+                      return;
+                  }
+
+                  AsyncJsonResponse *response = new AsyncJsonResponse();
+                  {
+                      JsonDocument doc;
+                      customHandler(doc);
+
+                      // // Print the contents of doc to the serial console
+                      // Serial.println(F("Generated JSON:"));
+                      // serializeJsonPretty(doc, Serial); // Pretty print for easier reading
+                      // Serial.println(); // Add a newline for better formatting
+
+                      response->getRoot().set(doc);
+                  }
+
+                  response->setLength();
+                  request->send(response);
+              }),
+          _customHandler(customHandler)
+    {
+        setMethod(HTTP_GET);
+    }
+};
+
 #endif // ASYNC_JSON_SUPPORT == 1
 
 #endif // EXTENDED_ASYNC_JSON_HANDLER_H_
