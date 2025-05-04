@@ -6,6 +6,11 @@
 #define LOGO_TIME 2     // Time (in seconds) to display the logo
 #define TILT_TIME 10    // Time (in seconds) to display the Tilt screen
 
+// There are three different LCD options, set depending on what is defined in platformio.ini:
+// LCD_SSD1306 - For the OLED displays
+// LCD_TFT - For larger TFT displays
+// LCD_TFT_ESPI - For smaller TFT displays
+
 #ifdef LCD_SSD1306
 #include <SSD1306Wire.h>
 #define SSD1306_FONT_HEIGHT     10
@@ -50,38 +55,41 @@
 
 class bridge_lcd {
 public:
+    // All public functions are in bridge_lcd.cpp unless otherwise noted
     bridge_lcd();
 
-    void init();
-    void reinit();
-    void display_logo(bool fromReset = false);
-    void checkTouch();
+    void init();                                    // In impl
+    void reinit();                                  // In impl
+    void clear();                                   // In impl
+    void checkTouch();                              // In impl  
 
+    void display_logo(bool fromReset = false);
     void display_wifi_connect_screen(const char *ap_name, const char *ap_pass);
     void display_wifi_success_screen(const char *mdns_url, const char *ip_address_url);
     void display_wifi_reset_screen();
     void display_ota_update_screen();
-
     void display_wifi_disconnected_screen();
     void display_wifi_reconnect_failed();
 
+    void check_screen();
+
+    bool displaying_ota_update_screen = false;
+
+private:
+    // All private functions are in bridge_lcd_impl.cpp unless otherwise noted
     void print_line(const char *left_text, uint8_t line);
     void print_line(const char *left_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line);
     void print_line(const char *left_text, const char *middle_text, const char *right_text, uint8_t line, bool add_gutter);
 
-    void check_screen();
-    void clear();
+    void display_logo_internal();
+    inline void init_power();
 
-    bool displaying_ota_update_screen = false;
-
-private:
-    bool displaying_wifi_dc_screen = false;
-#if HAVE_LCD
-    uint8_t display_next();
-    void display_tilt_screen(uint8_t screen_number);
     void print_tilt_to_line(tiltHydrometer *tilt, uint8_t line);
     bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
+
+    uint8_t display_next();                             // Not in impl
+    void display_tilt_screen(uint8_t screen_number);    // Not in impl
     void display();
 
 #ifdef LCD_SSD1306
@@ -90,13 +98,13 @@ private:
     TFT_eSPI *tft;
 #endif // LCD_SSD1306
 
+    bool displaying_wifi_dc_screen = false;
     uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
     uint8_t tilt_on_page;       // The page number currently being displayed
     uint8_t on_screen;
     unsigned long next_screen_at;
 
     bool touchLatch = false;    // Ensure we only trigger a touch once
-#endif // HAVE_LCD
 };
 
 void screenFlip();
