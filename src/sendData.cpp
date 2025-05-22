@@ -445,6 +445,7 @@ bool dataSendHandler::send_to_google()
 
                     http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // Follow the 301
                     http.setConnectTimeout(6000);                           // Set 6 second timeout
+                    http.setTimeout(10000);                                 // Set 10 second timeout
                     http.setReuse(false);
                     secureClient.setInsecure();                             // Ignore SHA fingerprint
 
