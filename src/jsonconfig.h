@@ -8,7 +8,6 @@
 #define JSON_CONFIG_FILE "tiltbridgeConfig.json"
 
 struct TiltCalData {
-    uint8_t degree = 1;
     double x0 = 0.0;
     double x1 = 1.0;
     double x2 = 0.0;
@@ -58,7 +57,7 @@ public:
     int8_t TZoffset = -5;
     char tempUnit[2] = "F";
     uint8_t smoothFactor = 60;
-    bool applyCalibration = false;
+    bool applyCalibration = true;
     bool tempCorrect = false;
 
     TiltCalData tilt_calibration[TILT_COLORS];

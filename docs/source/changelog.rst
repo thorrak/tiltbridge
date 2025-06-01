@@ -2,14 +2,23 @@ Changelog
 #########
 
 
-Unreleased - New UI & Fermentrack 2 Support
+v2.0.0 - Unreleased - New UI & Fermentrack 2 Support
 -------------------------------------------
 
 - New Vue-based UI with improved performance and responsiveness
 - Support for Fermentrack 2 and Fermentrack.net
-- Removed support for Parse ("TiltBridge Cloud")
+- ESP32-S3 Support
+- New Internationalization Support - Initially supporting English, Spanish, Portuguese, German, and Dutch
+- Completely rebuilt calibration workflow
 - Migrate from asynchronous to synchronous HTTP server
+- Upgrade to latest upstream frameworks/libraries
 
+
+
+v1.2.4 - Aug 28, 2024 - Disable Parse Cloud
+-------------------------------------------
+
+- Removed support for Parse ("TiltBridge Cloud")
 
 
 v1.2.2 - Mar 3, 2024 - New Data Senders

@@ -11,37 +11,17 @@
 #if ASYNC_JSON_SUPPORT == 1
 
 /**
- * @class PutAsyncCallbackJsonWebHandler
- * @brief Extends AsyncCallbackJsonWebHandler to support custom JSON request handling for HTTP PUT.
- *
- * This class provides the ability to process incoming PUT requests in an `AsyncWebServer`
- * using a user-defined handler function. The handler processes the JSON payload and returns
- * a success or failure response based on its logic.
+ * @class RequestAsyncCallbackJsonWebHandler
+ * @brief Template base class for JSON handlers that process requests and return success/failure.
  */
-class PutAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler
+template<WebRequestMethod METHOD>
+class RequestAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler
 {
 protected:
-    /**
-     * @brief Pointer to the custom handler function.
-     *
-     * The custom handler function processes the JSON payload and determines whether the
-     * request should be considered successful or not.
-     */
     bool (*_customHandler)(const JsonDocument &, bool);
 
 public:
-    /**
-     * @brief Constructor for PutAsyncCallbackJsonWebHandler.
-     *
-     * @param uri The URI to handle.
-     * @param maxJsonBufferSize Maximum size of the JSON buffer (defaults to DYNAMIC_JSON_DOCUMENT_SIZE).
-     * @param customHandler A pointer to the custom handler function. The function must accept
-     *        a `JsonDocument` and a `bool`, and return a `bool` indicating success.
-     *
-     * The custom handler function will be invoked for each request to the specified URI. If
-     * the handler is not provided or fails, an appropriate HTTP response will be sent to the client.
-     */
-    PutAsyncCallbackJsonWebHandler(
+    RequestAsyncCallbackJsonWebHandler(
         const char *uri, bool (*customHandler)(const JsonDocument &, bool) = nullptr)
         : AsyncCallbackJsonWebHandler(
               uri, [customHandler](AsyncWebServerRequest *request, JsonVariant &json)
@@ -64,40 +44,20 @@ public:
               }),
         _customHandler(customHandler)
     {
-        setMethod(HTTP_PUT);
+        setMethod(METHOD);
     }
 };
-
 
 /**
  * @class GetAsyncCallbackJsonWebHandler
  * @brief Extends AsyncCallbackJsonWebHandler to support custom JSON response handling for HTTP GET.
- *
- * This class provides the ability to process incoming GET requests in an `AsyncWebServer`
- * using a user-defined handler function that generates and returns JSON data.
  */
 class GetAsyncCallbackJsonWebHandler : public AsyncCallbackJsonWebHandler
 {
 protected:
-    /**
-     * @brief Pointer to the custom handler function.
-     *
-     * The custom handler function generates JSON data to be sent in the response.
-     * It accepts a `JsonDocument` reference which it populates with the response data.
-     */
     void (*_customHandler)(JsonDocument &);
 
 public:
-    /**
-     * @brief Constructor for GetAsyncCallbackJsonWebHandler.
-     *
-     * @param uri The URI to handle.
-     * @param customHandler A pointer to the custom handler function. The function must accept
-     *        a `JsonDocument` reference and populate it with the response data.
-     *
-     * The custom handler function will be invoked for each GET request to the specified URI.
-     * If the handler is not provided, an appropriate HTTP response will be sent to the client.
-     */
     GetAsyncCallbackJsonWebHandler(
         const char *uri,
         void (*customHandler)(JsonDocument &) = nullptr)
@@ -131,6 +91,11 @@ public:
         setMethod(HTTP_GET);
     }
 };
+
+// Type aliases for specific HTTP methods
+using PostAsyncCallbackJsonWebHandler = RequestAsyncCallbackJsonWebHandler<HTTP_POST>;
+using PutAsyncCallbackJsonWebHandler = RequestAsyncCallbackJsonWebHandler<HTTP_PUT>;
+using DeleteAsyncCallbackJsonWebHandler = RequestAsyncCallbackJsonWebHandler<HTTP_DELETE>;
 
 #endif // ASYNC_JSON_SUPPORT == 1
 

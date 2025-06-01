@@ -189,7 +189,6 @@ JsonDocument Config::to_json() {
     obj["tempCorrect"] = tempCorrect;
 
     for(int x=0;x<TILT_COLORS;x++) {
-        obj[tilt_color_names[x]]["degree"] = tilt_calibration[x].degree;
         obj[tilt_color_names[x]]["x0"] = tilt_calibration[x].x0;
         obj[tilt_color_names[x]]["x1"] = tilt_calibration[x].x1;
         obj[tilt_color_names[x]]["x2"] = tilt_calibration[x].x2;
@@ -281,10 +280,6 @@ void Config::load_from_json(JsonDocument obj) {
     // Loop through everything that is a "tilt-specific" setting
     for(int x=0;x<TILT_COLORS;x++) {
         // Calibration points
-        if (!obj[tilt_color_names[x]]["degree"].isNull()) {
-            tilt_calibration[x].degree = int(obj[tilt_color_names[x]]["degree"]);
-        }
-
         if (!obj[tilt_color_names[x]]["x0"].isNull()) {
             tilt_calibration[x].x0 = float(obj[tilt_color_names[x]]["x0"]);
         }
