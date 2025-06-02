@@ -536,7 +536,7 @@ void trigger_OTA(AsyncWebServerRequest *request) {
 #endif
 
 void http_json(JsonDocument &doc) {
-    doc = tilt_scanner.tilt_to_json(false);
+    doc = tilt_scanner.tilt_to_json();
 }
 
 void settings_json(JsonDocument &doc) {

@@ -232,7 +232,7 @@ bool dataSendHandler::send_to_bf_and_bf(const uint8_t which_bf)
         th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
         j["temp"] = temp;
         j["temp_unit"] = "F";
-        th.converted_gravity(gravity, sizeof(gravity), false);
+        th.cal_smooth_gravity_str(gravity, sizeof(gravity));
         j["gravity"] = gravity;
         j["gravity_unit"] = "G";
         j["device_source"] = "TiltBridge";
@@ -273,7 +273,7 @@ bool dataSendHandler::send_to_grainfather()
             th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
             j["Temp"] = temp;
             j["Unit"] = "F";
-            th.converted_gravity(gravity, sizeof(gravity), false);
+            th.cal_smooth_gravity_str(gravity, sizeof(gravity));
             j["SG"] = gravity;
 
             char payload_string[GF_SIZE];
@@ -325,7 +325,7 @@ bool dataSendHandler::send_to_taplistio()
         j["Color"] = tilt_color_names[th.m_color];
         th.converted_temp(temp, sizeof(temp), true);  // Always in Fahrenheit
         j["Temp"] = temp;
-        th.converted_gravity(gravity, sizeof(gravity), false);
+        th.cal_smooth_gravity_str(gravity, sizeof(gravity));
         j["SG"] = gravity;
         j["temperature_unit"] = "F";
         j["gravity_unit"] = "G";
@@ -371,7 +371,7 @@ bool dataSendHandler::send_to_brewstatus()
             for(tiltHydrometer & th : tilt_scanner.m_tilt_devices) {
                 char gravity[10];
                 char temp[6];
-                th.converted_gravity(gravity, sizeof(gravity), false);
+                th.cal_smooth_gravity_str(gravity, sizeof(gravity));
                 th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit since we don't send units
                 snprintf(payload, payload_size, "SG=%s&Temp=%s&Color=%s&Timepoint=%.11f&Beer=Undefined&Comment=",
                         gravity, temp, tilt_color_names[th.m_color], ((double)std::time(0) + (config.TZoffset * 3600.0)) / 86400.0 + 25569.0);
@@ -430,7 +430,7 @@ bool dataSendHandler::send_to_google()
                     payload["Beer"] = config.gsheets_config[th.m_color].name;
                     th.converted_temp(temp, sizeof(temp), true); // Always in Fahrenheit
                     payload["Temp"] = temp;
-                    th.converted_gravity(gravity, sizeof(gravity), false);
+                    th.cal_smooth_gravity_str(gravity, sizeof(gravity));
                     payload["SG"] = gravity;
                     payload["Color"] = tilt_color_names[th.m_color];
                     payload["Comment"] = "";
@@ -882,7 +882,7 @@ void dataSendHandler::prepare_general_payload(tiltHydrometer *th, const char* ti
     payload["Color"] = tilt_color_names[th->m_color];
     payload["timeStamp"] = (int)std::time(0);
     payload["fermunits"] = "SG";
-    th->converted_gravity(gravity, 10, false);
+    th->cal_smooth_gravity_str(gravity, sizeof(gravity));
     payload["SG"] = gravity;
     th->converted_temp(temp, 6, false);
     payload["Temp"] = temp;

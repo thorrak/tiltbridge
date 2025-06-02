@@ -29,7 +29,7 @@ public:
 
     bool wait_until_scan_complete();
     uint8_t load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* advertisedDevice);
-    JsonDocument tilt_to_json(bool use_raw_gravity);
+    JsonDocument tilt_to_json();
     void tilt_to_json_legacy(JsonDocument &doc);
 
     std::size_t tilt_count();

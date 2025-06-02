@@ -150,7 +150,7 @@ uint8_t tiltScanner::load_tilt_from_advert_hex(const NimBLEAdvertisedDevice* adv
 
 
 
-JsonDocument tiltScanner::tilt_to_json(bool use_raw_gravity)
+JsonDocument tiltScanner::tilt_to_json()
 {
     tilt_scanner.drop_expired_tilts();
     
@@ -158,7 +158,7 @@ JsonDocument tiltScanner::tilt_to_json(bool use_raw_gravity)
     JsonArray array = doc.to<JsonArray>();
 
     for(tiltHydrometer & th : m_tilt_devices) {
-        array.add(th.to_json(use_raw_gravity));
+        array.add(th.to_json(false));
     }
 
     return doc;
@@ -168,11 +168,13 @@ JsonDocument tiltScanner::tilt_to_json(bool use_raw_gravity)
 void tiltScanner::tilt_to_json_legacy(JsonDocument &doc)
 {
     // This is only used for sending to Legacy Fermentrack
-    // The difference is that we don't return an array, but instead return a dict with the tilt color as the key
+    // The main difference is that we don't return an array, but instead return a dict with the tilt color as the key
+    // This is deprecated, and will be removed in the future.
     tilt_scanner.drop_expired_tilts();
 
     for(tiltHydrometer & th : m_tilt_devices) {
         // tilt_data[0] = {'\0'};
+        // The other difference is that we send a "gravity" key in the JSON which contains the uncalibrated, smoothed gravity value
         JsonDocument tilt_data = th.to_json(true);
         doc[tilt_color_names[th.m_color]] = tilt_data;
     }
