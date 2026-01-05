@@ -27,15 +27,19 @@ void IRAM_ATTR boardButtonPressed() {
 
 void initWiFiResetButton() {
 #ifndef LCD_TFT
+#ifndef NO_BUTTONS
     pinMode(WIFI_RESET_BUTTON_GPIO, INPUT_PULLUP);
     attachInterrupt(WIFI_RESET_BUTTON_GPIO, wifiButtonPressed, RISING);
+#endif
 #endif
 }
 
 void initBoardResetButton() {
 #ifndef LCD_TFT
+#ifndef NO_BUTTONS
     pinMode(BOARD_RESET_BUTTON_GPIO, INPUT_PULLUP);
     attachInterrupt(BOARD_RESET_BUTTON_GPIO, boardButtonPressed, RISING);
+#endif
 #endif
 }
 
