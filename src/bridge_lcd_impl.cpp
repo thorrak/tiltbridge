@@ -1,7 +1,7 @@
 #include <ArduinoLog.h>
 #include <WiFi.h>
 
-#ifdef LCD_SSD1306
+#if defined(LCD_SSD1306) || defined(LCD_TFT_M5STICKC)
 #include <Wire.h>
 #endif
 
@@ -20,6 +20,23 @@
 I2C_AXP192 axp192(I2C_AXP192_DEFAULT_ADDRESS, Wire1);
 #endif
 
+#ifdef LCD_TFT_M5STICKC
+bridge_lcd::M5Variant bridge_lcd::detect_m5_variant() {
+    Wire1.begin(21, 22);
+    Wire1.beginTransmission(0x34);  // AXP192 I2C address
+    uint8_t error = Wire1.endTransmission();
+    Wire1.end();
+
+    if (error == 0) {
+        Log.notice(F("Detected M5StickC Plus (AXP192 found)" CR));
+        return M5Variant::Plus;
+    } else {
+        Log.notice(F("Detected M5StickC Plus2 (no AXP192)" CR));
+        return M5Variant::Plus2;
+    }
+}
+#endif
+
 
 ////////////////////////////////////////////////////////////
 // Public Methods
@@ -27,28 +44,42 @@ I2C_AXP192 axp192(I2C_AXP192_DEFAULT_ADDRESS, Wire1);
 
 
 inline void bridge_lcd::init_power() {
-#ifdef AXP192
-    // For m5 stick and whatnot, the LCD backlight AND the controller both are powered off the AXP192, so we need to initialize that first
-    Wire1.begin(21, 22);    
+#ifdef LCD_TFT_M5STICKC
+    m5_variant = detect_m5_variant();
 
-    I2C_AXP192_InitDef initDef = {
-        .EXTEN  = true,
-        .BACKUP = true,
-        .DCDC1  = 3300,
-        .DCDC2  = 0,
-        .DCDC3  = 0,
-        .LDO2   = 3000,
-        .LDO3   = 3000,
-        .GPIO0  = 2800,
-        .GPIO1  = -1,
-        .GPIO2  = -1,
-        .GPIO3  = -1,
-        .GPIO4  = -1,
-    };
-    axp192.begin(initDef);
-#endif
+    if (m5_variant == M5Variant::Plus) {
+        // M5StickC Plus: Initialize AXP192 for power/backlight
+        Wire1.begin(21, 22);
+        I2C_AXP192_InitDef initDef = {
+            .EXTEN  = true,
+            .BACKUP = true,
+            .DCDC1  = 3300,
+            .DCDC2  = 0,
+            .DCDC3  = 0,
+            .LDO2   = 3000,
+            .LDO3   = 3000,
+            .GPIO0  = 2800,
+            .GPIO1  = -1,
+            .GPIO2  = -1,
+            .GPIO3  = -1,
+            .GPIO4  = -1,
+        };
+        axp192.begin(initDef);
+    } else {
+        // M5StickC Plus2: Set HOLD pin (GPIO4) HIGH to maintain power
+        // Without this, the device may shut down on battery - see M5Stack docs
+        // n.b - I ended up commenting this out as there was a weird 'clicking" noise when turning 
+        //       off the device via the button when running on battery. I think the fix is to capture 
+        //       the button press (GPIO 35?) and then set GPIO4 to low, but am fine with just disabling
+        //       battery operation for now (which is what happens when these are commented out)
+        //pinMode(4, OUTPUT);
+        //digitalWrite(4, HIGH);
 
-#ifdef PIN_POWER_ON
+        // Turn on backlight via GPIO27
+        pinMode(27, OUTPUT);
+        digitalWrite(27, HIGH);
+    }
+#elif defined(PIN_POWER_ON)
     pinMode(PIN_POWER_ON, OUTPUT);
     digitalWrite(PIN_POWER_ON, HIGH);
 #endif
@@ -131,7 +162,11 @@ void bridge_lcd::init() {
 #if defined(LCD_TFT)
     tft = new LGFX_D32_Pro();
 #elif defined(LCD_TFT_M5STICKC)
-    tft = new LGFX_M5StickC();
+    {
+        auto m5_tft = new LGFX_M5StickC();
+        m5_tft->configure(m5_variant == M5Variant::Plus2);
+        tft = m5_tft;
+    }
 #elif defined(ESP32S3)
     tft = new LGFX_S3_TDisplay();
     // tft = new LGFX();

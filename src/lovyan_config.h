@@ -55,28 +55,33 @@ public:
 };
 
 #elif defined(LCD_TFT_M5STICKC)
-// Configuration class for M5StickC Plus
+// Configuration class for M5StickC Plus and Plus2
+// Plus: AXP192 power management, DC=23, RST=18, backlight via AXP192
+// Plus2: No AXP192, DC=14, RST=12, backlight via GPIO27 PWM
 class LGFX_M5StickC : public lgfx::LGFX_Device
 {
     lgfx::Panel_ST7789 _panel_instance;
     lgfx::Bus_SPI _bus_instance;
+    lgfx::Light_PWM _light_instance;
 
 public:
-    LGFX_M5StickC(void)
-    {
+    LGFX_M5StickC(void) {}  // Empty constructor - configure() does the work
+
+    void configure(bool isPlus2) {
         {
             auto cfg = _bus_instance.config();
-            cfg.spi_host = VSPI_HOST;
+            // Plus2 uses HSPI, Plus uses VSPI
+            cfg.spi_host = isPlus2 ? HSPI_HOST : VSPI_HOST;
             cfg.spi_mode = 0;
             cfg.freq_write = 40000000;
-            cfg.freq_read = 16000000;
+            cfg.freq_read = isPlus2 ? 15000000 : 16000000;
             cfg.spi_3wire = true;
             cfg.use_lock = true;
             cfg.dma_channel = SPI_DMA_CH_AUTO;
             cfg.pin_sclk = 13;
             cfg.pin_mosi = 15;
             cfg.pin_miso = -1;
-            cfg.pin_dc = 23;
+            cfg.pin_dc = isPlus2 ? 14 : 23;
             _bus_instance.config(cfg);
             _panel_instance.setBus(&_bus_instance);
         }
@@ -84,7 +89,7 @@ public:
         {
             auto cfg = _panel_instance.config();
             cfg.pin_cs = 5;
-            cfg.pin_rst = 18;
+            cfg.pin_rst = isPlus2 ? 12 : 18;
             cfg.pin_busy = -1;
             cfg.panel_width = 135;
             cfg.panel_height = 240;
@@ -100,6 +105,17 @@ public:
             cfg.bus_shared = true;
             _panel_instance.config(cfg);
         }
+
+        if (isPlus2) {
+            auto lcfg = _light_instance.config();
+            lcfg.pin_bl = 27;
+            lcfg.invert = false;
+            lcfg.freq = 256;  // M5GFX uses 256 Hz for Plus2
+            lcfg.pwm_channel = 7;
+            _light_instance.config(lcfg);
+            _panel_instance.setLight(&_light_instance);
+        }
+        // Plus: No Light binding - AXP192 handles backlight
 
         setPanel(&_panel_instance);
     }
