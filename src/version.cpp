@@ -9,29 +9,28 @@ const char *hardware() { return stringify(HARDWARE_VERSION); }
  * versionCompare: Compares two strings representing a semantic version
  *
  * Arguments:
- *      String v1:  String in nn.nn.nn format containing version to be
- *                  compared against
- *      String v2:  String in nn.nn.nn formatcontaining version to compare
+ *      const char *v1: String in nn.nn.nn format containing version to be
+ *                      compared against
+ *      const char *v2: String in nn.nn.nn format containing version to compare
  *
  * Returns:
- *      -1: String v1 < String v2
- *       0: String v1 == String v2
- *       1: String v1 > String v2
+ *      -1: v1 < v2
+ *       0: v1 == v2
+ *       1: v1 > v2
  */
-int versionCompare(String v1, String v2) {
-    // vnum stores each numeric part of the version
+int versionCompare(const char *v1, const char *v2) {
     unsigned int vnum1 = 0, vnum2 = 0;
+    unsigned int i = 0, j = 0;
 
-    //  Loop until both string are processed
-    for (unsigned int i = 0, j = 0; (i < v1.length() || j < v2.length());) {
-        // Store numeric part of version 1 in vnum1
-        while (i < v1.length() && v1[i] != '.') {
+    while (v1[i] != '\0' || v2[j] != '\0') {
+        // Parse numeric part of version 1
+        while (v1[i] != '\0' && v1[i] != '.') {
             vnum1 = vnum1 * 10 + (v1[i] - '0');
             i++;
         }
 
-        // Store numeric part of version 2 in vnum2
-        while (j < v2.length() && v2[j] != '.') {
+        // Parse numeric part of version 2
+        while (v2[j] != '\0' && v2[j] != '.') {
             vnum2 = vnum2 * 10 + (v2[j] - '0');
             j++;
         }
@@ -43,8 +42,8 @@ int versionCompare(String v1, String v2) {
 
         // If equal, reset variables and go for next numeric part
         vnum1 = vnum2 = 0;
-        i++;
-        j++;
+        if (v1[i] != '\0') i++;
+        if (v2[j] != '\0') j++;
     }
     return 0;
 }

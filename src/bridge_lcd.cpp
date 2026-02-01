@@ -1,4 +1,4 @@
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include <WiFi.h>
 
 #ifdef LCD_SSD1306

@@ -4,6 +4,7 @@
 #include <WiFiClient.h>
 #include <Ticker.h>
 #include <ArduinoJson.h>
+#include "mqtt_client.h"
 #include "tilt/tiltHydrometer.h"
 
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
@@ -85,8 +86,11 @@ private:
     bool send_to_url(const char *url, const char *dataToSend, const char *contentType, bool checkBody = false, const char *bodyCheck = "");
 
     // MQTT Stuff
-    WiFiClient mqClient;
+    esp_mqtt_client_handle_t mqtt_client = nullptr;
     bool mqtt_alreadyinit = false;
+    bool mqtt_connected = false;
+
+    static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
     void connect_mqtt();
     bool publish_to_mqtt(const char* topic, JsonDocument& payload, bool retain);

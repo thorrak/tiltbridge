@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -30,5 +32,5 @@ enum class httpMethod {
 };
 
 
-sendResult send_json_str(String &payload, const char *url, httpMethod method);
-sendResult send_json_str(String &payload, const char *url, String &response, httpMethod method);
+sendResult send_json_str(const char *payload, const char *url, httpMethod method);
+sendResult send_json_str(const char *payload, const char *url, char *response, size_t response_size, httpMethod method);

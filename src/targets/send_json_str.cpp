@@ -1,5 +1,6 @@
 
-#include <ArduinoLog.h>
+#include <string.h>
+#include <thorlog.h>
 
 #include "send_json_str.h"
 #include "version.h"
@@ -31,46 +32,42 @@ void get_useragent(char *ua, size_t size) {
     );
 }
 
-sendResult send_json_str(String &payload, const char *url, httpMethod method) {
-    String response;
-    return send_json_str(payload, url, response, method);
+sendResult send_json_str(const char *payload, const char *url, httpMethod method) {
+    return send_json_str(payload, url, nullptr, 0, method);
 }
 
-sendResult send_json_str(String &payload, const char *url, String &response, httpMethod method) {
-    char auth_header[64];
+sendResult send_json_str(const char *payload, const char *url, char *response, size_t response_size, httpMethod method) {
     char userAgent[128];
     int httpResponseCode;
     sendResult result;
 
-    // send_lock = true;
-
+    // Initialize response buffer if provided
+    if (response != nullptr && response_size > 0) {
+        response[0] = '\0';
+    }
 
     if (WiFi.status() != WL_CONNECTED) {
-        Log.warning(F("send_json_str: Wifi not connected, skipping send.\r\n"));
-        // send_lock = false;
+        Log.warning("send_json_str: Wifi not connected, skipping send.\r\n");
         return sendResult::retry;
     }
 
     get_useragent(userAgent, sizeof(userAgent));
 
-    // snprintf(auth_header, sizeof(auth_header), "token %s", config.secret);
+    size_t payload_len = (payload != nullptr) ? strlen(payload) : 0;
 
     // Log the request appropriately based on whether we have a payload
-    if (payload.length() > 0) {
-        Log.info(F("send_json_str: Sending %s with payload to %s\r\n"), httpMethodToString(method), url);
+    if (payload_len > 0) {
+        Log.info("send_json_str: Sending %s with payload to %s\r\n", httpMethodToString(method), url);
     } else {
-        Log.info(F("send_json_str: Sending %s to %s\r\n"), httpMethodToString(method), url);
+        Log.info("send_json_str: Sending %s to %s\r\n", httpMethodToString(method), url);
     }
 
     yield();  // Yield before we lock up the radio
 
-    // TODO - Determine if we can get rid of the call to new
-    // WiFiClientSecure *client = new WiFiClientSecure;
     WiFiClient client;
     if(true) {
-        // client.setInsecure();
         {
-            // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is 
+            // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClient
             HTTPClient http;
 
             http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
@@ -81,36 +78,42 @@ sendResult send_json_str(String &payload, const char *url, String &response, htt
 
             if (http.begin(client, url)) {
                 // Only add Content-Type header if we have a JSON payload
-                if (payload.length() > 0) {
-                    http.addHeader(F("Content-Type"), F("application/json"));
+                if (payload_len > 0) {
+                    http.addHeader("Content-Type", "application/json");
                 }
-                // http.addHeader(F("Authorization"), auth_header);
                 http.setUserAgent(userAgent);
 
                 // Use whatever method we were passed
-                httpResponseCode = http.sendRequest(httpMethodToString(method), payload);
+                // Pass empty string if payload is null
+                httpResponseCode = http.sendRequest(httpMethodToString(method), payload != nullptr ? payload : "");
 
-                response = http.getString();
+                // Use a local buffer for the response - we copy from getString() immediately
+                // to avoid keeping the Arduino String around
+                char httpResponseBuf[2048];
+                strlcpy(httpResponseBuf, http.getString().c_str(), sizeof(httpResponseBuf));
+
+                // Copy response to caller's buffer if provided
+                if (response != nullptr && response_size > 0) {
+                    strlcpy(response, httpResponseBuf, response_size);
+                }
 
                 if (httpResponseCode < HTTP_CODE_OK || httpResponseCode > HTTP_CODE_NO_CONTENT) {
                     Log.error("send_json_str: Send failed (%d): %s. Response:\r\n%s\r\n",
                         httpResponseCode,
-                        http.errorToString(httpResponseCode).c_str(),
-                        response.c_str());
+                        HTTPClient::errorToString(httpResponseCode),
+                        httpResponseBuf);
                     result = sendResult::failure;
                 } else {
-                    Log.verbose(F("send_json_str: Response:\r\n%s\r\n"), response.c_str());
+                    Log.verbose("send_json_str: Response:\r\n%s\r\n", httpResponseBuf);
                     result = sendResult::success;
                 }
                 http.end();
             } else {
-                Log.error(F("send_json_str: Unable to create connection\r\n"));
+                Log.error("send_json_str: Unable to create connection\r\n");
                 result = sendResult::failure;
             }
         }
-        // delete client;
     }
 
-    // send_lock = false;
     return result;
 }

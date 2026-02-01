@@ -1,4 +1,4 @@
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include <ArduinoJson.h>
 
 #include "filesystem.h"  // Selects SPIFFS or LittleFS as necessary
@@ -28,17 +28,17 @@ bool ConfigFile::loadFile(const char * filename) {
     // Loads the configuration from a file on FILESYSTEM
     if (!FILESYSTEM.exists(filename)) {
         // File does not exist
-        Log.info(F("Config file %s does not exist - creating with defaults\r\n"), filename);
+        Log.info("Config file %s does not exist - creating with defaults\r\n", filename);
         saveFile(filename);
     } else {
         // Existing configuration present
-        Log.verbose(F("Found existing config file %s\r\n"), filename);
+        Log.verbose("Found existing config file %s\r\n", filename);
     }
     
     File file = FILESYSTEM.open(filename, "r");
     if (!file) {
         // Unable to open the file
-        Log.error(F("Unable to access config file %s\r\n"), filename);
+        Log.error("Unable to access config file %s\r\n", filename);
         return false;
     }
 

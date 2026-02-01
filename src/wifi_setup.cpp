@@ -1,6 +1,6 @@
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include <ESPmDNS.h>
-#include <LCBUrl.h>
+#include "url_utils.h"
 #include <WiFiManager.h>
 #include <esp_timer.h>
 
@@ -20,13 +20,13 @@ void saveParamsCallback() {
 
 void apCallback(WiFiManager *myWiFiManager) {
     // Callback to display the WiFi LCD notification and set bandwidth
-    Log.verbose(F("Entered config mode: SSID: %s, IP: %s\r\n"), myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
+    Log.verbose("Entered config mode: SSID: %s, IP: %s\r\n", myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
     lcd.display_wifi_connect_screen(myWiFiManager->getConfigPortalSSID().c_str(), WIFI_SETUP_AP_PASS);
     esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW_HT20);  // Set the bandwidth of ESP32 interface 
 }
 
 void disconnectWiFi() {
-    Log.notice(F("Resetting WiFi settings via disconnectWiFi()\r\n"));
+    Log.notice("Resetting WiFi settings via disconnectWiFi()\r\n");
     WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(true);  // This is implicit at startup, but I want to set it explicitly here to ensure credentials are deleted
     WiFi.disconnect(true, true);
@@ -40,10 +40,10 @@ void mdnsReset() {
     http_server.name_reset_requested = false;
     MDNS.end();
     if (!MDNS.begin(config.mdnsID)) {
-        Log.error(F("Error resetting MDNS responder."));
+        Log.error("Error resetting MDNS responder.");
         ESP.restart();
     } else {
-        Log.notice(F("mDNS responder restarted, hostname: %s.local.\r\n"), WiFi.getHostname());
+        Log.notice("mDNS responder restarted, hostname: %s.local.\r\n", WiFi.getHostname());
         MDNS.addService("http", "tcp", WEB_SERVER_PORT);
         MDNS.addService("tiltbridge", "tcp", WEB_SERVER_PORT);
     }
@@ -56,11 +56,11 @@ void initWiFi() {
 
     // Set up WiFi event handlers for better diagnostics
     WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
-        Log.warning(F("WiFi disconnected, reason: %d\r\n"), info.wifi_sta_disconnected.reason);
+        Log.warning("WiFi disconnected, reason: %d\r\n", info.wifi_sta_disconnected.reason);
     }, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
     WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
-        Log.notice(F("WiFi connected, IP: %s\r\n"), WiFi.localIP().toString().c_str());
+        Log.notice("WiFi connected, IP: %s\r\n", WiFi.localIP().toString().c_str());
     }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
     WiFiManager wm;
@@ -88,7 +88,7 @@ void initWiFi() {
     wm.addParameter(&custom_mdns_name);
 
     if (!wm.autoConnect(WIFI_SETUP_AP_NAME, WIFI_SETUP_AP_PASS)) {
-        Log.warning(F("Failed to connect and/or hit timeout. Restarting.\r\n"));
+        Log.warning("Failed to connect and/or hit timeout. Restarting.\r\n");
         ESP.restart();
     } else {
         // We finished with portal (We were configured)
@@ -98,10 +98,9 @@ void initWiFi() {
 
     if (shouldSaveConfig) {
         // If we connected, then let's save the mDNS name
-        LCBUrl url;
         if (strcmp(custom_mdns_name.getValue(), config.mdnsID) != 0) {
             // If the mDNS name is valid, save it.
-            if (url.isValidHostName(custom_mdns_name.getValue())) {
+            if (isValidHostName(custom_mdns_name.getValue())) {
                 strlcpy(config.mdnsID, custom_mdns_name.getValue(), 31);
                 config.save();
             } else {
@@ -117,7 +116,7 @@ void initWiFi() {
     }
 
     if (!MDNS.begin(config.mdnsID)) {
-        Log.error(F("Error setting up MDNS responder.\r\n"));
+        Log.error("Error setting up MDNS responder.\r\n");
     }
 
     MDNS.addService("http", "tcp", WEB_SERVER_PORT);       // technically we should wait on this, but I'm impatient.
@@ -147,7 +146,7 @@ void reconnectWiFi() {
         // WiFi is down - Reconnect
         if(WLcount == 0) {
             // First time we noticed the WiFi is out
-            Log.notice(F("WiFi is disconnected, reconnecting. (%d/%d)\r\n"), WLcount, MAX_CONNECT_ATTEMPTS);
+            Log.notice("WiFi is disconnected, reconnecting. (%d/%d)\r\n", WLcount, MAX_CONNECT_ATTEMPTS);
             lcd.display_wifi_disconnected_screen();
             // WiFi.begin();
             delay(1000); // Ensuring the "disconnected" screen appears for at least one second
@@ -166,11 +165,11 @@ void reconnectWiFi() {
             if (WLcount <= MAX_CONNECT_ATTEMPTS) {
                 // Not reconnected, but still have attempts left to reconnect
                 // printDot(true);
-                Log.notice(F("WiFi is still disconnected. (%d/%d)\r\n"), WLcount, MAX_CONNECT_ATTEMPTS);
+                Log.notice("WiFi is still disconnected. (%d/%d)\r\n", WLcount, MAX_CONNECT_ATTEMPTS);
             } else {
                 // We failed to reconnect.
                 lcd.display_wifi_reconnect_failed();
-                Log.error(F("Unable to reconnect WiFi, restarting.\r\n"));
+                Log.error("Unable to reconnect WiFi, restarting.\r\n");
                 delay(1000);
                 ESP.restart();
             }
@@ -179,7 +178,7 @@ void reconnectWiFi() {
 
     if (WiFi.status() == WL_CONNECTED && WLcount != 0) {
         // We reconnected successfully
-        Log.error(F("Reconnected to WiFi\r\n"));
+        Log.error("Reconnected to WiFi\r\n");
         mdnsReset();  // Make sure that we reconnect mDNS
         lcd.display_logo();
         WLcount = 0;

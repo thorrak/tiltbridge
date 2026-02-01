@@ -2,7 +2,7 @@
 // Created by John Beeler on 5/12/18.
 //
 
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>
 
@@ -25,7 +25,7 @@ void ScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice)
             advertisedDevice->getManufacturerData()[2] == 0x02 && advertisedDevice->getManufacturerData()[3] == 0x15)
         {
 #ifdef BLE_PRINT_ALL_DEVICES
-            Log.verbose(F("Advertised iBeacon Device: %s \r\n"), advertisedDevice->toString().c_str());
+            Log.verbose("Advertised iBeacon Device: %s \r\n", advertisedDevice->toString().c_str());
 #endif
             tilt_scanner.load_tilt_from_advert_hex(advertisedDevice);
         }
@@ -73,7 +73,7 @@ bool tiltScanner::scan()
             if (pBLEScan->start(BLE_SCAN_TIME, false, true)) {
                 retval = true; //Scan successfully started.
             } else {
-                Log.verbose(F("Scan failed to start.\r\n"));
+                Log.verbose("Scan failed to start.\r\n");
             }
         }
     }
@@ -214,7 +214,7 @@ tiltHydrometer* tiltScanner::get_or_create_tilt(const NimBLEAddress devAddress, 
 void tiltScanner::drop_expired_tilts() {
     for (auto it = m_tilt_devices.begin(); it != m_tilt_devices.end(); ) {
         if (it->expired()) {
-            Log.verbose(F("Dropping Tilt %s due to inactivity.\r\n"), tilt_color_names[it->m_color]);
+            Log.verbose("Dropping Tilt %s due to inactivity.\r\n", tilt_color_names[it->m_color]);
             it = m_tilt_devices.erase(it);
         } else {
             ++it;

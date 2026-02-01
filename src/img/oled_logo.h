@@ -5,12 +5,12 @@
 #ifndef _OLED_LOGO_H
 #define _OLED_LOGO_H
 
-#include <Arduino.h>
+#include <cstdint>
 
 #define oled_logo_width 78
 #define oled_logo_height 56
 
-const uint8_t oled_logo_bits[] PROGMEM = {
+const uint8_t oled_logo_bits[] = {
     // Created using GIMP - Change to indexed color/2 bit, Save as XBM then open with a text editor
     0x00, 0x00, 0x00, 0x00, 0xfe, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0xc0, 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0,

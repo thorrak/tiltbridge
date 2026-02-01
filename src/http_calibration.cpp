@@ -1,6 +1,6 @@
 #include "http_calibration.h"
 #include <ArduinoJson.h>
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include "filesystem.h"
 #include "jsonconfig.h"
 #include "tilt/tiltHydrometer.h"
@@ -12,7 +12,7 @@ bool processCalibrationDataPoint(const JsonDocument& json, bool triggerUpstreamU
     
     // Extract required fields
     if (!json["color"].is<uint8_t>() || !json["rawGravity"].is<double>() || !json["actualGravity"].is<double>()) {
-        Log.error(F("Error: Missing required calibration data fields.\r\n"));
+        Log.error("Error: Missing required calibration data fields.\r\n");
         return false;
     }
     
@@ -20,7 +20,7 @@ bool processCalibrationDataPoint(const JsonDocument& json, bool triggerUpstreamU
     
     // Validate color
     if (color >= TILT_COLORS) {
-        Log.error(F("Error: Invalid Tilt color: %d.\r\n"), color);
+        Log.error("Error: Invalid Tilt color: %d.\r\n", color);
         return false;
     }
     
@@ -43,14 +43,14 @@ bool processCalibrationDataPoint(const JsonDocument& json, bool triggerUpstreamU
             file.close();
             
             if (error) {
-                Log.error(F("Error: Failed to parse existing calibration file: %s\r\n"), error.c_str());
+                Log.error("Error: Failed to parse existing calibration file: %s\r\n", error.c_str());
                 // Create new document if parsing fails
                 dataPoints = calDoc.to<JsonArray>();
             } else {
                 dataPoints = calDoc.as<JsonArray>();
             }
         } else {
-            Log.error(F("Error: Failed to open calibration file for reading.\r\n"));
+            Log.error("Error: Failed to open calibration file for reading.\r\n");
             dataPoints = calDoc.to<JsonArray>();
         }
     } else {
@@ -66,14 +66,14 @@ bool processCalibrationDataPoint(const JsonDocument& json, bool triggerUpstreamU
     // Save to file
     File file = FILESYSTEM.open(filename, "w");
     if (!file) {
-        Log.error(F("Error: Failed to open calibration file for writing.\r\n"));
+        Log.error("Error: Failed to open calibration file for writing.\r\n");
         return false;
     }
     
     serializeJson(calDoc, file);
     file.close();
     
-    Log.notice(F("Calibration point saved: color=%d, raw=%.3f, actual=%.3f\r\n"), 
+    Log.notice("Calibration point saved: color=%d, raw=%.3f, actual=%.3f\r\n", 
                color, rawGravity, actualGravity);
     
     return true;
@@ -85,7 +85,7 @@ bool processCalibrationCoefficients(const JsonDocument& json, bool triggerUpstre
     
     // Extract required fields
     if (!json["color"].is<uint8_t>()) {
-        Log.error(F("Error: Missing color field for calibration coefficients.\r\n"));
+        Log.error("Error: Missing color field for calibration coefficients.\r\n");
         return false;
     }
     
@@ -93,7 +93,7 @@ bool processCalibrationCoefficients(const JsonDocument& json, bool triggerUpstre
     
     // Validate color
     if (color >= TILT_COLORS) {
-        Log.error(F("Error: Invalid Tilt color: %d.\r\n"), color);
+        Log.error("Error: Invalid Tilt color: %d.\r\n", color);
         return false;
     }
     
@@ -103,35 +103,35 @@ bool processCalibrationCoefficients(const JsonDocument& json, bool triggerUpstre
     if (json["x0"].is<double>()) {
         config.tilt_calibration[color].x0 = json["x0"].as<double>();
         updated = true;
-        Log.notice(F("Updated x0 for color %d: %.6f\r\n"), color, config.tilt_calibration[color].x0);
+        Log.notice("Updated x0 for color %d: %.6f\r\n", color, config.tilt_calibration[color].x0);
     }
     
     if (json["x1"].is<double>()) {
         config.tilt_calibration[color].x1 = json["x1"].as<double>();
         updated = true;
-        Log.notice(F("Updated x1 for color %d: %.6f\r\n"), color, config.tilt_calibration[color].x1);
+        Log.notice("Updated x1 for color %d: %.6f\r\n", color, config.tilt_calibration[color].x1);
     }
     
     if (json["x2"].is<double>()) {
         config.tilt_calibration[color].x2 = json["x2"].as<double>();
         updated = true;
-        Log.notice(F("Updated x2 for color %d: %.6f\r\n"), color, config.tilt_calibration[color].x2);
+        Log.notice("Updated x2 for color %d: %.6f\r\n", color, config.tilt_calibration[color].x2);
     }
     
     if (json["x3"].is<double>()) {
         config.tilt_calibration[color].x3 = json["x3"].as<double>();
         updated = true;
-        Log.notice(F("Updated x3 for color %d: %.6f\r\n"), color, config.tilt_calibration[color].x3);
+        Log.notice("Updated x3 for color %d: %.6f\r\n", color, config.tilt_calibration[color].x3);
     }
     
     if (updated) {
         // Save configuration
         if (!config.save()) {
-            Log.error(F("Error: Unable to save calibration coefficients.\r\n"));
+            Log.error("Error: Unable to save calibration coefficients.\r\n");
             return false;
         }
         
-        Log.notice(F("Calibration coefficients saved for color %d\r\n"), color);
+        Log.notice("Calibration coefficients saved for color %d\r\n", color);
     }
     
     return true;
@@ -140,7 +140,7 @@ bool processCalibrationCoefficients(const JsonDocument& json, bool triggerUpstre
 // Function to get calibration points for a specific color
 bool getCalibrationPoints(uint8_t color, JsonDocument& doc) {
     if (color >= TILT_COLORS) {
-        Log.error(F("Error: Invalid Tilt color: %d.\r\n"), color);
+        Log.error("Error: Invalid Tilt color: %d.\r\n", color);
         return false;
     }
     
@@ -155,7 +155,7 @@ bool getCalibrationPoints(uint8_t color, JsonDocument& doc) {
     
     File file = FILESYSTEM.open(filename, "r");
     if (!file) {
-        Log.error(F("Error: Failed to open calibration file for reading.\r\n"));
+        Log.error("Error: Failed to open calibration file for reading.\r\n");
         return false;
     }
     
@@ -163,7 +163,7 @@ bool getCalibrationPoints(uint8_t color, JsonDocument& doc) {
     file.close();
     
     if (error) {
-        Log.error(F("Error: Failed to parse calibration file: %s\r\n"), error.c_str());
+        Log.error("Error: Failed to parse calibration file: %s\r\n", error.c_str());
         return false;
     }
     
@@ -173,7 +173,7 @@ bool getCalibrationPoints(uint8_t color, JsonDocument& doc) {
 // Function to clear calibration points for a specific color
 bool clearCalibrationPoints(uint8_t color) {
     if (color >= TILT_COLORS) {
-        Log.error(F("Error: Invalid Tilt color: %d.\r\n"), color);
+        Log.error("Error: Invalid Tilt color: %d.\r\n", color);
         return false;
     }
     
@@ -182,10 +182,10 @@ bool clearCalibrationPoints(uint8_t color) {
     
     if (FILESYSTEM.exists(filename)) {
         if (!FILESYSTEM.remove(filename)) {
-            Log.error(F("Error: Failed to delete calibration file.\r\n"));
+            Log.error("Error: Failed to delete calibration file.\r\n");
             return false;
         }
-        Log.notice(F("Calibration points cleared for color %d\r\n"), color);
+        Log.notice("Calibration points cleared for color %d\r\n", color);
     }
     
     return true;
@@ -194,7 +194,7 @@ bool clearCalibrationPoints(uint8_t color) {
 // Function to delete individual calibration data point by raw gravity
 bool deleteCalibrationPoint(uint8_t color, double rawGravity) {
     if (color >= TILT_COLORS) {
-        Log.error(F("Error: Invalid Tilt color: %d.\r\n"), color);
+        Log.error("Error: Invalid Tilt color: %d.\r\n", color);
         return false;
     }
     
@@ -202,7 +202,7 @@ bool deleteCalibrationPoint(uint8_t color, double rawGravity) {
     snprintf(filename, sizeof(filename), "%s/%d-cal.json", CONFIG_DIR, color);
     
     if (!FILESYSTEM.exists(filename)) {
-        Log.error(F("Error: No calibration file exists for color %d.\r\n"), color);
+        Log.error("Error: No calibration file exists for color %d.\r\n", color);
         return false;
     }
     
@@ -210,7 +210,7 @@ bool deleteCalibrationPoint(uint8_t color, double rawGravity) {
     JsonDocument calDoc;
     File file = FILESYSTEM.open(filename, "r");
     if (!file) {
-        Log.error(F("Error: Failed to open calibration file for reading.\r\n"));
+        Log.error("Error: Failed to open calibration file for reading.\r\n");
         return false;
     }
     
@@ -218,7 +218,7 @@ bool deleteCalibrationPoint(uint8_t color, double rawGravity) {
     file.close();
     
     if (error) {
-        Log.error(F("Error: Failed to parse calibration file: %s\r\n"), error.c_str());
+        Log.error("Error: Failed to parse calibration file: %s\r\n", error.c_str());
         return false;
     }
     
@@ -237,21 +237,21 @@ bool deleteCalibrationPoint(uint8_t color, double rawGravity) {
     }
     
     if (!found) {
-        Log.error(F("Error: Calibration point with raw gravity %.3f not found.\r\n"), rawGravity);
+        Log.error("Error: Calibration point with raw gravity %.3f not found.\r\n", rawGravity);
         return false;
     }
     
     // Save updated data back to file
     file = FILESYSTEM.open(filename, "w");
     if (!file) {
-        Log.error(F("Error: Failed to open calibration file for writing.\r\n"));
+        Log.error("Error: Failed to open calibration file for writing.\r\n");
         return false;
     }
     
     serializeJson(calDoc, file);
     file.close();
     
-    Log.notice(F("Calibration point deleted: color=%d, raw=%.3f\r\n"), color, rawGravity);
+    Log.notice("Calibration point deleted: color=%d, raw=%.3f\r\n", color, rawGravity);
     return true;
 }
 
@@ -259,7 +259,7 @@ bool deleteCalibrationPoint(uint8_t color, double rawGravity) {
 bool processCalibrationDataDelete(const JsonDocument& json, bool triggerUpstreamUpdate) {
     // Extract required fields
     if (!json["color"].is<uint8_t>()) {
-        Log.error(F("Error: Missing color field for calibration deletion.\r\n"));
+        Log.error("Error: Missing color field for calibration deletion.\r\n");
         return false;
     }
     

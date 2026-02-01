@@ -1,7 +1,7 @@
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
-#include <ArduinoLog.h>
+#include <thorlog.h>
 
 #include "filesystem.h"
 

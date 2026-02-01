@@ -1,8 +1,6 @@
 #ifndef _VERSION_H
 #define _VERSION_H
 
-#include <Arduino.h>
-
 #define stringify(s) _stringifyDo(s)
 #define _stringifyDo(s) #s
 
@@ -11,6 +9,6 @@ const char *branch();
 const char *version();
 const char *hardware();
 
-int versionCompare(String, String);
+int versionCompare(const char *v1, const char *v2);
 
 #endif // _VERSION_H

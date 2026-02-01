@@ -1,4 +1,4 @@
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include <WiFi.h>
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_M5STICKC)
@@ -28,10 +28,10 @@ bridge_lcd::M5Variant bridge_lcd::detect_m5_variant() {
     Wire1.end();
 
     if (error == 0) {
-        Log.notice(F("Detected M5StickC Plus (AXP192 found)" CR));
+        Log.notice("Detected M5StickC Plus (AXP192 found)" CR);
         return M5Variant::Plus;
     } else {
-        Log.notice(F("Detected M5StickC Plus2 (no AXP192)" CR));
+        Log.notice("Detected M5StickC Plus2 (no AXP192)" CR);
         return M5Variant::Plus2;
     }
 }
@@ -361,7 +361,7 @@ bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
     byte error;
 
    if(!Wire.begin(sda_pin, scl_pin)) {
-        Log.error(F("Failed to initialize Wire on pin %d/%d\r\n"), sda_pin, scl_pin);
+        Log.error("Failed to initialize Wire on pin %d/%d\r\n", sda_pin, scl_pin);
         return false;  // Failed to initialize twowire on selected sda/scl
    }
     Wire.beginTransmission(address);

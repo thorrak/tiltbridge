@@ -2,9 +2,16 @@
 // Created by Lee Bussy on 12/31/20
 //
 
-#include <Arduino.h>
+#include <cmath>
+#include <esp_timer.h>
 
 #include "uptime.h"
+
+// TODO - Come back and just fully convert to esp_timer_get_time() calls
+// instead of using Arduino millis() function
+static inline unsigned long millis() {
+    return (unsigned long)(esp_timer_get_time() / 1000);
+}
 
 static int refresh = UPTIME_REFRESH * 1000;
 static unsigned long uptimeNow;

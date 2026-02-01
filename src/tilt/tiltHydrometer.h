@@ -1,7 +1,8 @@
 #ifndef TILTBRIDGE_TILTHYDROMETER_H
 #define TILTBRIDGE_TILTHYDROMETER_H
 
-#include <Arduino.h>
+#include <cstdint>
+#include <cstddef>
 #include <NimBLEAddress.h>
 #include <ArduinoJson.h>
 

@@ -2,7 +2,7 @@
 // Please note - This source code (along with other files) are provided under license.
 // More details (including license details) can be found in the files accompanying this source code.
 
-#include <ArduinoLog.h>
+#include <thorlog.h>
 
 #include "filesystem.h"
 
@@ -29,12 +29,12 @@ void printMem() {
     const uint32_t free = ESP.getFreeHeap();
     const uint32_t max = ESP.getMaxAllocHeap();
     const uint8_t frag = 100 - (max * 100) / free;
-    Log.info(F("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n"), free, max, frag);
+    Log.info("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n", free, max, frag);
 }
 
 void reboot()
 {
-    Log.notice(F("Rebooting on 24-hour timer." CR));
+    Log.notice("Rebooting on 24-hour timer." CR);
     delay(500);
     ESP.restart();
 }
@@ -42,21 +42,21 @@ void reboot()
 void setup() {
     serial();
 
-    Log.verbose(F("Loading config.\r\n"));
+    Log.verbose("Loading config.\r\n");
     // Initialize the filesystem 
     // (reformat if unable to initialize, though this will present broader problems as we won't have the web interface)
     if (!FILESYSTEM.begin(true)) {
-        Log.verbose(F("Unable to initialize filesystem.\r\n"));
+        Log.verbose("Unable to initialize filesystem.\r\n");
     }
     config.load();
 
-    Log.verbose(F("Initializing LCD.\r\n"));
+    Log.verbose("Initializing LCD.\r\n");
     lcd.init();
 
-    Log.verbose(F("Initializing WiFi.\r\n"));
+    Log.verbose("Initializing WiFi.\r\n");
     initWiFi();
 
-    Log.verbose(F("Initializing scanner.\r\n"));
+    Log.verbose("Initializing scanner.\r\n");
     tilt_scanner.init();                        // Initialize the BLE scanner
     tilt_scanner.wait_until_scan_complete();    // Wait until the initial scan completes
 
@@ -91,7 +91,7 @@ void loop() {
     // Check semaphores
 
     if (doBoardReset || http_server.restart_requested) {
-        Log.verbose(F("Resetting controller.\r\n"));
+        Log.verbose("Resetting controller.\r\n");
         http_server.restart_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
         delay(1000);
@@ -99,7 +99,7 @@ void loop() {
     }
 
     if (doWiFiReset || http_server.wifi_reset_requested) {
-        Log.verbose(F("Resetting WiFi configuration.\r\n"));
+        Log.verbose("Resetting WiFi configuration.\r\n");
         http_server.wifi_reset_requested = false; 
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
         delay(1000);
@@ -108,13 +108,13 @@ void loop() {
     }
 
     if (http_server.name_reset_requested) {
-        Log.verbose(F("Resetting host name.\r\n"));
+        Log.verbose("Resetting host name.\r\n");
         http_server.name_reset_requested = false;
         mdnsReset();
     }
 
     if (http_server.factoryreset_requested) {
-        Log.verbose(F("Resetting to original settings.\r\n"));
+        Log.verbose("Resetting to original settings.\r\n");
         http_server.factoryreset_requested = false;
         tilt_scanner.wait_until_scan_complete();    // Wait for scans to complete
         config.deleteFile();                        // Delete the config file in the filesystem
@@ -122,13 +122,13 @@ void loop() {
     }
 
     if (http_server.mqtt_init_rqd) {
-        Log.verbose(F("Re-initializing MQTT.\r\n"));
+        Log.verbose("Re-initializing MQTT.\r\n");
         http_server.mqtt_init_rqd = false;
         data_sender.init_mqtt();
     }
 
     if (http_server.lcd_reinit_rqd) {
-        Log.verbose(F("Re-initializing LCD.\r\n"));
+        Log.verbose("Re-initializing LCD.\r\n");
         http_server.lcd_reinit_rqd = false;
         lcd.reinit();
     }

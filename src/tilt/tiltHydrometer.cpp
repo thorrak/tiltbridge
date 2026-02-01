@@ -2,7 +2,7 @@
 // Created by John Beeler on 4/28/18.
 //
 
-#include <ArduinoLog.h>
+#include <thorlog.h>
 #include "tiltHydrometer.h"
 #include "jsonconfig.h"
 
@@ -161,7 +161,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #if PRINT_GRAV_UPDATES == 1
     char value[7];
     sprintf(value, "%.4f", d_grav);
-    Log.verbose(F("%s Tilt gravity = %s\r\n"), tilt_color_names[m_color], value);
+    Log.verbose("%s Tilt gravity = %s\r\n", tilt_color_names[m_color], value);
 #endif
 
     if (true) {
@@ -171,7 +171,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #if PRINT_GRAV_UPDATES == 1
         char calvalue[7];
         sprintf(calvalue, "%.4f", d_grav);
-        Log.verbose(F("%s Tilt calibration corrected gravity = %s\r\n"), tilt_color_names[m_color], calvalue);
+        Log.verbose("%s Tilt calibration corrected gravity = %s\r\n", tilt_color_names[m_color], calvalue);
 #endif
     } else {
         // If we are not applying calibration, we still want to log the raw gravity value
@@ -186,7 +186,7 @@ bool tiltHydrometer::set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_p
 #if PRINT_GRAV_UPDATES == 1
         char calvalue[6];
         sprintf(calvalue, "%.4f", smoothed_cal_d_grav);
-        Log.verbose(F("%s Tilt temperature corrected gravity = %s\r\n"), tilt_color_names[m_color], calvalue);
+        Log.verbose("%s Tilt temperature corrected gravity = %s\r\n", tilt_color_names[m_color], calvalue);
 #endif
     }
 
