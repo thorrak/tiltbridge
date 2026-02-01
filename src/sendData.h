@@ -4,6 +4,7 @@
 #include <WiFiClient.h>
 #include <Ticker.h>
 #include <ArduinoJson.h>
+#include "tilt/tiltHydrometer.h"
 
 #define GSCRIPTS_DELAY (10 * 60)       // 10 minute delay between pushes to Google Sheets directly
 #define BREWERS_FRIEND_DELAY (15 * 60) // 15 minute delay between pushes to Brewer's Friend
@@ -22,6 +23,7 @@
 #define GSCRIPTS_MIN_URL_LENGTH 24
 #define GSCRIPTS_MIN_EMAIL_LENGTH 7
 #define GSHEETS_JSON 512
+#define INFLUXDB_MIN_URL_LENGTH 12
 
 // This is me being lazy and simplifying the reuse of code. The formats for Brewer's
 // Friend and Brewfather are basically the same so I'm combining them together
@@ -48,6 +50,7 @@ public:
     bool send_to_bf_and_bf(uint8_t which_bf); // Handler for both Brewer's Friend and Brewfather
     bool send_to_grainfather();
     bool send_to_bf_and_bf();
+    bool send_to_influxdb();
 
 
     // Send Timers
@@ -61,6 +64,7 @@ public:
     Ticker taplistioTicker;
     Ticker gSheetsTicker;
     Ticker mqttTicker;
+    Ticker influxdbTicker;
 
     // Send Semaphores
     bool send_legacy_fermentrack = false;
@@ -73,6 +77,7 @@ public:
     bool send_taplistio = false;
     bool send_gSheets = false;
     bool send_mqtt = false;
+    bool send_influxdb = false;
 
 private:
     bool send_lock = false;
@@ -85,11 +90,12 @@ private:
 
     void connect_mqtt();
     bool publish_to_mqtt(const char* topic, JsonDocument& payload, bool retain);
-    void prepare_and_send_payloads(uint8_t tilt_index);
-    void prepare_temperature_payload(const char* tilt_color, const char* tilt_topic);
-    void prepare_gravity_payload(const char* tilt_color, const char* tilt_topic);
-    void prepare_battery_payload(const char* tilt_color, const char* tilt_topic);
-    void prepare_general_payload(uint8_t tilt_index, const char* tilt_topic);
+
+
+    void prepare_temperature_payload(tiltHydrometer *th, const char* tilt_topic);
+    void prepare_gravity_payload(tiltHydrometer *th, const char* tilt_topic);
+    void prepare_battery_payload(tiltHydrometer *th, const char* tilt_topic);
+    void prepare_general_payload(tiltHydrometer *th, const char* tilt_topic);
     void enrich_announcement(const char* topic, const char* tilt_color, JsonDocument& payload);
 
 };

@@ -54,8 +54,13 @@ sendResult send_json_str(String &payload, const char *url, String &response, htt
     get_useragent(userAgent, sizeof(userAgent));
 
     // snprintf(auth_header, sizeof(auth_header), "token %s", config.secret);
-   
-    Log.info(F("send_json_str: Sending %s to %s\r\n"), payload.c_str(), url);
+
+    // Log the request appropriately based on whether we have a payload
+    if (payload.length() > 0) {
+        Log.info(F("send_json_str: Sending %s with payload to %s\r\n"), httpMethodToString(method), url);
+    } else {
+        Log.info(F("send_json_str: Sending %s to %s\r\n"), httpMethodToString(method), url);
+    }
 
     yield();  // Yield before we lock up the radio
 
@@ -75,7 +80,10 @@ sendResult send_json_str(String &payload, const char *url, String &response, htt
             http.setReuse(false);
 
             if (http.begin(client, url)) {
-                http.addHeader(F("Content-Type"), F("application/json"));
+                // Only add Content-Type header if we have a JSON payload
+                if (payload.length() > 0) {
+                    http.addHeader(F("Content-Type"), F("application/json"));
+                }
                 // http.addHeader(F("Authorization"), auth_header);
                 http.setUserAgent(userAgent);
 
@@ -88,10 +96,10 @@ sendResult send_json_str(String &payload, const char *url, String &response, htt
                     Log.error("send_json_str: Send failed (%d): %s. Response:\r\n%s\r\n",
                         httpResponseCode,
                         http.errorToString(httpResponseCode).c_str(),
-                        http.getString().c_str());
+                        response.c_str());
                     result = sendResult::failure;
                 } else {
-                    Log.verbose(F("send_json_str: Response:\r\n%s\r\n"), http.getString().c_str());
+                    Log.verbose(F("send_json_str: Response:\r\n%s\r\n"), response.c_str());
                     result = sendResult::success;
                 }
                 http.end();

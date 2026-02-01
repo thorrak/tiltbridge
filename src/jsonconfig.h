@@ -8,7 +8,6 @@
 #define JSON_CONFIG_FILE "tiltbridgeConfig.json"
 
 struct TiltCalData {
-    uint8_t degree = 1;
     double x0 = 0.0;
     double x1 = 1.0;
     double x2 = 0.0;
@@ -54,11 +53,11 @@ public:
     char mdnsID[32] = "tiltbridge";
     char guid[17] = "";
     bool invertTFT = false;
-    bool update_spiffs = false;
+    bool update_filesystem = false;
     int8_t TZoffset = -5;
     char tempUnit[2] = "F";
     uint8_t smoothFactor = 60;
-    bool applyCalibration = false;
+    bool applyCalibration = true;
     bool tempCorrect = false;
 
     TiltCalData tilt_calibration[TILT_COLORS];
@@ -92,6 +91,13 @@ public:
     char mqttPassword[65] = "";
     char mqttTopic[31] = "";
     uint16_t mqttPushEvery = 30;
+
+    // InfluxDB Settings
+    char influxdbURL[256] = "";
+    char influxdbToken[128] = "";
+    char influxdbOrg[64] = "";
+    char influxdbBucket[64] = "";
+    uint16_t influxdbPushEvery = 900;
 
 
     JsonDocument to_json_external();

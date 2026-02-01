@@ -8,5 +8,6 @@ User Guide
     :caption: User Guide:
 
     initial_setup
+    calibration
     cloud_services
     updates_and_wifi_reset

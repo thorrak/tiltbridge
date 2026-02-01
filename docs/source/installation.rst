@@ -28,10 +28,13 @@ order to be recognized by the operating system. Some users who have had difficul
 boards in order to be able to flash them have reported success getting their ESP32-based chips to
 show up in MacOS by installing these drivers_.
 
+These are generally not required for newer versions of MacOS, but may be required for older versions or for certain
+ESP32 boards that use less common serial-to-USB chips.
 
 
-Installation using Fermentrack
-------------------------------
+
+Installation using Legacy Fermentrack
+-------------------------------------
 
 Installation via `Fermentrack`_ is incredibly easy as it leverages the existing "firmware flash" workflow. To flash via
 this method simply log into your Fermentrack installation, choose "Flash Device" from the devices menu, select the

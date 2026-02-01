@@ -2,6 +2,7 @@
 #include <ESPmDNS.h>
 #include <LCBUrl.h>
 #include <WiFiManager.h>
+#include <esp_timer.h>
 
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
@@ -27,11 +28,10 @@ void apCallback(WiFiManager *myWiFiManager) {
 void disconnectWiFi() {
     Log.notice(F("Resetting WiFi settings via disconnectWiFi()\r\n"));
     WiFi.mode(WIFI_AP_STA);
-    WiFi.persistent(true);
+    WiFi.persistent(true);  // This is implicit at startup, but I want to set it explicitly here to ensure credentials are deleted
     WiFi.disconnect(true, true);
     WiFi.begin("0","0");  // Fixes a bug where WiFi.disconnect() sometimes won't always clear the settings
-    WiFi.persistent(false);
-    vTaskDelay(1000);
+    vTaskDelay(1000);  // Give everything a moment to settle before resetting
     ESP.restart();
 }
 
@@ -52,6 +52,16 @@ void mdnsReset() {
 void initWiFi() {
 
     WiFi.mode(WIFI_STA); // Explicitly set mode, ESP defaults to STA+AP
+    WiFi.setSleep(WIFI_PS_NONE); // Disable WiFi power saving for better stability
+
+    // Set up WiFi event handlers for better diagnostics
+    WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+        Log.warning(F("WiFi disconnected, reason: %d\r\n"), info.wifi_sta_disconnected.reason);
+    }, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+
+    WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+        Log.notice(F("WiFi connected, IP: %s\r\n"), WiFi.localIP().toString().c_str());
+    }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
     WiFiManager wm;
 #if ARDUINO_LOG_LEVEL == 6
@@ -65,7 +75,7 @@ void initWiFi() {
     wm.setConfigPortalTimeout(5 * 60);              // Timeout portal in 5 mins
 
     wm.setHostname(config.mdnsID);  // Allow DHCP to get proper name
-    // wm.setWiFiAutoReconnect(true);  // Enable auto reconnect (should remove need for reconnectWiFi())
+    // wm.setWiFiAutoReconnect(true);  // Enable auto reconnect (should remove need for reconnectWiFi()) - Note, this doesn't seem to be supported for anything other than ESP8266, so disabling it here in favor of the manual implementation in the loop
     wm.setWiFiAPChannel(1);         // Pick the most common channel, safe for all countries
     wm.setCleanConnect(true);       // Always disconnect before connecting
     // Commenting out setCountry until https://github.com/tzapu/WiFiManager/issues/1309 is fixed
@@ -102,6 +112,7 @@ void initWiFi() {
         // Doing this to reset the DHCP name, the portal should never pop
         // Additionally, there is a bug where the HTTP server doesn't spin up after the AP shuts down. Not sure where
         // that issue is, but this solves it.
+        delay(3000); // Add a small delay to ensure WiFi is settled
         ESP.restart();
     }
 
@@ -126,49 +137,49 @@ void initWiFi() {
     lcd.display_wifi_success_screen(mdns_url, ip_address_url);
 }
 
-#define MAX_CONNECT_ATTEMPTS 200
-#define TIME_BETWEEN_ATTEMPTS 3000  // Minimum time between attempts
+#define MAX_CONNECT_ATTEMPTS 50
+#define TIME_BETWEEN_ATTEMPTS 6000  // Minimum time between attempts (milliseconds)
 uint8_t WLcount = 0;
-unsigned long WLNextAt = 0;
+int64_t WLNextAt = 0;
 
 void reconnectWiFi() {
     if (WiFi.status() != WL_CONNECTED) {
         // WiFi is down - Reconnect
         if(WLcount == 0) {
             // First time we noticed the WiFi is out
-            Log.notice(F("WiFi is disconnected, reconnecting. (%d/%d)" CR), WLcount, MAX_CONNECT_ATTEMPTS);
+            Log.notice(F("WiFi is disconnected, reconnecting. (%d/%d)\r\n"), WLcount, MAX_CONNECT_ATTEMPTS);
             lcd.display_wifi_disconnected_screen();
-            WiFi.begin();
+            // WiFi.begin();
             delay(1000); // Ensuring the "disconnected" screen appears for at least one second
-        } else if(WLNextAt >= millis()) {
+        } else if(WLNextAt >= esp_timer_get_time()) {
             // Haven't hit the timer for the next reconnect attempt - just return
             return;
-        } else {
-            WiFi.reconnect();
-            delay(100);
         }
-        WLNextAt = millis() + TIME_BETWEEN_ATTEMPTS;
+
+        // Try to reconnect
+        WiFi.reconnect();
+        WLNextAt = esp_timer_get_time() + (1000 * TIME_BETWEEN_ATTEMPTS);
+        ++WLcount;
 
         // Check if we reconnected
         if (WiFi.status() != WL_CONNECTED) {
-            if (WLcount < MAX_CONNECT_ATTEMPTS) {
+            if (WLcount <= MAX_CONNECT_ATTEMPTS) {
                 // Not reconnected, but still have attempts left to reconnect
                 // printDot(true);
-                Log.notice(F("WiFi is still disconnected. (%d/%d)" CR), WLcount, MAX_CONNECT_ATTEMPTS);
-                ++WLcount;
+                Log.notice(F("WiFi is still disconnected. (%d/%d)\r\n"), WLcount, MAX_CONNECT_ATTEMPTS);
             } else {
                 // We failed to reconnect.
                 lcd.display_wifi_reconnect_failed();
-                Log.error(F("Unable to reconnect WiFi, restarting." CR));
+                Log.error(F("Unable to reconnect WiFi, restarting.\r\n"));
                 delay(1000);
                 ESP.restart();
             }
         }
     }
 
-    if (WiFi.status() == WL_CONNECTED && WLcount > 0) {
+    if (WiFi.status() == WL_CONNECTED && WLcount != 0) {
         // We reconnected successfully
-        Log.error(F("Reconnected to WiFi" CR));
+        Log.error(F("Reconnected to WiFi\r\n"));
         mdnsReset();  // Make sure that we reconnect mDNS
         lcd.display_logo();
         WLcount = 0;

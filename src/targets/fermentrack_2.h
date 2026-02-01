@@ -28,7 +28,10 @@ namespace FermentrackAPIEndpoints {
     // constexpr auto fullConfig = "/api/tiltbridge/device/fullconfig/";
     constexpr auto registerDevice = "/api/tiltbridge/device/register/";
     constexpr auto status = "/api/tiltbridge/device/status/";
-    // constexpr auto messages = "/api/tiltbridge/device/messages/";
+    constexpr auto messages = "/api/tiltbridge/device/messages/";
+    constexpr auto calibrationPoints = "/api/tiltbridge/device/tilt/cal/points/";
+    constexpr auto calibrationPoint = "/api/tiltbridge/device/tilt/cal/point/";
+    constexpr auto calibrationCoefficients = "/api/tiltbridge/device/tilt/cal/coefficients/";
 }; // namespace UpstreamAPIEndpoints
 
 namespace Fermentrack2SettingsKeys {
@@ -43,6 +46,15 @@ constexpr auto version = "version";
 }; // namespace UpstreamSettingsKeys
 
 
+class FermentrackMessageFlags {
+    public:
+    bool hasMessages = false;          //<! Flag to indicate that there are messages to be retrieved
+    bool pendingResetConnection = false;  //<! Flag to indicate that the connection should be reset
+    bool pendingRestartDevice = false;     //<! Flag to indicate that the device should be restarted
+    bool pendingSyncCalibration[8] = {false, false, false, false, false, false, false, false};   //<! Flags to indicate that calibration should be synced from Fermentrack for each color
+};
+
 
 extern fermentrackRegErrorT fermentrackRegistrationError;  //<! Error code from last registration attempt
 extern fermentrackStatusErrorT fermentrackStatusError;  //<! Error code from last status attempt
+extern FermentrackMessageFlags fermentrackMessageFlags;  //<! Flags for messages to be sent to Fermentrack

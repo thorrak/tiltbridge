@@ -7,9 +7,7 @@
 #include <ArduinoLog.h>
 #include <Ticker.h>
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#endif
+#include "filesystem.h"
 
 
 #include "resetreasons.h"
@@ -24,6 +22,7 @@
 
 #include "extended_async_json_handler.h"
 #include "targets/fermentrack_2.h"
+#include "http_calibration.h"
 
 
 httpServer http_server;
@@ -186,7 +185,6 @@ bool updateJsonSetting(const JsonDocument& json, const char* key, uint16_t& conf
 
 bool processCalibrationSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
     // Calibration settings
     if(!updateJsonSettingBool(json, CalibrationKeys::applyCalibration, config.applyCalibration))
@@ -198,11 +196,9 @@ bool processCalibrationSettings(const JsonDocument& json, bool triggerUpstreamUp
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid upstream configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save calibration configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save calibration configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -211,11 +207,9 @@ bool processCalibrationSettings(const JsonDocument& json, bool triggerUpstreamUp
 
 bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
     bool update_legacy = false;
     bool update_ft2 = false;
-
 
     if (json[FermentrackSettings::legacyFermentrackPushEvery].is<uint16_t>()) {
         Log.info("Received legacy fermentrack settings.\r\n");
@@ -277,7 +271,6 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
 
 bool processGoogleSheetsSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, GoogleSheetsSettings::scriptsURL, config.scriptsURL, 256))
@@ -302,11 +295,9 @@ bool processGoogleSheetsSettings(const JsonDocument& json, bool triggerUpstreamU
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Google Sheets configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Google Sheets configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save Google Sheets configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -315,7 +306,6 @@ bool processGoogleSheetsSettings(const JsonDocument& json, bool triggerUpstreamU
 
 bool processBrewersFriendSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, BrewersFriendSettings::brewersFriendKey, config.brewersFriendKey, 64))
@@ -327,11 +317,9 @@ bool processBrewersFriendSettings(const JsonDocument& json, bool triggerUpstream
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Brewer's Friend configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Brewer's Friend configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save Brewer's Friend configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -340,7 +328,6 @@ bool processBrewersFriendSettings(const JsonDocument& json, bool triggerUpstream
 
 bool processBrewfatherSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, BrewfatherSettings::brewfatherKey, config.brewfatherKey, 64))
@@ -352,11 +339,9 @@ bool processBrewfatherSettings(const JsonDocument& json, bool triggerUpstreamUpd
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Brewfather configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Brewfather configuration data.\r\n"));
-            failCount++;
-        }
+    } else  if (!config.save()) {
+        Log.error(F("Error: Unable to save Brewfather configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -365,7 +350,6 @@ bool processBrewfatherSettings(const JsonDocument& json, bool triggerUpstreamUpd
 
 bool processUserTargetSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, UserTargetSettings::userTargetURL, config.userTargetURL, 128))
@@ -377,11 +361,9 @@ bool processUserTargetSettings(const JsonDocument& json, bool triggerUpstreamUpd
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid user target configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save user target configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save user target configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -390,7 +372,6 @@ bool processUserTargetSettings(const JsonDocument& json, bool triggerUpstreamUpd
 
 bool processGrainfatherSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
     // Loop through each of the keys associated with the sheet names, and update the relevant config entry
     uint8_t i=0;
@@ -410,11 +391,9 @@ bool processGrainfatherSettings(const JsonDocument& json, bool triggerUpstreamUp
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Grainfather configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Grainfather configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save Grainfather configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -423,7 +402,6 @@ bool processGrainfatherSettings(const JsonDocument& json, bool triggerUpstreamUp
 
 bool processBrewstatusSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, BrewstatusSettings::brewstatusURL, config.brewstatusURL, 256))
@@ -440,11 +418,9 @@ bool processBrewstatusSettings(const JsonDocument& json, bool triggerUpstreamUpd
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Brewstatus configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Brewstatus configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save Brewstatus configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -453,7 +429,6 @@ bool processBrewstatusSettings(const JsonDocument& json, bool triggerUpstreamUpd
 
 bool processTaplistioSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, TaplistioSettings::taplistioURL, config.taplistioURL, 256))
@@ -469,11 +444,9 @@ bool processTaplistioSettings(const JsonDocument& json, bool triggerUpstreamUpda
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Taplist.io configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
@@ -481,7 +454,6 @@ bool processTaplistioSettings(const JsonDocument& json, bool triggerUpstreamUpda
 
 bool processMqttSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     uint8_t failCount = 0;
-    bool saveSettings = false;
 
 
     if(!updateJsonSetting(json, MQTTSettings::mqttBrokerHost, config.mqttBrokerHost, sizeof(config.mqttBrokerHost)))
@@ -512,75 +484,42 @@ bool processMqttSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
     // Save
     if(failCount>0) {
         Log.error(F("Error: Invalid Taplist.io configuration.\r\n"));
-    } else if (saveSettings) {
-        if (!config.save()) {
-            Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
-            failCount++;
-        }
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save Taplist.io configuration data.\r\n"));
+        failCount++;
     }
 
     return failCount == 0;
 }
 
 
-// TODO - Reenable/rebuild processCalibration
-// // we don't need to do much input checking on the calibration data as we are
-// // looking at numbers generated by the javascript and not a human
-// void processCalibration(AsyncWebServerRequest *request) {
-//     int tilt_color_no = TILT_NONE;
-//     int degree = 1;
-//     double x0 = 0.0;
-//     double x1 = 1.0;
-//     double x2 = 0.0;
-//     double x3 = 0.0;
+bool processInfluxdbSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
+    uint8_t failCount = 0;
 
-//     if (request->hasArg("clearTiltColor")) {
-//         // Reset to the defaults
-//         tilt_color_no = atoi(request->arg("clearTiltColor").c_str());
-//     } else if (request->hasArg("updateTiltColor")) {
-//         // Process the settings given
-//         tilt_color_no = atoi(request->arg("updateTiltColor").c_str());
-//         degree = atoi(request->arg("degree").c_str());
-//         if (degree == 1) {
-//             Log.verbose(F("Processing linear equation..."));
-//             x0 = strtod(request->arg("linearFitx0").c_str(), nullptr);
-//             x1 = strtod(request->arg("linearFitx1").c_str(), nullptr);
-//             x2 = x3 = 0.0;
-//         } else if (degree == 2) {
-//             Log.verbose(F("Processing quadratic equation..."));
-//             x0 = strtod(request->arg("quadraticFitx0").c_str(), nullptr);
-//             x1 = strtod(request->arg("quadraticFitx1").c_str(), nullptr);
-//             x2 = strtod(request->arg("quadraticFitx2").c_str(), nullptr);
-//             x3 = 0.0;
-//         } else if (degree == 3) {
-//             Log.verbose(F("Processing cubic equation..."));
-//             x0 = strtod(request->arg("cubicFitx0").c_str(), nullptr);
-//             x1 = strtod(request->arg("cubicFitx1").c_str(), nullptr);
-//             x2 = strtod(request->arg("cubicFitx2").c_str(), nullptr);
-//             x3 = strtod(request->arg("cubicFitx3").c_str(), nullptr);
-//         } else {
-//             // Invalid degree - Reset to defaults
-//             Log.verbose(F("Received invalid degree %i\r\n"), degree);
-//             processCalibrationError(request);
-//         }
-//     }
+    if(!updateJsonSetting(json, InfluxDBSettings::influxdbURL, config.influxdbURL, sizeof(config.influxdbURL)))
+        failCount++;
+    if(!updateJsonSetting(json, InfluxDBSettings::influxdbToken, config.influxdbToken, sizeof(config.influxdbToken)))
+        failCount++;
+    if(!updateJsonSetting(json, InfluxDBSettings::influxdbOrg, config.influxdbOrg, sizeof(config.influxdbOrg)))
+        failCount++;
+    if(!updateJsonSetting(json, InfluxDBSettings::influxdbBucket, config.influxdbBucket, sizeof(config.influxdbBucket)))
+        failCount++;
+    if(!updateJsonSetting(json, InfluxDBSettings::influxdbPushEvery, config.influxdbPushEvery))
+        failCount++;
 
-//     if(0 <= tilt_color_no && tilt_color_no < TILT_COLORS) {
-//         Log.verbose(F("Saved\r\n"));
-//         config.tilt_calibration[tilt_color_no].degree = degree;
-//         config.tilt_calibration[tilt_color_no].x0 = x0;
-//         config.tilt_calibration[tilt_color_no].x1 = x1;
-//         config.tilt_calibration[tilt_color_no].x2 = x2;
-//         config.tilt_calibration[tilt_color_no].x3 = x3;
-//     } else {
-//         Log.verbose(F("Failed\r\n"));
-//         processCalibrationError(request);
-//     }
+    if(strlen(config.influxdbURL) > INFLUXDB_MIN_URL_LENGTH)  // Trigger a send to InfluxDB in 5 seconds using the updated settings
+        sendNowTicker.once(5, [](){data_sender.send_influxdb = true;});
 
-//     redirectToCalibration(request);
-// }
+    // Save
+    if(failCount>0) {
+        Log.error(F("Error: Invalid InfluxDB configuration.\r\n"));
+    } else if (!config.save()) {
+        Log.error(F("Error: Unable to save InfluxDB configuration data.\r\n"));
+        failCount++;
+    }
 
-
+    return failCount == 0;
+}
 
 
 //-----------------------------------------------------------------------------------------
@@ -588,7 +527,7 @@ bool processMqttSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
 #ifndef DISABLE_OTA_UPDATES
 void trigger_OTA(AsyncWebServerRequest *request) {
     server.serveStatic("/updating.htm", FILESYSTEM, "/").setDefaultFile("updating.htm");
-    config.update_spiffs = true;
+    config.update_filesystem = true;
     lcd.display_ota_update_screen();         // Trigger this here while everything else is waiting.
     delay(1000);                             // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
@@ -597,7 +536,7 @@ void trigger_OTA(AsyncWebServerRequest *request) {
 #endif
 
 void http_json(JsonDocument &doc) {
-    tilt_scanner.tilt_to_json(doc, false);
+    doc = tilt_scanner.tilt_to_json();
 }
 
 void settings_json(JsonDocument &doc) {
@@ -657,6 +596,7 @@ void httpServer::setStaticPages() {
         "/config/tiltbridge",
         "/target", 
         "/target/fermentrack", 
+        "/target/legacy_fermentrack", 
         "/target/gsheets", 
         "/target/brewersfriend",
         "/target/brewfather", 
@@ -711,40 +651,33 @@ void httpServer::setPutPages() {
         {"/api/settings/brewstatus/", processBrewstatusSettings},
         {"/api/settings/taplistio/", processTaplistioSettings},
         {"/api/settings/mqtt/", processMqttSettings},
+        {"/api/settings/influxdb/", processInfluxdbSettings},
     };
 
     for (const auto& endpoint : endpoints) {
-        asyncWebServer.addHandler(new ExtendedAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
+        asyncWebServer.addHandler(new PutAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
     }
 }
 
 void httpServer::setJsonPages() {
-    // Tilt JSON
-    asyncWebServer.on("/api/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, http_json);
-    });
+    struct Endpoint {
+        const char* path;
+        void (*handler)(JsonDocument&);
+    };
 
-    // Settings JSON
-    asyncWebServer.on("/api/settings/json/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, settings_json);
-    });
+    const Endpoint endpoints[] = {
+        {"/api/json/", http_json},
+        {"/api/settings/json/", settings_json},
+        {"/api/version/", this_version},
+        {"/api/uptime/", uptime},
+        {"/api/heap/", heap},
+        {"/api/resetreason/", reset_reason},
+    };
 
-    // About Page JSON
-    asyncWebServer.on("/api/version/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, this_version);
-    });
+    for (const auto& endpoint : endpoints) {
+        asyncWebServer.addHandler(new GetAsyncCallbackJsonWebHandler(endpoint.path, endpoint.handler));
+    }
 
-    asyncWebServer.on("/api/uptime/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, uptime);
-    });
-
-    asyncWebServer.on("/api/heap/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, heap);
-    });
-
-    asyncWebServer.on("/api/resetreason/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        http_server.genericServeJson(request, reset_reason);
-    });
 }
 
 // TODO - Reenable/rebuild setActionPages
@@ -786,12 +719,38 @@ void httpServer::init() {
     setJsonPages();
     // setActionPages();
 
-    // TODO - Reenable/rebuild processCalibration
-    // // Process a calibration update
-    // web_server->on("/calibration/update/", HTTP_POST, [&]() {
-    //     processCalibration(request);
-    // });
-
+    // Calibration endpoints
+    asyncWebServer.addHandler(new PostAsyncCallbackJsonWebHandler("/api/calibration/datapoint/", processCalibrationDataPoint));
+    asyncWebServer.addHandler(new PutAsyncCallbackJsonWebHandler("/api/calibration/coefficients/", processCalibrationCoefficients));
+    asyncWebServer.addHandler(new PostAsyncCallbackJsonWebHandler("/api/calibration/datapoint/delete/", processCalibrationDataDelete));
+    
+    /*
+    // GET handler for calibration data points with query parameter
+    asyncWebServer.on("/api/calibration/datapoints/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!request->hasParam("color")) {
+            request->send(400, "application/json", "{\"error\":\"Missing color parameter\"}");
+            return;
+        }
+        
+        String colorStr = request->getParam("color")->value();
+        uint8_t color = colorStr.toInt();
+        
+        if (color >= TILT_COLORS) {
+            request->send(400, "application/json", "{\"error\":\"Invalid color parameter\"}");
+            return;
+        }
+        
+        AsyncJsonResponse *response = new AsyncJsonResponse();
+        JsonDocument doc;
+        
+        if (getCalibrationPoints(color, doc)) {
+            response->getRoot().set(doc);
+            response->setLength();
+            request->send(response);
+        } else {
+            request->send(500, "application/json", "{\"error\":\"Failed to retrieve calibration points\"}");
+        }
+    });*/
 
     // File not found handler
     asyncWebServer.onNotFound([](AsyncWebServerRequest *request) {

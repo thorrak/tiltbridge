@@ -2,6 +2,8 @@
 #define TILTBRIDGE_TILTHYDROMETER_H
 
 #include <Arduino.h>
+#include <NimBLEAddress.h>
+#include <ArduinoJson.h>
 
 #define TILT_DATA_SIZE 477 // JSON size of a Tilt
 #define TILT_ALL_DATA_SIZE (TILT_DATA_SIZE * TILT_COLORS + 71) // JSON size of 8 Tilts
@@ -37,23 +39,25 @@
 class tiltHydrometer
 {
 public:
-    explicit tiltHydrometer(uint8_t color);
+    explicit tiltHydrometer(NimBLEAddress address, uint8_t color);
 
     bool set_values(uint16_t i_temp, uint16_t i_grav, uint8_t i_tx_pwr, int8_t current_rssi);
-    void converted_gravity(char* output, size_t output_size, bool use_raw_gravity);
-    void to_json_string(char *json_string, bool use_raw_gravity);
+
+    void uncal_smooth_gravity_str(char* output, size_t output_size);
+    void cal_smooth_gravity_str(char* output, size_t output_size);
+    void latest_gravity_str(char* output, size_t output_size);
+
+    JsonDocument to_json(bool legacy_keys);
     void converted_temp(char* output, size_t output_size, bool fahrenheit_only);
     void get_weeks_battery(char* output, size_t output_size);
     bool is_celsius() const;
-    bool is_loaded();
 
     static uint8_t uuid_to_color_no(const char* uuid);
 
-    uint16_t temp;
-    uint16_t gravity;
-    uint16_t gravity_smoothed;
+    uint16_t raw_temp;              // The raw temperature value last read from the Tilt
+    uint16_t temp;                  // The calibrated temperature value last read from the Tilt
+
     uint16_t version_code;
-    uint32_t last_grav_value_1000;
     int8_t rssi;
 
     uint8_t weeks_since_last_battery_change;
@@ -62,13 +66,26 @@ public:
     bool tilt_pro;  // Tracks if this tilt is "high resolution" or not (ie. is a Tilt Pro)
     uint8_t m_color;  // Color number (0-7) for lookups
 
+    NimBLEAddress m_address;
+
+    bool expired();
+
 private:
-    bool m_loaded;              // Has data been loaded from an ad string
+    void grav_to_str(uint16_t grav, char* output, size_t output_size);
+
+    uint16_t latest_gravity;        // The latest (unsmoothed) uncalibrated, uncorrected gravity value read from the Tilt (used for the calibration workflow)
+    uint16_t uncal_smooth_gravity;  // The uncalibrated, smoothed, temperature corrected gravity value last updated from the Tilt (sent to Fermentrack which applies its own calibration)
+    uint16_t cal_smooth_gravity;    // The calibrated, smoothed, temperature corrected gravity value last updated from the Tilt (sent to most places)
+    uint32_t last_grav_value_1000;  // The uncalibrated, uncorrected, smoothed gravity value last updated from the Tilt, multiplied by 1000 (used for the smoothing algorithm)
+
+
     unsigned long m_lastUpdate; // Keep track of when we last updated and stop propagating out stale information
     bool m_has_sent_197;        // Used to determine if the tilt sends battery life (a 197 tx_pwr followed by a non-197 tx_pwr)
+    double apply_calibration(double d_grav);
 };
 
 extern const char* tilt_color_names[];
+extern const char* api_color_names[];
 extern const uint32_t tilt_text_colors[];
 
 #endif //TILTBRIDGE_TILTHYDROMETER_H

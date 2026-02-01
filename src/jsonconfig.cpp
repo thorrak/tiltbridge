@@ -1,16 +1,15 @@
 #include <ArduinoLog.h>
 #include <ArduinoJson.h>
 
-#if FILESYSTEM == SPIFFS
-#include <SPIFFS.h>
-#include <FS.h>
-#endif
+#include "filesystem.h"  // Selects SPIFFS or LittleFS as necessary
+
 
 #include "getGuid.h"
 #include "serialhandler.h"
 
 #include "jsonconfig.h"
 #include "JsonKeys.h"
+#include "bridge_lcd.h"  // for HAVE_LCD and HAVE_STATUS_LED  (note - HAVE_STATUS_LED is not used anywhere)
 #include "targets/fermentrack_2.h"  // For fermentrackRegistrationError
 
 
@@ -157,13 +156,14 @@ JsonDocument Config::to_json_external() {
     // save as part of the configuration.
     JsonDocument obj = to_json();
 
-#ifdef HAVE_LCD
+#if HAVE_LCD
     obj["have_lcd"] = true;
 #else
     obj["have_lcd"] = false;
 #endif
 
-#ifdef HAVE_STATUS_LED
+// Note - HAVE_STATUS_LED is not actually defined/used anywhere
+#if HAVE_STATUS_LED
     obj["have_led"] = true;
 #else
     obj["have_led"] = false;
@@ -181,7 +181,7 @@ JsonDocument Config::to_json() {
     obj["mdnsID"] = mdnsID;
     obj["guid"] = guid;
     obj["invertTFT"] = invertTFT;
-    obj["update_spiffs"] = update_spiffs;
+    obj["update_filesystem"] = update_filesystem;
     obj["TZoffset"] = TZoffset;
     obj["tempUnit"] = tempUnit;
     obj["smoothFactor"] = smoothFactor;
@@ -189,7 +189,6 @@ JsonDocument Config::to_json() {
     obj["tempCorrect"] = tempCorrect;
 
     for(int x=0;x<TILT_COLORS;x++) {
-        obj[tilt_color_names[x]]["degree"] = tilt_calibration[x].degree;
         obj[tilt_color_names[x]]["x0"] = tilt_calibration[x].x0;
         obj[tilt_color_names[x]]["x1"] = tilt_calibration[x].x1;
         obj[tilt_color_names[x]]["x2"] = tilt_calibration[x].x2;
@@ -212,21 +211,28 @@ JsonDocument Config::to_json() {
     obj[FermentrackSettings::fermentrackDeviceID] = fermentrackDeviceID;
     obj[FermentrackSettings::fermentrackAPIKey] = fermentrackAPIKey;
 
-    obj["brewstatusURL"] = brewstatusURL;
-    obj["brewstatusPushEvery"] = brewstatusPushEvery;
-    obj["taplistioURL"] = taplistioURL;
-    obj["taplistioPushEvery"] = taplistioPushEvery;
-    obj["scriptsURL"] = scriptsURL;
-    obj["scriptsEmail"] = scriptsEmail;
-    obj["brewersFriendKey"] = brewersFriendKey;
-    obj["brewfatherKey"] = brewfatherKey;
-    obj["userTargetURL"] = userTargetURL;
-    obj["mqttBrokerHost"] = mqttBrokerHost;
-    obj["mqttBrokerPort"] = mqttBrokerPort;
-    obj["mqttUsername"] = mqttUsername;
-    obj["mqttPassword"] = mqttPassword;
-    obj["mqttTopic"] = mqttTopic;
-    obj["mqttPushEvery"] = mqttPushEvery;
+    obj[BrewstatusSettings::brewstatusURL] = brewstatusURL;
+    obj[BrewstatusSettings::brewstatusPushEvery] = brewstatusPushEvery;
+    obj[TaplistioSettings::taplistioURL] = taplistioURL;
+    obj[TaplistioSettings::taplistioPushEvery] = taplistioPushEvery;
+    obj[GoogleSheetsSettings::scriptsURL] = scriptsURL;
+    obj[GoogleSheetsSettings::scriptsEmail] = scriptsEmail;
+    obj[BrewersFriendSettings::brewersFriendKey] = brewersFriendKey;
+    obj[BrewfatherSettings::brewfatherKey] = brewfatherKey;
+    obj[UserTargetSettings::userTargetURL] = userTargetURL;
+    obj[MQTTSettings::mqttBrokerHost] = mqttBrokerHost;
+    obj[MQTTSettings::mqttBrokerPort] = mqttBrokerPort;
+    obj[MQTTSettings::mqttUsername] = mqttUsername;
+    obj[MQTTSettings::mqttPassword] = mqttPassword;
+    obj[MQTTSettings::mqttTopic] = mqttTopic;
+    obj[MQTTSettings::mqttPushEvery] = mqttPushEvery;
+
+    // InfluxDB Settings
+    obj[InfluxDBSettings::influxdbURL] = influxdbURL;
+    obj[InfluxDBSettings::influxdbToken] = influxdbToken;
+    obj[InfluxDBSettings::influxdbOrg] = influxdbOrg;
+    obj[InfluxDBSettings::influxdbBucket] = influxdbBucket;
+    obj[InfluxDBSettings::influxdbPushEvery] = influxdbPushEvery;
 
     return obj;
 }
@@ -253,8 +259,8 @@ void Config::load_from_json(JsonDocument obj) {
         invertTFT = obj["invertTFT"];
     }
 
-    if (!obj["update_spiffs"].isNull()) {
-        update_spiffs = obj["update_spiffs"];
+    if (!obj["update_filesystem"].isNull()) {
+        update_filesystem = obj["update_filesystem"];
     }
 
     if (!obj["TZoffset"].isNull()) {
@@ -281,10 +287,6 @@ void Config::load_from_json(JsonDocument obj) {
     // Loop through everything that is a "tilt-specific" setting
     for(int x=0;x<TILT_COLORS;x++) {
         // Calibration points
-        if (!obj[tilt_color_names[x]]["degree"].isNull()) {
-            tilt_calibration[x].degree = int(obj[tilt_color_names[x]]["degree"]);
-        }
-
         if (!obj[tilt_color_names[x]]["x0"].isNull()) {
             tilt_calibration[x].x0 = float(obj[tilt_color_names[x]]["x0"]);
         }
@@ -366,81 +368,106 @@ void Config::load_from_json(JsonDocument obj) {
 
 
     // BrewStatus Settings
-    if (!obj["brewstatusURL"].isNull()) {
-        const char *bu = obj["brewstatusURL"];
+    if (!obj[BrewstatusSettings::brewstatusURL].isNull()) {
+        const char *bu = obj[BrewstatusSettings::brewstatusURL];
         strlcpy(brewstatusURL, bu, 256);
     }
 
-    if (!obj["brewstatusPushEvery"].isNull()) {
-        int pe = obj["brewstatusPushEvery"];
+    if (!obj[BrewstatusSettings::brewstatusPushEvery].isNull()) {
+        int pe = obj[BrewstatusSettings::brewstatusPushEvery];
         brewstatusPushEvery = pe;
     }
 
     // TaplistIO Settings
-    if (!obj["taplistioURL"].isNull()) {
-        const char *tu = obj["taplistioURL"];
+    if (!obj[TaplistioSettings::taplistioURL].isNull()) {
+        const char *tu = obj[TaplistioSettings::taplistioURL];
         strlcpy(taplistioURL, tu, 256);
     }
 
-    if (!obj["taplistioPushEvery"].isNull()) {
-        taplistioPushEvery = obj["taplistioPushEvery"];
+    if (!obj[TaplistioSettings::taplistioPushEvery].isNull()) {
+        taplistioPushEvery = obj[TaplistioSettings::taplistioPushEvery];
     }
 
     // Google Scripts Settings
-    if (!obj["scriptsURL"].isNull()) {
-        const char *su = obj["scriptsURL"];
+    if (!obj[GoogleSheetsSettings::scriptsURL].isNull()) {
+        const char *su = obj[GoogleSheetsSettings::scriptsURL];
         strlcpy(scriptsURL, su, 256);
     }
 
-    if (!obj["scriptsEmail"].isNull()) {
-        const char *se = obj["scriptsEmail"];
+    if (!obj[GoogleSheetsSettings::scriptsEmail].isNull()) {
+        const char *se = obj[GoogleSheetsSettings::scriptsEmail];
         strlcpy(scriptsEmail, se, 256);
     }
 
     // Brewers Friend
-    if (!obj["brewersFriendKey"].isNull()) {
-        const char *bf = obj["brewersFriendKey"];
+    if (!obj[BrewersFriendSettings::brewersFriendKey].isNull()) {
+        const char *bf = obj[BrewersFriendSettings::brewersFriendKey];
         strlcpy(brewersFriendKey, bf, 65);
     }
 
     // Brewfather
-    if (!obj["brewfatherKey"].isNull()) {
-        const char *bk = obj["brewfatherKey"];
+    if (!obj[BrewfatherSettings::brewfatherKey].isNull()) {
+        const char *bk = obj[BrewfatherSettings::brewfatherKey];
         strlcpy(brewfatherKey, bk, 65);
     }
 
     // User-defined Target Settings
-    if (!obj["userTargetURL"].isNull()) {
-        const char *uturl = obj["userTargetURL"];
+    if (!obj[UserTargetSettings::userTargetURL].isNull()) {
+        const char *uturl = obj[UserTargetSettings::userTargetURL];
         strlcpy(userTargetURL, uturl, 128);
     }
 
     // MQTT Settings
-    if (!obj["mqttBrokerHost"].isNull()) {
-        const char *mi = obj["mqttBrokerHost"];
+    if (!obj[MQTTSettings::mqttBrokerHost].isNull()) {
+        const char *mi = obj[MQTTSettings::mqttBrokerHost];
         strlcpy(mqttBrokerHost, mi, 256);
     }
 
-    if (!obj["mqttBrokerPort"].isNull()) {
-        mqttBrokerPort = int(obj["mqttBrokerPort"]);
+    if (!obj[MQTTSettings::mqttBrokerPort].isNull()) {
+        mqttBrokerPort = int(obj[MQTTSettings::mqttBrokerPort]);
     }
 
-    if (!obj["mqttUsername"].isNull()) {
-        const char *mu = obj["mqttUsername"];
+    if (!obj[MQTTSettings::mqttUsername].isNull()) {
+        const char *mu = obj[MQTTSettings::mqttUsername];
         strlcpy(mqttUsername, mu, 51);
     }
 
-    if (!obj["mqttPassword"].isNull()) {
-        const char *mp = obj["mqttPassword"];
+    if (!obj[MQTTSettings::mqttPassword].isNull()) {
+        const char *mp = obj[MQTTSettings::mqttPassword];
         strlcpy(mqttPassword, mp, 65);
     }
 
-    if (!obj["mqttTopic"].isNull()) {
-        const char *mt = obj["mqttTopic"];
+    if (!obj[MQTTSettings::mqttTopic].isNull()) {
+        const char *mt = obj[MQTTSettings::mqttTopic];
         strlcpy(mqttTopic, mt, 31);
     }
 
-    if (!obj["mqttPushEvery"].isNull()) {
-        mqttPushEvery = int(obj["mqttPushEvery"]);
+    if (!obj[MQTTSettings::mqttPushEvery].isNull()) {
+        mqttPushEvery = int(obj[MQTTSettings::mqttPushEvery]);
+    }
+
+    // InfluxDB Settings
+    if (!obj[InfluxDBSettings::influxdbURL].isNull()) {
+        const char *iu = obj[InfluxDBSettings::influxdbURL];
+        strlcpy(influxdbURL, iu, 256);
+    }
+
+    if (!obj[InfluxDBSettings::influxdbToken].isNull()) {
+        const char *it = obj[InfluxDBSettings::influxdbToken];
+        strlcpy(influxdbToken, it, 128);
+    }
+
+    if (!obj[InfluxDBSettings::influxdbOrg].isNull()) {
+        const char *io = obj[InfluxDBSettings::influxdbOrg];
+        strlcpy(influxdbOrg, io, 64);
+    }
+
+    if (!obj[InfluxDBSettings::influxdbBucket].isNull()) {
+        const char *ib = obj[InfluxDBSettings::influxdbBucket];
+        strlcpy(influxdbBucket, ib, 64);
+    }
+
+    if (!obj[InfluxDBSettings::influxdbPushEvery].isNull()) {
+        influxdbPushEvery = int(obj[InfluxDBSettings::influxdbPushEvery]);
     }
 }
