@@ -1,5 +1,4 @@
 #include <thorlog.h>
-#include <WiFi.h>
 
 #ifdef LCD_SSD1306
 #include <Wire.h>
@@ -8,6 +7,7 @@
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
 #include "bridge_lcd.h"
+#include "wifi_setup.h"
 
 bridge_lcd lcd;
 
@@ -156,10 +156,10 @@ uint8_t bridge_lcd::display_next() {
     // Returns the number of seconds to "hold" on this screen
     uint8_t active_tilts = 0;
 
-    if (WiFi.status() == WL_CONNECTED) {
+    if (is_wifi_connected()) {
         displaying_wifi_dc_screen = false;
     } else if (displaying_wifi_dc_screen) {
-        // If we're displaying the wifi dc screen, stay on it. 
+        // If we're displaying the wifi dc screen, stay on it.
         return 1;
     }
 
@@ -206,9 +206,9 @@ void bridge_lcd::display_tilt_screen(uint8_t screen_number) {
 
 #ifdef LCD_TFT
     // Display IP address or indicate if not connected
-    if (WiFi.status() == WL_CONNECTED) {
+    if (is_wifi_connected()) {
         char ip[16];
-        sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        get_local_ip(ip, sizeof(ip));
         print_line("IP Address:", ip, 11);
     } else {
         print_line("No WiFi Connection", "", 10);

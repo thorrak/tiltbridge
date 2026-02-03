@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <IPAddress.h>
+#include <stddef.h>
+
 
 // URL component buffer sizes
 #define URL_SCHEME_SIZE 8
@@ -72,12 +73,17 @@ bool isValidIP(const char* ip);
 bool isMDNS(const char* hostname);
 
 /**
- * Resolve a hostname to an IP address using DNS or mDNS
+ * Resolve a hostname to an IP address string using DNS or mDNS (ESP-IDF native)
+ *
+ * This function uses ESP-IDF APIs (mdns_query_a for .local addresses,
+ * getaddrinfo for regular DNS) and returns the IP as a string suitable
+ * for use with esp_http_client.
  *
  * @param hostname The hostname to resolve
- * @param result Reference to IPAddress to store the result
+ * @param resolvedIp Buffer to store the resolved IP address string (e.g., "192.168.1.100")
+ * @param bufferSize Size of the resolvedIp buffer (minimum 16 bytes for IPv4)
  * @return true if resolution succeeded, false otherwise
  */
-bool resolveHost(const char* hostname, IPAddress& result);
+bool resolveHostToString(const char* hostname, char* resolvedIp, size_t bufferSize);
 
 #endif // URL_UTILS_H

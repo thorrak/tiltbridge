@@ -1,4 +1,5 @@
 #include "OTAUpdate.h"
+#include "esp_system.h"
 
 #ifndef DISABLE_OTA_UPDATES
 
@@ -102,7 +103,7 @@ void execOTA()
                 // OTA update finished
                 if (Update.isFinished()) {
                     // Succeeded - restart
-                    ESP.restart();
+                    esp_restart();
                 } else {
                     // Failed
                 }

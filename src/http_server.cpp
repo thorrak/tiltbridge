@@ -1,11 +1,12 @@
+#include <freertos/FreeRTOS.h>
+#include <freertos/timers.h>
+
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
-#include <WiFi.h>
 
 #include "url_utils.h"
 #include <thorlog.h>
-#include <Ticker.h>
 
 #include "filesystem.h"
 
@@ -26,8 +27,45 @@
 
 
 httpServer http_server;
-Ticker sendNowTicker;
 AsyncWebServer asyncWebServer(WEBPORT);
+
+// Timer handles for triggering immediate sends from HTTP configuration updates
+static TimerHandle_t sendNowLegacyFTTimer = nullptr;
+static TimerHandle_t sendNowFTTimer = nullptr;
+static TimerHandle_t sendNowGSheetsTimer = nullptr;
+static TimerHandle_t sendNowBrewersFriendTimer = nullptr;
+static TimerHandle_t sendNowBrewfatherTimer = nullptr;
+static TimerHandle_t sendNowUserTargetTimer = nullptr;
+static TimerHandle_t sendNowGrainfatherTimer = nullptr;
+static TimerHandle_t sendNowBrewStatusTimer = nullptr;
+static TimerHandle_t sendNowTaplistioTimer = nullptr;
+static TimerHandle_t sendNowMqttTimer = nullptr;
+static TimerHandle_t sendNowInfluxdbTimer = nullptr;
+
+// Timer callbacks for send-now triggers
+static void sendNowLegacyFTCallback(TimerHandle_t xTimer) { data_sender.send_legacy_fermentrack = true; }
+static void sendNowFTCallback(TimerHandle_t xTimer) { data_sender.send_fermentrack = true; }
+static void sendNowGSheetsCallback(TimerHandle_t xTimer) { data_sender.send_gSheets = true; }
+static void sendNowBrewersFriendCallback(TimerHandle_t xTimer) { data_sender.send_brewersFriend = true; }
+static void sendNowBrewfatherCallback(TimerHandle_t xTimer) { data_sender.send_brewfather = true; }
+static void sendNowUserTargetCallback(TimerHandle_t xTimer) { data_sender.send_userTarget = true; }
+static void sendNowGrainfatherCallback(TimerHandle_t xTimer) { data_sender.send_grainfather = true; }
+static void sendNowBrewStatusCallback(TimerHandle_t xTimer) { data_sender.send_brewStatus = true; }
+static void sendNowTaplistioCallback(TimerHandle_t xTimer) { data_sender.send_taplistio = true; }
+static void sendNowMqttCallback(TimerHandle_t xTimer) { data_sender.send_mqtt = true; }
+static void sendNowInfluxdbCallback(TimerHandle_t xTimer) { data_sender.send_influxdb = true; }
+
+// Helper to start a send-now timer (creates if needed, then starts)
+static void startSendNowTimer(TimerHandle_t& timer, const char* name, TimerCallbackFunction_t callback, uint32_t delaySecs) {
+    if (timer == nullptr) {
+        timer = xTimerCreate(name, pdMS_TO_TICKS(delaySecs * 1000), pdFALSE, nullptr, callback);
+    } else {
+        xTimerChangePeriod(timer, pdMS_TO_TICKS(delaySecs * 1000), 0);
+    }
+    if (timer != nullptr) {
+        xTimerStart(timer, 0);
+    }
+}
 
 
 
@@ -258,9 +296,9 @@ bool processFermentrackSettings(const JsonDocument& json, bool triggerUpstreamUp
         } else {
             // Now that we've saved, trigger the send
             if(update_legacy)  // Trigger a send to Legacy Fermentrack/BPR in 3 seconds using the updated URL
-                sendNowTicker.once(3, [](){data_sender.send_legacy_fermentrack = true;});
+                startSendNowTimer(sendNowLegacyFTTimer, "SendLegacyFT", sendNowLegacyFTCallback, 3);
             if(update_ft2)  // Trigger a send to Fermentrack 2 in 5 seconds using the updated URL
-                sendNowTicker.once(5, [](){data_sender.send_fermentrack = true;});
+                startSendNowTimer(sendNowFTTimer, "SendFT", sendNowFTCallback, 5);
         }
     }
 
@@ -277,7 +315,7 @@ bool processGoogleSheetsSettings(const JsonDocument& json, bool triggerUpstreamU
     if(!updateJsonSetting(json, GoogleSheetsSettings::scriptsEmail, config.scriptsEmail, 256))
         failCount++;
     if(strlen(config.scriptsURL) > 26 && strlen(config.scriptsEmail) > 5)  // Trigger a send to Google in 5 seconds using the updated URL
-        sendNowTicker.once(5, [](){data_sender.send_gSheets = true;});
+        startSendNowTimer(sendNowGSheetsTimer, "SendGSheets", sendNowGSheetsCallback, 5);
 
     // Loop through each of the keys associated with the sheet names, and update the relevant config entry
     uint8_t i=0;
@@ -310,7 +348,7 @@ bool processBrewersFriendSettings(const JsonDocument& json, bool triggerUpstream
     if(!updateJsonSetting(json, BrewersFriendSettings::brewersFriendKey, config.brewersFriendKey, 64))
         failCount++;
     if(strlen(config.brewersFriendKey) > 1)  // Trigger a send to Brewers Friend
-        sendNowTicker.once(5, [](){data_sender.send_brewersFriend = true;});
+        startSendNowTimer(sendNowBrewersFriendTimer, "SendBF", sendNowBrewersFriendCallback, 5);
 
     
     // Save
@@ -332,7 +370,7 @@ bool processBrewfatherSettings(const JsonDocument& json, bool triggerUpstreamUpd
     if(!updateJsonSetting(json, BrewfatherSettings::brewfatherKey, config.brewfatherKey, 64))
         failCount++;
     if(strlen(config.brewfatherKey) > 1)  // Trigger a send to Brewfather
-        sendNowTicker.once(5, [](){data_sender.send_brewfather = true;});
+        startSendNowTimer(sendNowBrewfatherTimer, "SendBrewfather", sendNowBrewfatherCallback, 5);
 
     
     // Save
@@ -354,7 +392,7 @@ bool processUserTargetSettings(const JsonDocument& json, bool triggerUpstreamUpd
     if(!updateJsonSetting(json, UserTargetSettings::userTargetURL, config.userTargetURL, 128))
         failCount++;
     if(strlen(config.userTargetURL) > 1)  // Trigger a send to the user target
-        sendNowTicker.once(5, [](){data_sender.send_userTarget = true;});
+        startSendNowTimer(sendNowUserTargetTimer, "SendUserTarget", sendNowUserTargetCallback, 5);
  
     
     // Save
@@ -384,7 +422,7 @@ bool processGrainfatherSettings(const JsonDocument& json, bool triggerUpstreamUp
         i++;  // Also track index
     }
 
-    sendNowTicker.once(5, [](){data_sender.send_grainfather = true;});  // Always trigger a resend to grainfather
+    startSendNowTimer(sendNowGrainfatherTimer, "SendGrainfather", sendNowGrainfatherCallback, 5);  // Always trigger a resend to grainfather
 
     
     // Save
@@ -406,7 +444,7 @@ bool processBrewstatusSettings(const JsonDocument& json, bool triggerUpstreamUpd
     if(!updateJsonSetting(json, BrewstatusSettings::brewstatusURL, config.brewstatusURL, 256))
         failCount++;
     if(strlen(config.brewstatusURL) > 11)  // Trigger a send to BrewStatus in 5 seconds using the updated URL
-        sendNowTicker.once(5, [](){data_sender.send_brewStatus = true;});
+        startSendNowTimer(sendNowBrewStatusTimer, "SendBrewStatus", sendNowBrewStatusCallback, 5);
 
     if(!updateJsonSetting(json, BrewstatusSettings::brewstatusPushEvery, config.brewstatusPushEvery))
         failCount++;
@@ -433,7 +471,7 @@ bool processTaplistioSettings(const JsonDocument& json, bool triggerUpstreamUpda
     if(!updateJsonSetting(json, TaplistioSettings::taplistioURL, config.taplistioURL, 256))
         failCount++;
     if(strlen(config.taplistioURL) > 11)  // Trigger a send to TaplistIO in 5 seconds using the updated URL
-        sendNowTicker.once(5, [](){data_sender.send_taplistio = true;});
+        startSendNowTimer(sendNowTaplistioTimer, "SendTaplistio", sendNowTaplistioCallback, 5);
 
     if(!updateJsonSetting(json, TaplistioSettings::taplistioPushEvery, config.taplistioPushEvery))
         failCount++;
@@ -476,7 +514,7 @@ bool processMqttSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
 
     // Trigger a send to MQTT
     http_server.mqtt_init_rqd = true;
-    sendNowTicker.once(5, [](){data_sender.send_taplistio = true;});
+    startSendNowTimer(sendNowMqttTimer, "SendMQTT", sendNowMqttCallback, 5);
 
 
 
@@ -507,7 +545,7 @@ bool processInfluxdbSettings(const JsonDocument& json, bool triggerUpstreamUpdat
         failCount++;
 
     if(strlen(config.influxdbURL) > INFLUXDB_MIN_URL_LENGTH)  // Trigger a send to InfluxDB in 5 seconds using the updated settings
-        sendNowTicker.once(5, [](){data_sender.send_influxdb = true;});
+        startSendNowTimer(sendNowInfluxdbTimer, "SendInfluxDB", sendNowInfluxdbCallback, 5);
 
     // Save
     if(failCount>0) {
@@ -761,5 +799,5 @@ void httpServer::init() {
     // DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
 
     asyncWebServer.begin();
-    Log.notice("HTTP server started. Open: http://%s.local/ to view application.\r\n", WiFi.getHostname());
+    Log.notice("HTTP server started. Open: http://%s.local/ to view application.\r\n", config.mdnsID);
 }

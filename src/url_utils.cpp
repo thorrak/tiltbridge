@@ -2,8 +2,14 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
+
+// ESP-IDF includes for DNS/mDNS resolution
+#include "esp_err.h"
+#include "esp_netif.h"
+#include "mdns.h"
+#include "lwip/netdb.h"
+#include "lwip/sockets.h"
+
 
 bool parseUrl(const char* url, ParsedUrl* result) {
     if (url == NULL || result == NULL) {
@@ -297,14 +303,18 @@ bool isMDNS(const char* hostname) {
     return true;
 }
 
-bool resolveHost(const char* hostname, IPAddress& result) {
-    if (hostname == NULL) {
+bool resolveHostToString(const char* hostname, char* resolvedIp, size_t bufferSize) {
+    if (hostname == nullptr || resolvedIp == nullptr || bufferSize < 16) {
         return false;
     }
 
+    // Initialize output
+    resolvedIp[0] = '\0';
+
     // Check if it's already an IP address
     if (isValidIP(hostname)) {
-        return result.fromString(hostname);
+        strlcpy(resolvedIp, hostname, bufferSize);
+        return true;
     }
 
     // Use mDNS or regular DNS based on hostname
@@ -319,11 +329,41 @@ bool resolveHost(const char* hostname, IPAddress& result) {
         strncpy(shortHost, hostname, shortLen);
         shortHost[shortLen] = '\0';
 
-        result = MDNS.queryHost(shortHost);
-        return (result != INADDR_NONE && result != IPAddress(0, 0, 0, 0));
+        // ESP-IDF mDNS query
+        esp_ip4_addr_t addr;
+        addr.addr = 0;
+
+        esp_err_t err = mdns_query_a(shortHost, 2000, &addr);  // 2 second timeout
+        if (err != ESP_OK || addr.addr == 0) {
+            return false;
+        }
+
+        // Convert to string format (ESP-IDF stores in network byte order)
+        snprintf(resolvedIp, bufferSize, "%d.%d.%d.%d",
+                 (addr.addr >> 0) & 0xFF,
+                 (addr.addr >> 8) & 0xFF,
+                 (addr.addr >> 16) & 0xFF,
+                 (addr.addr >> 24) & 0xFF);
+        return true;
     } else {
-        // Use regular DNS
-        int ret = WiFi.hostByName(hostname, result);
-        return (ret == 1);
+        // Use regular DNS via getaddrinfo
+        struct addrinfo hints = {};
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+
+        struct addrinfo* result_addr = nullptr;
+        int ret = getaddrinfo(hostname, nullptr, &hints, &result_addr);
+
+        if (ret != 0 || result_addr == nullptr) {
+            return false;
+        }
+
+        // Extract IP address
+        struct sockaddr_in* addr = (struct sockaddr_in*)result_addr->ai_addr;
+        inet_ntoa_r(addr->sin_addr, resolvedIp, bufferSize);
+
+        freeaddrinfo(result_addr);
+        return (resolvedIp[0] != '\0');
     }
 }
+

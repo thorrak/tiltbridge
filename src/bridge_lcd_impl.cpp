@@ -1,5 +1,4 @@
 #include <thorlog.h>
-#include <WiFi.h>
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_M5STICKC)
 #include <Wire.h>
