@@ -5,7 +5,7 @@
 #include <esp_system.h>
 #include <esp_wifi.h>
 #include <esp_netif.h>
-#include <ESPmDNS.h>
+#include <mdns.h>
 
 #include <thorlog.h>
 #include <WiFiManager.h>
@@ -46,14 +46,14 @@ void disconnectWiFi() {
 void mdnsReset() {
     // tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
     http_server.name_reset_requested = false;
-    MDNS.end();
-    if (!MDNS.begin(config.mdnsID)) {
+    mdns_free();
+    if (mdns_init() != ESP_OK || mdns_hostname_set(config.mdnsID) != ESP_OK) {
         Log.error("Error resetting MDNS responder.");
         esp_restart();
     } else {
-        Log.notice("mDNS responder restarted, hostname: %s.local.\r\n", WiFi.getHostname());
-        MDNS.addService("http", "tcp", WEB_SERVER_PORT);
-        MDNS.addService("tiltbridge", "tcp", WEB_SERVER_PORT);
+        Log.notice("mDNS responder restarted, hostname: %s.local.\r\n", config.mdnsID);
+        mdns_service_add(NULL, "_http", "_tcp", WEB_SERVER_PORT, NULL, 0);
+        mdns_service_add(NULL, "_tiltbridge", "_tcp", WEB_SERVER_PORT, NULL, 0);
     }
 }
 
@@ -125,12 +125,12 @@ void initWiFi() {
         esp_restart();
     }
 
-    if (!MDNS.begin(config.mdnsID)) {
+    if (mdns_init() != ESP_OK || mdns_hostname_set(config.mdnsID) != ESP_OK) {
         Log.error("Error setting up MDNS responder.\r\n");
     }
 
-    MDNS.addService("http", "tcp", WEB_SERVER_PORT);       // technically we should wait on this, but I'm impatient.
-    MDNS.addService("tiltbridge", "tcp", WEB_SERVER_PORT); // for lookups
+    mdns_service_add(NULL, "_http", "_tcp", WEB_SERVER_PORT, NULL, 0);       // technically we should wait on this, but I'm impatient.
+    mdns_service_add(NULL, "_tiltbridge", "_tcp", WEB_SERVER_PORT, NULL, 0); // for lookups
 
     // Display a screen so the user can see how to access the Tiltbridge
     char mdns_url[50] = "http://";
