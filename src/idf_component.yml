@@ -17,3 +17,6 @@ dependencies:
   espressif/arduino-esp32: ^3.1
   espressif/esp-sr: ^1.9.5
   h2zero/esp-nimble-cpp: ^2.3.4
+  #tuanpmt/esp_wifi_manager: "*"
+  tuanpmt/esp_bus: "^1.0.3"
+  espressif/mdns: "^1.2"

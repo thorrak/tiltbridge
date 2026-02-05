@@ -27,6 +27,12 @@ static const char *TAG = "http_server";
 
 httpServer http_server;
 
+// Helper function to clear name reset flag without requiring http_server.h include
+// This avoids ESPAsyncWebServer/ESP-IDF http_parser.h enum conflicts
+void http_server_clear_name_reset() {
+    http_server.name_reset_requested = false;
+}
+
 // Timer handles for triggering immediate sends from HTTP configuration updates
 static TimerHandle_t sendNowLegacyFTTimer = nullptr;
 static TimerHandle_t sendNowFTTimer = nullptr;
