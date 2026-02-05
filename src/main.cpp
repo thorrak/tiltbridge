@@ -4,6 +4,7 @@
 
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <freertos/timers.h>
 
 #include <thorlog.h>
@@ -56,7 +57,7 @@ void printMem() {
 void reboot()
 {
     Log.notice("Rebooting on 24-hour timer." CR);
-    delay(500);
+    vTaskDelay(pdMS_TO_TICKS(500));
     esp_restart();
 }
 
@@ -122,15 +123,15 @@ void loop() {
         Log.verbose("Resetting controller.\r\n");
         http_server.restart_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        delay(1000);
+        vTaskDelay(pdMS_TO_TICKS(1000));
         esp_restart();                           // Restart the TiltBridge
     }
 
     if (doWiFiReset || http_server.wifi_reset_requested) {
         Log.verbose("Resetting WiFi configuration.\r\n");
-        http_server.wifi_reset_requested = false; 
+        http_server.wifi_reset_requested = false;
         tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-        delay(1000);
+        vTaskDelay(pdMS_TO_TICKS(1000));
         doWiFiReset = false;
         disconnectWiFi();
     }

@@ -1,3 +1,6 @@
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <thorlog.h>
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_M5STICKC)
@@ -99,12 +102,12 @@ void bridge_lcd::init() {
 #ifdef I2C_RESET_PIN
     pinMode(I2C_RESET_PIN, OUTPUT);
     // Apparently for the Heltec boards you have to do this twice. Go figure. 
-    digitalWrite(I2C_RESET_PIN, LOW); // Set I2C_RESET_PIN low to reset OLED 
-    delay(200); 
-    digitalWrite(I2C_RESET_PIN, HIGH); // While OLED is running, must set I2C_RESET_PIN in high 
-    delay(200); 
-    digitalWrite(I2C_RESET_PIN, LOW); // Set I2C_RESET_PIN low to reset OLED 
-    delay(200); 
+    digitalWrite(I2C_RESET_PIN, LOW); // Set I2C_RESET_PIN low to reset OLED
+    vTaskDelay(pdMS_TO_TICKS(200));
+    digitalWrite(I2C_RESET_PIN, HIGH); // While OLED is running, must set I2C_RESET_PIN in high
+    vTaskDelay(pdMS_TO_TICKS(200));
+    digitalWrite(I2C_RESET_PIN, LOW); // Set I2C_RESET_PIN low to reset OLED
+    vTaskDelay(pdMS_TO_TICKS(200));
     digitalWrite(I2C_RESET_PIN, HIGH); // While OLED is running, must set I2C_RESET_PIN in high 
 #endif
 
@@ -123,16 +126,16 @@ void bridge_lcd::init() {
         // For the "TTGO" style OLED shields, you have to power a pin to run the backlight.
         pinMode(16, OUTPUT);
         digitalWrite(16, LOW); // Set GPIO16 low to reset OLED
-        delay(50);
+        vTaskDelay(pdMS_TO_TICKS(50));
         digitalWrite(16, HIGH); // While OLED is running, must set GPIO16 in high
         if (i2c_device_at_address(0x3c, 4, 15)) {
             oled_display = new SSD1306Wire(0x3c, 4, 15);
         } else {
             digitalWrite(16, LOW);                    // We weren't able to find the TTGO board, so reset the pin
 
-            pinMode(21, OUTPUT); 
-            digitalWrite(21, LOW); // Set GPIO21 low to reset OLED 
-            delay(50); 
+            pinMode(21, OUTPUT);
+            digitalWrite(21, LOW); // Set GPIO21 low to reset OLED
+            vTaskDelay(pdMS_TO_TICKS(50));
             digitalWrite(21, HIGH); // While OLED is running, must set GPIO21 in high 
             if (i2c_device_at_address(0x3c, 17, 18)) {
                 oled_display = new SSD1306Wire(0x3c, 17, 18);

@@ -2,6 +2,9 @@
 // Created by John Beeler on 5/12/18.
 //
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <thorlog.h>
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>
@@ -86,7 +89,7 @@ bool tiltScanner::wait_until_scan_complete()
         return false; // Return false if there wasn't a scan active when this was called
 
     while (pBLEScan->isScanning())
-        delay(100); // Otherwise, keep sleeping 100ms at a time until the scan completes
+        vTaskDelay(pdMS_TO_TICKS(100)); // Otherwise, keep sleeping 100ms at a time until the scan completes
 
     return true;
 }

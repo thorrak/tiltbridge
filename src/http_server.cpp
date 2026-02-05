@@ -1,4 +1,5 @@
 #include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <freertos/timers.h>
 
 #include <ArduinoJson.h>
@@ -566,7 +567,7 @@ void trigger_OTA(AsyncWebServerRequest *request) {
     server.serveStatic("/updating.htm", FILESYSTEM, "/").setDefaultFile("updating.htm");
     config.update_filesystem = true;
     lcd.display_ota_update_screen();         // Trigger this here while everything else is waiting.
-    delay(1000);                             // Wait 1 second to let everything send
+    vTaskDelay(pdMS_TO_TICKS(1000));         // Wait 1 second to let everything send
     tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete (we don't want any tasks running in the background)
     execOTA();                               // Trigger the OTA update
 }

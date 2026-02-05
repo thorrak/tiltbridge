@@ -1,3 +1,6 @@
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <esp_timer.h>
 #include <esp_system.h>
 #include <esp_wifi.h>
@@ -118,7 +121,7 @@ void initWiFi() {
         // Doing this to reset the DHCP name, the portal should never pop
         // Additionally, there is a bug where the HTTP server doesn't spin up after the AP shuts down. Not sure where
         // that issue is, but this solves it.
-        delay(3000); // Add a small delay to ensure WiFi is settled
+        vTaskDelay(pdMS_TO_TICKS(3000)); // Add a small delay to ensure WiFi is settled
         esp_restart();
     }
 
@@ -156,7 +159,7 @@ void reconnectWiFi() {
             Log.notice("WiFi is disconnected, reconnecting. (%d/%d)\r\n", WLcount, MAX_CONNECT_ATTEMPTS);
             lcd.display_wifi_disconnected_screen();
             // WiFi.begin();
-            delay(1000); // Ensuring the "disconnected" screen appears for at least one second
+            vTaskDelay(pdMS_TO_TICKS(1000)); // Ensuring the "disconnected" screen appears for at least one second
         } else if(WLNextAt >= esp_timer_get_time()) {
             // Haven't hit the timer for the next reconnect attempt - just return
             return;
@@ -177,7 +180,7 @@ void reconnectWiFi() {
                 // We failed to reconnect.
                 lcd.display_wifi_reconnect_failed();
                 Log.error("Unable to reconnect WiFi, restarting.\r\n");
-                delay(1000);
+                vTaskDelay(pdMS_TO_TICKS(1000));
                 esp_restart();
             }
         }

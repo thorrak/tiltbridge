@@ -1,3 +1,6 @@
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <ctime>
 #include <thorlog.h>
 
@@ -49,7 +52,7 @@ void dataSendHandler::init_mqtt()
         esp_mqtt_client_destroy(mqtt_client);
         mqtt_client = nullptr;
         mqtt_connected = false;
-        delay(250);
+        vTaskDelay(pdMS_TO_TICKS(250));
     }
 
     // Check if broker is configured
@@ -353,6 +356,6 @@ bool dataSendHandler::publish_to_mqtt(const char* topic, JsonDocument& payload, 
     } else {
         Log.error("Failed to publish to MQTT\r\n");
     }
-    delay(10);
+    vTaskDelay(pdMS_TO_TICKS(10));
     return result;
 }
