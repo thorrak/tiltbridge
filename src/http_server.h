@@ -1,8 +1,8 @@
 #ifndef TILTBRIDGE_HTTP_SERVER_H
 #define TILTBRIDGE_HTTP_SERVER_H
 
-#include <ESPAsyncWebServer.h>
-
+#include <esp_http_server.h>
+#include <ArduinoJson.h>
 
 // TODO - Check if these defines are still used
 #define BREWFATHER_MIN_KEY_LENGTH       5   // Currently in use
@@ -10,11 +10,23 @@
 #define BREWSTATUS_MIN_KEY_LENGTH       12  // May no longer be used
 #define GRAINFATHER_MIN_URL_LENGTH      44  // May no longer be used
 #define USER_TARGET_MIN_URL_LENGTH      12  // Currently in use
+#define INFLUXDB_MIN_URL_LENGTH         10
 
 class httpServer {
 public:
+    /**
+     * @brief Initialize and start the HTTP server
+     *
+     * Sets up all routes, handlers, and starts the server
+     */
     void init();
-    //void handleClient();
+
+    /**
+     * @brief Stop the HTTP server
+     */
+    void stop();
+
+    // State flags set by HTTP handlers, processed by main loop
     bool lcd_reinit_rqd = false;
     bool restart_requested = false;
     bool name_reset_requested = false;
@@ -22,21 +34,23 @@ public:
     bool factoryreset_requested = false;
     bool mqtt_init_rqd = false;
 
-
 private:
-    void genericServeJson(AsyncWebServerRequest *request, void (*jsonFunc)(JsonDocument &));
-    void setJsonPages();
-    void setStaticPages();
-    void setPutPages();
+    /**
+     * @brief Register all JSON API GET endpoints
+     */
+    void registerJsonGetHandlers();
 
-    String getContentType(String filename);
-    bool handleFileRead(AsyncWebServerRequest *request, String path);
-    void redirect(AsyncWebServerRequest *request, const String &url);
+    /**
+     * @brief Register all JSON API PUT/POST endpoints
+     */
+    void registerJsonPutHandlers();
 
+    /**
+     * @brief Register calibration API endpoints
+     */
+    void registerCalibrationHandlers();
 };
 
 extern httpServer http_server;
-
-extern AsyncWebServer asyncWebServer;
 
 #endif //TILTBRIDGE_HTTP_SERVER_H

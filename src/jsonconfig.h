@@ -3,8 +3,11 @@
 
 #include <ArduinoJson.h>
 #include "tilt/tiltHydrometer.h"
+#include "filesystem.h"
+#include <stdio.h>
 
-#define CONFIG_DIR "/conf"
+// CONFIG_DIR includes the filesystem mount point for ESP-IDF VFS compatibility
+#define CONFIG_DIR FILESYSTEM_PREFIX "/conf"
 #define JSON_CONFIG_FILE "tiltbridgeConfig.json"
 
 struct TiltCalData {
@@ -41,8 +44,8 @@ protected:
     virtual void load_from_json(JsonDocument obj);
     virtual JsonDocument to_json();
 
-    bool deserializeConfig(Stream &);
-    bool serializeConfig(Print &);
+    bool deserializeConfig(const char *src);
+    bool serializeConfig(FILE *dst);
     bool saveFile(const char * filename);
     bool loadFile(const char * filename);
     virtual bool getFilename(char *filename);
