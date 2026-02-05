@@ -20,7 +20,7 @@
 
 #if defined(AXP192)
 #include "axp192.h"  // ESP-IDF compatible AXP192 driver for M5StickC Plus
-AXP192_Driver axp192_driver(I2C_NUM_1);
+AXP192_Driver axp192_driver;
 #endif
 
 #ifdef LCD_TFT_M5STICKC

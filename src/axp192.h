@@ -3,13 +3,13 @@
  * @brief ESP-IDF compatible AXP192 power management driver
  *
  * Simplified driver for AXP192 PMU used in M5StickC Plus.
- * Uses ESP-IDF I2C driver directly instead of Arduino Wire library.
+ * Uses ESP-IDF I2C master driver (driver_ng) directly.
  */
 
 #ifndef TILTBRIDGE_AXP192_H
 #define TILTBRIDGE_AXP192_H
 
-#include <driver/i2c.h>
+#include <driver/i2c_master.h>
 #include <esp_err.h>
 
 #define AXP192_DEFAULT_ADDRESS  0x34
@@ -33,16 +33,15 @@ struct AXP192_InitDef {
 };
 
 /**
- * @brief AXP192 power management class using ESP-IDF I2C
+ * @brief AXP192 power management class using ESP-IDF I2C master driver
  */
 class AXP192_Driver {
 public:
     /**
      * @brief Construct AXP192 driver
-     * @param i2c_port I2C port number (I2C_NUM_0 or I2C_NUM_1)
      * @param addr I2C address (default 0x34)
      */
-    AXP192_Driver(i2c_port_t i2c_port = I2C_NUM_1, uint8_t addr = AXP192_DEFAULT_ADDRESS);
+    explicit AXP192_Driver(uint8_t addr = AXP192_DEFAULT_ADDRESS);
 
     /**
      * @brief Initialize I2C and configure AXP192
@@ -79,14 +78,20 @@ public:
     void setBACKUP(bool enable);
 
 private:
-    i2c_port_t m_i2c_port;
     uint8_t m_addr;
+    i2c_master_bus_handle_t m_bus_handle;
+    i2c_master_dev_handle_t m_dev_handle;
     bool m_initialized;
 
     /**
-     * @brief Initialize I2C driver
+     * @brief Initialize I2C master bus and add device
      */
     esp_err_t initI2C(int sda_pin, int scl_pin);
+
+    /**
+     * @brief Clean up I2C bus and device handles
+     */
+    void deinitI2C();
 
     /**
      * @brief Write a byte to a register

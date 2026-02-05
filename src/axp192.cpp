@@ -1,6 +1,8 @@
 /**
  * @file axp192.cpp
  * @brief ESP-IDF compatible AXP192 power management driver implementation
+ *
+ * Uses ESP-IDF I2C master driver (driver_ng).
  */
 
 #include "axp192.h"
@@ -29,50 +31,69 @@
 // Timeout for I2C operations
 #define I2C_TIMEOUT_MS  100
 
-AXP192_Driver::AXP192_Driver(i2c_port_t i2c_port, uint8_t addr)
-    : m_i2c_port(i2c_port)
-    , m_addr(addr)
+AXP192_Driver::AXP192_Driver(uint8_t addr)
+    : m_addr(addr)
+    , m_bus_handle(nullptr)
+    , m_dev_handle(nullptr)
     , m_initialized(false)
 {
 }
 
 esp_err_t AXP192_Driver::initI2C(int sda_pin, int scl_pin)
 {
-    i2c_config_t conf;
-    memset(&conf, 0, sizeof(conf));
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = static_cast<gpio_num_t>(sda_pin);
-    conf.scl_io_num = static_cast<gpio_num_t>(scl_pin);
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = 400000;  // 400kHz
+    // Configure the I2C master bus
+    i2c_master_bus_config_t bus_config = {};
+    bus_config.i2c_port = I2C_NUM_1;
+    bus_config.sda_io_num = static_cast<gpio_num_t>(sda_pin);
+    bus_config.scl_io_num = static_cast<gpio_num_t>(scl_pin);
+    bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
+    bus_config.glitch_ignore_cnt = 7;
+    bus_config.flags.enable_internal_pullup = true;
 
-    esp_err_t err = i2c_param_config(m_i2c_port, &conf);
+    esp_err_t err = i2c_new_master_bus(&bus_config, &m_bus_handle);
     if (err != ESP_OK) {
-        Log.error("AXP192: Failed to configure I2C: %d" CR, err);
+        Log.error("AXP192: Failed to create I2C master bus: %d" CR, err);
         return err;
     }
 
-    err = i2c_driver_install(m_i2c_port, conf.mode, 0, 0, 0);
+    // Add the AXP192 device to the bus
+    i2c_device_config_t dev_config = {};
+    dev_config.dev_addr_length = I2C_ADDR_BIT_LEN_7;
+    dev_config.device_address = m_addr;
+    dev_config.scl_speed_hz = 400000;  // 400kHz
+
+    err = i2c_master_bus_add_device(m_bus_handle, &dev_config, &m_dev_handle);
     if (err != ESP_OK) {
-        Log.error("AXP192: Failed to install I2C driver: %d" CR, err);
+        Log.error("AXP192: Failed to add device to I2C bus: %d" CR, err);
+        i2c_del_master_bus(m_bus_handle);
+        m_bus_handle = nullptr;
         return err;
     }
 
     return ESP_OK;
 }
 
+void AXP192_Driver::deinitI2C()
+{
+    if (m_dev_handle != nullptr) {
+        i2c_master_bus_rm_device(m_dev_handle);
+        m_dev_handle = nullptr;
+    }
+    if (m_bus_handle != nullptr) {
+        i2c_del_master_bus(m_bus_handle);
+        m_bus_handle = nullptr;
+    }
+}
+
 esp_err_t AXP192_Driver::writeRegister(uint8_t reg, uint8_t value)
 {
     uint8_t data[2] = {reg, value};
-    return i2c_master_write_to_device(m_i2c_port, m_addr, data, 2,
-                                       pdMS_TO_TICKS(I2C_TIMEOUT_MS));
+    return i2c_master_transmit(m_dev_handle, data, 2, I2C_TIMEOUT_MS);
 }
 
 esp_err_t AXP192_Driver::readRegister(uint8_t reg, uint8_t* value)
 {
-    return i2c_master_write_read_device(m_i2c_port, m_addr, &reg, 1, value, 1,
-                                         pdMS_TO_TICKS(I2C_TIMEOUT_MS));
+    return i2c_master_transmit_receive(m_dev_handle, &reg, 1, value, 1, I2C_TIMEOUT_MS);
 }
 
 esp_err_t AXP192_Driver::setBits(uint8_t reg, uint8_t mask, uint8_t value)
@@ -100,7 +121,7 @@ bool AXP192_Driver::detect(int sda_pin, int scl_pin)
     err = readRegister(AXP192_REG_IC_TYPE, &ic_type);
 
     // Clean up I2C
-    i2c_driver_delete(m_i2c_port);
+    deinitI2C();
 
     if (err == ESP_OK) {
         Log.notice("AXP192: Detected IC type 0x%02X" CR, ic_type);
@@ -123,7 +144,7 @@ bool AXP192_Driver::begin(int sda_pin, int scl_pin, const AXP192_InitDef& init)
     err = readRegister(AXP192_REG_IC_TYPE, &ic_type);
     if (err != ESP_OK) {
         Log.error("AXP192: Device not responding" CR);
-        i2c_driver_delete(m_i2c_port);
+        deinitI2C();
         return false;
     }
 
@@ -159,7 +180,7 @@ bool AXP192_Driver::begin(int sda_pin, int scl_pin, const AXP192_InitDef& init)
 void AXP192_Driver::end()
 {
     if (m_initialized) {
-        i2c_driver_delete(m_i2c_port);
+        deinitI2C();
         m_initialized = false;
     }
 }
