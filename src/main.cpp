@@ -6,6 +6,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/timers.h>
+#include <nvs_flash.h>
+#include <esp_bus.h>
 
 #include <thorlog.h>
 
@@ -62,7 +64,18 @@ void reboot()
 }
 
 void setup() {
+
+    esp_log_level_set("esp_bus", ESP_LOG_VERBOSE);
+
+    // Initialize esp_bus (required for esp_wifi_manager events)
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    ESP_LOGI("tiltbridge", "Initializing esp_bus.");
+    ESP_ERROR_CHECK(esp_bus_init());
+    vTaskDelay(pdMS_TO_TICKS(3000));
+
     serial();
+
+    vTaskDelay(pdMS_TO_TICKS(3000));
 
     Log.verbose("Loading config.\r\n");
     // Initialize the filesystem 
@@ -74,6 +87,17 @@ void setup() {
 
     Log.verbose("Initializing LCD.\r\n");
     lcd.init();
+
+    // Initialize NVS (required for esp_wifi_manager)
+    esp_err_t nvs_ret = nvs_flash_init();
+    if (nvs_ret == ESP_ERR_NVS_NO_FREE_PAGES || nvs_ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        Log.warning("NVS partition was truncated, erasing and reinitializing.\r\n");
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        nvs_ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(nvs_ret);
+
+
 
     Log.verbose("Initializing WiFi.\r\n");
     initWiFi();
