@@ -1,5 +1,8 @@
 #include <thorlog.h>
 #include <ArduinoJson.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 
 #include "filesystem.h"  // Selects SPIFFS or LittleFS as necessary
 
@@ -14,6 +17,7 @@
 
 
 #define MAX_FILENAME_LENGTH  32
+#define JSON_CONFIG_BUFFER_SIZE 8192
 
 
 Config config;
@@ -21,12 +25,56 @@ const char *filename = JSON_CONFIG_FILE;
 const size_t capacitySerial = 6152;
 const size_t capacityDeserial = 8192;
 
+/**
+ * @brief Read file contents into a dynamically allocated buffer
+ * @param filename Path to file
+ * @param out_size Output parameter for file size
+ * @return Allocated buffer (caller must free) or NULL on error
+ */
+static char* read_file_to_buffer(const char* filename, size_t* out_size) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        return NULL;
+    }
+
+    // Get file size
+    fseek(file, 0, SEEK_END);
+    size_t size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (size == 0 || size > JSON_CONFIG_BUFFER_SIZE) {
+        fclose(file);
+        return NULL;
+    }
+
+    // Allocate buffer
+    char* buffer = (char*)malloc(size + 1);
+    if (!buffer) {
+        fclose(file);
+        return NULL;
+    }
+
+    // Read file
+    size_t bytes_read = fread(buffer, 1, size, file);
+    fclose(file);
+
+    if (bytes_read != size) {
+        free(buffer);
+        return NULL;
+    }
+
+    buffer[size] = '\0';
+    if (out_size) {
+        *out_size = size;
+    }
+    return buffer;
+}
 
 
 bool ConfigFile::loadFile(const char * filename) {
 
     // Loads the configuration from a file on FILESYSTEM
-    if (!FILESYSTEM.exists(filename)) {
+    if (!filesystem_exists(filename)) {
         // File does not exist
         Log.info("Config file %s does not exist - creating with defaults\r\n", filename);
         saveFile(filename);
@@ -34,45 +82,41 @@ bool ConfigFile::loadFile(const char * filename) {
         // Existing configuration present
         Log.verbose("Found existing config file %s\r\n", filename);
     }
-    
-    File file = FILESYSTEM.open(filename, "r");
-    if (!file) {
-        // Unable to open the file
+
+    // Read file into buffer
+    size_t size;
+    char* buffer = read_file_to_buffer(filename, &size);
+    if (buffer == NULL) {
         Log.error("Unable to access config file %s\r\n", filename);
         return false;
     }
 
-    if (!deserializeConfig(file)) {
-        file.close();
-        return false;
-    } else {
-        file.close();
-        return true;
-    }
+    bool result = deserializeConfig(buffer);
+    free(buffer);
+    return result;
 }
 
 bool ConfigFile::saveFile(const char * filename) {
     // Saves the configuration to a file on FILESYSTEM
-    File file = FILESYSTEM.open(filename, "w");
-    if (!file) {
-        file.close();
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
         return false;
     }
 
     // Serialize JSON to file
     if (!serializeConfig(file)) {
-        file.close();
+        fclose(file);
         return false;
     }
-    file.close();
+    fclose(file);
     return true;
 }
 
-bool ConfigFile::deserializeConfig(Stream &src) {
+bool ConfigFile::deserializeConfig(const char *src) {
     // Deserialize configuration
     JsonDocument doc;
 
-    // Parse the JSON object in the file
+    // Parse the JSON object from the buffer
     DeserializationError err = deserializeJson(doc, src);
 
     if (err) {
@@ -84,12 +128,30 @@ bool ConfigFile::deserializeConfig(Stream &src) {
     }
 }
 
-bool ConfigFile::serializeConfig(Print &dst) {
+bool ConfigFile::serializeConfig(FILE *dst) {
     // Serialize configuration
     JsonDocument doc = to_json();
 
-    // Serialize JSON to file
-    return serializeJson(doc, dst) > 0;
+    // Measure required size
+    size_t json_size = measureJson(doc);
+    if (json_size == 0 || json_size > JSON_CONFIG_BUFFER_SIZE) {
+        return false;
+    }
+
+    // Allocate buffer
+    char* buffer = (char*)malloc(json_size + 1);
+    if (!buffer) {
+        return false;
+    }
+
+    // Serialize to buffer
+    size_t written = serializeJson(doc, buffer, json_size + 1);
+
+    // Write to file
+    size_t file_written = fwrite(buffer, 1, written, dst);
+    free(buffer);
+
+    return file_written == written;
 }
 
 JsonDocument ConfigFile::to_json_external() {
@@ -105,7 +167,7 @@ bool ConfigFile::save() {
 
 bool ConfigFile::load() {
     char filename[MAX_FILENAME_LENGTH];
-    if(!getFilename(filename))   
+    if(!getFilename(filename))
         return false;
     return loadFile(filename);
 }
@@ -114,18 +176,26 @@ bool ConfigFile::deleteFile() {
     char filename[MAX_FILENAME_LENGTH];
     if(!getFilename(filename))
         return false;
-    return FILESYSTEM.remove(filename);
+    return remove(filename) == 0;
 }
 
 bool ConfigFile::printConfig() {
     // Serialize configuration
     JsonDocument doc = to_json();
 
-    bool retval = true;
-    // Serialize JSON to file
-    retval = serializeJson(doc, Serial) > 0;
+    // Serialize to buffer and print
+    size_t json_size = measureJson(doc);
+    char* buffer = (char*)malloc(json_size + 1);
+    if (!buffer) {
+        return false;
+    }
+
+    serializeJson(doc, buffer, json_size + 1);
+    Serial.print(buffer);
+    free(buffer);
+
     printCR(true);
-    return retval;
+    return true;
 }
 
 bool ConfigFile::printConfigFile() {
@@ -133,15 +203,18 @@ bool ConfigFile::printConfigFile() {
     char filename[MAX_FILENAME_LENGTH];
     if(!getFilename(filename))
         return false;
-    File file = FILESYSTEM.open(filename, "r");
-    if (!file)
-        return false;
 
-    while (file.available())
-        printChar(true, (const char *)file.read());
+    size_t size;
+    char* buffer = read_file_to_buffer(filename, &size);
+    if (buffer == NULL) {
+        return false;
+    }
+
+    // Print the buffer
+    Serial.print(buffer);
+    free(buffer);
 
     printCR(true);
-    file.close();
     return true;
 }
 

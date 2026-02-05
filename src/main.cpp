@@ -67,8 +67,8 @@ void setup() {
     Log.verbose("Loading config.\r\n");
     // Initialize the filesystem 
     // (reformat if unable to initialize, though this will present broader problems as we won't have the web interface)
-    if (!FILESYSTEM.begin(true)) {
-        Log.verbose("Unable to initialize filesystem.\r\n");
+    if (!filesystem_init(true)) {
+        Log.error("Unable to initialize filesystem.\r\n");
     }
     config.load();
 
