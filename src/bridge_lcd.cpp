@@ -1,9 +1,5 @@
 #include <thorlog.h>
 
-#ifdef LCD_SSD1306
-#include <Wire.h>
-#endif
-
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
 #include "bridge_lcd.h"
