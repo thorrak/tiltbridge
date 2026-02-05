@@ -12,10 +12,10 @@
 // LCD_TFT_ESPI - For smaller TFT displays
 
 #ifdef LCD_SSD1306
-#include <SSD1306Wire.h>
+#include <LovyanGFX.hpp>
+#include "lovyan_config.h"
 #define SSD1306_FONT_HEIGHT     10
 #define SSD_LINE_CLEARANCE      2
-#define SSD1306_FONT            ArialMT_Plain_10
 #define TILTS_PER_PAGE          5 // The actual number is one fewer than this - the first row is used for headers
 #define HAVE_LCD                1
 
@@ -97,11 +97,9 @@ private:
     void display_tilt_screen(uint8_t screen_number);    // Not in impl
     void display();
 
-#ifdef LCD_SSD1306
-    SSD1306Wire *oled_display;
-#elif defined(LCD_TFT) || defined(LCD_TFT_ESPI)
+#if defined(HAVE_LCD)
     lgfx::LGFX_Device *tft;
-#endif // LCD_SSD1306
+#endif
 
     bool displaying_wifi_dc_screen = false;
     uint8_t tilt_pages_in_run;  // Number of pages in the current loop through the active tilts (# active tilts / 3)
