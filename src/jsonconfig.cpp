@@ -191,7 +191,7 @@ bool ConfigFile::printConfig() {
     }
 
     serializeJson(doc, buffer, json_size + 1);
-    Serial.print(buffer);
+    printf("%s", buffer);
     free(buffer);
 
     printCR(true);
@@ -211,7 +211,7 @@ bool ConfigFile::printConfigFile() {
     }
 
     // Print the buffer
-    Serial.print(buffer);
+    printf("%s", buffer);
     free(buffer);
 
     printCR(true);

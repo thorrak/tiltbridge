@@ -1,13 +1,9 @@
 #include <cstdio>
 #include <esp_timer.h>
 #include <esp_log.h>
+#include <driver/uart.h>
 #include <thorlog.h>
 #include <thorlog_espidf.h>
-
-// TODO(ESP-IDF): Remove this include when migrating to pure ESP-IDF
-#include <HardwareSerial.h>
-// TODO(ESP-IDF): Add these includes instead:
-// #include <driver/uart.h>
 
 #include "serialhandler.h"
 
@@ -65,30 +61,15 @@ void debug() {
 
 void serial()
 {
-    // TODO(ESP-IDF): Replace Serial.begin/setDebugOutput with native UART init:
-    //
-    // const uart_config_t uart_config = {
-    //     .baud_rate = BAUD,
-    //     .data_bits = UART_DATA_8_BITS,
-    //     .parity = UART_PARITY_DISABLE,
-    //     .stop_bits = UART_STOP_BITS_1,
-    //     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-    //     .source_clk = UART_SCLK_DEFAULT,
-    // };
-    // uart_param_config(UART_NUM_0, &uart_config);
-    // uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0);
-    //
-    // Note: ESP-IDF typically auto-configures UART0 for console output via
-    // menuconfig (CONFIG_ESP_CONSOLE_UART), so explicit init may not be needed.
-
-    Serial.begin(BAUD);
-    Serial.setDebugOutput(true);
+    // ESP-IDF auto-configures UART0 for console output via menuconfig
+    // (CONFIG_ESP_CONSOLE_UART), so explicit UART init is not needed.
+    // Just initialize the logging system.
 
     printf("\n");
     fflush(stdout);
     Log.begin(ARDUINO_LOG_LEVEL, &espIdfAdapter, true);
     Log.setPrefix(printPrefix);
-    Log.notice("Serial logging started at %l.\r\n", BAUD);
+    Log.notice("Serial logging started at %d.\r\n", BAUD);
 
     debug();
 }

@@ -1,9 +1,15 @@
 #include <thorlog.h>
+#include <esp_timer.h>
 
 #include "jsonconfig.h"
 #include "tilt/tiltScanner.h"
 #include "bridge_lcd.h"
 #include "wifi_setup.h"
+
+// ESP-IDF replacement for Arduino millis()
+static inline unsigned long millis() {
+    return (unsigned long)(esp_timer_get_time() / 1000ULL);
+}
 
 bridge_lcd lcd;
 

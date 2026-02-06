@@ -2,18 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-// =============================================================================
-// TODO(idf_lib_swap): ARDUINO COMPATIBILITY - REMOVE WHEN FULLY CONVERTED
-// =============================================================================
-// This WiFi.h include must come BEFORE esp_http_client.h to prevent
-// lwip/Arduino IPAddress.h header conflicts. The conflict occurs because:
-//   - esp_http_client.h -> sys/socket.h -> lwip headers define INADDR_NONE as macro
-//   - Arduino's IPAddress.h tries to use INADDR_NONE as a variable name
-// When fully converted to ESP-IDF, remove this include entirely.
-#include <WiFi.h>
-// =============================================================================
-
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_http_client.h>

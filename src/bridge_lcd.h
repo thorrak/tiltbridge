@@ -22,9 +22,9 @@
 #elif defined(LCD_TFT) || defined(LCD_TFT_ESPI)
 
 // For the LCD_TFT displays, we're connecting via SPI
+// LovyanGFX handles SPI internally, no separate SPI include needed
 #include <LovyanGFX.hpp>
 #include "lovyan_config.h"
-#include <SPI.h>
 
 #define FF_NORMAL               &FreeSans9pt7b
 
@@ -85,7 +85,7 @@ private:
     inline void init_power();
 
     void print_tilt_to_line(tiltHydrometer *tilt, uint8_t line);
-    bool i2c_device_at_address(byte address, int sda_pin, int scl_pin);
+    bool i2c_device_at_address(uint8_t address, int sda_pin, int scl_pin);
 
 #ifdef LCD_TFT_M5STICKC
     enum class M5Variant { Plus, Plus2 };

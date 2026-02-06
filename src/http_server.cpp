@@ -4,6 +4,8 @@
 
 #include <ArduinoJson.h>
 #include <esp_log.h>
+#include <esp_heap_caps.h>
+#include <esp_system.h>
 
 #include "url_utils.h"
 #include "thorlog.h"
@@ -106,9 +108,9 @@ static void uptime_json(JsonDocument &doc) {
 }
 
 static void heap_json(JsonDocument &doc) {
-    const uint32_t free = ESP.getFreeHeap();
-    const uint32_t max = ESP.getMaxAllocHeap();
-    const uint8_t frag = 100 - (max * 100) / free;
+    const uint32_t free = esp_get_free_heap_size();
+    const uint32_t max = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    const uint8_t frag = (free > 0) ? (100 - (max * 100) / free) : 0;
 
     doc["free"] = free;
     doc["max"] = max;

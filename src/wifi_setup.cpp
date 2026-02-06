@@ -124,6 +124,7 @@ void mdnsReset() {
     mdns_free();
     if (mdns_init() != ESP_OK || mdns_hostname_set(config.mdnsID) != ESP_OK) {
         Log.error("Error resetting MDNS responder.");
+        vTaskDelay(pdMS_TO_TICKS(1000));
         esp_restart();
     } else {
         Log.notice("mDNS responder restarted, hostname: %s.local.\r\n", config.mdnsID);
@@ -142,11 +143,11 @@ void initWiFi() {
     esp_log_level_set("esp_bus", ESP_LOG_VERBOSE);
 
     // Subscribe to WiFi events
-    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_CONNECTED), on_wifi_connected, NULL);
-    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_GOT_IP), on_wifi_got_ip, NULL);
-    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_DISCONNECTED), on_wifi_disconnected, NULL);
+    // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_CONNECTED), on_wifi_connected, NULL);
+    // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_GOT_IP), on_wifi_got_ip, NULL);
+    // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_DISCONNECTED), on_wifi_disconnected, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_AP_START), on_wifi_ap_started, NULL);
-    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_VAR_CHANGED), on_var_changed, NULL);
+    // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_VAR_CHANGED), on_var_changed, NULL);
 
     // Default variables for WiFi manager - mdns_name is used to set the mDNS hostname
     // This provides a default value; if NVS has a stored value, that takes precedence
@@ -202,31 +203,37 @@ void initWiFi() {
     esp_err_t err = wifi_manager_init(&wifi_config);
     if (err != ESP_OK) {
         Log.error("Failed to initialize WiFi Manager: %d\r\n", err);
+        vTaskDelay(pdMS_TO_TICKS(1000));
         esp_restart();
     }
 
-    // Wait for connection (5 minutes timeout)
+    // Wait for connection (5 second timeout)
     err = wifi_manager_wait_connected(5 * 60 * 1000);
     if (err != ESP_OK) {
-        Log.warning("WiFi connection timeout, AP mode active for configuration.\r\n");
+        Log.warning("WiFi connection timeout, AP mode remains active for configuration.\r\n");
         // AP mode is automatically started by enable_captive_portal = true
     }
+
+    Log.warning("Past WiFi Mgr code\r\n");
+
+    // wifi_manager_deinit
 
     // Sync mDNS name from wifi_manager's NVS storage to config
     // The wifi_manager may have a user-configured value that differs from config default
     char stored_mdns[32] = {0};
-    if (wifi_manager_get_var("mdns_name", stored_mdns, sizeof(stored_mdns)) == ESP_OK && strlen(stored_mdns) > 0) {
-        if (isValidHostName(stored_mdns) && strcmp(stored_mdns, config.mdnsID) != 0) {
-            Log.notice("Using stored mDNS name from WiFi manager: %s\r\n", stored_mdns);
-            strlcpy(config.mdnsID, stored_mdns, sizeof(config.mdnsID));
-            config.save();
-        }
-        // Doing this to reset the DHCP name, the portal should never pop
-        // Additionally, there is a bug where the HTTP server doesn't spin up after the AP shuts down. Not sure where
-        // that issue is, but this solves it.
-        vTaskDelay(pdMS_TO_TICKS(3000)); // Add a small delay to ensure WiFi is settled
-        esp_restart();  // TODO - See if this can be removed
-    }
+    // if (wifi_manager_get_var("mdns_name", stored_mdns, sizeof(stored_mdns)) == ESP_OK && strlen(stored_mdns) > 0) {
+    //     if (isValidHostName(stored_mdns) && strcmp(stored_mdns, config.mdnsID) != 0) {
+    //         Log.notice("Using stored mDNS name from WiFi manager: %s\r\n", stored_mdns);
+    //         strlcpy(config.mdnsID, stored_mdns, sizeof(config.mdnsID));
+    //         config.save();
+    //     }
+    //     // Doing this to reset the DHCP name, the portal should never pop
+    //     // Additionally, there is a bug where the HTTP server doesn't spin up after the AP shuts down. Not sure where
+    //     // that issue is, but this solves it.
+    //     Log.warning("Resetting WiFi to apply mDNS name and ensure proper HTTP server startup.\r\n");
+    //     vTaskDelay(pdMS_TO_TICKS(3000)); // Add a small delay to ensure WiFi is settled
+    //     esp_restart();  // TODO - See if this can be removed
+    // }
 
     if (mdns_init() != ESP_OK || mdns_hostname_set(config.mdnsID) != ESP_OK) {
         Log.error("Error setting up MDNS responder.\r\n");
