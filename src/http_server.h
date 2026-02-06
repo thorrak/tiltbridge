@@ -10,7 +10,7 @@
 #define BREWSTATUS_MIN_KEY_LENGTH       12  // May no longer be used
 #define GRAINFATHER_MIN_URL_LENGTH      44  // May no longer be used
 #define USER_TARGET_MIN_URL_LENGTH      12  // Currently in use
-#define INFLUXDB_MIN_URL_LENGTH         10
+// INFLUXDB_MIN_URL_LENGTH is defined in sendData.h
 
 class httpServer {
 public:

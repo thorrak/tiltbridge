@@ -2,9 +2,16 @@
 // Created by John Beeler on 4/28/18.
 //
 
+#include <cmath>
+#include <esp_timer.h>
 #include <thorlog.h>
 #include "tiltHydrometer.h"
 #include "jsonconfig.h"
+
+// ESP-IDF replacement for Arduino millis()
+static inline unsigned long millis() {
+    return (unsigned long)(esp_timer_get_time() / 1000ULL);
+}
 
 const char* tilt_color_names[] = {
     "Red",

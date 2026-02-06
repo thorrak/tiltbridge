@@ -3,6 +3,7 @@
 // More details (including license details) can be found in the files accompanying this source code.
 
 #include <esp_system.h>
+#include <esp_heap_caps.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/timers.h>
@@ -35,9 +36,9 @@ TimerHandle_t reboot24Timer = nullptr;
 // Timer callback for memory debug printing
 #if (ARDUINO_LOG_LEVEL >= ARDUINO_LOG_LOG_LEVEL_INFO) && !defined(DISABLE_LOGGING)
 static void memCheckTimerCallback(TimerHandle_t xTimer) {
-    const uint32_t free = ESP.getFreeHeap();
-    const uint32_t max = ESP.getMaxAllocHeap();
-    const uint8_t frag = 100 - (max * 100) / free;
+    const uint32_t free = esp_get_free_heap_size();
+    const uint32_t max = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    const uint8_t frag = (free > 0) ? (100 - (max * 100) / free) : 0;
     Log.info("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n", free, max, frag);
 }
 #endif
@@ -50,9 +51,9 @@ static void reboot24TimerCallback(TimerHandle_t xTimer) {
 }
 
 void printMem() {
-    const uint32_t free = ESP.getFreeHeap();
-    const uint32_t max = ESP.getMaxAllocHeap();
-    const uint8_t frag = 100 - (max * 100) / free;
+    const uint32_t free = esp_get_free_heap_size();
+    const uint32_t max = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    const uint8_t frag = (free > 0) ? (100 - (max * 100) / free) : 0;
     Log.info("Free Heap: %d, Largest contiguous block: %d, Frag: %d%%\r\n", free, max, frag);
 }
 
@@ -99,10 +100,11 @@ void setup() {
 
 
 
-    Log.verbose("Initializing WiFi.\r\n");
+    Log.info("Initializing WiFi.\r\n");
     initWiFi();
+    vTaskDelay(pdMS_TO_TICKS(3000));
 
-    Log.verbose("Initializing scanner.\r\n");
+    Log.info("Initializing scanner.\r\n");
     tilt_scanner.init();                        // Initialize the BLE scanner
     tilt_scanner.wait_until_scan_complete();    // Wait until the initial scan completes
 
@@ -189,4 +191,28 @@ void loop() {
     reconnectWiFi();
 
     screenFlip(); // This must be in the loop
+}
+
+// Main loop task for FreeRTOS
+static void loopTask(void* pvParameters) {
+    for (;;) {
+        loop();
+        vTaskDelay(pdMS_TO_TICKS(10));  // Small delay to allow other tasks to run
+    }
+}
+
+// ESP-IDF entry point
+extern "C" void app_main(void) {
+    setup();
+
+    // Create the main loop task
+    xTaskCreatePinnedToCore(
+        loopTask,       // Task function
+        "loopTask",     // Task name
+        8192,           // Stack size (bytes)
+        nullptr,        // Task parameters
+        1,              // Priority
+        nullptr,        // Task handle
+        1               // Core ID (run on core 1, leaving core 0 for WiFi/BLE)
+    );
 }

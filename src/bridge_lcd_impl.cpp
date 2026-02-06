@@ -1,13 +1,45 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#include <driver/gpio.h>
 #include <thorlog.h>
 
 #if defined(LCD_SSD1306)
-#include <Wire.h>
+#include <driver/i2c.h>
 #endif
 
 #include "jsonconfig.h"
+
+// ESP-IDF GPIO compatibility helpers (replacing Arduino's pinMode/digitalWrite)
+#ifndef OUTPUT
+#define OUTPUT GPIO_MODE_OUTPUT
+#endif
+#ifndef HIGH
+#define HIGH 1
+#endif
+#ifndef LOW
+#define LOW 0
+#endif
+
+static inline void pinMode(int pin, gpio_mode_t mode) {
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << pin),
+        .mode = mode,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&io_conf);
+}
+
+static inline void digitalWrite(int pin, int level) {
+    gpio_set_level((gpio_num_t)pin, level);
+}
+
+// Replace Arduino yield() with FreeRTOS equivalent
+static inline void yield() {
+    taskYIELD();
+}
 #include "tilt/tiltScanner.h"
 #include "bridge_lcd.h"
 #include "lovyan_config.h"
@@ -366,21 +398,46 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
 #endif
 }
 
-bool bridge_lcd::i2c_device_at_address(byte address, int sda_pin, int scl_pin) {
+bool bridge_lcd::i2c_device_at_address(uint8_t address, int sda_pin, int scl_pin) {
 #ifdef LCD_SSD1306
     // This allows us to do LCD autodetection (and by extension, support
-    // multiple OLED ESP32 boards
-    byte error;
+    // multiple OLED ESP32 boards using ESP-IDF I2C driver
 
-   if(!Wire.begin(sda_pin, scl_pin)) {
-        Log.error("Failed to initialize Wire on pin %d/%d\r\n", sda_pin, scl_pin);
-        return false;  // Failed to initialize twowire on selected sda/scl
-   }
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
-    Wire.end();
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = sda_pin,
+        .scl_io_num = scl_pin,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master = {
+            .clk_speed = 100000,
+        },
+        .clk_flags = 0,
+    };
 
-    if (error == 0) // No error means that a device responded
+    esp_err_t err = i2c_param_config(I2C_NUM_0, &conf);
+    if (err != ESP_OK) {
+        Log.error("Failed to configure I2C on pin %d/%d\r\n", sda_pin, scl_pin);
+        return false;
+    }
+
+    err = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+    if (err != ESP_OK) {
+        Log.error("Failed to install I2C driver on pin %d/%d\r\n", sda_pin, scl_pin);
+        return false;
+    }
+
+    // Try to communicate with device at address
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_stop(cmd);
+    err = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(100));
+    i2c_cmd_link_delete(cmd);
+
+    i2c_driver_delete(I2C_NUM_0);
+
+    if (err == ESP_OK) // No error means that a device responded
         return true;
 #endif // Leave this here to avoid compiler warning
     return false;
