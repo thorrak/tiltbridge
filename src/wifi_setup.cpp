@@ -6,6 +6,7 @@
 #include <esp_system.h>
 #include <esp_wifi.h>
 #include <esp_netif.h>
+#include <esp_event.h>
 #include <mdns.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -18,6 +19,7 @@
 #include "url_utils.h"
 #include "bridge_lcd.h"
 #include "jsonconfig.h"
+#include "idf_http_server.h"
 
 #include "wifi_setup.h"
 
@@ -83,7 +85,6 @@ static void on_wifi_disconnected(const char *event, const void *data, size_t len
 // Event callback for AP started
 static void on_wifi_ap_started(const char *event, const void *data, size_t len, void *ctx) {
     wifi_ap_status_t ap_status;
-    ESP_LOGW("tiltbridge", "WiFi AP actually works");
     Log.info("WiFi AP started for configuration.\r\n");
     if (wifi_manager_get_ap_status(&ap_status) == ESP_OK) {
         Log.info("AP started: SSID: %s, IP: %s\r\n", ap_status.ssid, ap_status.ip);
@@ -142,6 +143,23 @@ void initWiFi() {
     esp_log_level_set("tiltbridge", ESP_LOG_VERBOSE);
     esp_log_level_set("esp_bus", ESP_LOG_VERBOSE);
 
+    // Initialize TCP/IP stack before starting HTTP server
+    // esp_netif_init() is safe to call multiple times
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    // Create default event loop if not already created
+    esp_err_t evt_ret = esp_event_loop_create_default();
+    if (evt_ret != ESP_OK && evt_ret != ESP_ERR_INVALID_STATE) {
+        ESP_ERROR_CHECK(evt_ret);  // Only fail on unexpected errors
+    }
+
+    // Start HTTP server early so we can share it with wifi_manager
+    // This prevents port conflicts when wifi_manager's HTTP server is torn down
+    esp_err_t http_ret = idf_httpd_start();
+    if (http_ret != ESP_OK) {
+        Log.error("Failed to start HTTP server early: %s\r\n", esp_err_to_name(http_ret));
+    }
+
     // Subscribe to WiFi events
     // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_CONNECTED), on_wifi_connected, NULL);
     // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_GOT_IP), on_wifi_got_ip, NULL);
@@ -182,7 +200,7 @@ void initWiFi() {
         .start_ap_on_init = false,
         .http = {
             .enable = true,
-            .httpd = NULL,
+            .httpd = idf_httpd_get_handle(),  // Share our HTTP server with wifi_manager
             .api_base_path = "/api/wifi",
             .enable_auth = false,
             .auth_username = NULL,
@@ -207,16 +225,16 @@ void initWiFi() {
         esp_restart();
     }
 
-    // Wait for connection (5 second timeout)
+    // Wait for connection (5 minute timeout)
     err = wifi_manager_wait_connected(5 * 60 * 1000);
     if (err != ESP_OK) {
-        Log.warning("WiFi connection timeout, AP mode remains active for configuration.\r\n");
-        // AP mode is automatically started by enable_captive_portal = true
+        Log.error("WiFi connection timeout. Restarting device.\r\n");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        esp_restart();
     }
 
-    Log.warning("Past WiFi Mgr code\r\n");
-
-    // wifi_manager_deinit
+    // Deinit wifi_manager now that we're connected - we don't need the AP or captive portal anymore
+    wifi_manager_deinit(false);
 
     // Sync mDNS name from wifi_manager's NVS storage to config
     // The wifi_manager may have a user-configured value that differs from config default
