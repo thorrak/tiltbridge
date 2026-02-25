@@ -18,13 +18,10 @@
 
 #include "url_utils.h"
 #include "bridge_lcd.h"
-#include "jsonconfig.h"
+#include "jsonconfig.h"  // For config struct and global instance
 #include "idf_http_server.h"
 
 #include "wifi_setup.h"
-
-// Helper function defined in http_server.cpp to avoid ESPAsyncWebServer/ESP-IDF header conflicts
-extern void http_server_clear_name_reset();
 
 // Track WiFi connection state to distinguish initial connection from reconnection.
 // This flag is set to true when WiFi disconnects and reset to false when reconnected.
