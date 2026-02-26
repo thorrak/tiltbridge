@@ -18,6 +18,8 @@
 #include "sendData.h"
 #include "JsonKeys.h"
 
+#include <esp_wifi_manager.h>
+
 #include "http_server.h"
 #include "idf_http_server.h"
 #include "idf_json_utils.h"
@@ -235,6 +237,7 @@ static bool processTiltBridgeSettingsJson(const JsonDocument& json, bool trigger
         if (config.save()) {
             if (hostnamechanged) {
                 hostnamechanged = false;
+                wifi_manager_set_var("mdns_name", config.mdnsID);
                 http_server.name_reset_requested = true;
                 Log.notice("Received new mDNSid, queued network reset.\r\n");
             }
