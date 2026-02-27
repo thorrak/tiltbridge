@@ -10,7 +10,6 @@
 
 
 void initWiFi();
-void mdnsReset();
 
 void disconnectWiFi();
 void reconnectWiFi();

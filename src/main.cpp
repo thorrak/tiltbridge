@@ -19,6 +19,7 @@
 #include "tilt/tiltScanner.h"
 #include "http_server.h"
 #include "wifi_setup.h"
+#include "mdns_setup.h"
 #include "sendData.h"
 #include "jsonconfig.h"
 #include "bridge_lcd.h"

@@ -7,7 +7,7 @@
 #include <esp_wifi.h>
 #include <esp_netif.h>
 #include <esp_event.h>
-#include <mdns.h>
+#include "mdns_setup.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
@@ -125,24 +125,6 @@ void disconnectWiFi() {
     esp_restart();
 }
 
-void mdnsReset() {
-    // tilt_scanner.wait_until_scan_complete(); // Wait for scans to complete
-    // TODO - Double check that this works as expected
-    // http_server.name_reset_requested = false;
-    mdns_free();
-    if (mdns_init() != ESP_OK || mdns_hostname_set(config.mdnsID) != ESP_OK) {
-        Log.error("Error resetting MDNS responder.");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        esp_restart();
-    } else {
-        Log.notice("mDNS responder restarted, hostname: %s.local.\r\n", config.mdnsID);
-        mdns_service_add(NULL, "_http", "_tcp", WEB_SERVER_PORT, NULL, 0);
-        mdns_service_add(NULL, "_tiltbridge", "_tcp", WEB_SERVER_PORT, NULL, 0);
-    }
-
-    // Update the mDNS name in wifi_manager's custom variables
-    wifi_manager_set_var("mdns_name", config.mdnsID);
-}
 
 void initWiFi() {
 
@@ -254,17 +236,7 @@ void initWiFi() {
         }
     }
 
-    if (mdns_init() != ESP_OK || mdns_hostname_set(config.mdnsID) != ESP_OK) {
-        Log.error("Error setting up MDNS responder.\r\n");
-    } else {
-        Log.notice("mDNS responder started, hostname: %s.local\r\n", config.mdnsID);
-    }
-
-    mdns_service_add(NULL, "_http", "_tcp", WEB_SERVER_PORT, NULL, 0);       // technically we should wait on this, but I'm impatient.
-    mdns_service_add(NULL, "_tiltbridge", "_tcp", WEB_SERVER_PORT, NULL, 0); // for lookups
-
-    // Store the mDNS name in wifi_manager's custom variables for persistence
-    wifi_manager_set_var("mdns_name", config.mdnsID);
+    initMDNS();
 }
 
 // Check WiFi connectivity and trigger reconnect if needed.
