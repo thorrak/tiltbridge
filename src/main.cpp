@@ -88,6 +88,7 @@ void setup() {
 
     Log.verbose("Initializing LCD.\r\n");
     lcd.init();
+    lcd.display_logo();
 
     // Initialize NVS (required for esp_wifi_manager)
     esp_err_t nvs_ret = nvs_flash_init();

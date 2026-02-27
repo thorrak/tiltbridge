@@ -28,6 +28,16 @@
 // Used to determine appropriate LCD display: success screen (initial) vs logo (reconnection).
 static bool wifi_was_disconnected = false;
 
+// Event callback for WiFi connecting (attempting to connect to a network)
+static void on_wifi_connecting(const char *event, const void *data, size_t len, void *ctx) {
+    if (data == nullptr || len == 0) {
+        return;
+    }
+    const char *ssid = (const char *)data;
+    Log.info("WiFi connecting to %s\r\n", ssid);
+    lcd.display_wifi_connecting_screen(ssid);
+}
+
 // Event callback for WiFi connected
 static void on_wifi_connected(const char *event, const void *data, size_t len, void *ctx) {
     if (data == nullptr || len < sizeof(wifi_connected_t)) {
@@ -158,9 +168,10 @@ void initWiFi() {
     }
 
     // Subscribe to WiFi events
+    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_CONNECTING), on_wifi_connecting, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_CONNECTED), on_wifi_connected, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_GOT_IP), on_wifi_got_ip, NULL);
-    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_DISCONNECTED), on_wifi_disconnected, NULL);
+    // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_DISCONNECTED), on_wifi_disconnected, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_AP_START), on_wifi_ap_started, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_VAR_CHANGED), on_var_changed, NULL);
 
@@ -192,6 +203,7 @@ void initWiFi() {
             .dhcp_start = "192.168.4.2",
             .dhcp_end = "192.168.4.20",
         },
+        .always_use_ap_defaults = true, // Ignore any saved AP config - we want to ensure the captive portal is always available and consistent
         .enable_captive_portal = true,
         .stop_ap_on_connect = true,
         .start_ap_on_init = false,
@@ -205,8 +217,6 @@ void initWiFi() {
         },
         .mdns = {
             .enable = false,  // Disabled - using ESPmDNS directly for custom services
-            .hostname = NULL,
-            .instance_name = NULL,
         },
         .ble = {
             .enable = false,

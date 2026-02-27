@@ -67,6 +67,7 @@ public:
     void display_wifi_success_screen(const char *mdns_url, const char *ip_address_url);
     void display_wifi_reset_screen();
     void display_ota_update_screen();
+    void display_wifi_connecting_screen(const char *ssid);
     void display_wifi_disconnected_screen();
     void display_wifi_reconnect_failed();
 

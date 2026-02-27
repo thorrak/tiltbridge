@@ -69,6 +69,15 @@ void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap
     display();
 }
 
+void bridge_lcd::display_wifi_connecting_screen(const char *ssid) {
+    clear();
+    print_line("Connecting to WiFi:", 1);
+    print_line(ssid, 2);
+    print_line("", 3);
+    print_line("Please wait...", 4);
+    display();
+}
+
 void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *ip_address_url) {
     // Displayed at startup when the device is configured to connect to WiFi
     clear();
@@ -132,6 +141,7 @@ void bridge_lcd::display_logo(bool fromReset) {}
 // void bridge_lcd::checkTouch() {}
 
 void bridge_lcd::display_wifi_connect_screen(const char *ap_name, const char *ap_pass) {}
+void bridge_lcd::display_wifi_connecting_screen(const char *ssid) {}
 void bridge_lcd::display_wifi_success_screen(const char *mdns_url, const char *ip_address_url) {}
 void bridge_lcd::display_wifi_reset_screen() {}
 void bridge_lcd::display_ota_update_screen() {}
