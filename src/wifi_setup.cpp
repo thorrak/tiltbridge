@@ -35,6 +35,13 @@ static void on_wifi_connecting(const char *event, const void *data, size_t len, 
     }
     const char *ssid = (const char *)data;
     Log.info("WiFi connecting to %s\r\n", ssid);
+
+    // Don't clobber the AP screen with "connecting to..." during background reconnect attempts
+    wifi_status_t status;
+    if (wifi_manager_get_status(&status) == ESP_OK && status.ap_active) {
+        return;
+    }
+
     lcd.display_wifi_connecting_screen(ssid);
 }
 
@@ -173,6 +180,9 @@ void initWiFi() {
         .retry_interval_ms = 5000,
         .retry_max_interval_ms = 60000,
         .auto_reconnect = true,
+        .provisioning_mode = WIFI_PROV_ON_FAILURE,  // If we fail to connect to any known network, start provisioning (SoftAP + captive portal)
+        .stop_provisioning_on_connect = true,       // Stop the AP and captive portal and deregister httpd endpoints once we successfully connect to a WiFi network
+        .provisioning_teardown_delay_ms = 5000,
         .default_ap = {
             .ssid = WIFI_SETUP_AP_NAME,
             .password = WIFI_SETUP_AP_PASS,
@@ -186,11 +196,8 @@ void initWiFi() {
             .dhcp_end = "192.168.4.20",
         },
         .always_use_ap_defaults = true, // Ignore any saved AP config - we want to ensure the captive portal is always available and consistent
-        .enable_captive_portal = true,
-        .stop_ap_on_connect = true,
-        .start_ap_on_init = false,
+        .enable_ap = true,
         .http = {
-            .enable = true,
             .httpd = idf_httpd_get_handle(),  // Share our HTTP server with wifi_manager
             .api_base_path = "/api/wifi",
             .enable_auth = false,
@@ -222,8 +229,8 @@ void initWiFi() {
         esp_restart();
     }
 
-    // Deinit wifi_manager now that we're connected - we don't need the AP or captive portal anymore
-    wifi_manager_deinit(false);
+    // wifi_manager handles its own provisioning teardown after the configured delay
+    // (stop_provisioning_on_connect + provisioning_teardown_delay_ms)
 
     // Sync mDNS name from wifi_manager's NVS storage to config
     // The wifi_manager may have a user-configured value that differs from config default
