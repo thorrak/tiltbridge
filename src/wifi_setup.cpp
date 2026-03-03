@@ -20,6 +20,7 @@
 #include "bridge_lcd.h"
 #include "jsonconfig.h"  // For config struct and global instance
 #include "idf_http_server.h"
+#include "http_server.h"
 
 #include "wifi_setup.h"
 
@@ -107,6 +108,12 @@ static void on_wifi_ap_started(const char *event, const void *data, size_t len, 
     }
 }
 
+// Event callback for provisioning stopped — initialize the HTTP server routes
+static void on_provisioning_stopped(const char *event, const void *data, size_t len, void *ctx) {
+    Log.info("WiFi provisioning stopped, initializing HTTP server.\r\n");
+    http_server.init();
+}
+
 // Event callback for variable changes (e.g., mdns_name changed via WiFi manager API)
 static void on_var_changed(const char *event, const void *data, size_t len, void *ctx) {
     if (data == nullptr || len < sizeof(wifi_var_t)) {
@@ -163,6 +170,7 @@ void initWiFi() {
     // esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_DISCONNECTED), on_wifi_disconnected, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_AP_START), on_wifi_ap_started, NULL);
     esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_VAR_CHANGED), on_var_changed, NULL);
+    esp_bus_sub(WIFI_EVT(WIFI_MGR_EVT_PROVISIONING_STOPPED), on_provisioning_stopped, NULL);
 
     // Default variables for WiFi manager - mdns_name is used to set the mDNS hostname
     // This provides a default value; if NVS has a stored value, that takes precedence
@@ -183,6 +191,7 @@ void initWiFi() {
         .provisioning_mode = WIFI_PROV_ON_FAILURE,  // If we fail to connect to any known network, start provisioning (SoftAP + captive portal)
         .stop_provisioning_on_connect = true,       // Stop the AP and captive portal and deregister httpd endpoints once we successfully connect to a WiFi network
         .provisioning_teardown_delay_ms = 5000,
+        .http_post_prov_mode = WIFI_HTTP_API_ONLY,  // Unregister captive portal/webui routes after provisioning so TiltBridge can register its own
         .default_ap = {
             .ssid = WIFI_SETUP_AP_NAME,
             .password = WIFI_SETUP_AP_PASS,

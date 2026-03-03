@@ -111,7 +111,6 @@ void setup() {
     tilt_scanner.wait_until_scan_complete();    // Wait until the initial scan completes
 
     data_sender.init();     // Initialize the data sender
-    http_server.init();     // Initialize the web server
     initButtons();          // Initialize buttons
 
     // Start independent timers using FreeRTOS software timers

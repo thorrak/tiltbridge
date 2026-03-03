@@ -710,11 +710,11 @@ void httpServer::registerCalibrationHandlers() {
 
 void httpServer::init() {
     // Start the HTTP server with worker pool
-    esp_err_t ret = idf_httpd_start();
-    if (ret != ESP_OK) {
-        Log.error("Failed to start HTTP server: %s\r\n", esp_err_to_name(ret));
-        return;
-    }
+    // esp_err_t ret = idf_httpd_start();
+    // if (ret != ESP_OK) {
+    //     Log.error("Failed to start HTTP server: %s\r\n", esp_err_to_name(ret));
+    //     return;
+    // }
 
     // Register static file and SPA handlers first
     idf_static_register_handlers();
