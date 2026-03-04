@@ -10,3 +10,5 @@ CONFIG_ESPTOOLPY_HEADER_FLASHSIZE_UPDATE=y
 
 # FreeRTOS Timer task needs more stack for WiFi manager and logging callbacks
 CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=4096
+# The host stack needs to be larger to support certain WiFi Manager operations
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=6144

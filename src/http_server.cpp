@@ -537,6 +537,50 @@ static bool processInfluxdbSettings(const JsonDocument& json, bool triggerUpstre
 }
 
 
+/**
+ * @brief Unified target settings dispatcher
+ *
+ * Detects which target's keys are present in the JSON and delegates
+ * to the appropriate process*Settings helper.
+ */
+static bool processTargetSettings(const JsonDocument& json, bool triggerUpstreamUpdate) {
+    // Fermentrack — check for either legacy or FT2 key
+    if (json[FermentrackSettings::legacyFermentrackPushEvery].is<uint16_t>() ||
+        json[FermentrackSettings::fermentrackHostname].is<const char*>())
+        return processFermentrackSettings(json, triggerUpstreamUpdate);
+
+    if (json[GoogleSheetsSettings::scriptsURL].is<const char*>())
+        return processGoogleSheetsSettings(json, triggerUpstreamUpdate);
+
+    if (json[BrewersFriendSettings::brewersFriendKey].is<const char*>())
+        return processBrewersFriendSettings(json, triggerUpstreamUpdate);
+
+    if (json[BrewfatherSettings::brewfatherKey].is<const char*>())
+        return processBrewfatherSettings(json, triggerUpstreamUpdate);
+
+    if (json[UserTargetSettings::userTargetURL].is<const char*>())
+        return processUserTargetSettings(json, triggerUpstreamUpdate);
+
+    if (json["grainfatherURL_red"].is<const char*>())
+        return processGrainfatherSettings(json, triggerUpstreamUpdate);
+
+    if (json[BrewstatusSettings::brewstatusURL].is<const char*>())
+        return processBrewstatusSettings(json, triggerUpstreamUpdate);
+
+    if (json[TaplistioSettings::taplistioURL].is<const char*>())
+        return processTaplistioSettings(json, triggerUpstreamUpdate);
+
+    if (json[MQTTSettings::mqttBrokerHost].is<const char*>())
+        return processMqttSettings(json, triggerUpstreamUpdate);
+
+    if (json[InfluxDBSettings::influxdbURL].is<const char*>())
+        return processInfluxdbSettings(json, triggerUpstreamUpdate);
+
+    Log.warning("No recognized target keys in JSON payload.\r\n");
+    return false;
+}
+
+
 //=============================================================================
 // HTTP Handler Wrappers (bridge existing functions to httpd_req_handler_t)
 //=============================================================================
@@ -598,16 +642,7 @@ MAKE_GET_HANDLER(handle_api_resetreason, reset_reason_json)
 // Generate PUT handlers
 MAKE_PUT_HANDLER(handle_settings_controller, processTiltBridgeSettingsJson)
 MAKE_PUT_HANDLER(handle_settings_calibration, processCalibrationSettings)
-MAKE_PUT_HANDLER(handle_settings_fermentrack, processFermentrackSettings)
-MAKE_PUT_HANDLER(handle_settings_googlesheets, processGoogleSheetsSettings)
-MAKE_PUT_HANDLER(handle_settings_brewersfriend, processBrewersFriendSettings)
-MAKE_PUT_HANDLER(handle_settings_brewfather, processBrewfatherSettings)
-MAKE_PUT_HANDLER(handle_settings_grainfather, processGrainfatherSettings)
-MAKE_PUT_HANDLER(handle_settings_usertarget, processUserTargetSettings)
-MAKE_PUT_HANDLER(handle_settings_brewstatus, processBrewstatusSettings)
-MAKE_PUT_HANDLER(handle_settings_taplistio, processTaplistioSettings)
-MAKE_PUT_HANDLER(handle_settings_mqtt, processMqttSettings)
-MAKE_PUT_HANDLER(handle_settings_influxdb, processInfluxdbSettings)
+MAKE_PUT_HANDLER(handle_settings_targets, processTargetSettings)
 
 // Calibration POST handlers
 MAKE_PUT_HANDLER(handle_calibration_datapoint, processCalibrationDataPoint)
@@ -650,18 +685,9 @@ void httpServer::registerJsonPutHandlers() {
         const char *uri;
         esp_err_t (*handler)(httpd_req_t *);
     } put_endpoints[] = {
-        {"/api/settings/controller/", handle_settings_controller},
+        {"/api/settings/controller/",  handle_settings_controller},
         {"/api/settings/calibration/", handle_settings_calibration},
-        {"/api/settings/fermentrack/", handle_settings_fermentrack},
-        {"/api/settings/googlesheets/", handle_settings_googlesheets},
-        {"/api/settings/brewersfriend/", handle_settings_brewersfriend},
-        {"/api/settings/brewfather/", handle_settings_brewfather},
-        {"/api/settings/grainfather/", handle_settings_grainfather},
-        {"/api/settings/usertarget/", handle_settings_usertarget},
-        {"/api/settings/brewstatus/", handle_settings_brewstatus},
-        {"/api/settings/taplistio/", handle_settings_taplistio},
-        {"/api/settings/mqtt/", handle_settings_mqtt},
-        {"/api/settings/influxdb/", handle_settings_influxdb},
+        {"/api/settings/targets/",     handle_settings_targets},
     };
 
     for (const auto& endpoint : put_endpoints) {
