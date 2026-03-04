@@ -241,16 +241,9 @@ void initWiFi() {
     // wifi_manager handles its own provisioning teardown after the configured delay
     // (stop_provisioning_on_connect + provisioning_teardown_delay_ms)
 
-    // Sync mDNS name from wifi_manager's NVS storage to config
-    // The wifi_manager may have a user-configured value that differs from config default
-    char stored_mdns[32] = {0};
-    if (wifi_manager_get_var("mdns_name", stored_mdns, sizeof(stored_mdns)) == ESP_OK && strlen(stored_mdns) > 0) {
-        if (isValidHostName(stored_mdns) && strcmp(stored_mdns, config.mdnsID) != 0) {
-            Log.notice("Using stored mDNS name from WiFi manager: %s\r\n", stored_mdns);
-            strlcpy(config.mdnsID, stored_mdns, sizeof(config.mdnsID));
-            config.save();
-        }
-    }
+    // Sync mDNS name FROM config TO wifi_manager (config file is the source of truth).
+    // The on_var_changed callback handles the reverse direction for real-time changes.
+    wifi_manager_set_var("mdns_name", config.mdnsID);
 
     initMDNS();
 }
