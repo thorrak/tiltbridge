@@ -649,6 +649,32 @@ MAKE_PUT_HANDLER(handle_calibration_datapoint, processCalibrationDataPoint)
 MAKE_PUT_HANDLER(handle_calibration_coefficients, processCalibrationCoefficients)
 MAKE_PUT_HANDLER(handle_calibration_delete, processCalibrationDataDelete)
 
+// Action handler — dispatches based on "action" field in JSON body
+static esp_err_t handle_action(httpd_req_t *req) {
+    JsonDocument doc;
+
+    if (idf_json_parse_body(req, doc) != ESP_OK) {
+        return ESP_OK;  // Error response already sent
+    }
+
+    const char *action = doc["action"];
+    if (!action) {
+        return idf_json_send_error(req, 400, "Missing 'action' field");
+    }
+
+    if (strcmp(action, "resetWifi") == 0) {
+        http_server.wifi_reset_requested = true;
+    } else if (strcmp(action, "resetDevice") == 0) {
+        http_server.factoryreset_requested = true;
+    } else if (strcmp(action, "restartDevice") == 0) {
+        http_server.restart_requested = true;
+    } else {
+        return idf_json_send_error(req, 400, "Unknown action");
+    }
+
+    return idf_json_send_status(req, true);
+}
+
 
 //=============================================================================
 // httpServer class implementation
@@ -734,6 +760,18 @@ void httpServer::registerCalibrationHandlers() {
     ESP_LOGI(TAG, "Registered calibration handlers");
 }
 
+void httpServer::registerActionHandlers() {
+    httpd_uri_t uri_config = {
+        .uri = "/api/actions/",
+        .method = HTTP_POST,
+        .handler = handle_action,
+        .user_ctx = NULL
+    };
+    idf_httpd_register_uri(&uri_config);
+
+    ESP_LOGI(TAG, "Registered action handlers");
+}
+
 void httpServer::init() {
     // Start the HTTP server with worker pool
     // esp_err_t ret = idf_httpd_start();
@@ -750,6 +788,7 @@ void httpServer::init() {
     registerJsonGetHandlers();
     registerJsonPutHandlers();
     registerCalibrationHandlers();
+    registerActionHandlers();
 
     // Register catch-all for static files LAST (so specific routes take precedence)
     idf_static_register_catchall();

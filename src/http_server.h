@@ -49,6 +49,11 @@ private:
      * @brief Register calibration API endpoints
      */
     void registerCalibrationHandlers();
+
+    /**
+     * @brief Register action API endpoints (resetWifi, resetDevice)
+     */
+    void registerActionHandlers();
 };
 
 extern httpServer http_server;
