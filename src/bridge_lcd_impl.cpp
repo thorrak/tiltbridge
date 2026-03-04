@@ -42,6 +42,8 @@ static inline void yield() {
 }
 #include "tilt/tiltScanner.h"
 #include "bridge_lcd.h"
+
+#if HAVE_LCD
 #include "lovyan_config.h"
 
 #if defined(LCD_SSD1306) || defined(LCD_TFT_ESPI)
@@ -49,6 +51,7 @@ static inline void yield() {
 #elif defined(LCD_TFT)
 #include "img/tft_logo.h" // Large logo
 #endif
+#endif // HAVE_LCD
 
 #if defined(AXP192)
 #include "axp192.h"  // ESP-IDF compatible AXP192 driver for M5StickC Plus
