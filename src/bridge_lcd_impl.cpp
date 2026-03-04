@@ -5,7 +5,7 @@
 #include <thorlog.h>
 
 #if defined(LCD_SSD1306)
-#include <driver/i2c.h>
+#include <driver/i2c_master.h>
 #endif
 
 #include "jsonconfig.h"
@@ -400,46 +400,31 @@ void bridge_lcd::print_tilt_to_line(tiltHydrometer *tilt, uint8_t line) {
 
 bool bridge_lcd::i2c_device_at_address(uint8_t address, int sda_pin, int scl_pin) {
 #ifdef LCD_SSD1306
-    // This allows us to do LCD autodetection (and by extension, support
-    // multiple OLED ESP32 boards using ESP-IDF I2C driver
-
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = sda_pin,
-        .scl_io_num = scl_pin,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master = {
-            .clk_speed = 100000,
+    // LCD autodetection using the new ESP-IDF 5.x I2C master driver API
+    i2c_master_bus_config_t bus_config = {
+        .i2c_port = I2C_NUM_0,
+        .sda_io_num = (gpio_num_t)sda_pin,
+        .scl_io_num = (gpio_num_t)scl_pin,
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .flags = {
+            .enable_internal_pullup = true,
         },
-        .clk_flags = 0,
     };
 
-    esp_err_t err = i2c_param_config(I2C_NUM_0, &conf);
+    i2c_master_bus_handle_t bus_handle;
+    esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
     if (err != ESP_OK) {
-        Log.error("Failed to configure I2C on pin %d/%d\r\n", sda_pin, scl_pin);
+        Log.error("Failed to create I2C bus on pin %d/%d\r\n", sda_pin, scl_pin);
         return false;
     }
 
-    err = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
-    if (err != ESP_OK) {
-        Log.error("Failed to install I2C driver on pin %d/%d\r\n", sda_pin, scl_pin);
-        return false;
-    }
+    err = i2c_master_probe(bus_handle, address, pdMS_TO_TICKS(100));
+    i2c_del_master_bus(bus_handle);
 
-    // Try to communicate with device at address
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_stop(cmd);
-    err = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(100));
-    i2c_cmd_link_delete(cmd);
-
-    i2c_driver_delete(I2C_NUM_0);
-
-    if (err == ESP_OK) // No error means that a device responded
+    if (err == ESP_OK)
         return true;
-#endif // Leave this here to avoid compiler warning
+#endif
     return false;
 }
 
