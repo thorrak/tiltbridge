@@ -70,14 +70,10 @@ void setup() {
     esp_log_level_set("esp_bus", ESP_LOG_VERBOSE);
 
     // Initialize esp_bus (required for esp_wifi_manager events)
-    vTaskDelay(pdMS_TO_TICKS(3000));
     ESP_LOGI("tiltbridge", "Initializing esp_bus.");
     ESP_ERROR_CHECK(esp_bus_init());
-    vTaskDelay(pdMS_TO_TICKS(3000));
 
     serial();
-
-    vTaskDelay(pdMS_TO_TICKS(3000));
 
     Log.verbose("Loading config.\r\n");
     // Initialize the filesystem 
@@ -104,7 +100,6 @@ void setup() {
 
     Log.info("Initializing WiFi.\r\n");
     initWiFi();
-    vTaskDelay(pdMS_TO_TICKS(3000));
 
     Log.info("Initializing scanner.\r\n");
     tilt_scanner.init();                        // Initialize the BLE scanner
