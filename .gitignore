@@ -119,3 +119,7 @@ dependencies.lock
 # Reassert .DS_Store ignore (the !/data/wifiui/** re-include above would otherwise
 # un-ignore it inside that subdir).
 **/.DS_Store
+
+# Python bytecode from the helper scripts in tools/
+__pycache__/
+*.pyc

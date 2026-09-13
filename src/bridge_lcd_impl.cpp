@@ -49,7 +49,7 @@ static inline void yield() {
 #if defined(LCD_SSD1306) || defined(LCD_SMALL_TFT)
 #include "img/oled_logo.h" // Small logo
 #elif defined(LCD_LARGE_TFT)
-#include "img/tft_logo.h" // Large logo
+#include "img/tft_logo_rle.h" // Large logo, RLE16 (see tools/gen_logo_rle.py)
 #endif
 #endif // HAVE_LCD
 
@@ -456,11 +456,15 @@ void bridge_lcd::display_logo_internal() {
         0xFFFF);  // White in monochrome
     display();
 #elif defined(LCD_LARGE_TFT)
-    tft->pushImage(
-        (320 - 288) / 2, 0,
-        gimp_image.width,
-        gimp_image.height,
-        gimp_image.pixel_data);
+    // The logo is stored run-length encoded (8.9 KB instead of 135 KB of raw
+    // RGB565). Walk the runs straight into writeColor(), which fills N pixels
+    // of one color inside the address window -- no decode buffer needed.
+    tft->startWrite();
+    tft->setAddrWindow((320 - TFT_LOGO_WIDTH) / 2, 0, TFT_LOGO_WIDTH, TFT_LOGO_HEIGHT);
+    for (uint16_t i = 0; i < TFT_LOGO_RUNS; i++) {
+        tft->writeColor(tft_logo_rle_colors[i], tft_logo_rle_counts[i]);
+    }
+    tft->endWrite();
 #elif defined(LCD_SMALL_TFT)
     tft->drawXBitmap(
         (tft->width() - oled_logo_width) / 2,

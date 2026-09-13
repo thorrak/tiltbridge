@@ -16,7 +16,7 @@ bridge_lcd lcd;
 #if defined(LCD_SSD1306) || defined(LCD_SMALL_TFT)
 #include "img/oled_logo.h" // Small logo
 #elif defined(LCD_LARGE_TFT)
-#include "img/tft_logo.h" // Large logo
+#include "img/tft_logo_rle.h" // Large logo, RLE16 (see tools/gen_logo_rle.py)
 #endif
 
 
