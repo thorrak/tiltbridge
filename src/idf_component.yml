@@ -24,7 +24,7 @@ dependencies:
   # Registry. 0.2.0 dropped the esp_bus dependency; events now arrive on the
   # default esp_event loop under WIFI_CFG_EVENT.
   thorrak/esp_wifi_config:
-    version: "^0.3.1"
+    version: "^0.3.2"
     # Local development override: comment out `version` above and uncomment
     # the two lines below to build against a checkout of the library.
     # override_path: ../../esp_wifi_config

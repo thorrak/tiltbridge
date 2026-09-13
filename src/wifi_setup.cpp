@@ -238,6 +238,12 @@ void initWiFi() {
         esp_restart();
     }
 
+    // Push the config-file mDNS name into wifi_cfg's variable store now, before
+    // provisioning can start, so the captive portal wizard shows the current
+    // name. The var store is wiped by wifi_cfg_factory_reset() (disconnectWiFi)
+    // and would otherwise fall back to the "tiltbridge" default until we connect.
+    wifi_cfg_set_var("mdns_name", config.mdnsID);
+
     // Wait for connection (5 minute timeout)
     err = wifi_cfg_wait_connected(5 * 60 * 1000);
     if (err != ESP_OK) {
