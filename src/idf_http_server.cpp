@@ -29,7 +29,9 @@ esp_err_t idf_httpd_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = HTTP_SERVER_PORT;
     config.lru_purge_enable = true;
-    config.max_uri_handlers = 40;
+    // esp_wifi_config retains 18 API routes; TiltBridge adds 34 (52 total).
+    // Leave room for both sets so later API and static-file handlers register.
+    config.max_uri_handlers = 64;
     config.max_resp_headers = 8;
     config.uri_match_fn = httpd_uri_match_wildcard;
 
