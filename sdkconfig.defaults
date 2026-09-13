@@ -23,6 +23,8 @@ CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=4096
 CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=6144
 
 # esp_wifi_config component options
+# The SoftAP captive portal (default y; WEBUI depends on it as of 0.2.3)
+CONFIG_WIFI_CFG_ENABLE_SOFTAP=y
 CONFIG_WIFI_CFG_ENABLE_WEBUI=y
 CONFIG_WIFI_CFG_WEBUI_CUSTOM_PATH="/littlefs/wifiui"
 

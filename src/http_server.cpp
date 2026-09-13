@@ -820,7 +820,7 @@ void httpServer::registerActionHandlers() {
 }
 
 void httpServer::init() {
-    // Start the HTTP server with worker pool
+    // Start the HTTP server
     // esp_err_t ret = idf_httpd_start();
     // if (ret != ESP_OK) {
     //     Log.error("Failed to start HTTP server: %s\r\n", esp_err_to_name(ret));

@@ -8,7 +8,6 @@
 #include <freertos/task.h>
 #include <freertos/timers.h>
 #include <nvs_flash.h>
-#include <esp_bus.h>
 
 #include <thorlog.h>
 
@@ -67,12 +66,6 @@ void reboot()
 
 void setup() {
 
-    esp_log_level_set("esp_bus", ESP_LOG_VERBOSE);
-
-    // Initialize esp_bus (required for esp_wifi_config events)
-    ESP_LOGI("tiltbridge", "Initializing esp_bus.");
-    ESP_ERROR_CHECK(esp_bus_init());
-
     serial();
 
     Log.verbose("Loading config.\r\n");
@@ -102,7 +95,7 @@ void setup() {
     // with ESP_ERR_INVALID_STATE (0x103) and provisioning never starts. So
     // wifi_cfg has to be initialised first; tilt_scanner.init() below calls
     // NimBLEDevice::init() afterwards and re-attaches to the (still-running,
-    // thanks to .prov.memory_policy = KEEP_ALL) controller.
+    // thanks to .prov_ble.memory_policy = KEEP_ALL) controller.
     Log.info("Initializing WiFi.\r\n");
     initWiFi();
 
