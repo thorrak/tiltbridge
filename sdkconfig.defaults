@@ -12,6 +12,12 @@ CONFIG_ESPTOOLPY_HEADER_FLASHSIZE_UPDATE=y
 CONFIG_COMPILER_OPTIMIZATION_SIZE=y
 CONFIG_XTAL_FREQ_AUTO=y
 
+# No caller sets HttpRequestOptions::skipCertValidation to false, so the Mozilla
+# root CA bundle is never attached and costs ~69 KiB of flash. Re-enable this
+# (here AND in every sdkconfig.<env>, which take precedence) if a send target
+# ever needs real certificate verification.
+# CONFIG_MBEDTLS_CERTIFICATE_BUNDLE is not set
+
 # Allow skipping server certificate verification at runtime (for targets that
 # don't need strict TLS validation, e.g. Brewer's Friend, Brewfather, etc.)
 CONFIG_ESP_TLS_INSECURE=y

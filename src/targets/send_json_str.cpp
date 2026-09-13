@@ -6,7 +6,9 @@
 #include <freertos/task.h>
 #include <esp_http_client.h>
 #include <esp_netif.h>
+#ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
 #include <esp_crt_bundle.h>
+#endif
 #include <esp_tls.h>
 
 #include <thorlog.h>
@@ -223,9 +225,17 @@ sendResult http_request(const char* url, httpMethod method, const char* payload,
     // which skips cert verification while still sending SNI (required by most CDN-hosted
     // services like Brewer's Friend). We must NOT set skip_cert_common_name_check here
     // because that also disables SNI via mbedtls_ssl_set_hostname(NULL).
+    //
+    // No caller currently sets skipCertValidation to false, so the root CA bundle
+    // is never attached at runtime. CONFIG_MBEDTLS_CERTIFICATE_BUNDLE is therefore
+    // disabled to keep the ~69 KiB Mozilla root store out of flash. Re-enable that
+    // Kconfig option (in sdkconfig.defaults and every sdkconfig.<env>) to restore
+    // verification for callers that ask for it.
+#ifdef CONFIG_MBEDTLS_CERTIFICATE_BUNDLE
     if (!options.skipCertValidation) {
         config.crt_bundle_attach = esp_crt_bundle_attach;
     }
+#endif
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
     if (client == nullptr) {
