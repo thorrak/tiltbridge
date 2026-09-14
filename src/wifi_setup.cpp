@@ -24,6 +24,7 @@
 #include "http_server.h"
 
 #include "wifi_setup.h"
+#include "wifi_webui_assets.h"
 
 // Track WiFi connection state to distinguish initial connection from reconnection.
 // This flag is set to true when WiFi disconnects and reset to false when reconnected.
@@ -269,6 +270,11 @@ void initWiFi() {
     // attempt without rebooting.
     wifi_config.prov_ble.reset_on_failure = true;
     wifi_config.prov_ble.max_failed_attempts = 3;
+
+    // Hand the provisioning UI to the library before it can serve a request.
+    // CONFIG_WIFI_CFG_WEBUI_SOURCE_APPLICATION means this is the only source
+    // for those pages -- without it the portal 404s.
+    wifi_webui_assets_register();
 
     // Initialize WiFi Config
     esp_err_t err = wifi_cfg_init(&wifi_config);

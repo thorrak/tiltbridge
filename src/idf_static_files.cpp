@@ -13,6 +13,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 
+#include "embedded_ui.h"
 #include "filesystem.h"
 
 static const char *TAG = "idf_static";
@@ -74,10 +75,74 @@ static bool file_exists(const char *path) {
     return (stat(path, &st) == 0);
 }
 
+/**
+ * @brief Apply the headers every static response carries.
+ *
+ * Content type comes from the logical path, never from a .gz suffix -- a
+ * gzipped index.js is still application/javascript, it is only transferred
+ * compressed.
+ */
+static void set_static_headers(httpd_req_t *req, const char *file_path, bool gzipped) {
+    httpd_resp_set_type(req, idf_static_get_content_type(file_path));
+
+    if (gzipped) {
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    }
+
+    char cache_control[32];
+    snprintf(cache_control, sizeof(cache_control), "max-age=%d", STATIC_CACHE_MAX_AGE);
+    httpd_resp_set_hdr(req, "Cache-Control", cache_control);
+}
+
+/**
+ * @brief Serve an asset compiled into the firmware image, if we have one.
+ *
+ * Checked before LittleFS on purpose. The embedded copy is the one that shipped
+ * with this firmware; a LittleFS partition left over from an earlier install
+ * holds the UI that matched the *previous* firmware. Letting the filesystem win
+ * would reintroduce exactly the skew that embedding the UI exists to remove --
+ * every OTA update would keep serving the old pages until someone remembered to
+ * flash a filesystem image too.
+ *
+ * @return true if the response was sent.
+ */
+static bool serve_embedded(httpd_req_t *req, const char *file_path) {
+    for (size_t i = 0; i < tb_embedded_assets_count; i++) {
+        const embedded_asset_t *asset = &tb_embedded_assets[i];
+        if (strcmp(file_path, asset->path) != 0) {
+            continue;
+        }
+
+        const size_t len = (size_t)(asset->end - asset->start);
+        set_static_headers(req, file_path, asset->gzipped);
+
+        // Sent in one call rather than streamed: the bytes live in memory-mapped
+        // flash, so there is no buffer to fill and nothing to read incrementally.
+        esp_err_t err = httpd_resp_send(req, (const char *)asset->start, len);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to send embedded asset %s: %s",
+                     file_path, esp_err_to_name(err));
+        } else {
+            ESP_LOGD(TAG, "Served %u embedded bytes for %s", (unsigned)len, file_path);
+        }
+        return true;
+    }
+
+    return false;
+}
+
 esp_err_t idf_static_serve_file(httpd_req_t *req, const char *file_path) {
     char full_path[STATIC_MAX_PATH_LEN];
     char gz_path[STATIC_MAX_PATH_LEN + 4]; // +4 for ".gz" suffix
     bool use_gzip = false;
+
+    if (serve_embedded(req, file_path)) {
+        return ESP_OK;
+    }
+
+    // Fall through to LittleFS for anything the firmware does not carry:
+    // data/conf/, the esp_wifi_config UI under wifiui/, and files a user has
+    // uploaded to the device.
 
     // Build full filesystem path
     snprintf(full_path, sizeof(full_path), "%s/%s", FILESYSTEM_PREFIX, file_path);
@@ -108,19 +173,7 @@ esp_err_t idf_static_serve_file(httpd_req_t *req, const char *file_path) {
     size_t file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    // Determine content type from original file path (not gz path)
-    const char *content_type = idf_static_get_content_type(file_path);
-    httpd_resp_set_type(req, content_type);
-
-    // Set gzip encoding if applicable
-    if (use_gzip) {
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    }
-
-    // Set cache control
-    char cache_control[32];
-    snprintf(cache_control, sizeof(cache_control), "max-age=%d", STATIC_CACHE_MAX_AGE);
-    httpd_resp_set_hdr(req, "Cache-Control", cache_control);
+    set_static_headers(req, file_path, use_gzip);
 
     // Stream file in chunks
     char *chunk = (char *)malloc(STATIC_FILE_CHUNK_SIZE);
@@ -248,7 +301,12 @@ esp_err_t idf_static_register_handlers(void) {
     };
     idf_httpd_register_uri(&notfound_uri);
 
-    ESP_LOGI(TAG, "Registered static file handlers");
+    size_t embedded_bytes = 0;
+    for (size_t i = 0; i < tb_embedded_assets_count; i++) {
+        embedded_bytes += (size_t)(tb_embedded_assets[i].end - tb_embedded_assets[i].start);
+    }
+    ESP_LOGI(TAG, "Registered static file handlers (%u assets embedded, %u bytes)",
+             (unsigned)tb_embedded_assets_count, (unsigned)embedded_bytes);
     return ESP_OK;
 }
 

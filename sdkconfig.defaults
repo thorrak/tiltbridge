@@ -32,7 +32,20 @@ CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=6144
 # The SoftAP captive portal (default y; WEBUI depends on it as of 0.2.3)
 CONFIG_WIFI_CFG_ENABLE_SOFTAP=y
 CONFIG_WIFI_CFG_ENABLE_WEBUI=y
-CONFIG_WIFI_CFG_WEBUI_CUSTOM_PATH="/littlefs/wifiui"
+# The provisioning UI is embedded in firmware.bin and handed to the library by
+# wifi_webui_assets_register() (src/wifi_webui_assets.cpp), so it survives an
+# OTA update like the rest of the image. It used to be read from
+# /littlefs/wifiui at runtime, which an OTA does not touch.
+#
+# The library's own SOURCE_EMBEDDED mode is not an option here: it is built on
+# ESP-IDF EMBED_FILES, which PlatformIO does not implement -- it lists the
+# generated .S as a source and never runs the custom command that creates it.
+# CONFIG_WIFI_CFG_WEBUI_CUSTOM_PATH must stay unset; the component CMake fails
+# the configure step if it is set without SOURCE_FILESYSTEM.
+# CONFIG_WIFI_CFG_WEBUI_SOURCE_EMBEDDED is not set
+# CONFIG_WIFI_CFG_WEBUI_SOURCE_FILESYSTEM is not set
+CONFIG_WIFI_CFG_WEBUI_SOURCE_APPLICATION=y
+CONFIG_WIFI_CFG_WEBUI_CUSTOM_PATH=""
 
 # Network Provisioning (BLE) — wraps ESP-IDF wifi_provisioning manager.
 CONFIG_WIFI_CFG_ENABLE_NETWORK_PROVISIONING=y
