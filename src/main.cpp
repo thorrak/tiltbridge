@@ -74,6 +74,12 @@ void setup() {
     if (!filesystem_init(true)) {
         Log.error("Unable to initialize filesystem.\r\n");
     }
+    // The filesystem image no longer ships this directory into existence, and a
+    // device upgrading to the OTA partition layout formats a fresh, empty
+    // LittleFS. Without this every config and calibration write fails.
+    if (!filesystem_ensure_dir(CONFIG_DIR)) {
+        Log.error("Unable to create %s; settings will not persist.\r\n", CONFIG_DIR);
+    }
     config.load();
 
     Log.verbose("Initializing LCD.\r\n");

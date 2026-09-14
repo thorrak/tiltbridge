@@ -1,5 +1,7 @@
+#include <errno.h>
 #include <esp_log.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #if defined(FILESYSTEM_LITTLEFS)
 #include <esp_littlefs.h>
@@ -92,4 +94,23 @@ void filesystem_deinit(void) {
 bool filesystem_exists(const char *path) {
     struct stat st;
     return (stat(path, &st) == 0);
+}
+
+bool filesystem_ensure_dir(const char *path) {
+    struct stat st;
+    if (stat(path, &st) == 0) {
+        if (S_ISDIR(st.st_mode)) {
+            return true;
+        }
+        ESP_LOGE(TAG, "%s exists but is not a directory", path);
+        return false;
+    }
+
+    if (mkdir(path, 0755) != 0) {
+        ESP_LOGE(TAG, "Failed to create directory %s (errno %d)", path, errno);
+        return false;
+    }
+
+    ESP_LOGI(TAG, "Created directory %s", path);
+    return true;
 }

@@ -1,6 +1,24 @@
-# Name,   Type, SubType, Offset,  Size, Flags
-nvs,      data, nvs,     0x9000,  0x5000,
-otadata,  data, ota,     0xe000,  0x2000,
-app0,     app,  ota_0,   0x10000, 0x190000,
-app1,     app,  ota_1,   0x1A0000,0x190000,
-littlefs,   data, littlefs,  0x330000,0xD0000,
+# 4 MB flash, dual OTA slots.
+#
+# Everything from 0x10000 to the 4 MB mark is 0x3F0000 (4,128,768 bytes) and
+# this table spends all of it: two 0x1E0000 app slots plus a 0x30000 LittleFS
+# partition come to exactly 0x3F0000. App partition offsets must be 64 KiB
+# aligned, and both are.
+#
+# Slot size vs. image size: the largest build (esp32_s3_small_tft) is about
+# 1.67 MiB, leaving roughly 215 KB -- 11% -- free in a slot. Both web UIs now
+# live inside the image (~325 KB of it), which is what makes a 192 KiB
+# filesystem enough; see tools/gen_embedded_ui.py.
+#
+# LittleFS holds only /littlefs/conf now: config.json and the per-color
+# calibration files. It moved here from 0x330000 and shrank from 832 KiB, so a
+# device coming from the pre-OTA layout finds no filesystem at this offset and
+# formats a fresh one. Saved WiFi credentials live in NVS, which has not moved,
+# but device settings and calibration do not survive the change.
+#
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x5000,
+otadata,  data, ota,     0xe000,   0x2000,
+app0,     app,  ota_0,   0x10000,  0x1E0000,
+app1,     app,  ota_1,   0x1F0000, 0x1E0000,
+littlefs, data, littlefs, 0x3D0000, 0x30000,
