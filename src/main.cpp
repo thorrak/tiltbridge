@@ -93,9 +93,9 @@ void setup() {
     // wifi_prov_scheme_ble, which unconditionally calls esp_bt_controller_init()
     // and brings up its own NimBLE host. If NimBLE is already up, that fails
     // with ESP_ERR_INVALID_STATE (0x103) and provisioning never starts. So
-    // wifi_cfg has to be initialised first; tilt_scanner.init() below calls
-    // NimBLEDevice::init() afterwards and re-attaches to the (still-running,
-    // thanks to .prov_ble.memory_policy = KEEP_ALL) controller.
+    // wifi_cfg has to be initialised first. initWiFi() also waits for the
+    // provisioning manager to deinitialize BLE before tilt_scanner.init()
+    // starts its own NimBLE host; KEEP_ALL only retains controller memory.
     Log.info("Initializing WiFi.\r\n");
     initWiFi();
 
