@@ -1,4 +1,5 @@
 #include <freertos/FreeRTOS.h>
+#include <freertos/event_groups.h>
 #include <freertos/task.h>
 
 #include <cstring>
@@ -7,6 +8,7 @@
 #include <esp_wifi.h>
 #include <esp_netif.h>
 #include <esp_event.h>
+#include <wifi_provisioning/manager.h>
 #include "mdns_setup.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -22,11 +24,36 @@
 #include "http_server.h"
 
 #include "wifi_setup.h"
+#include "wifi_webui_assets.h"
 
 // Track WiFi connection state to distinguish initial connection from reconnection.
 // This flag is set to true when WiFi disconnects and reset to false when reconnected.
 // Used to determine appropriate LCD display: success screen (initial) vs logo (reconnection).
 static bool wifi_was_disconnected = false;
+
+// The provisioning manager and Tilt scanner must own NimBLE sequentially.
+// Start idle so a boot using saved WiFi credentials needs no BLE teardown.
+static EventGroupHandle_t ble_handoff_events = nullptr;
+static constexpr EventBits_t WIFI_IP_EVENT_SEEN = BIT0;
+static constexpr EventBits_t PROVISIONING_STOPPED = BIT1;
+static constexpr EventBits_t PROVISIONING_BLE_IDLE = BIT2;
+static constexpr EventBits_t BLE_HANDOFF_READY =
+    WIFI_IP_EVENT_SEEN | PROVISIONING_STOPPED | PROVISIONING_BLE_IDLE;
+
+static void on_provisioning_started(void *arg, esp_event_base_t base, int32_t event_id, void *data) {
+    xEventGroupClearBits(ble_handoff_events, PROVISIONING_STOPPED);
+}
+
+static void on_provisioning_ble_event(void *arg, esp_event_base_t base, int32_t event_id, void *data) {
+    if (event_id == WIFI_PROV_INIT || event_id == WIFI_PROV_START) {
+        xEventGroupClearBits(ble_handoff_events, PROVISIONING_BLE_IDLE);
+    } else if (event_id == WIFI_PROV_DEINIT) {
+        // END precedes manager deinit. Only DEINIT confirms BLE is released.
+        // The separate STOPPED bit keeps a disconnect/restart cycle from
+        // looking idle while the overall provisioning flow is still active.
+        xEventGroupSetBits(ble_handoff_events, PROVISIONING_BLE_IDLE);
+    }
+}
 
 // Event callback for WiFi connecting (attempting to connect to a network)
 static void on_wifi_connecting(void *arg, esp_event_base_t base, int32_t event_id, void *data) {
@@ -57,6 +84,9 @@ static void on_wifi_connected(void *arg, esp_event_base_t base, int32_t event_id
 
 // Event callback for WiFi got IP
 static void on_wifi_got_ip(void *arg, esp_event_base_t base, int32_t event_id, void *data) {
+    // wait_connected() wakes before queued events are delivered. Seeing this
+    // event ensures earlier provisioning-start events have updated the bits.
+    xEventGroupSetBits(ble_handoff_events, WIFI_IP_EVENT_SEEN);
     wifi_status_t status;
     if (wifi_cfg_get_status(&status) == ESP_OK) {
         Log.notice("WiFi got IP: %s\r\n", status.ip);
@@ -111,6 +141,8 @@ static void on_wifi_ap_started(void *arg, esp_event_base_t base, int32_t event_i
 static void on_provisioning_stopped(void *arg, esp_event_base_t base, int32_t event_id, void *data) {
     Log.info("WiFi provisioning stopped, initializing HTTP server.\r\n");
     http_server.init();
+    // This library event can precede actual BLE teardown; require both.
+    xEventGroupSetBits(ble_handoff_events, PROVISIONING_STOPPED);
 }
 
 // Event callback for variable changes (e.g., mdns_name changed via WiFi config API)
@@ -154,6 +186,14 @@ void initWiFi() {
         ESP_ERROR_CHECK(evt_ret);  // Only fail on unexpected errors
     }
 
+    ble_handoff_events = xEventGroupCreate();
+    if (ble_handoff_events == nullptr) {
+        Log.error("Unable to allocate BLE handoff state. Restarting device.\r\n");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        esp_restart();
+    }
+    xEventGroupSetBits(ble_handoff_events, PROVISIONING_STOPPED | PROVISIONING_BLE_IDLE);
+
     // Start HTTP server early so we can share it with wifi_cfg
     // This prevents port conflicts when wifi_cfg's HTTP server is torn down
     esp_err_t http_ret = idf_httpd_start();
@@ -170,7 +210,9 @@ void initWiFi() {
     // ESP_ERROR_CHECK(esp_event_handler_register(WIFI_CFG_EVENT, WIFI_CFG_EVENT_DISCONNECTED, on_wifi_disconnected, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_CFG_EVENT, WIFI_CFG_EVENT_AP_START, on_wifi_ap_started, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_CFG_EVENT, WIFI_CFG_EVENT_VAR_CHANGED, on_var_changed, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_CFG_EVENT, WIFI_CFG_EVENT_PROVISIONING_STARTED, on_provisioning_started, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_CFG_EVENT, WIFI_CFG_EVENT_PROVISIONING_STOPPED, on_provisioning_stopped, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, on_provisioning_ble_event, NULL));
 
     // Default variables for WiFi config - mdns_name is used to set the mDNS hostname
     // This provides a default value; if NVS has a stored value, that takes precedence
@@ -220,15 +262,19 @@ void initWiFi() {
     wifi_config.prov_ble.device_name = "TiltBridge-{id}";
     wifi_config.prov_ble.security = WIFI_CFG_PROV_SECURITY_1;
     wifi_config.prov_ble.pop = "thorrak";
-    // KEEP_ALL keeps the BT controller + BLE memory alive after the
-    // provisioning manager tears down, so tilt_scanner can re-attach
-    // via NimBLEDevice::init() without re-initialising the controller.
+    // Retain controller memory so NimBLEDevice::init() can initialize BLE
+    // after the provisioning manager has fully stopped and deinitialized it.
     wifi_config.prov_ble.memory_policy = WIFI_CFG_PROV_MEM_KEEP_ALL;
     // reset_on_failure defaults to false; set explicitly so a wrong-password
     // loop clears stored creds after max_failed_attempts and accepts a fresh
     // attempt without rebooting.
     wifi_config.prov_ble.reset_on_failure = true;
     wifi_config.prov_ble.max_failed_attempts = 3;
+
+    // Hand the provisioning UI to the library before it can serve a request.
+    // CONFIG_WIFI_CFG_WEBUI_SOURCE_APPLICATION means this is the only source
+    // for those pages -- without it the portal 404s.
+    wifi_webui_assets_register();
 
     // Initialize WiFi Config
     esp_err_t err = wifi_cfg_init(&wifi_config);
@@ -252,8 +298,22 @@ void initWiFi() {
         esp_restart();
     }
 
-    // wifi_cfg handles its own provisioning teardown after the configured delay
-    // (stop_provisioning_on_connect + provisioning_teardown_delay_ms)
+    // GOT_IP alone does not release NimBLE: wifi_cfg requests teardown after
+    // its delay, and the SDK then stops asynchronously. Never start a second
+    // host while provisioning still owns BLE. Allow the normal reboot
+    // backstop (15 s) to fire, but fail safely if lifecycle events are lost.
+    const EventBits_t handoff_bits = xEventGroupWaitBits(
+        ble_handoff_events, BLE_HANDOFF_READY, pdFALSE, pdTRUE, pdMS_TO_TICKS(30000));
+    if ((handoff_bits & BLE_HANDOFF_READY) != BLE_HANDOFF_READY) {
+        Log.error("BLE handoff timeout (IP event %d, provisioning stopped %d, BLE idle %d). "
+                  "Restarting before Tilt scanner startup.\r\n",
+                  (handoff_bits & WIFI_IP_EVENT_SEEN) ? 1 : 0,
+                  (handoff_bits & PROVISIONING_STOPPED) ? 1 : 0,
+                  (handoff_bits & PROVISIONING_BLE_IDLE) ? 1 : 0);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        esp_restart();
+    }
+    Log.info("WiFi startup complete; BLE available for Tilt scanning.\r\n");
 
     // Sync mDNS name FROM config TO wifi_cfg (config file is the source of truth).
     // The on_var_changed callback handles the reverse direction for real-time changes.

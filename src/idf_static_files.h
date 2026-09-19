@@ -1,9 +1,15 @@
 /**
  * @file idf_static_files.h
- * @brief Static file serving for ESP-IDF HTTP server with LittleFS support
+ * @brief Static file serving for the ESP-IDF HTTP server
  *
- * Provides handlers for serving static files from LittleFS filesystem,
- * with support for gzip pre-compression and cache control headers.
+ * Assets are served from two places, in this order:
+ *
+ *   1. The web UI compiled into the firmware image (see embedded_ui.h). This
+ *      is the copy that shipped with the running firmware, so it wins.
+ *   2. LittleFS, for everything else -- data/conf/, the esp_wifi_config UI,
+ *      and anything a user has put on the device.
+ *
+ * Both paths support gzip pre-compression and cache control headers.
  */
 
 #ifndef IDF_STATIC_FILES_H
@@ -21,14 +27,16 @@
 #define STATIC_FILE_CHUNK_SIZE 1024
 
 /**
- * @brief Serve a static file from LittleFS
+ * @brief Serve a static file, preferring the copy embedded in the firmware
  *
- * Handles gzip compression detection, content-type detection,
- * and cache control headers.
+ * Checks the embedded asset table first, then falls back to LittleFS. Handles
+ * gzip compression detection, content-type detection, and cache control
+ * headers for both.
  *
  * @param req HTTP request handle
- * @param file_path Path to file in filesystem (without leading /)
- * @return ESP_OK on success, ESP_FAIL if file not found
+ * @param file_path Path to the file, without a leading / and without any .gz
+ *                  suffix (a gzipped asset is found under its plain name)
+ * @return ESP_OK on success, ESP_FAIL if found in neither
  */
 esp_err_t idf_static_serve_file(httpd_req_t *req, const char *file_path);
 

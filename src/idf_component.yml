@@ -24,7 +24,19 @@ dependencies:
   # Registry. 0.2.0 dropped the esp_bus dependency; events now arrive on the
   # default esp_event loop under WIFI_CFG_EVENT.
   thorrak/esp_wifi_config:
-    version: "^0.3.2"
+    # 0.4.0 introduced what this project depends on: src/wifi_webui_assets.cpp
+    # calls wifi_cfg_webui_set_asset_provider() and sdkconfig sets
+    # CONFIG_WIFI_CFG_WEBUI_SOURCE_APPLICATION, both new in 0.4.0. It also
+    # replaced the old "empty CUSTOM_PATH means embedded" encoding with the
+    # CONFIG_WIFI_CFG_WEBUI_SOURCE choice, so 0.3.x will not configure.
+    #
+    # Patch releases only. The library is pre-1.0, where a minor release is
+    # allowed to break API and Kconfig -- 0.4.0 did exactly that to 0.3.x, so
+    # 0.5.0 must not be picked up by a resolver. 0.4.2 and later patches are
+    # welcome. Tilde rather than caret on purpose: `^0.4.1` happens to mean the
+    # same thing today only because of the 0.x carve-out, and would silently
+    # widen to admit minor releases once this library reaches 1.0.
+    version: "~0.4.1"
     # Local development override: comment out `version` above and uncomment
     # the two lines below to build against a checkout of the library.
     # override_path: ../../esp_wifi_config

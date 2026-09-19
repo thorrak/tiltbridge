@@ -43,6 +43,20 @@ void filesystem_deinit(void);
  */
 bool filesystem_exists(const char *path);
 
+/**
+ * Create a directory if it is not already there
+ *
+ * Nothing in the firmware used to do this: /littlefs/conf existed only because
+ * data/conf/readme.txt put it in the flashed filesystem image. A device that
+ * formatted a fresh filesystem -- which every device does now, since the OTA
+ * partition layout moved and resized the LittleFS partition -- had no conf
+ * directory, and every config write failed silently.
+ *
+ * @param path Full path to the directory (e.g., "/littlefs/conf")
+ * @return true if the directory exists or was created
+ */
+bool filesystem_ensure_dir(const char *path);
+
 #ifdef __cplusplus
 }
 #endif
